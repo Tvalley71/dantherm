@@ -1,0 +1,132 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dantherm modbus forbindelse",
+        "data": {
+          "host": "Indtast ip-adresse til din Dantherm enhed",
+          "name": "Indtast prefix til din enheds entiteter",
+          "port": "Indtast TCP port der skal forbindes til på din enhed",
+          "scan_interval": "Indtast opdateringsfrekvens for modbus registere i sekunder"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "filter_reset": { "name": "Nulstil filter" },
+      "alarm_reset": { "name": "Nulstil alarm" }
+    },
+    "cover": {
+      "bypass_damper": { "name": "Bypass spjæld"}
+    },
+    "number": {
+      "filter_lifetime": { "name": "Filter livstid" }
+    },
+    "select": {
+      "operation_selection": {
+        "name": "Driftindstilling",
+        "state": {
+          "2": "Efterspørgsel",
+          "4": "Manual",
+          "8": "Ugerogram"
+        }
+      },
+      "fan_level_selection": {
+        "name": "Ventilatorindstilling",
+        "state": {
+          "0": "Stoppet",
+          "1": "Niveau 1",
+          "2": "Niveau 2",
+          "3": "Niveau 3",
+          "4": "Niveau 4"
+        }
+      },
+      "week_program_selection": {
+        "name": "Ugeprogram",
+        "state": {
+          "0": "Ugerogram 1",
+          "1": "Ugerogram 2",
+          "2": "Ugerogram 3",
+          "3": "Ugerogram 4",
+          "4": "Ugerogram 5",
+          "5": "Ugerogram 6",
+          "6": "Ugerogram 7",
+          "7": "Ugerogram 8",
+          "8": "Ugerogram 9",
+          "9": "Ugerogram 10"
+        }
+      }
+    },
+    "sensor": {
+      "operation_mode": {
+        "name": "Drifttilstand",
+        "state": {
+          "0": "Standby",
+          "1": "Manuel tilstand",
+          "2": "Efterspørgselstilstand",
+          "3": "Ugeprogram tilstand",
+          "4": "Servoflow",
+          "5": "Bortrejst tilstand",
+          "6": "Sommer tilstand",
+          "7": "DI tilsidesættelse",
+          "8": "Hygrostat tilsidesættelse",
+          "9": "Brændeovnstilstand",
+          "10": "Installatør tilstand",
+          "11": "Fejlsikret tilstand 1",
+          "12": "Fejlsikret tilstand 2",
+          "13": "Fejlsikkerhed fra",
+          "14": "Afrimningstilstand fra",
+          "15": "Afrimningstilstand",
+          "16": "Natte tilstand"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "0": "Ingen",
+          "1": "Udsugningsventilator alarm",
+          "2": "Indblæsningsventilator alarm",
+          "3": "Bypass alarm",
+          "4": "T1 alarm",
+          "5": "T2 alarm",
+          "6": "T3 alarm",
+          "7": "T4 alarm",
+          "8": "T5 alarm",
+          "9": "RH alarm",
+          "10": "Udendørs13 alarm",
+          "11": "Indblæsning5 alarm",
+          "12": "Brand alarm",
+          "13": "Kommunikations alarm",
+          "14": "Brand Termostat alarm",
+          "15": "Høj Vandstand alarm"
+        }
+      },
+      "fan_level": { "name": "Ventilator niveau" },
+      "fan1_speed": { "name": "Ventilatorhastighed 1" },
+      "fan2_speed": { "name": "Ventilatorhastighed 2" },
+      "humidity": { "name": "Luftfugtighed" },
+      "air_quality": { "name": "Luftkvalitet" },
+      "exhaust_temperature": { "name": "Udblæsningstemperatur" },
+      "extract_temperature": { "name": "Udsugningstemperatur" },
+      "supply_temperature": { "name": "Indblæsningstemperatur" },
+      "outdoor_temperature": { "name": "Udeluftstemperatur" },
+      "filter_remain": { "name": "Filter tilbage" },
+      "current_unit_mode": { "name": "Aktuel enhedstilstand" },
+      "active_unit_mode": { "name": "Aktiv enhedstilstand" }
+    },
+    "switch": {
+      "away_mode": { "name": "Rejsetilstand" },
+      "night_mode": { "name": "Natte tilstand" },
+      "fireplace_mode": { "name": "Brændeovnstilstand" },
+      "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
+      "summer_mode": { "name": "Summer tilstand" }
+    }
+  }
+}
