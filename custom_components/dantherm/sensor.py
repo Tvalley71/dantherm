@@ -1,13 +1,13 @@
 """Sensor implementation."""
 
+from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 
-from .__init__ import DanthermEntity
 from .const import DOMAIN, SENSOR_TYPES, DanthermSensorEntityDescription
-from .device import Device
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,33 +40,10 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         self.has_entity_name = True
         self.entity_description: DanthermSensorEntityDescription = description
 
-    async def async_added_to_hass(self):
-        """Register entity for ."""
-        self._device.async_add_refresh_entity(self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        self._device.async_remove_refresh_entity(self)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id."""
-        return f"dantherm_{self._key}"
-
     @property
     def native_value(self):
         """Return the state."""
-        return self._device.data.get(self._key, None)
-
-    @property
-    def _key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self._key
+        return self._device.data.get(self.key, None)
 
     @property
     def icon(self) -> str | None:
@@ -89,4 +66,4 @@ class DanthermSensor(SensorEntity, DanthermEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            self._device.data[self._key] = self._attr_state = result
+            self._device.data[self.key] = self._attr_state = result

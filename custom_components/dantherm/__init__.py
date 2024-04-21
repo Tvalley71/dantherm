@@ -9,7 +9,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import Device
@@ -48,6 +47,14 @@ async def async_setup(hass: HomeAssistant, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the Dantherm device."""
+
+    # Assign the HA configured log level of this module to the dantherm module
+    this_logger: logging.Logger = logging.getLogger(__name__)
+    aiovantage_logger: logging.Logger = logging.getLogger(DOMAIN)
+    log_level: int = this_logger.getEffectiveLevel()
+    aiovantage_logger.setLevel(log_level)
+    this_logger.info("Logging at level: {log_level}")
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
@@ -85,30 +92,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class DanthermEntity(Entity):
-    """Dantherm Entity."""
-
-    def __init__(
-        self,
-        device,
-    ) -> None:
-        """Initialize the instance."""
-        self._device = device
-
-    @property
-    def device_info(self):
-        """Device Info."""
-        unique_id = self._device.get_device_name + " " + self._device.get_device_type
-
-        return {
-            "identifiers": {
-                (DOMAIN, unique_id),
-            },
-            "name": self._device.get_device_name,
-            "manufacturer": "Dantherm",
-            "model": self._device.get_device_type,
-            "sw_version": self._device.get_device_fw_version,
-            "serial_number": self._device.get_device_serial_number,
-        }

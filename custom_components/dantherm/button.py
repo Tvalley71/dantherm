@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 
-from . import DanthermEntity
 from .const import BUTTON_TYPES, DOMAIN, DanthermButtonEntityDescription
+from .device import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,26 +39,11 @@ class DanthermButton(ButtonEntity, DanthermEntity):
         self._attr_has_entity_name = True
         self.entity_description: DanthermButtonEntityDescription = description
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id."""
-        return f"dantherm_{self._key}"
-
-    @property
-    def _key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self._key
-
     async def async_press(self) -> None:
         """Handle the button press."""
 
         if self.entity_description.state_entity:
-            value = self._device.data.get(self._key, None)
+            value = self._device.data.get(self.key, None)
         else:
             value = self.entity_description.state
 

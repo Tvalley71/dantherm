@@ -7,7 +7,7 @@
           "host": "Enter ip-address of your Dantherm unit",
           "name": "Enter prefix for the device entities",
           "port": "Enter TCP port on which to connect to the device",
-          "scan_interval": "Emter polling frequency of the modbus registers in seconds"
+          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
         }
       }
     },

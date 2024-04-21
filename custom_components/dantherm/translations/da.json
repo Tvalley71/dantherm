@@ -34,7 +34,7 @@
         "name": "Driftindstilling",
         "state": {
           "2": "Efterspørgsel",
-          "4": "Manual",
+          "4": "Manuel",
           "8": "Ugerogram"
         }
       },
@@ -42,10 +42,10 @@
         "name": "Ventilatorindstilling",
         "state": {
           "0": "Stoppet",
-          "1": "Niveau 1",
-          "2": "Niveau 2",
-          "3": "Niveau 3",
-          "4": "Niveau 4"
+          "1": "Hastighed 1",
+          "2": "Hastighed 2",
+          "3": "Hastighed 3",
+          "4": "Hastighed 4"
         }
       },
       "week_program_selection": {
@@ -123,7 +123,7 @@
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },
-      "night_mode": { "name": "Natte tilstand" },
+      "night_mode": { "name": "Nattilstand" },
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
       "summer_mode": { "name": "Summer tilstand" }

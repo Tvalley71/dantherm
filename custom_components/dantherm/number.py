@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 
-from . import DanthermEntity
 from .const import DOMAIN, NUMBER_TYPES, DanthermNumberEntityDescription
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class DanthermNumber(NumberEntity, DanthermEntity):
 
     def __init__(
         self,
-        device,
+        device: Device,
         description: DanthermNumberEntityDescription,
     ) -> None:
         """Init number."""
@@ -40,24 +40,9 @@ class DanthermNumber(NumberEntity, DanthermEntity):
         self.entity_description: DanthermNumberEntityDescription = description
 
     @property
-    def unique_id(self) -> str | None:
-        """Return the unique id."""
-        return f"dantherm_{self._key}"
-
-    @property
     def native_value(self):
         """Return the state."""
-        return self._device.data.get(self._key, None)
-
-    @property
-    def _key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self._key
+        return self._device.data.get(self.key, None)
 
     async def async_set_native_value(self, value: int) -> None:
         """Update the current value."""
@@ -70,4 +55,4 @@ class DanthermNumber(NumberEntity, DanthermEntity):
         result = await self._device.read_holding_registers(
             description=self.entity_description
         )
-        self._device.data[self._key] = result
+        self._device.data[self.key] = result

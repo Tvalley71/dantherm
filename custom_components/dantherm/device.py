@@ -1,7 +1,7 @@
 """Device implementation."""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pymodbus.constants import Endian
@@ -12,9 +12,65 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DataClass
+from .const import DEVICE_TYPES, DOMAIN, DataClass
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DanthermEntity(Entity):
+    """Dantherm Entity."""
+
+    def __init__(
+        self,
+        device,
+    ) -> None:
+        """Initialize the instance."""
+        self._device = device
+        self.attr_suspend_refresh: datetime | None = None
+
+    async def async_added_to_hass(self):
+        """Register entity for refresh interval."""
+        self._device.async_add_refresh_entity(self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister entity for refresh interval."""
+        self._device.async_remove_refresh_entity(self)
+
+    def suspend_refresh(self, seconds: int):
+        """Suspend entity refresh for specified number of seconds."""
+
+        self.attr_suspend_refresh = datetime.now() + timedelta(seconds=seconds)
+
+    @property
+    def key(self) -> str:
+        """Return the key name."""
+        return self.entity_description.key
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id."""
+        return f"dantherm_{self.key}"
+
+    @property
+    def translation_key(self) -> str:
+        """Return the translation key name."""
+        return self.key
+
+    @property
+    def device_info(self):
+        """Device Info."""
+        unique_id = self._device.get_device_name + " " + self._device.get_device_type
+
+        return {
+            "identifiers": {
+                (DOMAIN, unique_id),
+            },
+            "name": self._device.get_device_name,
+            "manufacturer": "Dantherm",
+            "model": self._device.get_device_type,
+            "sw_version": self._device.get_device_fw_version,
+            "serial_number": self._device.get_device_serial_number,
+        }
 
 
 class Device:
@@ -78,41 +134,44 @@ class Device:
         self._device_installed_components = await self.read_holding_registers(
             address=610, count=2
         )
-        _LOGGER.debug(
-            "Installed components 2 = %s", hex(self._device_installed_components)
+        _LOGGER.debug(  # I may like to know these values on installs with other units
+            "Installed components (610) = %s", hex(self._device_installed_components)
         )
         self._device_installed_components = await self.read_holding_registers(address=2)
         _LOGGER.debug(
-            "Installed components 1 = %s", hex(self._device_installed_components)
+            "Installed components (2) = %s", hex(self._device_installed_components)
         )
         self._device_type = await self.read_holding_registers(address=3)
-        _LOGGER.debug("Device type = %s", hex(self._device_type))
+        _LOGGER.debug("Device type = %s", self.get_device_type)
         self._device_fw_version = await self.read_holding_registers(address=24)
-        _LOGGER.debug("Firmware version = %s", self._device_fw_version)
+        _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
         self._device_serial_number = await self.read_holding_registers(
             address=7, count=2
         )
-        _LOGGER.debug("Serial number = %s", self._device_serial_number)
+        _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
     async def async_install_entity(self, description: EntityDescription) -> bool:
         """Test if the component is installed on the device."""
 
-        if (not description.component_class) or (
-            (self._device_installed_components & description.component_class)
-            == description.component_class
+        install = True
+        if (description.component_class) and (
+            (self._device_installed_components & description.component_class) == 0
         ):
-            if description.data_exclude_if is None:
-                return True
+            install = False
+        if description.data_exclude_if is not None:
             result = await self.read_holding_registers(description=description)
             if description.data_exclude_if == result:
-                return False
+                install = False
+
+        if install:
             return True
+        _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
     # @callback
     def async_add_refresh_entity(self, entity):
         """Add entity for refresh."""
-        # This is the first sensor, set up interval.
+        # This is the first entity, set up interval.
         if not self._entities:
             self._entity_refresh_method = async_track_time_interval(
                 self._hass, self.async_refresh_entities, self._scan_interval
@@ -124,32 +183,34 @@ class Device:
     def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
         self._entities.remove(entity)
+        self.hass.data[DOMAIN].pop(entity.key)
 
         if not self._entities:
-            # stop the interval timer upon removal of last sensor
+            # This is the last entity, stop the interval timer
             self._entity_refresh_method()
             self._entity_refresh_method = None
 
     async def async_refresh_entities(self, _now: int | None = None) -> None:
         """Time to update entities."""
+
         if not self._entities:
             return
 
         for entity in self._entities:
-            await self.async_refresh_entity(entity=entity)
+            await self.async_refresh_entity(entity)
 
-    async def async_refresh_entity(
-        self, entity: Entity | None = None, name: str | None = None
-    ) -> None:
-        """Time to update entities."""
+    async def async_refresh_entity(self, entity: DanthermEntity) -> None:
+        """."""
 
-        if not entity:
-            for entity in self._entities:
-                if entity.name == name:
-                    break
+        if entity.attr_suspend_refresh:
+            if entity.attr_suspend_refresh < datetime.now():
+                entity.attr_suspend_refresh = None
+                _LOGGER.debug("Remove suspension of entity=%s", entity.name)
+            else:
+                _LOGGER.debug("Skipping suspened entity=%s", entity.name)
+                return
 
-        if not entity:
-            return
+        _LOGGER.debug("Refresh entity=%s", entity.name)
 
         await entity.async_update_ha_state(True)
         entity.async_write_ha_state()
@@ -245,21 +306,7 @@ class Device:
     @property
     def get_device_type(self) -> str:
         """Device type."""
-        device_types = {
-            1: "WG200",
-            2: "WG300",
-            3: "WG500",
-            4: "HCC 2",
-            5: "HCC 2 ALU",
-            6: "HCV300 ALU",
-            7: "HCV500 ALU",
-            8: "HCV700 ALU",
-            9: "HCV400 P2",
-            10: "HCV400 E1",
-            11: "HCV400 P1",
-            12: "HCC 2 E1",
-        }
-        return device_types[self._device_type]
+        return DEVICE_TYPES.get(self._device_type, "UNKNOWN")
 
     @property
     def get_device_fw_version(self) -> str:

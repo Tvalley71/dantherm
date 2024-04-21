@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
-from . import DanthermEntity
 from .const import DOMAIN, SELECT_TYPES, DanthermSelectEntityDescription
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class DanthermSelect(SelectEntity, DanthermEntity):
 
     def __init__(
         self,
-        device,
+        device: Device,
         description: DanthermSelectEntityDescription,
     ) -> None:
         """Init select."""
@@ -38,29 +38,6 @@ class DanthermSelect(SelectEntity, DanthermEntity):
         self._device = device
         self._attr_has_entity_name = True
         self.entity_description: DanthermSelectEntityDescription = description
-
-    # async def async_added_to_hass(self):
-    #     """Register entity for ."""
-    #     self._device.async_add_refresh_entity(self)
-
-    # async def async_will_remove_from_hass(self) -> None:
-    #     """Unregister callbacks."""
-    #     self._device.async_remove_refresh_entity(self)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id."""
-        return f"dantherm_{self._key}"
-
-    @property
-    def _key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self._key
 
     @property
     def icon(self) -> str | None:

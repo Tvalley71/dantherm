@@ -15,9 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import DanthermEntity
 from .const import COVER_TYPES, DOMAIN, DanthermCoverEntityDescription
-from .device import Device
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,14 +63,6 @@ class DanthermCover(CoverEntity, DanthermEntity):
         self._attr_last_state: int = 0
         self._call_active = False
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self._device.async_add_refresh_entity(self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        self._device.async_remove_refresh_entity(self)
-
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         result = await self._device.write_holding_registers(
@@ -100,48 +91,21 @@ class DanthermCover(CoverEntity, DanthermEntity):
         self.async_update_ha_state(True)
 
     @property
-    def unique_id(self) -> str | None:
-        """Return the unique id."""
-        return f"dantherm_{self._key}"
-
-    @property
     def native_value(self):
         """Return the state."""
-        return self._device.data.get(self._key, None)
-
-    @property
-    def _key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self._key
+        return self._device.data.get(self.key, None)
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the cover."""
-
-        if self._call_active:
-            return
-        self._call_active = True
 
         self._attr_last_state = STATE_UNKNOWN
         result = await self._device.read_holding_registers(
             description=self.entity_description
         )
 
-        self._call_active = False
-        _LOGGER.debug("Request sent")
         if result is None:
-            _LOGGER.debug("No result:")
             self._attr_available = False
-            self.schedule_update_ha_state()
-            return
-        _LOGGER.debug("Result: {self.result}")
-        self._attr_available = True
-
-        if result == self.entity_description.state_closed:
+        elif result == self.entity_description.state_closed:
             self._attr_state = STATE_CLOSED
             self._attr_is_closed = True
             self._attr_is_closing = False
@@ -159,5 +123,3 @@ class DanthermCover(CoverEntity, DanthermEntity):
             self._attr_is_opening = False
         else:
             self._attr_state = STATE_UNAVAILABLE
-
-        self.schedule_update_ha_state()
