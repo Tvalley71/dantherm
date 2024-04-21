@@ -1,6 +1,5 @@
 """Sensor implementation."""
 
-from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
