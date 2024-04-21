@@ -183,7 +183,6 @@ class Device:
     def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
         self._entities.remove(entity)
-        self.hass.data[DOMAIN].pop(entity.key)
 
         if not self._entities:
             # This is the last entity, stop the interval timer
