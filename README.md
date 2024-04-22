@@ -26,3 +26,5 @@ Check out the Home Assistant Community. I'll respond to this post once I'm ready
 https://community.home-assistant.io/t/dantherm-hcv-400/284326
 
 Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
+
+I have no affiliation with Dantherm other than owning one of their units.
