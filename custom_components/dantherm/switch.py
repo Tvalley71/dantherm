@@ -54,9 +54,15 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self.suspend_refresh(self.entity_description.state_suspend_for)
 
         self._attr_is_on = False
-        await self._device.write_holding_registers(
-            description=self.entity_description, value=self.entity_description.state_off
-        )
+        if self.entity_description.data_setinternal:
+            await getattr(self._device, self.entity_description.data_setinternal)(
+                self.entity_description.state_off
+            )
+        else:
+            await self._device.write_holding_registers(
+                description=self.entity_description,
+                value=self.entity_description.state_off,
+            )
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -65,9 +71,15 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self.suspend_refresh(self.entity_description.state_suspend_for)
 
         self._attr_is_on = True
-        await self._device.write_holding_registers(
-            description=self.entity_description, value=self.entity_description.state_on
-        )
+        if self.entity_description.data_setinternal:
+            await getattr(self._device, self.entity_description.data_setinternal)(
+                self.entity_description.state_on
+            )
+        else:
+            await self._device.write_holding_registers(
+                description=self.entity_description,
+                value=self.entity_description.state_on,
+            )
 
     async def async_update(self) -> None:
         """Read holding register."""
@@ -77,7 +89,9 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 _LOGGER.debug("Skipping suspened entity=%s", self.name)
                 return
 
-        if self.entity_description.data_entity:
+        if self.entity_description.data_getinternal:
+            result = getattr(self._device, self.entity_description.data_getinternal)
+        elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)
         else:
             result = await self._device.read_holding_registers(

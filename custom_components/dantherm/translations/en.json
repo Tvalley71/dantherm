@@ -33,15 +33,16 @@
       "operation_selection": {
         "name": "Operation Selection",
         "state": {
-          "2": "Demand",
-          "4": "Manual",
-          "8": "Week Program"
+          "0": "Standby",
+          "1": "Automatic",
+          "2": "Manual",
+          "3": "Week Program"
         }
       },
       "fan_level_selection": {
         "name": "Fan Selection",
         "state": {
-          "0": "Standby",
+          "0": "Level 0",
           "1": "Level 1",
           "2": "Level 2",
           "3": "Level 3",
@@ -70,7 +71,7 @@
         "state": {
           "0": "Standby",
           "1": "Manual Mode",
-          "2": "Demand Mode",
+          "2": "Automatic Mode",
           "3": "Weekprogram Mode",
           "4": "Servoflow",
           "5": "Away Mode",
@@ -108,7 +109,7 @@
           "15": "High Waterlevel Alarm"
         }
       },
-      "fan_level": { "name": "Ventilator niveau" },
+      "fan_level": { "name": "Fan Level" },
       "fan1_speed": { "name": "Fan Speed 1" },
       "fan2_speed": { "name": "Fan Speed 2" },
       "humidity": { "name": "Humidity" },

@@ -107,6 +107,9 @@ class Device:
         self._modbus = modbus.ModbusHub(self._hass, self._client_config)
         self._scan_interval = timedelta(seconds=scan_interval)
         self._entity_refresh_method = None
+        self._current_unit_mode = 0
+        self._active_unit_mode = 0
+        self._fan_level = 0
         self._entities = []
         self.data = {}
 
@@ -168,7 +171,6 @@ class Device:
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    # @callback
     def async_add_refresh_entity(self, entity):
         """Add entity for refresh."""
         # This is the first entity, set up interval.
@@ -179,7 +181,6 @@ class Device:
 
         self._entities.append(entity)
 
-    # @callback
     def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
         self._entities.remove(entity)
@@ -195,11 +196,17 @@ class Device:
         if not self._entities:
             return
 
+        self._current_unit_mode = await self._read_holding_uint32(472)
+
+        self._active_unit_mode = await self._read_holding_uint32(168)
+
+        self._fan_level = await self._read_holding_uint32(324)
+
         for entity in self._entities:
             await self.async_refresh_entity(entity)
 
     async def async_refresh_entity(self, entity: DanthermEntity) -> None:
-        """."""
+        """Refresh an entity."""
 
         if entity.attr_suspend_refresh:
             if entity.attr_suspend_refresh < datetime.now():
@@ -213,6 +220,62 @@ class Device:
 
         await entity.async_update_ha_state(True)
         entity.async_write_ha_state()
+
+    @property
+    def get_current_unit_mode(self):
+        """Get current unit mode."""
+
+        return self._current_unit_mode
+
+    @property
+    def get_active_unit_mode(self):
+        """Get active unit mode."""
+
+        return self._active_unit_mode
+
+    @property
+    def get_op_selection(self):
+        """Get operation mode selection."""
+
+        if self._active_unit_mode & 2 == 2:  # demand mode
+            return 1
+        if self._active_unit_mode & 4 == 4:  # manual mode
+            if self._fan_level == 0:
+                return 0  # standby
+            return 2  # manual
+        if self._active_unit_mode & 8 == 8:  # week program
+            return 3
+
+        _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
+        return 0
+
+    @property
+    def get_fan_level(self):
+        """Get current unit mode."""
+
+        return self._fan_level
+
+    async def set_active_unit_mode(self, value):
+        """Set active unit mode."""
+
+        await self._write_holding_uint32(168, value)
+
+    async def set_op_selection(self, value):
+        """Set operation mode selection."""
+
+        if value == 1:
+            await self.set_active_unit_mode(2)  # demand mode
+        if value in (0, 2):
+            await self.set_active_unit_mode(4)  # manual mode
+        if value == 3:
+            await self.set_active_unit_mode(8)  # week program mode
+        if value == 0:
+            await self.set_fan_level(0)
+
+    async def set_fan_level(self, value):
+        """Set fan level."""
+
+        await self._write_holding_uint32(324, value)
 
     async def read_holding_registers(
         self,

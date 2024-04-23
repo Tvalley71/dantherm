@@ -132,9 +132,11 @@ class DanthermSelectEntityDescription(SelectEntityDescription):
     """Dantherm Select Entity Description."""
 
     data_setaddress: int | None = None
+    data_setinternal: str | None = None
     data_setclass: DataClass | None = None
 
     data_address: int | None = None
+    data_getinternal: str | None = None
     data_entity: str | None = None
     data_bitwise_and: int | None = None
     data_exclude_if: Any | None = None
@@ -148,6 +150,7 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     """Dantherm Sensor Entity Description."""
 
     data_address: int | None = None
+    data_getinternal: str | None = None
     data_precision: int | None = None
     data_scale: int | None = None
     data_exclude_if: Any | None = None
@@ -163,6 +166,8 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     """Dantherm Switch Entity Description."""
 
     data_setaddress: int | None = None
+    data_setinternal: str | None = None
+    data_getinternal: str | None = None
     data_setclass: DataClass | None = None
     state_suspend_for: int | None = None
     state_on: int = None
@@ -226,17 +231,14 @@ NUMBER_TYPES: dict[str, list[DanthermNumberEntityDescription]] = {
 SELECT_TYPES: dict[str, list[DanthermSelectEntityDescription]] = {
     "operation_selection": DanthermSelectEntityDescription(
         key="operation_selection",
-        data_setaddress=168,
-        data_entity="active_unit_mode",
-        data_bitwise_and=0x0F,
-        data_class=DataClass.UInt32,
-        options=["2", "4", "8"],
+        data_setinternal="set_op_selection",
+        data_getinternal="get_op_selection",
+        options=["0", "1", "2", "3"],
     ),
     "fan_level_selection": DanthermSelectEntityDescription(
         key="fan_level_selection",
-        data_setaddress=324,
-        data_entity="fan_level",
-        data_class=DataClass.UInt32,
+        data_setinternal="set_fan_level",
+        data_getinternal="get_fan_level",
         options=["0", "1", "2", "3", "4"],
     ),
     "week_program_selection": DanthermSelectEntityDescription(
@@ -248,22 +250,9 @@ SELECT_TYPES: dict[str, list[DanthermSelectEntityDescription]] = {
 }
 
 SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
-    "current_unit_mode": DanthermSensorEntityDescription(
-        key="current_unit_mode",
-        data_class=DataClass.UInt32,
-        data_address=472,
-        entity_registry_visible_default=False,
-    ),
-    "active_unit_mode": DanthermSensorEntityDescription(
-        key="active_unit_mode",
-        data_class=DataClass.UInt16,
-        data_address=168,
-        entity_registry_visible_default=False,
-    ),
     "operation_mode": DanthermSensorEntityDescription(
         key="operation_mode",
-        data_entity="current_unit_mode",
-        data_class=DataClass.UInt32,
+        data_getinternal="get_current_unit_mode",
     ),
     "alarm": DanthermSensorEntityDescription(
         key="alarm",
@@ -274,8 +263,7 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
     "fan_level": DanthermSensorEntityDescription(
         key="fan_level",
         icon="mdi:fan",
-        data_class=DataClass.UInt32,
-        data_address=324,
+        data_getinternal="get_fan_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "fan1_rpm": DanthermSensorEntityDescription(
@@ -365,9 +353,8 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
 SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     "away_mode": DanthermSwitchEntityDescription(
         key="away_mode",
-        data_class=DataClass.UInt32,
-        data_setaddress=168,
-        data_entity="active_unit_mode",
+        data_setinternal="set_active_unit_mode",
+        data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x10,
         icon_on="mdi:briefcase-outline",
@@ -377,9 +364,8 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     ),
     "night_mode": DanthermSwitchEntityDescription(
         key="night_mode",
-        data_class=DataClass.UInt32,
-        data_setaddress=168,
-        data_entity="active_unit_mode",
+        data_setinternal="set_active_unit_mode",
+        data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x20,
         icon_on="mdi:weather-night",
@@ -389,9 +375,8 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     ),
     "fireplace_mode": DanthermSwitchEntityDescription(
         key="fireplace_mode",
-        data_class=DataClass.UInt32,
-        data_setaddress=168,
-        data_entity="active_unit_mode",
+        data_setinternal="set_active_unit_mode",
+        data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x40,
         icon_on="mdi:fireplace",
@@ -401,9 +386,8 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     ),
     "manual_bypass_mode": DanthermSwitchEntityDescription(
         key="manual_bypass_mode",
-        data_class=DataClass.UInt32,
-        data_setaddress=168,
-        data_entity="active_unit_mode",
+        data_setinternal="set_active_unit_mode",
+        data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x80,
         icon_on="mdi:arrow-decision-outline",
@@ -414,9 +398,8 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     ),
     "summer_mode": DanthermSwitchEntityDescription(
         key="summer_mode",
-        data_class=DataClass.UInt32,
-        data_setaddress=168,
-        data_entity="active_unit_mode",
+        data_setinternal="set_active_unit_mode",
+        data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x800,
         icon_on="mdi:emoticon-cool-outline",
