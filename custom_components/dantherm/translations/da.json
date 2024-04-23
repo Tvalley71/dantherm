@@ -33,15 +33,16 @@
       "operation_selection": {
         "name": "Driftindstilling",
         "state": {
-          "2": "Efterspørgsel",
-          "4": "Manuel",
-          "8": "Ugerogram"
+          "0": "Standby",
+          "1": "Automatik",
+          "2": "Manuel",
+          "3": "Ugerogram"
         }
       },
       "fan_level_selection": {
         "name": "Ventilatorindstilling",
         "state": {
-          "0": "Stoppet",
+          "0": "Hastighed 0",
           "1": "Hastighed 1",
           "2": "Hastighed 2",
           "3": "Hastighed 3",
@@ -70,7 +71,7 @@
         "state": {
           "0": "Standby",
           "1": "Manuel tilstand",
-          "2": "Efterspørgselstilstand",
+          "2": "Automatik tilstand",
           "3": "Ugeprogram tilstand",
           "4": "Servoflow",
           "5": "Bortrejst tilstand",
@@ -108,7 +109,7 @@
           "15": "Høj Vandstand alarm"
         }
       },
-      "fan_level": { "name": "Ventilator niveau" },
+      "fan_level": { "name": "Ventilatorniveau" },
       "fan1_speed": { "name": "Ventilatorhastighed 1" },
       "fan2_speed": { "name": "Ventilatorhastighed 2" },
       "humidity": { "name": "Luftfugtighed" },

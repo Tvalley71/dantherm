@@ -54,7 +54,9 @@ class DanthermSensor(SensorEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Read holding register."""
 
-        if self.entity_description.data_entity:
+        if self.entity_description.data_getinternal:
+            result = getattr(self._device, self.entity_description.data_getinternal)
+        elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)
         else:
             result = await self._device.read_holding_registers(

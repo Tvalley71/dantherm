@@ -49,14 +49,21 @@ class DanthermSelect(SelectEntity, DanthermEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
-        await self._device.write_holding_registers(
-            description=self.entity_description, value=int(option)
-        )
+        if self.entity_description.data_setinternal:
+            await getattr(self._device, self.entity_description.data_setinternal)(
+                int(option)
+            )
+        else:
+            await self._device.write_holding_registers(
+                description=self.entity_description, value=int(option)
+            )
 
     async def async_update(self) -> None:
         """Fetch new state data for the select."""
 
-        if self.entity_description.data_entity:
+        if self.entity_description.data_getinternal:
+            result = getattr(self._device, self.entity_description.data_getinternal)
+        elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)
         else:
             result = await self._device.read_holding_registers(
