@@ -368,7 +368,11 @@ class Device:
     @property
     def get_device_type(self) -> str:
         """Device type."""
-        return DEVICE_TYPES.get(self._device_type, "UNKNOWN")
+
+        result = DEVICE_TYPES.get(self._device_type, None)
+        if result is None:
+            result = f"UNKNOWN {self._device_type}"
+        return result
 
     @property
     def get_device_fw_version(self) -> str:
