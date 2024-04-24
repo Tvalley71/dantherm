@@ -1,0 +1,133 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion modbus Dantherm",
+        "data": {
+          "host": "Adresse IP de la VMC",
+          "name": "Préfixe à utiliser pour les entités",
+          "port": "Port TCP de de la VMC",
+          "scan_interval": "Fréquence d'interrogation des registres modbus (secondes)"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "filter_reset": { "name": "Réinitialisation filtre" },
+      "alarm_reset": { "name": "Réinitialisation alerte" }
+    },
+    "cover": {
+      "bypass_damper": { "name": "Volet de bypass" }
+    },
+    "number": {
+      "filter_lifetime": { "name": "Durée de vie filtre" }
+    },
+    "select": {
+      "operation_selection": {
+        "name": "Sélection mode",
+        "state": {
+          "0": "Arrêt",
+          "1": "Auto",
+          "2": "Manuel",
+          "3": "Programme hebdo"
+        }
+      },
+      "fan_level_selection": {
+        "name": "Vitesse ventilation",
+        "state": {
+          "0": "Arrêt",
+          "1": "Niveau 1",
+          "2": "Niveau 2",
+          "3": "Niveau 3",
+          "4": "Niveau 4"
+        }
+      },
+      "week_program_selection": {
+        "name": "Programme hebdo",
+        "state": {
+          "0": "Programme hebdo 1",
+          "1": "Programme hebdo 2",
+          "2": "Programme hebdo 3",
+          "3": "Programme hebdo 4",
+          "4": "Programme hebdo 5",
+          "5": "Programme hebdo 6",
+          "6": "Programme hebdo 7",
+          "7": "Programme hebdo 8",
+          "8": "Programme hebdo 9",
+          "9": "Programme hebdo 10"
+        }
+      }
+    },
+    "sensor": {
+      "operation_mode": {
+        "name": "Mode",
+        "state": {
+          "0": "Arrêt",
+          "1": "Mode manuel",
+          "2": "Mode auto",
+          "3": "Mode programme hebdo",
+          "4": "Mode asservi",
+          "5": "Mode absent",
+          "6": "Mode été",
+          "7": "Ignorer DI",
+          "8": "Ignorer hygrostat",
+          "9": "Mode allumage cheminée",
+          "10": "Mode installateur",
+          "11": "Mode sans échec 1",
+          "12": "Mode sans échec 2",
+          "13": "Fail Off",
+          "14": "Mode hors gel désactivé",
+          "15": "Mode hors gel",
+          "16": "Mode nuit"
+        }
+      },
+      "alarm": {
+        "name": "Alerte",
+        "state": {
+          "0": "Aucune",
+          "1": "Alerte ventilation extraction",
+          "2": "Alerte ventilateur pulsion",
+          "3": "Alerte bypass",
+          "4": "Alerte T1",
+          "5": "Alerte T2",
+          "6": "Alerte T3",
+          "7": "Alerte T4",
+          "8": "Alerte T5",
+          "9": "Alerte humidité",
+          "10": "Alarme extérieur 13",
+          "11": "Alerte pulsion 5",
+          "12": "Alerte feu",
+          "13": "Alerte communication",
+          "14": "Alerte thermostat feu",
+          "15": "Alerte niveau d'eau élevé"
+        }
+      },
+      "fan_level": { "name": "Niveau ventilation" },
+      "fan1_speed": { "name": "Vitesse ventilateur 1" },
+      "fan2_speed": { "name": "Vitesse ventilateur 2" },
+      "humidity": { "name": "Humidité" },
+      "air_quality": { "name": "Qualité de l'air" },
+      "exhaust_temperature": { "name": "Température expulsion" },
+      "extract_temperature": { "name": "Température extraction" },
+      "supply_temperature": { "name": "Température pulsion" },
+      "outdoor_temperature": { "name": "Température extérieure" },
+      "filter_remain": { "name": "Durée restante filtre" },
+      "current_unit_mode": { "name": "Mode actuel" },
+      "active_unit_mode": { "name": "Mode actif" }
+    }
+  },
+  "switch": {
+    "away_mode": { "name": "Mode absent" },
+    "night_mode": { "name": "Mode nuit" },
+    "fireplace_mode": { "name": "Mode démarrage cheminée" },
+    "manual_bypass_mode": { "name": "Mode bypass manuel" },
+    "summer_mode": { "name": "Mode été" }
+  }
+}

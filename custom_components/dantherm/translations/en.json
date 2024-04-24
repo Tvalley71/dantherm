@@ -113,7 +113,7 @@
       "fan1_speed": { "name": "Fan Speed 1" },
       "fan2_speed": { "name": "Fan Speed 2" },
       "humidity": { "name": "Humidity" },
-      "air_quality": { "name": "Air quality" },
+      "air_quality": { "name": "Air Quality" },
       "exhaust_temperature": { "name": "Exhaust Temperature" },
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
