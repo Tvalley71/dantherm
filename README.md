@@ -22,7 +22,7 @@ Hopefully, the integration will function with the listed units blow, as outlined
 11. HCV400 P1
 12. HCC 2 E1
 
-I will respond post above once the integration is ready.
+I will respond to the post above once the integration is ready.
 
 Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
 
