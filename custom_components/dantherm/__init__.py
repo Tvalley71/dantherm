@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
-    device = Device(hass, name, host, port, scan_interval)
+    device = Device(hass, name, host, port, 1, scan_interval)
     try:
         await device.setup()
     except ValueError as ex:

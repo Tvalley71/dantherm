@@ -76,14 +76,13 @@ class DanthermEntity(Entity):
 class Device:
     """Dantherm Device."""
 
-    unit_id = 0
-
     def __init__(
         self,
         hass: HomeAssistant,
         name,
         host,
         port,
+        unit_id,
         scan_interval,
     ) -> None:
         """Init device."""
@@ -95,6 +94,7 @@ class Device:
         self._device_serial_number = 0
         self._host = host
         self._port = port
+        self._unit_id = int(unit_id)
         self._client_config = {
             "name": self._device_name,
             "type": "tcp",
@@ -118,7 +118,6 @@ class Device:
 
         _LOGGER.debug("Setup has started")
 
-        Device.unit_id += 1
         success = await self._modbus.async_setup()
 
         if success:
@@ -390,7 +389,7 @@ class Device:
         """Read holding registers."""
 
         result = await self._modbus.async_pb_call(
-            Device.unit_id, address, count, "holding"
+            self._unit_id, address, count, "holding"
         )
         if result is None:
             _LOGGER.log(
@@ -402,7 +401,7 @@ class Device:
         """Write holding registers."""
 
         result = await self._modbus.async_pb_call(
-            Device.unit_id,
+            self._unit_id,
             address,
             values,
             "write_registers",
