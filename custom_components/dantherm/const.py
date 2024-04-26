@@ -156,7 +156,7 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_scale: int | None = None
     data_exclude_if: Any | None = None
     data_entity: str | None = None
-    data_icon_zero: str | None = None
+    data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
     icon_internal: str | None = None
 
@@ -260,7 +260,7 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         key="alarm",
         icon="mdi:alert-circle-outline",
         data_address=516,
-        data_icon_zero="mdi:alert-circle-check-outline",
+        data_zero_icon="mdi:alert-circle-check-outline",
     ),
     "fan_level": DanthermSensorEntityDescription(
         key="fan_level",
@@ -268,12 +268,13 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         data_getinternal="get_fan_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "fan1_rpm": DanthermSensorEntityDescription(
+    "fan1_speed": DanthermSensorEntityDescription(
         key="fan1_speed",
         icon="mdi:fan",
         data_class=DataClass.Float32,
         data_address=100,
-        unit_of_measurement="rpm",
+        data_zero_icon="mdi:fan-off",
+        native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -282,7 +283,8 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         icon="mdi:fan",
         data_class=DataClass.Float32,
         data_address=102,
-        unit_of_measurement="rpm",
+        data_zero_icon="mdi:fan-off",
+        native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
