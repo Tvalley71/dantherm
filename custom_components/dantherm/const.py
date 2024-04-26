@@ -158,6 +158,7 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_entity: str | None = None
     data_icon_zero: str | None = None
     data_class: DataClass = DataClass.UInt16
+    icon_internal: str | None = None
 
     component_class: ComponentClass = None
 
@@ -263,7 +264,7 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
     ),
     "fan_level": DanthermSensorEntityDescription(
         key="fan_level",
-        icon="mdi:fan",
+        icon_internal="get_fan_icon",
         data_getinternal="get_fan_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),

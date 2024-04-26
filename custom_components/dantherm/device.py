@@ -250,9 +250,22 @@ class Device:
 
     @property
     def get_fan_level(self):
-        """Get current unit mode."""
+        """Get current fan level."""
 
         return self._fan_level
+
+    @property
+    def get_fan_icon(self) -> str:
+        """Get current fan icon."""
+
+        result = self.get_op_selection
+        if result == 0:
+            return "mdi:fan-off"
+        if result == 1:
+            return "mdi:fan-auto"
+        if result == 3:
+            return "mdi:fan-clock"
+        return "mdi:fan"
 
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
