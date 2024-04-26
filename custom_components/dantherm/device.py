@@ -246,7 +246,7 @@ class Device:
             return 3
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
-        return 4
+        return 2  # manual
 
     @property
     def get_fan_level(self):
