@@ -527,7 +527,7 @@ class Device:
         await self._write_holding_registers(address, payload)
 
     async def _read_holding_float32(self, address, precision):
-        """Read holding int registers."""
+        """Read holding float32 registers."""
 
         result = await self._read_holding_registers(address, 2)
         decoder = BinaryPayloadDecoder.fromRegisters(
