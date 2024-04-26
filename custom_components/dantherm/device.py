@@ -442,7 +442,7 @@ class Device:
         await self._write_holding_registers(address, payload)
 
     async def _read_holding_uint8(self, address):
-        """Read holding int8 registers."""
+        """Read holding uint8 registers."""
 
         result = await self._read_holding_registers(address, 1)
         decoder = BinaryPayloadDecoder.fromRegisters(
