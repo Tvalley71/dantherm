@@ -156,8 +156,9 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_scale: int | None = None
     data_exclude_if: Any | None = None
     data_entity: str | None = None
-    data_icon_zero: str | None = None
+    data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
+    icon_internal: str | None = None
 
     component_class: ComponentClass = None
 
@@ -247,6 +248,7 @@ SELECT_TYPES: dict[str, list[DanthermSelectEntityDescription]] = {
         data_address=466,
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        component_class=ComponentClass.Week,
     ),
 }
 
@@ -259,20 +261,21 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         key="alarm",
         icon="mdi:alert-circle-outline",
         data_address=516,
-        data_icon_zero="mdi:alert-circle-check-outline",
+        data_zero_icon="mdi:alert-circle-check-outline",
     ),
     "fan_level": DanthermSensorEntityDescription(
         key="fan_level",
-        icon="mdi:fan",
+        icon_internal="get_fan_icon",
         data_getinternal="get_fan_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "fan1_rpm": DanthermSensorEntityDescription(
+    "fan1_speed": DanthermSensorEntityDescription(
         key="fan1_speed",
         icon="mdi:fan",
         data_class=DataClass.Float32,
         data_address=100,
-        unit_of_measurement="rpm",
+        data_zero_icon="mdi:fan-off",
+        native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -281,7 +284,8 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         icon="mdi:fan",
         data_class=DataClass.Float32,
         data_address=102,
-        unit_of_measurement="rpm",
+        data_zero_icon="mdi:fan-off",
+        native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -293,18 +297,18 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        # component_class=ComponentClass.RH_Senser,
+        component_class=ComponentClass.RH_Senser,
     ),
-    # "air_quality": DanthermSensorEntityDescription( # left out for now
-    #     key="air_quality",
-    #     data_address=430,
-    #     data_exclude_if=0,
-    #     data_class=DataClass.UInt32,
-    #     native_unit_of_measurement="ppm",
-    #     device_class=SensorDeviceClass.AQI,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     # component_class=ComponentClass.VOC_sensor
-    # ),
+    "air_quality": DanthermSensorEntityDescription(  # left out for now
+        key="air_quality",
+        data_address=430,
+        data_exclude_if=0,
+        data_class=DataClass.UInt32,
+        native_unit_of_measurement="ppm",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.VOC_sensor,
+    ),
     "exhaust_temperature": DanthermSensorEntityDescription(
         key="exhaust_temperature",
         data_class=DataClass.Float32,
@@ -391,9 +395,9 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x80,
-        icon_on="mdi:arrow-decision-outline",
+        icon_on="mdi:swap-horizontal",
         state_off=0x8080,
-        icon_off="mdi:arrow-decision-auto-outline",
+        icon_off="mdi:power-off",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
     ),

@@ -47,9 +47,14 @@ class DanthermSensor(SensorEntity, DanthermEntity):
     @property
     def icon(self) -> str | None:
         """Return an icon."""
-        if self.entity_description.data_icon_zero and not self._attr_state:
-            return self.entity_description.data_icon_zero
-        return super().icon
+
+        result = super().icon
+        if self.entity_description.data_zero_icon and not self._attr_state:
+            result = self.entity_description.data_zero_icon
+        elif self.entity_description.icon_internal:
+            result = getattr(self._device, self.entity_description.icon_internal)
+
+        return result
 
     async def async_update(self) -> None:
         """Read holding register."""

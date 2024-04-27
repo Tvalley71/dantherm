@@ -133,17 +133,18 @@ class Device:
             _LOGGER.error("Modbus setup was unsuccessful")
             raise ValueError("Modbus setup was unsuccessful")
 
-        self._device_installed_components = await self.read_holding_registers(
-            address=610, count=2
-        )
-        _LOGGER.debug(  # I may like to know these values on installs with other units
-            "Installed components (610) = %s", hex(self._device_installed_components)
-        )
-        self._device_installed_components = await self.read_holding_registers(address=2)
+        self._device_installed_components = await self._read_holding_uint16(2)
         _LOGGER.debug(
-            "Installed components (2) = %s", hex(self._device_installed_components)
+            "Installed components (2) = %s",
+            hex(self._device_installed_components),
         )
-        self._device_type = await self.read_holding_registers(address=3)
+        self._device_installed_components = await self._read_holding_uint16(610)
+        _LOGGER.debug(
+            "Installed components (610) = %s",
+            hex(self._device_installed_components),
+        )
+
+        self._device_type = await self._read_holding_uint8(address=3)
         _LOGGER.debug("Device type = %s", self.get_device_type)
         self._device_fw_version = await self.read_holding_registers(address=24)
         _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
@@ -195,11 +196,18 @@ class Device:
         if not self._entities:
             return
 
+        _LOGGER.debug(
+            "Installed components = %s", hex(self._device_installed_components)
+        )
+
         self._current_unit_mode = await self._read_holding_uint32(472)
+        _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
 
         self._active_unit_mode = await self._read_holding_uint32(168)
+        _LOGGER.debug("Active unit mode = %s", hex(self._active_unit_mode))
 
         self._fan_level = await self._read_holding_uint32(324)
+        _LOGGER.debug("Fan level = %s", self._fan_level)
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -246,13 +254,26 @@ class Device:
             return 3
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
-        return 0
+        return 2  # manual
 
     @property
     def get_fan_level(self):
-        """Get current unit mode."""
+        """Get current fan level."""
 
         return self._fan_level
+
+    @property
+    def get_fan_icon(self) -> str:
+        """Get current fan icon."""
+
+        result = self.get_op_selection
+        if result == 0:
+            return "mdi:fan-off"
+        if result == 1:
+            return "mdi:fan-auto"
+        if result == 3:
+            return "mdi:fan-clock"
+        return "mdi:fan"
 
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
@@ -322,6 +343,7 @@ class Device:
             elif count == 4:
                 result = decoder.decode_64bit_uint()
         result *= scale
+        _LOGGER.debug("Reading holding register=%s result=%s", str(address), result)
         return result
 
     async def write_holding_registers(
@@ -429,7 +451,7 @@ class Device:
         await self._write_holding_registers(address, payload)
 
     async def _read_holding_uint8(self, address):
-        """Read holding int8 registers."""
+        """Read holding uint8 registers."""
 
         result = await self._read_holding_registers(address, 1)
         decoder = BinaryPayloadDecoder.fromRegisters(
@@ -514,7 +536,7 @@ class Device:
         await self._write_holding_registers(address, payload)
 
     async def _read_holding_float32(self, address, precision):
-        """Read holding int registers."""
+        """Read holding float32 registers."""
 
         result = await self._read_holding_registers(address, 2)
         decoder = BinaryPayloadDecoder.fromRegisters(

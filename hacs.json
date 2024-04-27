@@ -1,5 +1,7 @@
 {
   "name": "Dantherm",
+  "zip_release": true,
   "render_readme": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "filename": "dantherm.zip"
 }
