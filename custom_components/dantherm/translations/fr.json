@@ -118,9 +118,7 @@
       "extract_temperature": { "name": "Température extraction" },
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
-      "filter_remain": { "name": "Durée restante filtre" },
-      "current_unit_mode": { "name": "Mode actuel" },
-      "active_unit_mode": { "name": "Mode actif" }
+      "filter_remain": { "name": "Durée restante filtre" }
     }
   },
   "switch": {
