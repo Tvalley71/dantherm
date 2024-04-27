@@ -248,7 +248,7 @@ SELECT_TYPES: dict[str, list[DanthermSelectEntityDescription]] = {
         data_address=466,
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        # component_class=ComponentClass.Week,
+        component_class=ComponentClass.Week,
     ),
 }
 
@@ -297,18 +297,18 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        # component_class=ComponentClass.RH_Senser,
+        component_class=ComponentClass.RH_Senser,
     ),
-    # "air_quality": DanthermSensorEntityDescription( # left out for now
-    #     key="air_quality",
-    #     data_address=430,
-    #     data_exclude_if=0,
-    #     data_class=DataClass.UInt32,
-    #     native_unit_of_measurement="ppm",
-    #     device_class=SensorDeviceClass.AQI,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     # component_class=ComponentClass.VOC_sensor
-    # ),
+    "air_quality": DanthermSensorEntityDescription(  # left out for now
+        key="air_quality",
+        data_address=430,
+        data_exclude_if=0,
+        data_class=DataClass.UInt32,
+        native_unit_of_measurement="ppm",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.VOC_sensor,
+    ),
     "exhaust_temperature": DanthermSensorEntityDescription(
         key="exhaust_temperature",
         data_class=DataClass.Float32,

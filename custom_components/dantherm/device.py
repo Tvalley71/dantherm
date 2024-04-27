@@ -133,17 +133,18 @@ class Device:
             _LOGGER.error("Modbus setup was unsuccessful")
             raise ValueError("Modbus setup was unsuccessful")
 
-        self._device_installed_components = await self.read_holding_registers(
-            address=610, count=2
-        )
-        _LOGGER.debug(  # I may like to know these values on installs with other units
-            "Installed components (610) = %s", hex(self._device_installed_components)
-        )
-        self._device_installed_components = await self.read_holding_registers(address=2)
+        self._device_installed_components = await self._read_holding_uint16(2)
         _LOGGER.debug(
-            "Installed components (2) = %s", hex(self._device_installed_components)
+            "Installed components (2) = %s",
+            hex(self._device_installed_components),
         )
-        self._device_type = await self.read_holding_registers(address=3)
+        self._device_installed_components = await self._read_holding_uint16(610)
+        _LOGGER.debug(
+            "Installed components (610) = %s",
+            hex(self._device_installed_components),
+        )
+
+        self._device_type = await self._read_holding_uint8(address=3)
         _LOGGER.debug("Device type = %s", self.get_device_type)
         self._device_fw_version = await self.read_holding_registers(address=24)
         _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
@@ -194,6 +195,10 @@ class Device:
 
         if not self._entities:
             return
+
+        _LOGGER.debug(
+            "Installed components = %s", hex(self._device_installed_components)
+        )
 
         self._current_unit_mode = await self._read_holding_uint32(472)
         _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
