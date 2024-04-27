@@ -118,9 +118,7 @@
       "extract_temperature": { "name": "Udsugningstemperatur" },
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
-      "filter_remain": { "name": "Filter tilbage" },
-      "current_unit_mode": { "name": "Aktuel enhedstilstand" },
-      "active_unit_mode": { "name": "Aktiv enhedstilstand" }
+      "filter_remain": { "name": "Filter tilbage" }
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },

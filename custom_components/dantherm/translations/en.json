@@ -118,9 +118,7 @@
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
-      "filter_remain": { "name": "Filter Ramain" },
-      "current_unit_mode": { "name": "Current Unit Mode" },
-      "active_unit_mode": { "name": "Active Unit Mode" }
+      "filter_remain": { "name": "Filter Ramain" }
     }
   },
   "switch": {
