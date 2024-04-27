@@ -50,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Assign the HA configured log level of this module to the dantherm module
     this_logger: logging.Logger = logging.getLogger(__name__)
-    aiovantage_logger: logging.Logger = logging.getLogger(DOMAIN)
+    dantherm_logger: logging.Logger = logging.getLogger(DOMAIN)
     log_level: int = this_logger.getEffectiveLevel()
-    aiovantage_logger.setLevel(log_level)
+    dantherm_logger.setLevel(log_level)
     this_logger.info("Logging at level: {log_level}")
 
     hass.data.setdefault(DOMAIN, {})
