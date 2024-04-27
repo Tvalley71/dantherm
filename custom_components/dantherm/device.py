@@ -196,10 +196,13 @@ class Device:
             return
 
         self._current_unit_mode = await self._read_holding_uint32(472)
+        _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
 
         self._active_unit_mode = await self._read_holding_uint32(168)
+        _LOGGER.debug("Active unit mode = %s", hex(self._active_unit_mode))
 
         self._fan_level = await self._read_holding_uint32(324)
+        _LOGGER.debug("Fan level = %s", self._fan_level)
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -335,6 +338,7 @@ class Device:
             elif count == 4:
                 result = decoder.decode_64bit_uint()
         result *= scale
+        _LOGGER.debug("Reading holding register=%s result=%s", str(address), result)
         return result
 
     async def write_holding_registers(
