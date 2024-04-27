@@ -20,31 +20,25 @@ jobs:
         id: version
         uses: home-assistant/actions/helpers/version@master
 
-      - name: ℹ️ Get integration information
-        id: information
-        run: |
-          name=$(find custom_components/ -maxdepth 1 -type d | tail -n 1 | cut -d "/" -f2) \
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-
       - name: 🖊️ Set version number
         run: |
           jq '.version = "${{ steps.version.outputs.version }}"' \
-            "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json" > tmp \
-            && mv -f tmp "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json"
+            "${{ github.workspace }}/custom_components/dantherm/manifest.json" > tmp \
+            && mv -f tmp "${{ github.workspace }}/custom_components/dantherm/manifest.json"
 
       - name: 👀 Validate data
         run: |
-          manifestversion=$(jq -r '.version' ${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json)
+          manifestversion=$(jq -r '.version' ${{ github.workspace }}/custom_components/dantherm/manifest.json)
           if [ "$manifestversion" != "${{ steps.version.outputs.version }}" ]; then
-            echo "The version in custom_components/${{ steps.information.outputs.name }}/manifest.json was not correct"
+            echo "The version in custom_components/dantherm/manifest.json was not correct"
             echo "$manifestversion"
             exit 1
           fi
 
       - name: 📦 Create zip file for the integration
         run: |
-          cd "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}"
-          zip ${{ steps.information.outputs.name }}.zip -r ./
+          cd "${{ github.workspace }}/custom_components/dantherm"
+          zip dantherm.zip -r ./
 
       - name: 📤 Upload the zip file as a release asset
         uses: actions/upload-release-asset@v1
@@ -52,6 +46,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/${{ steps.information.outputs.name }}.zip"
-          asset_name: ${{ steps.information.outputs.name }}.zip
+          asset_path: "${{ github.workspace }}/custom_components/dantherm/dantherm.zip"
+          asset_name: dantherm.zip
           asset_content_type: application/zip
