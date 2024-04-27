@@ -1,21 +1,13 @@
 {
   "domain": "dantherm",
   "name": "Dantherm",
-  "codeowners": [
-    "@Tvalley71"
-  ],
+  "codeowners": ["@Tvalley71"],
   "config_flow": true,
-  "dependencies": [
-    "modbus"
-  ],
+  "dependencies": ["modbus"],
   "documentation": "https://github.com/Tvalley71/dantherm",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Tvalley71/dantherm/issues",
-  "loggers": [
-    "custom_components.dantherm"
-  ],
-  "requirements": [
-    "pymodbus>=3.5.1"
-  ],
-  "version": "0.1.0"
+  "loggers": ["custom_components.dantherm"],
+  "requirements": ["pymodbus>=3.5.1"],
+  "version": "0.0.0"
 }
