@@ -1,7 +1,6 @@
-# This GitHub action workflow is ment to be copyable to any repo that have the same structure.
-# - Your integration exsist under custom_components/{INTEGRATION_NAME}/[integration files]
+# This GitHub action workflow is meant to be copyable to any repo that have the same structure.
+# - Your integration exist under custom_components/{INTEGRATION_NAME}/[integration files]
 # - You are using GitHub releases to publish new versions
-# - You have a INTEGRATION_VERSION constant in custom_components/{INTEGRATION_NAME}/const.py
 
 name: Release Workflow
 
@@ -15,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: 🔢 Get release version
         id: version
@@ -27,11 +26,27 @@ jobs:
           name=$(find custom_components/ -type d -maxdepth 1 | tail -n 1 | cut -d "/" -f2)
           echo "::set-output name=name::$name"
 
+      - name: 🖊️ Set version number
+        run: |
+          jq '.version = "${{ steps.version.outputs.version }}"' \
+            "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json" > tmp \
+            && mv -f tmp "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json"
+
+      - name: 👀 Validate data
+        run: |
+          manifestversion=$(jq -r '.version' ${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/manifest.json)
+          if [ "$manifestversion" != "${{ steps.version.outputs.version }}" ]; then
+            echo "The version in custom_components/${{ steps.information.outputs.name }}/manifest.json was not correct"
+            echo "$manifestversion"
+            exit 1
+          fi
+
       - name: 📦 Create zip file for the integration
         run: |
           cd "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}"
           zip ${{ steps.information.outputs.name }}.zip -r ./
-      - name: 📤 Upload the zipfile as a release asset
+
+      - name: 📤 Upload the zip file as a release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
