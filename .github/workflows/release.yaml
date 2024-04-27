@@ -40,12 +40,12 @@ jobs:
           cd "${{ github.workspace }}/custom_components/dantherm"
           zip dantherm.zip -r ./
 
-#      - name: 📤 Upload the zip file as a release asset
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ github.event.release.upload_url }}
-#          asset_path: "${{ github.workspace }}/custom_components/dantherm/dantherm.zip"
-#          asset_name: dantherm.zip
-#          asset_content_type: application/zip
+      - name: 📤 Upload the zip file as a release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: "${{ github.workspace }}/custom_components/dantherm/dantherm.zip"
+          asset_name: dantherm.zip
+          asset_content_type: application/zip
