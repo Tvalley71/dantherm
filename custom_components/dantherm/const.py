@@ -248,6 +248,7 @@ SELECT_TYPES: dict[str, list[DanthermSelectEntityDescription]] = {
         data_address=466,
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        # component_class=ComponentClass.Week,
     ),
 }
 
