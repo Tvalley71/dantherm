@@ -1,7 +1,7 @@
 {
-  "codeowners": ["Tvalley71"],
+  "codeowners": ["@Tvalley71"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["modbus"],
   "documentation": "https://github.com/Tvalley71/dantherm",
   "issue_tracker": "https://github.com/Tvalley71/dantherm/issues",
   "domain": "dantherm",
