@@ -24,7 +24,7 @@ jobs:
         id: information
         run: |
           name=$(find custom_components/ -maxdepth 1 -type d | tail -n 1 | cut -d "/" -f2)
-          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> $GITHUB_OUTPUT
 
       - name: 🖊️ Set version number
         run: |
