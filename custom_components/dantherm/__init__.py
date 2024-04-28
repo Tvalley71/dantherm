@@ -31,7 +31,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
-    # "button", "cover", # left out for now
+    "button",
+    "cover",
     "number",
     "select",
     "sensor",
@@ -47,13 +48,6 @@ async def async_setup(hass: HomeAssistant, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the Dantherm device."""
-
-    # Assign the HA configured log level of this module to the dantherm module
-    this_logger: logging.Logger = logging.getLogger(__name__)
-    dantherm_logger: logging.Logger = logging.getLogger(DOMAIN)
-    log_level: int = this_logger.getEffectiveLevel()
-    dantherm_logger.setLevel(log_level)
-    this_logger.info("Logging at level: {log_level}")
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data

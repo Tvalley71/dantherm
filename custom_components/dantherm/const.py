@@ -260,7 +260,7 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
     "alarm": DanthermSensorEntityDescription(
         key="alarm",
         icon="mdi:alert-circle-outline",
-        data_address=516,
+        data_getinternal="get_alarm",
         data_zero_icon="mdi:alert-circle-check-outline",
     ),
     "fan_level": DanthermSensorEntityDescription(

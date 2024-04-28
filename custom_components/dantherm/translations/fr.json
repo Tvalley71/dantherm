@@ -42,7 +42,7 @@
       "fan_level_selection": {
         "name": "Vitesse ventilation",
         "state": {
-          "0": "Arrêt",
+          "0": "Niveau 0",
           "1": "Niveau 1",
           "2": "Niveau 2",
           "3": "Niveau 3",
