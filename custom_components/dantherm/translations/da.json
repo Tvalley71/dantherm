@@ -42,11 +42,11 @@
       "fan_level_selection": {
         "name": "Ventilatorindstilling",
         "state": {
-          "0": "Hastighed 0",
-          "1": "Hastighed 1",
-          "2": "Hastighed 2",
-          "3": "Hastighed 3",
-          "4": "Hastighed 4"
+          "0": "Niveau 0",
+          "1": "Niveau 1",
+          "2": "Niveau 2",
+          "3": "Niveau 3",
+          "4": "Niveau 4"
         }
       },
       "week_program_selection": {
