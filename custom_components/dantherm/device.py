@@ -134,11 +134,6 @@ class Device:
             _LOGGER.error("Modbus setup was unsuccessful")
             raise ValueError("Modbus setup was unsuccessful")
 
-        self._device_installed_components = await self._read_holding_uint16(2)
-        _LOGGER.debug(
-            "Installed components (2) = %s",
-            hex(self._device_installed_components),
-        )
         self._device_installed_components = await self._read_holding_uint16(610)
         _LOGGER.debug(
             "Installed components (610) = %s",
