@@ -7,6 +7,7 @@ import logging
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
 
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.modbus import modbus
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -134,7 +135,11 @@ class Device:
             _LOGGER.error("Modbus setup was unsuccessful")
             raise ValueError("Modbus setup was unsuccessful")
 
-        self._device_installed_components = await self._read_holding_uint16(610)
+        result = await self._read_holding_uint16(610)
+        if result is None:
+            raise ValueError("Dantherm unit probably not responding")
+
+        self._device_installed_components = result
         _LOGGER.debug(
             "Installed components (610) = %s",
             hex(self._device_installed_components),
@@ -304,6 +309,14 @@ class Device:
 
         await self._write_holding_uint32(324, value)
 
+    async def set_bypass_damper(self, feature: CoverEntityFeature = None):
+        """Set bypass damper."""
+
+        if self.get_active_unit_mode & 0x80 == 0x80:
+            await self.set_active_unit_mode(0x8080)
+        else:
+            await self.set_active_unit_mode(0x80)
+
     async def read_holding_registers(
         self,
         description: EntityDescription | None = None,
@@ -421,7 +434,7 @@ class Device:
             self._unit_id, address, count, "holding"
         )
         if result is None:
-            _LOGGER.log(
+            _LOGGER.error(
                 "Error reading holding register=%s count=%s", str(address), str(count)
             )
         return result
@@ -436,7 +449,7 @@ class Device:
             "write_registers",
         )
         if result is None:
-            _LOGGER.log(
+            _LOGGER.error(
                 "Error writing holding register=%s values=%s", str(address), str(values)
             )
 
@@ -495,6 +508,8 @@ class Device:
         """Read holding uint16 registers."""
 
         result = await self._read_holding_registers(address, 1)
+        if result is None:
+            return None
         decoder = BinaryPayloadDecoder.fromRegisters(
             result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
         )

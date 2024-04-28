@@ -5,7 +5,11 @@ from enum import Enum
 from typing import Any
 
 from homeassistant.components.button import ButtonEntityDescription
-from homeassistant.components.cover import CoverDeviceClass, CoverEntityDescription
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntityDescription,
+    CoverEntityFeature,
+)
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntityDescription,
@@ -95,7 +99,9 @@ class DanthermButtonEntityDescription(ButtonEntityDescription):
 class DanthermCoverEntityDescription(CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
+    supported_features: CoverEntityFeature | None = None
     data_setaddress: int | None = None
+    data_setinternal: str | None = None
     data_setclass: DataClass | None = None
     state_open: int = None
     state_close: int = None
@@ -201,10 +207,8 @@ BUTTON_TYPES: dict[str, list[DanthermButtonEntityDescription]] = {
 COVER_TYPES: dict[str, list[DanthermCoverEntityDescription]] = {
     "bypass_damper": DanthermCoverEntityDescription(
         key="bypass_damper",
-        data_setaddress=168,
-        data_setclass=DataClass.UInt16,
-        state_open=0x0080,
-        state_close=0x8080,
+        supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        data_setinternal="set_bypass_damper",
         data_address=198,
         data_class=DataClass.UInt16,
         state_opening=64,
