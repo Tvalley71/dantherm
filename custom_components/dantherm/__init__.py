@@ -31,7 +31,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
-    # "button", "cover", # left out for now
+    "button",
+    "cover",
     "number",
     "select",
     "sensor",
