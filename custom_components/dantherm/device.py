@@ -110,6 +110,7 @@ class Device:
         self._current_unit_mode = 0
         self._active_unit_mode = 0
         self._fan_level = 0
+        self._alarm = 0
         self._entities = []
         self.data = {}
 
@@ -209,6 +210,9 @@ class Device:
         self._fan_level = await self._read_holding_uint32(324)
         _LOGGER.debug("Fan level = %s", self._fan_level)
 
+        self._alarm = await self._read_holding_uint32(516)
+        _LOGGER.debug("Alarm = %s", self._alarm)
+
         for entity in self._entities:
             await self.async_refresh_entity(entity)
 
@@ -266,6 +270,8 @@ class Device:
     def get_fan_icon(self) -> str:
         """Get current fan icon."""
 
+        if self._alarm != 0:
+            return "mdi:fan-alert"
         result = self.get_op_selection
         if result == 0:
             return "mdi:fan-off"
@@ -274,6 +280,12 @@ class Device:
         if result == 3:
             return "mdi:fan-clock"
         return "mdi:fan"
+
+    @property
+    def get_alarm(self):
+        """Get alarm."""
+
+        return self._alarm
 
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
