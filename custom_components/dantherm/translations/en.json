@@ -119,6 +119,134 @@
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "filter_remain": { "name": "Filter Ramain" }
+    }{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Dantherm modbus-connection",
+        "data": {
+          "host": "Enter ip-address of your Dantherm unit",
+          "name": "Enter prefix for the device entities",
+          "port": "Enter TCP port on which to connect to the device",
+          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "button": {
+      "filter_reset": { "name": "Reset Filter" },
+      "alarm_reset": { "name": "Reset Alarm" }
+    },
+    "cover": {
+      "bypass_damper": { "name": "Bypass Damper" }
+    },
+    "number": {
+      "filter_lifetime": { "name": "Filter Lifetime" }
+    },
+    "select": {
+      "operation_selection": {
+        "name": "Operation Selection",
+        "state": {
+          "0": "Standby",
+          "1": "Automatic",
+          "2": "Manual",
+          "3": "Week Program"
+        }
+      },
+      "fan_level_selection": {
+        "name": "Fan Selection",
+        "state": {
+          "0": "Level 0",
+          "1": "Level 1",
+          "2": "Level 2",
+          "3": "Level 3",
+          "4": "Level 4"
+        }
+      },
+      "week_program_selection": {
+        "name": "Week Program",
+        "state": {
+          "0": "Week Program 1",
+          "1": "Week Program 2",
+          "2": "Week Program 3",
+          "3": "Week Program 4",
+          "4": "Week Program 5",
+          "5": "Week Program 6",
+          "6": "Week Program 7",
+          "7": "Week Program 8",
+          "8": "Week Program 9",
+          "9": "Week Program 10"
+        }
+      }
+    },
+    "sensor": {
+      "operation_mode": {
+        "name": "Operation Mode",
+        "state": {
+          "0": "Standby",
+          "1": "Manual Mode",
+          "2": "Automatic Mode",
+          "3": "Weekprogram Mode",
+          "4": "Servoflow",
+          "5": "Away Mode",
+          "6": "Summer Mode",
+          "7": "DI Override",
+          "8": "Hygrostat override",
+          "9": "Fireplace Mode",
+          "10": "Installer Mode",
+          "11": "Fail Safe 1",
+          "12": "Fail Safe 2",
+          "13": "Fail Off",
+          "14": "Defrost Off",
+          "15": "Defrost",
+          "16": "Night Mode"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "0": "None",
+          "1": "Exhaust FAN Alarm",
+          "2": "Supply FAN Alarm",
+          "3": "Bypass Alarm",
+          "4": "T1 Alarm",
+          "5": "T2 Alarm",
+          "6": "T3 Alarm",
+          "7": "T4 Alarm",
+          "8": "T5 Alarm",
+          "9": "RH Alarm",
+          "10": "Outdoor13 Alarm",
+          "11": "Supply5 Alarm",
+          "12": "Fire Alarm",
+          "13": "Comminication Alarm",
+          "14": "Fire Termostat Alarm",
+          "15": "High Waterlevel Alarm"
+        }
+      },
+      "fan_level": { "name": "Fan Level" },
+      "fan1_speed": { "name": "Fan Speed 1" },
+      "fan2_speed": { "name": "Fan Speed 2" },
+      "humidity": { "name": "Humidity" },
+      "air_quality": { "name": "Air Quality" },
+      "exhaust_temperature": { "name": "Exhaust Temperature" },
+      "extract_temperature": { "name": "Extract Temperature" },
+      "supply_temperature": { "name": "Supply Temperature" },
+      "outdoor_temperature": { "name": "Outdoor Temperature" },
+      "filter_remain": { "name": "Filter Ramain" }
+    },
+    "switch": {
+      "away_mode": { "name": "Away Mode" },
+      "night_mode": { "name": "Night Mode" },
+      "fireplace_mode": { "name": "Fireplace Mode" },
+      "manual_bypass_mode": { "name": "Manual Bypass Mode" },
+      "summer_mode": { "name": "Summer Mode" }
+    }    
   }
 }
