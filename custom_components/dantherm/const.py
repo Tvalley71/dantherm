@@ -412,7 +412,7 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
         state_suspend_for=30,
         state_on=0x800,
         icon_on="mdi:emoticon-cool-outline",
-        state_off=8800,
+        state_off=0x8800,
         icon_off="mdi:power-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
