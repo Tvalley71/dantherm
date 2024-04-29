@@ -120,7 +120,7 @@
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "filter_remain": { "name": "Filter Ramain" }
     }
-  },
+  }
 #  "switch":
 #  {
 #    "away_mode": { "name": "Away Mode"},
