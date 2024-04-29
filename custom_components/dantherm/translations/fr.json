@@ -119,13 +119,13 @@
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
       "filter_remain": { "name": "Durée restante filtre" }
+    },
+    "switch": {
+      "away_mode": { "name": "Mode absent" },
+      "night_mode": { "name": "Mode nuit" },
+      "fireplace_mode": { "name": "Mode démarrage cheminée" },
+      "manual_bypass_mode": { "name": "Mode bypass manuel" },
+      "summer_mode": { "name": "Mode été" }
     }
-  },
-  "switch": {
-    "away_mode": { "name": "Mode absent" },
-    "night_mode": { "name": "Mode nuit" },
-    "fireplace_mode": { "name": "Mode démarrage cheminée" },
-    "manual_bypass_mode": { "name": "Mode bypass manuel" },
-    "summer_mode": { "name": "Mode été" }
   }
 }
