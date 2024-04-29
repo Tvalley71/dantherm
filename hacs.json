@@ -1,7 +1,8 @@
 {
   "name": "Dantherm",
   "zip_release": true,
+  "hide_default_branch": true,
   "filename": "dantherm.zip",
   "render_readme": true,
-  "iot_class": "local_polling"
+  "content_in_root": false
 }

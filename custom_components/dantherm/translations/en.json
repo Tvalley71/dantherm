@@ -119,13 +119,13 @@
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "filter_remain": { "name": "Filter Ramain" }
-    }
-  },
-  "switch": {
-    "away_mode": { "name": "Away Mode" },
-    "night_mode": { "name": "Night Mode" },
-    "fireplace_mode": { "name": "Fireplace Mode" },
-    "manual_bypass_mode": { "name": "Manual Bypass Mode" },
-    "summer_mode": { "name": "Summer Mode" }
+    },
+    "switch": {
+      "away_mode": { "name": "Away Mode" },
+      "night_mode": { "name": "Night Mode" },
+      "fireplace_mode": { "name": "Fireplace Mode" },
+      "manual_bypass_mode": { "name": "Manual Bypass Mode" },
+      "summer_mode": { "name": "Summer Mode" }
+    }    
   }
 }
