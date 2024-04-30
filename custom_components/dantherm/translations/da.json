@@ -75,7 +75,7 @@
           "3": "Ugeprogram tilstand",
           "4": "Servoflow",
           "5": "Bortrejst tilstand",
-          "6": "Sommer tilstand",
+          "6": "Sommertilstand",
           "7": "DI tilsidesættelse",
           "8": "Hygrostat tilsidesættelse",
           "9": "Brændeovnstilstand",
@@ -125,7 +125,7 @@
       "night_mode": { "name": "Nattilstand" },
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
-      "summer_mode": { "name": "Summer tilstand" }
+      "summer_mode": { "name": "Sommertilstand" }
     }
   }
 }
