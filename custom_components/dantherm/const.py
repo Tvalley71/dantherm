@@ -124,9 +124,11 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
     """Dantherm Number Entity Description."""
 
     data_setaddress: int | None = None
+    data_setinternal: str | None = None
     data_setclass: DataClass | None = None
 
     data_address: int | None = None
+    data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
     data_class: DataClass = DataClass.UInt16
@@ -224,8 +226,8 @@ COVER_TYPES: dict[str, list[DanthermCoverEntityDescription]] = {
 NUMBER_TYPES: dict[str, list[DanthermNumberEntityDescription]] = {
     "filter_lifetime": DanthermNumberEntityDescription(
         key="filter_lifetime",
-        data_class=DataClass.UInt32,
-        data_address=556,
+        data_setinternal="set_filter_lifetime",
+        data_getinternal="get_filter_lifetime",
         native_max_value=360,
         native_min_value=0,
         device_class=NumberDeviceClass.DURATION,
@@ -351,8 +353,7 @@ SENSOR_TYPES: dict[str, list[DanthermSensorEntityDescription]] = {
     ),
     "filter_remain": DanthermSensorEntityDescription(
         key="filter_remain",
-        data_class=DataClass.UInt32,
-        data_address=554,
+        data_getinternal="get_filter_remain",
         native_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -412,7 +413,7 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
         state_suspend_for=30,
         state_on=0x800,
         icon_on="mdi:emoticon-cool-outline",
-        state_off=8800,
+        state_off=0x8800,
         icon_off="mdi:power-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
