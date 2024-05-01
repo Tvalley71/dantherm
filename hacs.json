@@ -1,7 +1,7 @@
 {
   "name": "Dantherm",
   "zip_release": true,
-  "hide_default_branch": true,
+  "hide_default_branch": false,
   "filename": "dantherm.zip",
   "render_readme": true,
   "content_in_root": false
