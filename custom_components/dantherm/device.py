@@ -112,6 +112,8 @@ class Device:
         self._active_unit_mode = 0
         self._fan_level = 0
         self._alarm = 0
+        self._filter_lifetime = 0
+        self._filter_remain = 0
         self._entities = []
         self.data = {}
 
@@ -213,6 +215,12 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
+        self._filter_lifetime = await self._read_holding_uint32(556)
+        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+
+        self._filter_remain = await self._read_holding_uint32(554)
+        _LOGGER.debug("Filter remain = %s", self._filter_remain)
+
         for entity in self._entities:
             await self.async_refresh_entity(entity)
 
@@ -287,6 +295,26 @@ class Device:
 
         return self._alarm
 
+    @property
+    def get_filter_lifetime(self):
+        """Get filter lifetime."""
+
+        return self._filter_lifetime
+
+    @property
+    def get_filter_remain(self):
+        """Get filter remain."""
+
+        return self._filter_remain
+
+    @property
+    def get_filter_remain_attrs(self):
+        """Get filter remain attributes."""
+
+        if not self._filter_lifetime:
+            return None
+        return {"level": int(self._filter_remain / (self._filter_lifetime / 4))}
+
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
 
@@ -308,6 +336,11 @@ class Device:
         """Set fan level."""
 
         await self._write_holding_uint32(324, value)
+
+    async def set_filter_lifetime(self, value):
+        """Set filter lifetime."""
+
+        await self._write_holding_uint32(556, value)
 
     async def set_bypass_damper(self, feature: CoverEntityFeature = None):
         """Set bypass damper."""

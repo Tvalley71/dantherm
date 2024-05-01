@@ -60,6 +60,13 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         """Read holding register."""
 
         if self.entity_description.data_getinternal:
+            if hasattr(
+                self._device, f"{self.entity_description.data_getinternal}_attrs"
+            ):
+                self._attr_extra_state_attributes = getattr(
+                    self._device,
+                    f"{self.entity_description.data_getinternal}_attrs",
+                )
             result = getattr(self._device, self.entity_description.data_getinternal)
         elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)

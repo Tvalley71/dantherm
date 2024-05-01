@@ -47,12 +47,27 @@ class DanthermNumber(NumberEntity, DanthermEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Update the current value."""
 
-        await self._device.write_holding_registers(description=self.entity_description)
+        if self.entity_description.data_setinternal:
+            await getattr(self._device, self.entity_description.data_setinternal)(value)
+        else:
+            await self._device.write_holding_registers(
+                description=self.entity_description
+            )
 
     async def async_update(self) -> None:
         """Read holding register."""
 
-        result = await self._device.read_holding_registers(
-            description=self.entity_description
-        )
+        if self.entity_description.data_getinternal:
+            if hasattr(
+                self._device, f"{self.entity_description.data_getinternal}_attrs"
+            ):
+                self._attr_extra_state_attributes = getattr(
+                    self._device,
+                    f"{self.entity_description.data_getinternal}_attrs",
+                )
+            result = getattr(self._device, self.entity_description.data_getinternal)
+        else:
+            result = await self._device.read_holding_registers(
+                description=self.entity_description
+            )
         self._device.data[self.key] = result
