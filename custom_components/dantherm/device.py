@@ -151,9 +151,7 @@ class Device:
         _LOGGER.debug("Device type = %s", self.get_device_type)
         self._device_fw_version = await self.read_holding_registers(address=24)
         _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
-        self._device_serial_number = await self.read_holding_registers(
-            address=7, count=2
-        )
+        self._device_serial_number = await self._read_holding_uint64(address=4)
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
     async def async_install_entity(self, description: EntityDescription) -> bool:
@@ -378,6 +376,8 @@ class Device:
                 result = await self._read_holding_uint32(address)
             elif description.data_class == DataClass.Int32:
                 result = await self._read_holding_int32(address)
+            elif description.data_class == DataClass.UInt64:
+                result = await self._read_holding_uint64(address)
             elif description.data_class == DataClass.Float32:
                 if not precision:
                     precision = description.data_precision
@@ -589,6 +589,15 @@ class Device:
         builder.add_32bit_uint(int(value))
         payload = builder.to_registers()
         await self._write_holding_registers(address, payload)
+
+    async def _read_holding_uint64(self, address):
+        """Read holding uint64 registers."""
+
+        result = await self._read_holding_registers(address, 4)
+        decoder = BinaryPayloadDecoder.fromRegisters(
+            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+        )
+        return decoder.decode_64bit_uint()
 
     async def _read_holding_float32(self, address, precision):
         """Read holding float32 registers."""
