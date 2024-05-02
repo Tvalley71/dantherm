@@ -1,43 +1,59 @@
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
-[![License][license-shield]][license]
+# Dantherm 
+Home Assistant integration for Dantherm ventilation units
 
-[![hacs][hacsbadge]][hacs]
-[![Project Maintenance][maintenance-shield]][user_profile]
+Currently only support for Modbus over TCP/IP.
 
-Platform | Description
-:---: | :---
-Select | Operation mode
-Select | Fan level
-Select | Week program[^1]
-Cover | Bypass damper[^1]
-Number | Filter lifetime
-Sensor | Operation mode
-Sensor | Alarm
-Sensor | Fan level
-Sensor | Fan speed 1[^2]
-Sensor | Fan speed 2[^2]
-Sensor | Humidity[^1][^3]
-Sensor | Air quality[^1][^3]
-Sensor | Exhaust temperature
-Sensor | Extract temperature
-Sensor | Supply temperature
-Sensor | Outdoor temperature
-Sensor | Filter ramaining time
-Switch | Away mode
-Switch | Night mode
-Switch | Fireplace mode
-Switch | Manual bypass mode[^1]
-Switch | Summer mode
+Known supported devices:
+* HCV400 P2
+* RCV320
 
-[^1] The installation of the entity relies on the support or installation within the specific ventilation unit.
+> [!NOTE]
+> The listed devices have been tested with the integration.
+> Please don't hesitate to contact me if you're aware of supported devices not included in the list.
 
-[^2] Fan speeds 1 and 2 is the fan speed for either the extract or supply side of the heat exchanger, with the specific side varying across the different models.
+### Controls and sensors
 
-[^3] The humidity and air quality is measured in the extract side of the unit.
+key | description
+:--- | :---
+operation_selection | Mode of operation selection
+fan_level_selection | Fan level selection
+week_program_selection | Week program selection[^1]
+bypass_damper | Bypass damper cover[^1]
+filter_lifetime | Input filter lifetime box
+operation_mode | Operation mode sensor
+alarm | Alarm sensor
+fan_level | Fan level sensor
+fan1_speed | Fan 1 speed sensor[^2]
+fan2_speed | Fan 2 speed sensor[^2]
+humidity | Humidity sensor[^1][^3]
+air_quality | Air quality sensor[^1][^3]
+exhaust_temperature | Exhaust temperature sensor
+extract_temperature | Extract temperature sensor
+supply_temperature | Supply temperature sensor
+outdoor_temperature | Outdoor temperature sensor
+filter_remain | Remaining filter time sensor
+away_mode | Away mode switch
+night_mode | Night mode switch
+fireplace_mode | Fireplace mode switch
+manual_bypass_mode | Manual bypass mode switch[^1]
+summer_mode| Summer mode switch
 
-![Skærmbillede 2024-05-01 170232](https://github.com/Tvalley71/dantherm/assets/83084467/0f98cc7d-dbce-478c-836f-aecfe0bfb92c)[^1]
+[^1]: The entity's existence hinges upon the support or installation of the particular sensor within the unit.
+[^2]: Fan speeds 1 and 2 is the fan speed for either the extract or supply side, with the specific side varying across the different models.
+[^3]: The humidity and air quality is measured in the extract side of the unit.
 
-[^1] The serial number might be of the modbus module inside the unit, because it does not correspond to the number on the unit itself.
+![Skærmbillede 2024-05-01 170232](https://github.com/Tvalley71/dantherm/assets/83084467/0f98cc7d-dbce-478c-836f-aecfe0bfb92c)
+
+![Skærmbillede 2024-05-01 170253](https://github.com/Tvalley71/dantherm/assets/83084467/563a84f6-5158-411b-8ebb-13c68728b272)
+
+![Skærmbillede 2024-05-01 170317](https://github.com/Tvalley71/dantherm/assets/83084467/2a56a4f0-0016-4797-a0ca-f352082f716c)
+
+The bypass damper cover
+
+![Skærmbillede 2024-05-01 170504](https://github.com/Tvalley71/dantherm/assets/83084467/1997bd58-a07a-4c32-b3f2-f96c16acda69)
+
+Installation
+
+HACS
 
 
