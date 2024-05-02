@@ -35,3 +35,9 @@ Switch | Summer mode
 [^2] Fan speeds 1 and 2 is the fan speed for either the extract or supply side of the heat exchanger, with the specific side varying across the different models.
 
 [^3] The humidity and air quality is measured in the extract side of the unit.
+
+![Skærmbillede 2024-05-01 170232](https://github.com/Tvalley71/dantherm/assets/83084467/0f98cc7d-dbce-478c-836f-aecfe0bfb92c)[^1]
+
+[^1] The serial number might be of the modbus module inside the unit, because it does not correspond to the number on the unit itself.
+
+
