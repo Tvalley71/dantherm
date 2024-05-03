@@ -16,16 +16,16 @@ key | description
 :--- | :---
 operation_selection | Mode of operation selection
 fan_level_selection | Fan level selection
-week_program_selection | Week program selection[^1]
-bypass_damper | Bypass damper cover[^1]
+week_program_selection | Week program selection<sup>*<sup>
+bypass_damper | Bypass damper cover<sup>*<sup>
 filter_lifetime | Input filter lifetime box
 operation_mode | Operation mode sensor
 alarm | Alarm sensor
 fan_level | Fan level sensor
-fan1_speed | Fan 1 speed sensor[^2]
-fan2_speed | Fan 2 speed sensor[^2]
-humidity | Humidity sensor[^1][^3]
-air_quality | Air quality sensor[^1][^3]
+fan1_speed | Fan 1 speed sensor
+fan2_speed | Fan 2 speed sensor
+humidity | Humidity sensor<sup>*<sup>
+air_quality | Air quality sensor<sup>*<sup>
 exhaust_temperature | Exhaust temperature sensor
 extract_temperature | Extract temperature sensor
 supply_temperature | Supply temperature sensor
@@ -34,14 +34,12 @@ filter_remain | Remaining filter time sensor
 away_mode | Away mode switch
 night_mode | Night mode switch
 fireplace_mode | Fireplace mode switch
-manual_bypass_mode | Manual bypass mode switch[^1]
+manual_bypass_mode | Manual bypass mode switch<sup>*<sup>
 summer_mode| Summer mode switch
 filter_reset | Reset remain filter time button
 alarm_reset | Reset alarm button
 
-[^1]: The entity's existence hinges upon the support or installation of the particular sensor within the unit.
-[^2]: Fan speeds 1 and 2 is the fan speed for either the extract or supply side, with the specific side varying across the different models.
-[^3]: The humidity and air quality is measured in the extract side of the unit.
+_* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 ![Skærmbillede 2024-05-01 170232](https://github.com/Tvalley71/dantherm/assets/83084467/0f98cc7d-dbce-478c-836f-aecfe0bfb92c)
 
@@ -49,24 +47,29 @@ alarm_reset | Reset alarm button
 
 ![Skærmbillede 2024-05-01 170317](https://github.com/Tvalley71/dantherm/assets/83084467/2a56a4f0-0016-4797-a0ca-f352082f716c)
 
-The bypass damper cover
+
+#### The bypass damper cover
 
 ![Skærmbillede 2024-05-01 170504](https://github.com/Tvalley71/dantherm/assets/83084467/1997bd58-a07a-4c32-b3f2-f96c16acda69)
 
 > [!NOTE]
-> The functions of the Preheater and HAC-module are currently unsupported due to lack of testing possibilities. If these functions are desired, please contact me, and we may provide support in collaboration.
+> Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
+
 
 ### Languages
 
 Currently supported languages:
 
-Danish, English and French
+Danish, English and French.
 
 > [!NOTE]
-> Please feel free to grab one of the language files on Github [here](./custom_components/dantherm/translations) and translate it to your language and I will include .
+> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and I'll include it in future releases! 
 
-Installation
+
+### Installation
 
 HACS
+
+Tvalley71
 
 
