@@ -70,22 +70,22 @@
         "name": "Operation Mode",
         "state": {
           "0": "Standby",
-          "1": "Manual Mode",
-          "2": "Automatic Mode",
-          "3": "Weekprogram Mode",
+          "1": "Manual",
+          "2": "Automatic",
+          "3": "Week program",
           "4": "Servoflow",
-          "5": "Away Mode",
-          "6": "Summer Mode",
-          "7": "DI Override",
+          "5": "Away",
+          "6": "Summer",
+          "7": "DI override",
           "8": "Hygrostat override",
-          "9": "Fireplace Mode",
-          "10": "Installer Mode",
+          "9": "Fireplace",
+          "10": "Installer",
           "11": "Fail Safe 1",
           "12": "Fail Safe 2",
           "13": "Fail Off",
           "14": "Defrost Off",
           "15": "Defrost",
-          "16": "Night Mode"
+          "16": "Night"
         }
       },
       "alarm": {
@@ -126,6 +126,6 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" }
-    }    
+    }
   }
 }
