@@ -76,7 +76,8 @@ class DataClass(Enum):
     UInt16 = 4
     Int32 = 5
     UInt32 = 6
-    Float32 = 7
+    UInt64 = 7
+    Float32 = 8
 
 
 @dataclass
