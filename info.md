@@ -42,28 +42,58 @@ alarm_reset | Reset alarm button
 
 _* Some of the entities may not install due to lack of support or installation in the particular unit._
 
-#### Installation
-![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/164fa28f-2fd6-40dc-99fd-7f94f9cb20a5)
 
-#### Success and area assignment
+### Installation
+
+#### Installation via HACS (Home Assistant Community Store)
+
+1. Ensure you have HACS installed and configured in your Home Assistant instance.
+2. Open the HACS (Home Assistant Community Store) by navigating to **Configuration > Integrations > HACS.**
+3. Click on **Integrations** and then click the **Explore & Add Repositories** button.
+4. Search for "Dantherm" in the search bar.
+5. Locate the "Dantherm Integration" repository and click on it.
+6. Click the **Install** button.
+7. Once installed, restart your Home Assistant instance.
+
+#### Manual Installation
+
+1. Navigate to your Home Assistant configuration directory.
+* For most installations, this will be **'/config/'**.
+2. Inside the configuration directory, create a new folder named **'custom_components'** if it does not already exist.
+3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
+4. Download the latest release of the Dantherm integration from the [releases page](./custom_components/dantherm) or clone the repository into the **'custom_components/dantherm'** directory:
+
+```console
+git clone https://github.com/Tvalley71/dantherm.git custom_components/dantherm
+```
+5. Once the files are in place, restart your Home Assistant instance.
+
+### Configuration
+After installation, add the Dantherm integration to your Home Assistant configuration.
+
+1. In Home Assistant, go to **Configuration > Integrations.**
+2. Click the **+** button to add a new integration.
+3. Search for "Dantherm" and select it from the list of available integrations.
+4. Follow the on-screen instructions to complete the integration setup.
+
+![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/164fa28f-2fd6-40dc-99fd-7f94f9cb20a5)
 ![Skærmbillede 2024-05-04 090125](https://github.com/Tvalley71/dantherm/assets/83084467/dc00e751-08ce-40ca-b30b-6f60b73e9708)
 
-#### Device Info
+### Support
+If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new)
+ on this repository. We welcome contributions and feedback from the community.
+
+### Screenshots
 ![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/37ab062e-9239-4efa-b87c-7d823c576a8e)
 
-#### Controls
 ![Skærmbillede 2024-05-04 090259](https://github.com/Tvalley71/dantherm/assets/83084467/6b9fd2e8-0ab6-48c2-8d2b-293d13f39ea2)
 
-#### Sensors
 ![Skærmbillede 2024-05-04 090321](https://github.com/Tvalley71/dantherm/assets/83084467/4769978f-6f27-4768-8e58-5eb9c27ad59d)
 
-#### Bypass damper cover
 ![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/701b3ec5-98f8-4a78-bf3c-d06e1b8d7b25)
-
 
 > [!NOTE]
 > Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
-
 
 ### Languages
 
@@ -73,11 +103,6 @@ Danish, English and French.
 
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and I'll include it in future releases! 
-
-
-### Installation
-
-HACS
 
 ### Dashboard card
 
