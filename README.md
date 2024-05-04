@@ -48,8 +48,8 @@ _* Some of the entities may not install due to lack of support or installation i
 #### Installation via HACS (Home Assistant Community Store)
 
 1. Ensure you have HACS installed and configured in your Home Assistant instance.
-2. Open the HACS (Home Assistant Community Store) by navigating to **Configuration > Integrations > HACS.**
-3. Click on **Integrations** and then click the **Explore & Add Repositories** button.
+2. Open the HACS (Home Assistant Community Store) by clicking **HACS** in the side menu.
+3. Click on **Integrations** and then click the **Explore & Download Repositories** button.
 4. Search for "Dantherm" in the search bar.
 5. Locate the "Dantherm Integration" repository and click on it.
 6. Click the **Install** button.
