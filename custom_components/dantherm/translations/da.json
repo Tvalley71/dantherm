@@ -36,7 +36,7 @@
           "0": "Standby",
           "1": "Automatik",
           "2": "Manuel",
-          "3": "Ugerogram"
+          "3": "Ugeprogram"
         }
       },
       "fan_level_selection": {
@@ -52,16 +52,16 @@
       "week_program_selection": {
         "name": "Ugeprogram",
         "state": {
-          "0": "Ugerogram 1",
-          "1": "Ugerogram 2",
-          "2": "Ugerogram 3",
-          "3": "Ugerogram 4",
-          "4": "Ugerogram 5",
-          "5": "Ugerogram 6",
-          "6": "Ugerogram 7",
-          "7": "Ugerogram 8",
-          "8": "Ugerogram 9",
-          "9": "Ugerogram 10"
+          "0": "Ugeprogram 1",
+          "1": "Ugeprogram 2",
+          "2": "Ugeprogram 3",
+          "3": "Ugeprogram 4",
+          "4": "Ugeprogram 5",
+          "5": "Ugeprogram 6",
+          "6": "Ugeprogram 7",
+          "7": "Ugeprogram 8",
+          "8": "Ugeprogram 9",
+          "9": "Ugeprogram 10"
         }
       }
     },
