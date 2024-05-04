@@ -81,7 +81,7 @@ HACS
 
 ### Dashboard card
 
-This is a modified version of a dashboard card posted by @cronner on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
+This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
 
 ![Skærmbillede 2024-05-04 094821](https://github.com/Tvalley71/dantherm/assets/83084467/41410cd1-f8ae-4248-8efe-c193a54699ec)
 
