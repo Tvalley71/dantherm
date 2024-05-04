@@ -76,21 +76,22 @@ After installation, add the Dantherm integration to your Home Assistant configur
 3. Search for "Dantherm" and select it from the list of available integrations.
 4. Follow the on-screen instructions to complete the integration setup.
 
-![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/164fa28f-2fd6-40dc-99fd-7f94f9cb20a5)
-![Skærmbillede 2024-05-04 090125](https://github.com/Tvalley71/dantherm/assets/83084467/dc00e751-08ce-40ca-b30b-6f60b73e9708)
+![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/f085a769-c55c-45f1-952e-6ee8884eaad1)
+![Skærmbillede 2024-05-04 090125](https://github.com/Tvalley71/dantherm/assets/83084467/1a66e37c-3c0e-498d-995f-c2bb5c778f35)
 
 ### Support
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new)
  on this repository. I welcome contributions and feedback from the community.
 
 ### Screenshots
-![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/37ab062e-9239-4efa-b87c-7d823c576a8e)
 
-![Skærmbillede 2024-05-04 090259](https://github.com/Tvalley71/dantherm/assets/83084467/6b9fd2e8-0ab6-48c2-8d2b-293d13f39ea2)
+![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/fa9b31b6-5ec8-4c3b-a381-ef7061495560)
 
-![Skærmbillede 2024-05-04 090321](https://github.com/Tvalley71/dantherm/assets/83084467/4769978f-6f27-4768-8e58-5eb9c27ad59d)
+![Skærmbillede 2024-05-04 090259](https://github.com/Tvalley71/dantherm/assets/83084467/12caf89b-5431-4cde-8210-54c69022eb2f)
 
-![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/701b3ec5-98f8-4a78-bf3c-d06e1b8d7b25)
+![Skærmbillede 2024-05-04 090321](https://github.com/Tvalley71/dantherm/assets/83084467/ba8a8a7c-daaf-4fb0-a9cc-e5997f6e98b3)
+
+![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/7e82d596-c97d-4c5f-af01-e005f9ee352c)
 
 > [!NOTE]
 > Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
@@ -235,7 +236,7 @@ elements:
 image: /local/dantherm1.png
 ```
 #### Helper template sensor.
-![Skærmbillede 2024-05-04 094747](https://github.com/Tvalley71/dantherm/assets/83084467/f006ff96-9fd3-4b12-9b04-5d972830112c)
+![Skærmbillede 2024-05-04 094747](https://github.com/Tvalley71/dantherm/assets/83084467/49b4e3b5-e419-458d-ada8-ffc3a92e0395)
 
 </details>
 
