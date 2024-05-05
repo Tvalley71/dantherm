@@ -128,42 +128,6 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 type: picture-elements
 elements:
-  - type: conditional
-    conditions:
-      - entity: sensor.dantherm_alarm
-        state_not: '0'
-    elements:
-      - type: state-label
-        entity: sensor.dantherm_alarm
-        style:
-          top: 15%
-          left: 50%
-          width: 100%
-          font-weight: bold
-          text-align: center
-          color: white
-          background-color: red
-          opacity: 70%
-  - type: state-label
-    entity: sensor.dantherm_operation_mode
-    style:
-      top: 45%
-      left: 36%
-      font-weight: bold
-      text-align: center;
-      font-size: 100%
-  - type: state-label
-    entity: sensor.dantherm_humidity
-    style:
-      top: 29%
-      left: 48.5%
-      font-size: 125%
-  - type: state-label
-    entity: sensor.dantherm_fan_level
-    style:
-      top: 29%
-      left: 66.5%
-      font-size: 125%
   - type: image
     entity: sensor.dantherm_filter_remain_level
     state_image:
@@ -231,6 +195,42 @@ elements:
         style:
           top: 81%
           left: 78%
+  - type: conditional
+    conditions:
+      - entity: sensor.dantherm_alarm
+        state_not: '0'
+    elements:
+      - type: state-label
+        entity: sensor.dantherm_alarm
+        style:
+          top: 15%
+          left: 50%
+          width: 100%
+          font-weight: bold
+          text-align: center
+          color: white
+          background-color: red
+          opacity: 70%
+  - type: state-label
+    entity: sensor.dantherm_operation_mode
+    style:
+      top: 45%
+      left: 36%
+      font-weight: bold
+      text-align: center;
+      font-size: 100%
+  - type: state-label
+    entity: sensor.dantherm_humidity
+    style:
+      top: 29%
+      left: 48.5%
+      font-size: 125%
+  - type: state-label
+    entity: sensor.dantherm_fan_level
+    style:
+      top: 29%
+      left: 66.5%
+      font-size: 125%
 image: /local/dantherm1.png
 ```
 #### Helper template sensor.
