@@ -107,9 +107,9 @@ Danish, English and French.
 
 This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
 
-![Skærmbillede 2024-05-04 094821](https://github.com/Tvalley71/dantherm/assets/83084467/41410cd1-f8ae-4248-8efe-c193a54699ec)
+![Skærmbillede 2024-05-05 112706](https://github.com/Tvalley71/dantherm/assets/83084467/dcea2ed2-ac9e-47b8-aae3-0c6da6118224)
 
-![Skærmbillede 2024-05-04 094934](https://github.com/Tvalley71/dantherm/assets/83084467/9b8b8a14-1382-4a2e-b197-f7c7dfa2442e)
+![Skærmbillede 2024-05-05 112737](https://github.com/Tvalley71/dantherm/assets/83084467/1a0c077b-8e09-4fb2-b479-85f52a25c782)
 
 <details>
 
@@ -119,7 +119,8 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 I might consider creating a custom card based on this in the future.
 
-To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15212126/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory.
+To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15212350/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory.
+
 
 
 
@@ -185,13 +186,13 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
       entity: sensor.dantherm_humidity
       style:
         top: 29%
-        left: 48.5%
+        left: 38%
         font-size: 125%
     - type: state-label
-      entity: sensor.dantherm_fan_level
+      entity: select.dantherm_fan_selection
       style:
         top: 29%
-        left: 66.5%
+        left: 63%
         font-size: 125%
     - type: conditional
       conditions:
