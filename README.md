@@ -119,7 +119,8 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 I might consider creating a custom card based on this in the future.
 
-To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15212084/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory.
+To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15212126/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory.
+
 
 
 Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to create the below helper template sensor.
@@ -138,11 +139,11 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
         '2': /local/dantherm6.png
         '3': /local/dantherm7.png
       style:
-        left: 43.6%
-        top: 36%
-        transform: scale(0.4, 0.4)
+        left: 0%
+        top: 0%
+        transform: scale(1,1)
       tap_action:
-        action: more-info
+        action: none
     - type: image
       entity: cover.dantherm_bypass_damper
       state_image:
