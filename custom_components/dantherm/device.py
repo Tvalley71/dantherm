@@ -311,7 +311,12 @@ class Device:
 
         if not self._filter_lifetime:
             return None
-        return {"level": int(self._filter_remain / (self._filter_lifetime / 4))}
+        return {
+            "level": int(
+                (self._filter_lifetime - self._filter_remain)
+                / (self._filter_lifetime / 4)
+            )
+        }
 
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
