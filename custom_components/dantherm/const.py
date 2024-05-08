@@ -179,7 +179,10 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     data_setaddress: int | None = None
     data_setinternal: str | None = None
     data_getinternal: str | None = None
+    state_seton: int = None
+    state_setoff: int = None
     data_setclass: DataClass | None = None
+
     state_suspend_for: int | None = None
     state_on: int = None
     icon_on: str = None
@@ -365,11 +368,12 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     "away_mode": DanthermSwitchEntityDescription(
         key="away_mode",
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_active_unit_mode",
+        state_seton=0x10,
+        state_setoff=0x8010,
+        data_getinternal="get_current_unit_mode",
+        state_on=5,
         state_suspend_for=30,
-        state_on=0x10,
         icon_on="mdi:briefcase-outline",
-        state_off=0x8010,
         icon_off="mdi:power-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -387,11 +391,12 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     "fireplace_mode": DanthermSwitchEntityDescription(
         key="fireplace_mode",
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_active_unit_mode",
+        state_seton=0x40,
+        state_setoff=0x8040,
+        data_getinternal="get_current_unit_mode",
+        state_on=9,
         state_suspend_for=30,
-        state_on=0x40,
         icon_on="mdi:fireplace",
-        state_off=0x8040,
         icon_off="mdi:power-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -410,11 +415,12 @@ SWITCH_TYPES: dict[str, list[DanthermSwitchEntityDescription]] = {
     "summer_mode": DanthermSwitchEntityDescription(
         key="summer_mode",
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_active_unit_mode",
+        state_seton=0x800,
+        state_setoff=0x8800,
+        data_getinternal="get_current_unit_mode",
+        state_on=6,
         state_suspend_for=30,
-        state_on=0x800,
         icon_on="mdi:emoticon-cool-outline",
-        state_off=0x8800,
         icon_off="mdi:power-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),

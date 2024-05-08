@@ -54,14 +54,14 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self.suspend_refresh(self.entity_description.state_suspend_for)
 
         self._attr_is_on = False
+        state = self.entity_description.state_setoff
+        if state is None:
+            state = self.entity_description.state_off
         if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                self.entity_description.state_off
-            )
+            await getattr(self._device, self.entity_description.data_setinternal)(state)
         else:
             await self._device.write_holding_registers(
-                description=self.entity_description,
-                value=self.entity_description.state_off,
+                description=self.entity_description, value=state
             )
 
     async def async_turn_on(self, **kwargs):
@@ -71,14 +71,14 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self.suspend_refresh(self.entity_description.state_suspend_for)
 
         self._attr_is_on = True
+        state = self.entity_description.state_seton
+        if state is None:
+            state = self.entity_description.state_on
         if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                self.entity_description.state_on
-            )
+            await getattr(self._device, self.entity_description.data_setinternal)(state)
         else:
             await self._device.write_holding_registers(
-                description=self.entity_description,
-                value=self.entity_description.state_on,
+                description=self.entity_description, value=state
             )
 
     async def async_update(self) -> None:
