@@ -70,7 +70,6 @@ class DanthermCover(CoverEntity, DanthermEntity):
                 description=self.entity_description,
                 value=self.entity_description.state_open,
             )
-        # await self.async_update_ha_state(True)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
