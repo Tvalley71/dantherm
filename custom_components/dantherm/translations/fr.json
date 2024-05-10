@@ -33,10 +33,10 @@
       "operation_selection": {
         "name": "Sélection mode",
         "state": {
-          "0": "Arrêt",
-          "1": "Auto",
-          "2": "Manuel",
-          "3": "Programme hebdo"
+          "standby": "Arrêt",
+          "automatic": "Auto",
+          "manual": "Manuel",
+          "week_program": "Programme hebdo"
         }
       },
       "fan_level_selection": {

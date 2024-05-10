@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 
-from .const import BUTTON_TYPES, DOMAIN, DanthermButtonEntityDescription
-from .device import DanthermEntity
+from .const import BUTTONS, DOMAIN, DanthermButtonEntityDescription
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +16,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in BUTTON_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            button = DanthermButton(device, entity_description)
+    for description in BUTTONS:
+        if await device.async_install_entity(description):
+            button = DanthermButton(device, description)
             entities.append(button)
 
     async_add_entities(entities, update_before_add=True)
@@ -30,7 +30,7 @@ class DanthermButton(ButtonEntity, DanthermEntity):
 
     def __init__(
         self,
-        device,
+        device: Device,
         description: DanthermButtonEntityDescription,
     ) -> None:
         """Init button."""

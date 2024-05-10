@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SELECT_TYPES, DanthermSelectEntityDescription
+from .const import DOMAIN, SELECTS, DanthermSelectEntityDescription
 from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +16,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in SELECT_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            select = DanthermSelect(device, entity_description)
+    for description in SELECTS:
+        if await device.async_install_entity(description):
+            select = DanthermSelect(device, description)
             entities.append(select)
 
     async_add_entities(entities, update_before_add=True)
@@ -51,12 +51,13 @@ class DanthermSelect(SelectEntity, DanthermEntity):
 
         if self.entity_description.data_setinternal:
             await getattr(self._device, self.entity_description.data_setinternal)(
-                int(option)
+                option
             )
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description, value=int(option)
             )
+        self._attr_force_update = True
 
     async def async_update(self) -> None:
         """Fetch new state data for the select."""

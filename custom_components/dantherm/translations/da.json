@@ -33,10 +33,10 @@
       "operation_selection": {
         "name": "Driftindstilling",
         "state": {
-          "0": "Standby",
-          "1": "Automatik",
-          "2": "Manuel",
-          "3": "Ugeprogram"
+          "standby": "Standby",
+          "automatic": "Automatik",
+          "manual": "Manuel",
+          "week_program": "Ugeprogram"
         }
       },
       "fan_level_selection": {
