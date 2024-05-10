@@ -60,7 +60,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 
 1. Navigate to your Home Assistant configuration directory.
 
-- For most installations, this will be **'/config/'**.
+    - For most installations, this will be **'/config/'**.
 
 2. Inside the configuration directory, create a new folder named **'custom_components'** if it does not already exist.
 3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
