@@ -33,10 +33,10 @@
       "operation_selection": {
         "name": "Operation Selection",
         "state": {
-          "0": "Standby",
-          "1": "Automatic",
-          "2": "Manual",
-          "3": "Week Program"
+          "standby": "Standby",
+          "automatic": "Automatic",
+          "manual": "Manual",
+          "week_program": "Week Program"
         }
       },
       "fan_level_selection": {

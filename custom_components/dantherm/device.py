@@ -13,7 +13,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DEVICE_TYPES, DOMAIN, DataClass
+from .const import (
+    DEVICE_TYPES,
+    DOMAIN,
+    STATE_AUTOMATIC,
+    STATE_MANUAL,
+    STATE_STANDBY,
+    STATE_WEEKPROGRAM,
+    DataClass,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -255,16 +263,16 @@ class Device:
         """Get operation mode selection."""
 
         if self._active_unit_mode & 2 == 2:  # demand mode
-            return 1
+            return STATE_AUTOMATIC
         if self._active_unit_mode & 4 == 4:  # manual mode
             if self._fan_level == 0:
-                return 0  # standby
-            return 2  # manual
+                return STATE_STANDBY
+            return STATE_MANUAL  # manual
         if self._active_unit_mode & 8 == 8:  # week program
-            return 3
+            return STATE_WEEKPROGRAM
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
-        return 2  # manual
+        return STATE_MANUAL  # manual
 
     @property
     def get_fan_level(self):
@@ -279,11 +287,11 @@ class Device:
         if self._alarm != 0:
             return "mdi:fan-alert"
         result = self.get_op_selection
-        if result == 0:
+        if result == STATE_STANDBY:
             return "mdi:fan-off"
-        if result == 1:
+        if result == STATE_AUTOMATIC:
             return "mdi:fan-auto"
-        if result == 3:
+        if result == STATE_WEEKPROGRAM:
             return "mdi:fan-clock"
         return "mdi:fan"
 
@@ -326,14 +334,18 @@ class Device:
     async def set_op_selection(self, value):
         """Set operation mode selection."""
 
-        if value == 1:
-            await self.set_active_unit_mode(2)  # demand mode
-        if value in (0, 2):
+        if value == STATE_STANDBY:
             await self.set_active_unit_mode(4)  # manual mode
-        if value == 3:
+            if self._fan_level != 0:
+                await self.set_fan_level(0)
+        elif value == STATE_AUTOMATIC:
+            await self.set_active_unit_mode(2)  # demand mode
+        elif value == STATE_MANUAL:
+            await self.set_active_unit_mode(4)  # manual mode
+            if self._fan_level == 0:
+                await self.set_fan_level(2)
+        elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(8)  # week program mode
-        if value == 0:
-            await self.set_fan_level(0)
 
     async def set_fan_level(self, value):
         """Set fan level."""

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.cover import (
@@ -91,6 +91,12 @@ class OpMode(int):
     Summer = 6
     Fireplace = 9
     Night = 16
+
+
+STATE_STANDBY: Final = "standby"
+STATE_AUTOMATIC: Final = "automatic"
+STATE_MANUAL: Final = "manual"
+STATE_WEEKPROGRAM: Final = "week_program"
 
 
 class BypassDamperState(int):
@@ -233,30 +239,34 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     ),
 )
 
-COVERS: tuple[DanthermCoverEntityDescription, ...] = DanthermCoverEntityDescription(
-    key="bypass_damper",
-    supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
-    data_setinternal="set_bypass_damper",
-    data_address=198,
-    data_class=DataClass.UInt16,
-    state_opening=BypassDamperState.Opening,
-    state_opened=BypassDamperState.Opened,
-    state_closing=BypassDamperState.Closing,
-    state_closed=BypassDamperState.Closed,
-    component_class=ComponentClass.Bypass,
-    icon="mdi:valve",
-    device_class=CoverDeviceClass.DAMPER,
+COVERS: tuple[DanthermCoverEntityDescription, ...] = (
+    DanthermCoverEntityDescription(
+        key="bypass_damper",
+        supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        data_setinternal="set_bypass_damper",
+        data_address=198,
+        data_class=DataClass.UInt16,
+        state_opening=BypassDamperState.Opening,
+        state_opened=BypassDamperState.Opened,
+        state_closing=BypassDamperState.Closing,
+        state_closed=BypassDamperState.Closed,
+        component_class=ComponentClass.Bypass,
+        icon="mdi:valve",
+        device_class=CoverDeviceClass.DAMPER,
+    ),
 )
 
-NUMBERS: tuple[DanthermNumberEntityDescription, ...] = DanthermNumberEntityDescription(
-    key="filter_lifetime",
-    data_setinternal="set_filter_lifetime",
-    data_getinternal="get_filter_lifetime",
-    native_max_value=360,
-    native_min_value=0,
-    device_class=NumberDeviceClass.DURATION,
-    native_unit_of_measurement="d",
-    mode=NumberMode.BOX,
+NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
+    DanthermNumberEntityDescription(
+        key="filter_lifetime",
+        data_setinternal="set_filter_lifetime",
+        data_getinternal="get_filter_lifetime",
+        native_max_value=360,
+        native_min_value=0,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="d",
+        mode=NumberMode.BOX,
+    ),
 )
 
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
@@ -264,7 +274,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         key="operation_selection",
         data_setinternal="set_op_selection",
         data_getinternal="get_op_selection",
-        options=["0", "1", "2", "3"],
+        options=["standby", "automatic", "manual", "week_program"],
     ),
     DanthermSelectEntityDescription(
         key="fan_level_selection",
