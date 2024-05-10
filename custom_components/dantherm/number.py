@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, NUMBER_TYPES, DanthermNumberEntityDescription
+from .const import DOMAIN, NUMBERS, DanthermNumberEntityDescription
 from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +16,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in NUMBER_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            cover = DanthermNumber(device, entity_description)
+    for description in NUMBERS:
+        if await device.async_install_entity(description):
+            cover = DanthermNumber(device, description)
             entities.append(cover)
 
     async_add_entities(entities, update_before_add=True)

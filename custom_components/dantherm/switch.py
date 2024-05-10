@@ -6,8 +6,8 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SWITCH_TYPES, DanthermSwitchEntityDescription
-from .device import DanthermEntity
+from .const import DOMAIN, SWITCHES, DanthermSwitchEntityDescription
+from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +17,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in SWITCH_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            switch = DanthermSwitch(device, entity_description)
+    for description in SWITCHES:
+        if await device.async_install_entity(description):
+            switch = DanthermSwitch(device, description)
             entities.append(switch)
 
     async_add_entities(entities, update_before_add=True)
@@ -31,7 +31,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
 
     def __init__(
         self,
-        device,
+        device: Device,
         description: DanthermSwitchEntityDescription,
     ) -> None:
         """Init Number."""
@@ -108,3 +108,5 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
+
+            self._device.data[self.key] = self._attr_is_on

@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SENSOR_TYPES, DanthermSensorEntityDescription
+from .const import DOMAIN, SENSORS, DanthermSensorEntityDescription
 from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +16,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in SENSOR_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            sensor = DanthermSensor(device, entity_description)
+    for description in SENSORS:
+        if await device.async_install_entity(description):
+            sensor = DanthermSensor(device, description)
             entities.append(sensor)
 
     async_add_entities(entities, update_before_add=True)
@@ -36,7 +36,7 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         """Init sensor."""
         super().__init__(device)
         self._device = device
-        self.has_entity_name = True
+        self._attr_has_entity_name = True
         self.entity_description: DanthermSensorEntityDescription = description
 
     @property
@@ -59,14 +59,12 @@ class DanthermSensor(SensorEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Read holding register."""
 
+        if hasattr(self._device, f"get_{self.key}_attrs"):
+            self._attr_extra_state_attributes = getattr(
+                self._device, f"get_{self.key}_attrs"
+            )
+
         if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"{self.entity_description.data_getinternal}_attrs"
-            ):
-                self._attr_extra_state_attributes = getattr(
-                    self._device,
-                    f"{self.entity_description.data_getinternal}_attrs",
-                )
             result = getattr(self._device, self.entity_description.data_getinternal)
         elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)

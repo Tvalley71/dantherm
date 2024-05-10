@@ -8,7 +8,7 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 
-from .const import COVER_TYPES, DOMAIN, DanthermCoverEntityDescription
+from .const import COVERS, DOMAIN, DanthermCoverEntityDescription
 from .device import DanthermEntity, Device
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,9 +19,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     device = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for entity_description in COVER_TYPES.values():
-        if await device.async_install_entity(entity_description):
-            cover = DanthermCover(device, entity_description)
+    for description in COVERS:
+        if await device.async_install_entity(description):
+            cover = DanthermCover(device, description)
             entities.append(cover)
 
     async_add_entities(entities, update_before_add=True)
@@ -39,7 +39,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
         """Init cover."""
         super().__init__(device)
         self._device = device
-        self.has_entity_name = True
+        self._attr_has_entity_name = True
         self.entity_description: DanthermCoverEntityDescription = description
         self._attr_supported_features = 0
         if description.supported_features:
