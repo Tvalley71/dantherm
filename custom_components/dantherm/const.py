@@ -138,6 +138,7 @@ class DanthermCoverEntityDescription(CoverEntityDescription):
     state_stop: int = None
 
     data_address: int | None = None
+    data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
     data_class: DataClass = DataClass.UInt16
@@ -196,7 +197,6 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_entity: str | None = None
     data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
-    icon_internal: str | None = None
 
     component_class: ComponentClass = None
 
@@ -244,14 +244,12 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
         key="bypass_damper",
         supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
         data_setinternal="set_bypass_damper",
-        data_address=198,
-        data_class=DataClass.UInt16,
+        data_getinternal="get_bypass_damper",
         state_opening=BypassDamperState.Opening,
         state_opened=BypassDamperState.Opened,
         state_closing=BypassDamperState.Closing,
         state_closed=BypassDamperState.Closed,
         component_class=ComponentClass.Bypass,
-        icon="mdi:valve",
         device_class=CoverDeviceClass.DAMPER,
     ),
 )
@@ -259,6 +257,7 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
 NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     DanthermNumberEntityDescription(
         key="filter_lifetime",
+        icon="mdi:air-filter",
         data_setinternal="set_filter_lifetime",
         data_getinternal="get_filter_lifetime",
         native_max_value=360,
@@ -272,8 +271,9 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
         key="operation_selection",
-        data_setinternal="set_op_selection",
-        data_getinternal="get_op_selection",
+        icon="mdi:state-machine",
+        data_setinternal="set_operation_selection",
+        data_getinternal="get_operation_selection",
         options=["standby", "automatic", "manual", "week_program"],
     ),
     DanthermSelectEntityDescription(
@@ -284,6 +284,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     ),
     DanthermSelectEntityDescription(
         key="week_program_selection",
+        icon="mdi:clock-edit-outline",
         data_address=466,
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
@@ -304,7 +305,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key="fan_level",
-        icon_internal="get_fan_icon",
         data_getinternal="get_fan_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -386,6 +386,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key="filter_remain",
+        icon="mdi:air-filter",
         data_getinternal="get_filter_remain",
         native_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
@@ -402,8 +403,8 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_current_unit_mode",
         state_on=OpMode.Away,
         state_suspend_for=30,
-        icon_on="mdi:briefcase-outline",
-        icon_off="mdi:power-off",
+        icon_on="mdi:bag-suitcase-outline",
+        icon_off="mdi:bag-suitcase-off-outline",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
@@ -412,9 +413,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x20,
-        icon_on="mdi:weather-night",
+        icon_on="mdi:sleep",
         state_off=0x8020,
-        icon_off="mdi:power-off",
+        icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
@@ -426,7 +427,7 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_on=OpMode.Fireplace,
         state_suspend_for=30,
         icon_on="mdi:fireplace",
-        icon_off="mdi:power-off",
+        icon_off="mdi:fireplace-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
@@ -435,9 +436,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=0x80,
-        icon_on="mdi:swap-horizontal",
+        icon_on="mdi:hand-back-right-outline",
         state_off=0x8080,
-        icon_off="mdi:power-off",
+        icon_off="mdi:hand-back-right-off-outline",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -449,8 +450,8 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_current_unit_mode",
         state_on=OpMode.Summer,
         state_suspend_for=30,
-        icon_on="mdi:emoticon-cool-outline",
-        icon_off="mdi:power-off",
+        icon_on="mdi:weather-sunny",
+        icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )

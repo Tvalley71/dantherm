@@ -20,6 +20,7 @@ from .const import (
     STATE_MANUAL,
     STATE_STANDBY,
     STATE_WEEKPROGRAM,
+    BypassDamperState,
     DataClass,
 )
 
@@ -120,6 +121,7 @@ class Device:
         self._active_unit_mode = 0
         self._fan_level = 0
         self._alarm = 0
+        self._bypass_damper = 0
         self._filter_lifetime = 0
         self._filter_remain = 0
         self._entities = []
@@ -221,6 +223,9 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
+        self._bypass_damper = await self._read_holding_int32(198)
+        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+
         self._filter_lifetime = await self._read_holding_uint32(556)
         _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
 
@@ -259,8 +264,8 @@ class Device:
         return self._active_unit_mode
 
     @property
-    def get_op_selection(self):
-        """Get operation mode selection."""
+    def get_operation_selection(self):
+        """Get operation selection."""
 
         if self._active_unit_mode & 2 == 2:  # demand mode
             return STATE_AUTOMATIC
@@ -275,18 +280,33 @@ class Device:
         return STATE_MANUAL  # manual
 
     @property
+    def get_fan_level_selection_icon(self) -> str:
+        """Get fan level selection icon."""
+
+        result = self.get_fan_level
+        if not result:
+            return "mdi:fan-off"
+        if result == 1:
+            return "mdi:fan-speed-1"
+        if result == 2:
+            return "mdi:fan-speed-2"
+        if result == 3:
+            return "mdi:fan-speed-3"
+        return "mdi:fan-plus"
+
+    @property
     def get_fan_level(self):
-        """Get current fan level."""
+        """Get fan level."""
 
         return self._fan_level
 
     @property
-    def get_fan_icon(self) -> str:
-        """Get current fan icon."""
+    def get_fan_level_icon(self) -> str:
+        """Get fan level icon."""
 
         if self._alarm != 0:
             return "mdi:fan-alert"
-        result = self.get_op_selection
+        result = self.get_operation_selection
         if result == STATE_STANDBY:
             return "mdi:fan-off"
         if result == STATE_AUTOMATIC:
@@ -300,6 +320,22 @@ class Device:
         """Get alarm."""
 
         return self._alarm
+
+    @property
+    def get_bypass_damper(self):
+        """Get bypass damper."""
+
+        return self._bypass_damper
+
+    @property
+    def get_bypass_damper_icon(self) -> str:
+        """Get bypass damper icon."""
+
+        if self.get_bypass_damper == BypassDamperState.Closed:
+            return "mdi:valve-closed"
+        if self.get_bypass_damper == BypassDamperState.Opened:
+            return "mdi:valve-open"
+        return "mdi:valve"
 
     @property
     def get_filter_lifetime(self):
@@ -331,7 +367,7 @@ class Device:
 
         await self._write_holding_uint32(168, value)
 
-    async def set_op_selection(self, value):
+    async def set_operation_selection(self, value):
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
