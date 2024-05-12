@@ -36,7 +36,10 @@
           "standby": "Arrêt",
           "automatic": "Auto",
           "manual": "Manuel",
-          "week_program": "Programme hebdo"
+          "week_program": "Programme hebdo",
+          "away": "Absent",
+          "summer": "Été",
+          "fireplace": "Cheminée"
         }
       },
       "fan_level_selection": {

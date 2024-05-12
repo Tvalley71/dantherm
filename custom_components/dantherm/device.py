@@ -17,8 +17,11 @@ from .const import (
     DEVICE_TYPES,
     DOMAIN,
     STATE_AUTOMATIC,
+    STATE_AWAY,
+    STATE_FIREPLACE,
     STATE_MANUAL,
     STATE_STANDBY,
+    STATE_SUMMER,
     STATE_WEEKPROGRAM,
     BypassDamperState,
     DataClass,
@@ -267,11 +270,19 @@ class Device:
     def get_operation_selection(self):
         """Get operation selection."""
 
+        if self._active_unit_mode == 0:
+            return STATE_STANDBY
+        if self._active_unit_mode & 0x10 == 0x10:  # away mode
+            return STATE_AWAY
+        if self._active_unit_mode & 0x800 == 0x800:  # summer mode
+            return STATE_SUMMER
+        if self._active_unit_mode & 0x40 == 0x40:  # boost fireplace mode
+            return STATE_FIREPLACE
         if self._active_unit_mode & 2 == 2:  # demand mode
             return STATE_AUTOMATIC
         if self._active_unit_mode & 4 == 4:  # manual mode
             if self._fan_level == 0:
-                return STATE_STANDBY
+                return STATE_STANDBY  # if fan level is 0 return standby
             return STATE_MANUAL  # manual
         if self._active_unit_mode & 8 == 8:  # week program
             return STATE_WEEKPROGRAM
@@ -378,10 +389,14 @@ class Device:
             await self.set_active_unit_mode(2)  # demand mode
         elif value == STATE_MANUAL:
             await self.set_active_unit_mode(4)  # manual mode
-            if self._fan_level == 0:
-                await self.set_fan_level(2)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(8)  # week program mode
+        elif value == STATE_AWAY:
+            await self.set_active_unit_mode(0x0010)  # away mode
+        elif value == STATE_SUMMER:
+            await self.set_active_unit_mode(0x0800)  # summer mode
+        elif value == STATE_FIREPLACE:
+            await self.set_active_unit_mode(0x0040)  # boost fireplace mode
 
     async def set_fan_level(self, value):
         """Set fan level."""

@@ -97,6 +97,9 @@ STATE_STANDBY: Final = "standby"
 STATE_AUTOMATIC: Final = "automatic"
 STATE_MANUAL: Final = "manual"
 STATE_WEEKPROGRAM: Final = "week_program"
+STATE_AWAY: Final = "away"
+STATE_SUMMER: Final = "summer"
+STATE_FIREPLACE: Final = "fireplace"
 
 
 class BypassDamperState(int):
@@ -274,7 +277,15 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         icon="mdi:state-machine",
         data_setinternal="set_operation_selection",
         data_getinternal="get_operation_selection",
-        options=["standby", "automatic", "manual", "week_program"],
+        options=[
+            "standby",
+            "automatic",
+            "manual",
+            "week_program",
+            "away",
+            "summer",
+            "fireplace",
+        ],
     ),
     DanthermSelectEntityDescription(
         key="fan_level_selection",

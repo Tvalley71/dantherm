@@ -36,7 +36,10 @@
           "standby": "Standby",
           "automatic": "Automatik",
           "manual": "Manuel",
-          "week_program": "Ugeprogram"
+          "week_program": "Ugeprogram",
+          "away": "Rejse",
+          "summer": "Sommer",
+          "fireplace": "Brændeovn"
         }
       },
       "fan_level_selection": {
