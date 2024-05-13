@@ -42,9 +42,11 @@ class DanthermSelect(SelectEntity, DanthermEntity):
     @property
     def icon(self) -> str | None:
         """Return an icon."""
-        if len(self.options) > 0:
-            return self.entity_description.icon
-        return "mdi:alert-circle-outline"
+
+        result = super().icon
+        if hasattr(self._device, f"get_{self.key}_icon"):
+            result = getattr(self._device, f"get_{self.key}_icon")
+        return result
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

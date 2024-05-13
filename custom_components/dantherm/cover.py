@@ -58,6 +58,15 @@ class DanthermCover(CoverEntity, DanthermEntity):
         self._attr_is_closing = False
         self._attr_is_opening = False
 
+    @property
+    def icon(self) -> str | None:
+        """Return an icon."""
+
+        result = super().icon
+        if hasattr(self._device, f"get_{self.key}_icon"):
+            result = getattr(self._device, f"get_{self.key}_icon")
+        return result
+
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
 
@@ -107,9 +116,12 @@ class DanthermCover(CoverEntity, DanthermEntity):
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the cover."""
 
-        result = await self._device.read_holding_registers(
-            description=self.entity_description
-        )
+        if self.entity_description.data_getinternal:
+            result = getattr(self._device, self.entity_description.data_getinternal)
+        else:
+            result = await self._device.read_holding_registers(
+                description=self.entity_description
+            )
 
         if result is None:
             self._attr_available = False

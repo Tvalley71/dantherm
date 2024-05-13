@@ -49,10 +49,10 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         """Return an icon."""
 
         result = super().icon
-        if self.entity_description.data_zero_icon and not self._attr_state:
+        if hasattr(self._device, f"get_{self.key}_icon"):
+            result = getattr(self._device, f"get_{self.key}_icon")
+        elif self.entity_description.data_zero_icon and not self._attr_state:
             result = self.entity_description.data_zero_icon
-        elif self.entity_description.icon_internal:
-            result = getattr(self._device, self.entity_description.icon_internal)
 
         return result
 

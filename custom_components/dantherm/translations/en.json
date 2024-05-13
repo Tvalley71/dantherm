@@ -36,7 +36,10 @@
           "standby": "Standby",
           "automatic": "Automatic",
           "manual": "Manual",
-          "week_program": "Week Program"
+          "week_program": "Week Program",
+          "away": "Away",
+          "summer": "Summer",
+          "fireplace": "Fireplace"
         }
       },
       "fan_level_selection": {

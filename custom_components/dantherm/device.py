@@ -17,9 +17,13 @@ from .const import (
     DEVICE_TYPES,
     DOMAIN,
     STATE_AUTOMATIC,
+    STATE_AWAY,
+    STATE_FIREPLACE,
     STATE_MANUAL,
     STATE_STANDBY,
+    STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    BypassDamperState,
     DataClass,
 )
 
@@ -120,6 +124,7 @@ class Device:
         self._active_unit_mode = 0
         self._fan_level = 0
         self._alarm = 0
+        self._bypass_damper = 0
         self._filter_lifetime = 0
         self._filter_remain = 0
         self._entities = []
@@ -221,6 +226,9 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
+        self._bypass_damper = await self._read_holding_int32(198)
+        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+
         self._filter_lifetime = await self._read_holding_uint32(556)
         _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
 
@@ -259,14 +267,22 @@ class Device:
         return self._active_unit_mode
 
     @property
-    def get_op_selection(self):
-        """Get operation mode selection."""
+    def get_operation_selection(self):
+        """Get operation selection."""
 
+        if self._active_unit_mode == 0:
+            return STATE_STANDBY
+        if self._active_unit_mode & 0x10 == 0x10:  # away mode
+            return STATE_AWAY
+        if self._active_unit_mode & 0x800 == 0x800:  # summer mode
+            return STATE_SUMMER
+        if self._active_unit_mode & 0x40 == 0x40:  # boost fireplace mode
+            return STATE_FIREPLACE
         if self._active_unit_mode & 2 == 2:  # demand mode
             return STATE_AUTOMATIC
         if self._active_unit_mode & 4 == 4:  # manual mode
             if self._fan_level == 0:
-                return STATE_STANDBY
+                return STATE_STANDBY  # if fan level is 0 return standby
             return STATE_MANUAL  # manual
         if self._active_unit_mode & 8 == 8:  # week program
             return STATE_WEEKPROGRAM
@@ -275,18 +291,33 @@ class Device:
         return STATE_MANUAL  # manual
 
     @property
+    def get_fan_level_selection_icon(self) -> str:
+        """Get fan level selection icon."""
+
+        result = self.get_fan_level
+        if not result:
+            return "mdi:fan-off"
+        if result == 1:
+            return "mdi:fan-speed-1"
+        if result == 2:
+            return "mdi:fan-speed-2"
+        if result == 3:
+            return "mdi:fan-speed-3"
+        return "mdi:fan-plus"
+
+    @property
     def get_fan_level(self):
-        """Get current fan level."""
+        """Get fan level."""
 
         return self._fan_level
 
     @property
-    def get_fan_icon(self) -> str:
-        """Get current fan icon."""
+    def get_fan_level_icon(self) -> str:
+        """Get fan level icon."""
 
         if self._alarm != 0:
             return "mdi:fan-alert"
-        result = self.get_op_selection
+        result = self.get_operation_selection
         if result == STATE_STANDBY:
             return "mdi:fan-off"
         if result == STATE_AUTOMATIC:
@@ -300,6 +331,22 @@ class Device:
         """Get alarm."""
 
         return self._alarm
+
+    @property
+    def get_bypass_damper(self):
+        """Get bypass damper."""
+
+        return self._bypass_damper
+
+    @property
+    def get_bypass_damper_icon(self) -> str:
+        """Get bypass damper icon."""
+
+        if self.get_bypass_damper == BypassDamperState.Closed:
+            return "mdi:valve-closed"
+        if self.get_bypass_damper == BypassDamperState.Opened:
+            return "mdi:valve-open"
+        return "mdi:valve"
 
     @property
     def get_filter_lifetime(self):
@@ -331,7 +378,7 @@ class Device:
 
         await self._write_holding_uint32(168, value)
 
-    async def set_op_selection(self, value):
+    async def set_operation_selection(self, value):
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
@@ -342,10 +389,14 @@ class Device:
             await self.set_active_unit_mode(2)  # demand mode
         elif value == STATE_MANUAL:
             await self.set_active_unit_mode(4)  # manual mode
-            if self._fan_level == 0:
-                await self.set_fan_level(2)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(8)  # week program mode
+        elif value == STATE_AWAY:
+            await self.set_active_unit_mode(0x0010)  # away mode
+        elif value == STATE_SUMMER:
+            await self.set_active_unit_mode(0x0800)  # summer mode
+        elif value == STATE_FIREPLACE:
+            await self.set_active_unit_mode(0x0040)  # boost fireplace mode
 
     async def set_fan_level(self, value):
         """Set fan level."""
