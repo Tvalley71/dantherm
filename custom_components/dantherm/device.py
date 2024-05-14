@@ -366,10 +366,12 @@ class Device:
 
         if not self._filter_lifetime:
             return None
+        if self._filter_remain >= self._filter_lifetime:
+            return { "level": int(3) }
         return {
             "level": int(
                 (self._filter_lifetime - self._filter_remain)
-                / (self._filter_lifetime / 4)
+                / (self._filter_lifetime / 3)
             )
         }
 
