@@ -4,14 +4,14 @@ Home Assistant integration for Dantherm ventilation units
 
 Currently only support for Modbus over TCP/IP.
 
-Known supported devices:
+Known supported units:
 
 - HCV300 ALU
 - HCV400 P2
 - RCV320
 
 > [!NOTE]
-> The listed devices have been tested with the integration. Please don't hesitate to contact me, if you're aware of supported devices not included in the list.
+> The listed units are known to have been tested with the integration. There may be other Dantherm units that are also supported. If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
 ### Controls and sensors
 
@@ -45,6 +45,11 @@ Known supported devices:
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 ### Installation
+
+> [!IMPORTANT]
+> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or follow this link.
+>
+> <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height="">
 
 #### Installation via HACS (Home Assistant Community Store)
 
@@ -81,8 +86,7 @@ After installation, add the Dantherm integration to your Home Assistant configur
 
 ### Support
 
-If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new)
-on this repository. I welcome contributions and feedback from the community.
+If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [create a discussion](https://github.com/Tvalley71/dantherm/discussions/new?category=general) on this repository. I welcome any contributions or feedback.
 
 ### Screenshots
 
