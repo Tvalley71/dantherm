@@ -88,13 +88,14 @@ After installation, add the Dantherm integration to your Home Assistant configur
 
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [create a discussion](https://github.com/Tvalley71/dantherm/discussions/new?category=general) on this repository. I welcome any contributions or feedback.
 
-### Screenshots
+
+## Screenshots
 
 ![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/fa9b31b6-5ec8-4c3b-a381-ef7061495560)
-![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/7e82d596-c97d-4c5f-af01-e005f9ee352c)
 
 ![Skærmbillede 2024-05-13 070737](https://github.com/Tvalley71/dantherm/assets/83084467/d6493c4e-ab10-493d-b2ec-c4f192383192)
 ![Skærmbillede 2024-05-13 070838](https://github.com/Tvalley71/dantherm/assets/83084467/8032983f-f55e-425e-8c55-c8d2ae918ea7)
+![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/4b2665b1-6abe-491b-8c3b-e5b3322402ee)
 
 > [!NOTE]
 > Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
@@ -106,9 +107,11 @@ Currently supported languages:
 Danish, English and French.
 
 > [!NOTE]
-> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and I'll include it in future releases!
+> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
-### Dashboard card
+### Examples of use
+
+#### Picture-elements card
 
 This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
 
@@ -118,7 +121,7 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 <details>
 
-<summary>The details for the above dashboard card (challenging).</summary>
+<summary>The details for the above picture-elements card (challenging).</summary>
 
 ####
 
@@ -248,7 +251,71 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 </details>
 
-Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
+#### Mushroom chips card
+
+Example of a Mushroom Chip Card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+
+![Skærmbillede 2024-05-21 104804](https://github.com/Tvalley71/dantherm/assets/83084467/075df325-03e1-4855-bb74-a4cf90780266)
+
+<details>
+
+<summary>Mushroom chips card details.</summary>
+
+####
+
+
+#### Mode of operation and fan level chips card (shown above)
+
+```yaml
+
+  - type: custom:mushroom-chips-card
+    chips:
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: sensor.dantherm_fan_level
+            state_not: unavailable
+        chip:
+          type: entity
+          entity: sensor.dantherm_fan_level
+          icon_color: blue
+
+```
+
+#### Alert chips card
+
+Alert chip displaying any current alert along with its descriptions. A hold action is available to attempt resetting the alarm.
+
+```yaml
+
+  - type: custom:mushroom-chips-card
+    chips:
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: sensor.dantherm_alarm
+            state_not: unavailable
+          - condition: state
+            entity: sensor.dantherm_alarm
+            state_not: '0'
+        chip:
+          type: entity
+          entity: sensor.dantherm_alarm
+          icon_color: red
+          hold_action:
+            action: call-service
+            service: button.press
+            data: {}
+            target:
+              entity_id: button.dantherm_reset_alarm
+
+```
+
+</details>
+
+#
+
+### Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
 
 I have no affiliation with Dantherm other than owning one of their units. The HCV400 P2.
 
