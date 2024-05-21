@@ -115,11 +115,11 @@ Danish, English and French.
 
 This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
 
-![Skærmbillede 2024-05-05 112706](https://github.com/Tvalley71/dantherm/assets/83084467/4f4b520f-62b7-47d2-aada-e20ea44c1f7d)
+![Skærmbillede 2024-05-21 182357](https://github.com/Tvalley71/dantherm/assets/83084467/220edf94-71aa-4c29-abd4-c9ed191abd32)
 
-![Skærmbillede 2024-05-05 112737](https://github.com/Tvalley71/dantherm/assets/83084467/9997abff-c618-494d-971d-6c5313bc1864)
+![Skærmbillede 2024-05-21 182443](https://github.com/Tvalley71/dantherm/assets/83084467/91ab4cf7-d7cb-4df9-a602-0d8955203b70)
 
-![Skærmbillede 2024-05-21 100127](https://github.com/Tvalley71/dantherm/assets/83084467/95e3df61-5000-4591-bdc4-b6f3c226aad5)
+![Skærmbillede 2024-05-21 182154](https://github.com/Tvalley71/dantherm/assets/83084467/66fc2c18-7db1-403e-ae2b-fc32a4734d6d)
 
 
 <details>
@@ -137,115 +137,140 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 #### The code
 
 ```yaml
-- type: picture-elements
-  image: /local/dantherm1.png
-  elements:
-    - type: image
-      entity: sensor.dantherm_filter_remain_level
-      state_image:
-        "0": /local/dantherm4.png
-        "1": /local/dantherm5.png
-        "2": /local/dantherm6.png
-        "3": /local/dantherm7.png
-      style:
-        left: 0%
-        top: 0%
-        transform: scale(1,1)
-      tap_action:
-        action: none
-    - type: image
-      entity: cover.dantherm_bypass_damper
-      state_image:
-        closed: /local/dantherm2.png
-        closing: /local/dantherm2.png
-        open: /local/dantherm3.png
-        opening: /local/dantherm3.png
-      style:
-        left: 26.6%
-        top: 51%
-        transform: scale(0.7,0.7)
-      tap_action:
-        action: more-info
-    - type: conditional
-      conditions:
-        - entity: sensor.dantherm_alarm
-          state_not: "0"
-      elements:
-        - type: state-label
-          entity: sensor.dantherm_alarm
-          style:
-            top: 15%
-            left: 50%
-            width: 100%
-            font-weight: bold
-            text-align: center
-            color: white
-            background-color: red
-            opacity: 70%
-    - type: state-label
-      entity: select.dantherm_operation_selection
-      style:
-        top: 45%
-        left: 36%
-        font-weight: bold
-        text-align: center;
-        font-size: 100%
-    - type: state-label
-      entity: sensor.dantherm_humidity
-      style:
-        top: 29%
-        left: 38%
-        font-size: 125%
-    - type: state-label
-      entity: select.dantherm_fan_selection
-      style:
-        top: 29%
-        left: 63%
-        font-size: 125%
-    - type: conditional
-      conditions:
-        - entity: cover.dantherm_bypass_damper
-          state:
-            - closed
-            - closing
-      elements:
-        - type: state-label
-          entity: sensor.dantherm_outdoor_temperature
-          style:
-            top: 64.5%
-            left: 78%
-        - type: state-label
-          entity: sensor.dantherm_extract_temperature
-          style:
-            top: 64.5%
-            left: 49%
-        - type: state-label
-          entity: sensor.dantherm_exhaust_temperature
-          style:
-            top: 81%
-            left: 78%
-        - type: state-label
-          entity: sensor.dantherm_supply_temperature
-          style:
-            top: 81%
-            left: 49%
-    - type: conditional
-      conditions:
-        - entity: cover.dantherm_bypass_damper
-          state:
-            - open
-            - opening
-      elements:
-        - type: state-label
-          entity: sensor.dantherm_extract_temperature
-          style:
-            top: 64.5%
-            left: 49%
-        - type: state-label
-          entity: sensor.dantherm_outdoor_temperature
-          style:
-            top: 81%
-            left: 78%
+
+  - type: picture-elements
+    image: /local/dantherm1.png
+    elements:
+      - type: image
+        entity: sensor.dantherm_filter_remain_level
+        state_image:
+          '0': /local/dantherm4.png
+          '1': /local/dantherm5.png
+          '2': /local/dantherm6.png
+          '3': /local/dantherm7.png
+        style:
+          transform: scale(1,1)
+          left: 0%
+          top: 0%
+        tap_action:
+          action: more-info
+      - type: conditional
+        conditions:
+          - entity: switch.dantherm_summer_mode
+            state: 'off'
+        elements:
+          - type: image
+            entity: cover.dantherm_bypass_damper
+            state_image:
+              closed: /local/dantherm2.png
+              closing: /local/dantherm2.png
+              open: /local/dantherm3.png
+              opening: /local/dantherm3.png
+            style:
+              left: 26.6%
+              top: 50%
+              transform: scale(0.693,0.693)
+            tap_action:
+              action: more-info
+          - type: conditional
+            conditions:
+              - entity: cover.dantherm_bypass_damper
+                state:
+                  - closed
+                  - closing
+            elements:
+              - type: state-label
+                entity: sensor.dantherm_outdoor_temperature
+                style:
+                  top: 64.5%
+                  left: 78%
+              - type: state-label
+                entity: sensor.dantherm_extract_temperature
+                style:
+                  top: 64.5%
+                  left: 49%
+              - type: state-label
+                entity: sensor.dantherm_exhaust_temperature
+                style:
+                  top: 81%
+                  left: 78%
+              - type: state-label
+                entity: sensor.dantherm_supply_temperature
+                style:
+                  top: 81%
+                  left: 49%
+          - type: conditional
+            conditions:
+              - entity: cover.dantherm_bypass_damper
+                state:
+                  - open
+                  - opening
+            elements:
+              - type: state-label
+                entity: sensor.dantherm_extract_temperature
+                style:
+                  top: 64.5%
+                  left: 49%
+              - type: state-label
+                entity: sensor.dantherm_outdoor_temperature
+                style:
+                  top: 81%
+                  left: 78%
+      - type: conditional
+        conditions:
+          - entity: switch.dantherm_summer_mode
+            state: 'on'
+        elements:
+          - type: image
+            image: /local/dantherm8.png
+            style:
+              left: 26.6%
+              top: 50%
+              transform: scale(0.693,0.693)
+            tap_action:
+              action: none
+          - type: state-label
+            entity: sensor.dantherm_extract_temperature
+            style:
+              top: 64.5%
+              left: 49%
+      - type: conditional
+        conditions:
+          - entity: sensor.dantherm_alarm
+            state_not: '0'
+        elements:
+          - type: state-label
+            entity: sensor.dantherm_alarm
+            style:
+              top: 15%
+              left: 50%
+              width: 100%
+              font-weight: bold
+              text-align: center
+              color: white
+              background-color: red
+              opacity: 70%
+      - type: state-label
+        entity: select.dantherm_operation_selection
+        style:
+          top: 45%
+          left: 36%
+          font-weight: bold
+          text-align: center;
+          font-size: 100%
+      - type: state-label
+        entity: sensor.dantherm_humidity
+        style:
+          top: 29%
+          left: 38%
+          font-size: 125%
+      - type: state-label
+        entity: select.dantherm_fan_selection
+        style:
+          top: 29%
+          left: 63%
+          font-size: 125%
+
 ```
 
 #### Helper template sensor.
