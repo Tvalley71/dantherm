@@ -119,6 +119,8 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 ![Skærmbillede 2024-05-05 112737](https://github.com/Tvalley71/dantherm/assets/83084467/1a0c077b-8e09-4fb2-b479-85f52a25c782)
 
+![Skærmbillede 2024-05-21 100127](https://github.com/Tvalley71/dantherm/assets/83084467/4254563b-7789-440a-a19e-231932291ce0)
+
 <details>
 
 <summary>The details for the above picture-elements card (challenging).</summary>
