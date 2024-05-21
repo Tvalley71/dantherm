@@ -115,11 +115,12 @@ Danish, English and French.
 
 This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
 
-![Skærmbillede 2024-05-05 112706](https://github.com/Tvalley71/dantherm/assets/83084467/dcea2ed2-ac9e-47b8-aae3-0c6da6118224)
+![Skærmbillede 2024-05-05 112706](https://github.com/Tvalley71/dantherm/assets/83084467/4f4b520f-62b7-47d2-aada-e20ea44c1f7d)
 
-![Skærmbillede 2024-05-05 112737](https://github.com/Tvalley71/dantherm/assets/83084467/1a0c077b-8e09-4fb2-b479-85f52a25c782)
+![Skærmbillede 2024-05-05 112737](https://github.com/Tvalley71/dantherm/assets/83084467/9997abff-c618-494d-971d-6c5313bc1864)
 
-![Skærmbillede 2024-05-21 100127](https://github.com/Tvalley71/dantherm/assets/83084467/4254563b-7789-440a-a19e-231932291ce0)
+![Skærmbillede 2024-05-21 100127](https://github.com/Tvalley71/dantherm/assets/83084467/95e3df61-5000-4591-bdc4-b6f3c226aad5)
+
 
 <details>
 
