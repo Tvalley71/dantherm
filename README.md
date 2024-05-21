@@ -69,7 +69,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 
 2. Inside the configuration directory, create a new folder named **'custom_components'** if it does not already exist.
 3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
-4. Download the latest release of the Dantherm integration from the [releases page](./custom_components/dantherm) into the **'custom_components/dantherm'** directory:
+4. Download the latest release of the Dantherm integration from the [releases page](./custom_components/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
 5. Once the files are in place, restart your Home Assistant instance.
 
 ### Configuration
