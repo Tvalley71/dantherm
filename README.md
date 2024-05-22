@@ -48,8 +48,8 @@ _\* Some of the entities may not install due to lack of support or installation 
 
 > [!IMPORTANT]
 > Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or follow this link.
->
-> <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height="">
+
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height="">
 
 #### Installation via HACS (Home Assistant Community Store)
 
