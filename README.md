@@ -270,7 +270,8 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
         style:
           top: 29%
           left: 63%
-          font-size: 125%
+          font-weight: bold
+          font-size: 100%
 
 ```
 
