@@ -121,7 +121,7 @@
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
-      "filter_remain": { "name": "Filter Ramain" }
+      "filter_remain": { "name": "Filter Remain" }
     },
     "switch": {
       "away_mode": { "name": "Away Mode" },
