@@ -47,7 +47,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 ### Installation
 
 > [!IMPORTANT]
-> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or follow this link.
+> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
 
 <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
@@ -64,9 +64,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 #### Manual Installation
 
 1. Navigate to your Home Assistant configuration directory.
-
     - For most installations, this will be **'/config/'**.
-
 2. Inside the configuration directory, create a new folder named **'custom_components'** if it does not already exist.
 3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
 4. Download the latest release of the Dantherm integration from the [releases page](https://github.com/Tvalley71/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
@@ -281,18 +279,19 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 </details>
 
-#### Mushroom chips card
+#### Mushroom-chips card
 
-Example of a Mushroom Chip Card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
 
 ![Skærmbillede 2024-05-21 104804](https://github.com/Tvalley71/dantherm/assets/83084467/075df325-03e1-4855-bb74-a4cf90780266)
 
 <details>
 
-<summary>Mushroom chips card details.</summary>
+<summary>Mushroom-chips card details.</summary>
 
 ####
 
+The following cards need the _Mushroom_ frontend repository installed under HACS.
 
 #### Mode of operation and fan level chips card (shown above)
 
