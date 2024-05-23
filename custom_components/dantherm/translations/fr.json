@@ -20,11 +20,11 @@
   },
   "entity": {
     "button": {
-      "filter_reset": { "name": "Réinitialisation filtre" },
-      "alarm_reset": { "name": "Réinitialisation alerte" }
+      "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
+      "alarm_reset": { "name": "Réinitialiser alerte active" }
     },
     "cover": {
-      "bypass_damper": { "name": "Volet de bypass" }
+      "bypass_damper": { "name": "Bypass" }
     },
     "number": {
       "filter_lifetime": { "name": "Durée de vie filtre" }
@@ -92,10 +92,10 @@
         }
       },
       "alarm": {
-        "name": "Alerte",
+        "name": "Alerte active",
         "state": {
           "0": "Aucune",
-          "1": "Alerte ventilation extraction",
+          "1": "Alerte ventilateur extraction",
           "2": "Alerte ventilateur pulsion",
           "3": "Alerte bypass",
           "4": "Alerte T1",
@@ -121,12 +121,12 @@
       "extract_temperature": { "name": "Température extraction" },
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
-      "filter_remain": { "name": "Durée restante filtre" }
+      "filter_remain": { "name": "Remplacement filtre dans" }
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },
       "night_mode": { "name": "Mode nuit" },
-      "fireplace_mode": { "name": "Mode démarrage cheminée" },
+      "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
       "summer_mode": { "name": "Mode été" }
     }
