@@ -87,7 +87,7 @@ After installation, add the Dantherm integration to your Home Assistant configur
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
 
-## Screenshots
+### Screenshots
 
 ![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/fa9b31b6-5ec8-4c3b-a381-ef7061495560)
 
