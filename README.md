@@ -47,7 +47,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 ### Installation
 
 > [!IMPORTANT]
-> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or follow this link.
+> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
 
 <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
@@ -64,9 +64,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 #### Manual Installation
 
 1. Navigate to your Home Assistant configuration directory.
-
     - For most installations, this will be **'/config/'**.
-
 2. Inside the configuration directory, create a new folder named **'custom_components'** if it does not already exist.
 3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
 4. Download the latest release of the Dantherm integration from the [releases page](https://github.com/Tvalley71/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
@@ -86,7 +84,7 @@ After installation, add the Dantherm integration to your Home Assistant configur
 
 ### Support
 
-If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [create a discussion](https://github.com/Tvalley71/dantherm/discussions/new?category=general) on this repository. I welcome any contributions or feedback.
+If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
 
 ## Screenshots
@@ -281,18 +279,19 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 </details>
 
-#### Mushroom chips card
+#### Mushroom-chips card
 
-Example of a Mushroom Chip Card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
 
 ![Skærmbillede 2024-05-21 104804](https://github.com/Tvalley71/dantherm/assets/83084467/075df325-03e1-4855-bb74-a4cf90780266)
 
 <details>
 
-<summary>Mushroom chips card details.</summary>
+<summary>Mushroom-chips card details.</summary>
 
 ####
 
+The following cards need the _Mushroom_ frontend repository installed under HACS.
 
 #### Mode of operation and fan level chips card (shown above)
 
@@ -343,10 +342,14 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 
 </details>
 
-#
+## Disclaimer
 
-### Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
+The trademark "Dantherm" is owned by Dantherm Group A/S, a leading supplier of climate control solutions.
 
-I have no affiliation with Dantherm other than owning one of their units. The HCV400 P2.
+All product names, trademarks, and registered trademarks mentioned in this repository are the property of their respective owners.
+
+I am not affiliated with Dantherm, except as an owner of one of their units, the HCV400 P2.
+
+The author does not guarantee the functionality of this integration and is not responsible for any damage.
 
 Tvalley71
