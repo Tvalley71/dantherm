@@ -342,10 +342,14 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 
 </details>
 
-#
+## Disclaimer
 
-### Please be advised that the trademark "Dantherm" is owned by Dantherm Group A/S, a prominent supplier of climate control solutions.
+The trademark "Dantherm" is owned by Dantherm Group A/S, a leading supplier of climate control solutions.
 
-I have no affiliation with Dantherm other than owning one of their units. The HCV400 P2.
+All product names, trademarks, and registered trademarks mentioned in this repository are the property of their respective owners.
+
+I am not affiliated with Dantherm, except as an owner of one of their units, the HCV400 P2.
+
+The author does not guarantee the functionality of this integration and is not responsible for any damage.
 
 Tvalley71
