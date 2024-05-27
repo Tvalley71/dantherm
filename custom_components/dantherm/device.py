@@ -25,6 +25,7 @@ from .const import (
     STATE_WEEKPROGRAM,
     BypassDamperState,
     DataClass,
+    OpMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -317,6 +318,23 @@ class Device:
 
         if self._alarm != 0:
             return "mdi:fan-alert"
+
+        result = self.get_current_unit_mode
+        if result == OpMode.Standby:
+            return "mdi:fan-off"
+        if result == OpMode.Away:
+            return "mdi:bag-suitcase-outline"
+        if result == OpMode.Summer:
+            return "mdi:weather-sunny"
+        if result == OpMode.Fireplace:
+            return "mdi:fireplace"
+        if result == OpMode.Night:
+            return "mdi:weather-night"
+        if result == OpMode.Automatic:
+            return "mdi:fan-auto"
+        if result == OpMode.WeekProgram:
+            return "mdi:fan-clock"
+
         result = self.get_operation_selection
         if result == STATE_STANDBY:
             return "mdi:fan-off"
@@ -324,6 +342,7 @@ class Device:
             return "mdi:fan-auto"
         if result == STATE_WEEKPROGRAM:
             return "mdi:fan-clock"
+
         return "mdi:fan"
 
     @property
@@ -367,7 +386,7 @@ class Device:
         if not self._filter_lifetime:
             return None
         if self._filter_remain >= self._filter_lifetime:
-            return { "level": int(3) }
+            return {"level": 3}
         return {
             "level": int(
                 (self._filter_lifetime - self._filter_remain)
