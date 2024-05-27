@@ -323,11 +323,11 @@ class Device:
         if result == OpMode.Standby:
             return "mdi:fan-off"
         if result == OpMode.Away:
-            return "mdi:bag-suitcase-outline"
+            return "mdi:bag-suitcase"
         if result == OpMode.Summer:
             return "mdi:weather-sunny"
         if result == OpMode.Fireplace:
-            return "mdi:fireplace"
+            return "mdi:fire"
         if result == OpMode.Night:
             return "mdi:weather-night"
         if result == OpMode.Automatic:
