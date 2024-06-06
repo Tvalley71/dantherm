@@ -317,7 +317,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="fan_level",
         data_getinternal="get_fan_level",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key="fan1_speed",
