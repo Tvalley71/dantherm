@@ -317,7 +317,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="fan_level",
         data_getinternal="get_fan_level",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key="fan1_speed",
@@ -400,8 +399,9 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:air-filter",
         data_getinternal="get_filter_remain",
         native_unit_of_measurement="d",
+        suggested_display_precision=0,
+        suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
