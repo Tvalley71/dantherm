@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 
 DOMAIN = "dantherm"
 DEFAULT_NAME = "Dantherm"
@@ -268,6 +269,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="d",
         mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -300,6 +302,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
         component_class=ComponentClass.Week,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -307,6 +310,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="operation_mode",
         data_getinternal="get_current_unit_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DanthermSensorEntityDescription(
         key="alarm",
@@ -428,6 +432,7 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_off=0x8020,
         icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
     ),
     DanthermSwitchEntityDescription(
         key="fireplace_mode",
