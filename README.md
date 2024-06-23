@@ -34,6 +34,7 @@ Known supported units:
 | supply_temperature     | Supply temperature sensor             |
 | outdoor_temperature    | Outdoor temperature sensor            |
 | filter_remain          | Remaining filter time sensor          |
+| work_time              | Work time sensor<sup>&dagger;<sup>    |
 | away_mode              | Away mode switch                      |
 | night_mode             | Night mode switch                     |
 | fireplace_mode         | Fireplace mode switch                 |
@@ -43,6 +44,8 @@ Known supported units:
 | alarm_reset            | Reset alarm button                    |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
+
+_&dagger; The entity is hidden by default._
 
 ### Installation
 
