@@ -407,6 +407,19 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
     ),
+    DanthermSensorEntityDescription(
+        key="work_time",
+        icon="mdi:progress-clock",
+        data_class=DataClass.UInt32,
+        data_address=624,
+        native_unit_of_measurement="h",
+        suggested_display_precision=0,
+        suggested_unit_of_measurement="h",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
