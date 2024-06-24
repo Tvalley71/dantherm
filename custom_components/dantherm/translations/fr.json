@@ -27,8 +27,7 @@
       "bypass_damper": { "name": "Bypass" }
     },
     "number": {
-      "filter_lifetime": { "name": "Durée de vie filtre" },
-      "preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
+      "filter_lifetime": { "name": "Durée de vie filtre" }
     },
     "select": {
       "operation_selection": {
@@ -124,7 +123,8 @@
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
-      "work_time": { "name": "Temps de fonctionnement" }
+      "work_time": { "name": "Temps de fonctionnement" },
+      "preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },

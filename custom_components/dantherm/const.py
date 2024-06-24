@@ -271,21 +271,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
-    DanthermNumberEntityDescription(
-        key="preheater_dutycycle",
-        icon="mdi:heating-coil",
-        data_address=160,
-        data_class=DataClass.UInt32,
-        native_max_value=100,
-        native_min_value=0,
-        device_class=NumberDeviceClass.POWER_FACTOR,
-        native_unit_of_measurement="%",
-        mode=NumberMode.SLIDER,
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
-        component_class=ComponentClass.Internal_preheater,
-    ),
 )
 
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
@@ -444,6 +429,17 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
+        key="preheater_dutycycle",
+        icon="mdi:heating-coil",
+        data_address=160,
+        data_class=DataClass.UInt32,
+        device_class=NumberDeviceClass.POWER_FACTOR,
+        native_unit_of_measurement="%",
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        component_class=ComponentClass.Internal_preheater,
     ),
 )
 

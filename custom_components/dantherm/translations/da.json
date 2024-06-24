@@ -27,8 +27,7 @@
       "bypass_damper": { "name": "Bypass spjæld"}
     },
     "number": {
-      "filter_lifetime": { "name": "Filter livstid" },
-      "preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
+      "filter_lifetime": { "name": "Filter livstid" }
     },
     "select": {
       "operation_selection": {
@@ -124,7 +123,8 @@
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filter tilbage" },
-      "work_time": { "name": "Drifttid" }
+      "work_time": { "name": "Drifttid" },
+      "preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },

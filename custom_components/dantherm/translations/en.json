@@ -27,8 +27,7 @@
       "bypass_damper": { "name": "Bypass Damper" }
     },
     "number": {
-      "filter_lifetime": { "name": "Filter Lifetime" },
-      "preheater_dutycycle": { "name": "Preheater Dutycycle"}
+      "filter_lifetime": { "name": "Filter Lifetime" }
     },
     "select": {
       "operation_selection": {
@@ -124,7 +123,8 @@
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
-      "work_time": { "name": "Work Time" }
+      "work_time": { "name": "Work Time" },
+      "preheater_dutycycle": { "name": "Preheater Dutycycle"}
     },
     "switch": {
       "away_mode": { "name": "Away Mode" },
