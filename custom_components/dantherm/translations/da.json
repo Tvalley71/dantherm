@@ -27,7 +27,8 @@
       "bypass_damper": { "name": "Bypass spjæld"}
     },
     "number": {
-      "filter_lifetime": { "name": "Filter livstid" }
+      "filter_lifetime": { "name": "Filter livstid" },
+      "preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
     "select": {
       "operation_selection": {

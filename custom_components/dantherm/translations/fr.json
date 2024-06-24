@@ -27,7 +27,8 @@
       "bypass_damper": { "name": "Bypass" }
     },
     "number": {
-      "filter_lifetime": { "name": "Durée de vie filtre" }
+      "filter_lifetime": { "name": "Durée de vie filtre" },
+      "preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
     "select": {
       "operation_selection": {
