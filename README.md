@@ -33,8 +33,10 @@ Known supported units:
 | extract_temperature    | Extract temperature sensor            |
 | supply_temperature     | Supply temperature sensor             |
 | outdoor_temperature    | Outdoor temperature sensor            |
+| room_temperature       | Room temperature sensor<sup>\*<sup>   |
 | filter_remain          | Remaining filter time sensor          |
 | work_time              | Work time sensor<sup>&dagger;<sup>    |
+| preheater_dutycycle    | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | away_mode              | Away mode switch                      |
 | night_mode             | Night mode switch                     |
 | fireplace_mode         | Fireplace mode switch                 |
