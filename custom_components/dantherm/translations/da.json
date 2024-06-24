@@ -122,6 +122,7 @@
       "extract_temperature": { "name": "Udsugningstemperatur" },
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
+      "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filter tilbage" },
       "work_time": { "name": "Drifttid" }
     },

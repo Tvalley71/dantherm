@@ -122,6 +122,7 @@
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
+      "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
       "work_time": { "name": "Work Time" }
     },

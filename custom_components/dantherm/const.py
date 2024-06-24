@@ -414,6 +414,16 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
+        key="room_temperature",
+        data_class=DataClass.Float32,
+        data_address=140,
+        data_precision=1,
+        native_unit_of_measurement="°C",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.HRC2,
+    ),
+    DanthermSensorEntityDescription(
         key="filter_remain",
         icon="mdi:air-filter",
         data_getinternal="get_filter_remain",
