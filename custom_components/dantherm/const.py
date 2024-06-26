@@ -406,6 +406,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
         component_class=ComponentClass.HRC2,
     ),
     DanthermSensorEntityDescription(
