@@ -33,7 +33,7 @@ Known supported units:
 | extract_temperature    | Extract temperature sensor            |
 | supply_temperature     | Supply temperature sensor             |
 | outdoor_temperature    | Outdoor temperature sensor            |
-| room_temperature       | Room temperature sensor<sup>\*<sup>   |
+| room_temperature       | Room temperature sensor<sup>\* &dagger;<sup> |
 | filter_remain          | Remaining filter time sensor          |
 | work_time              | Work time sensor<sup>&dagger;<sup>    |
 | preheater_dutycycle    | Preheater power dutycycle<sup>\* &dagger;<sup> |
@@ -47,7 +47,7 @@ Known supported units:
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
-_&dagger; The entity is hidden by default._
+_&dagger; The entity is disabled by default._
 
 ### Installation
 
