@@ -161,11 +161,11 @@ class Device:
             _LOGGER.error("Modbus setup was unsuccessful")
             raise ValueError("Modbus setup was unsuccessful")
 
-        result = await self._read_holding_uint16(610)
+        result = await self._read_holding_uint32(610)
         if result is None:
             raise ValueError("Dantherm unit probably not responding")
 
-        self._device_installed_components = result
+        self._device_installed_components = result & 0xFFFF
         _LOGGER.debug(
             "Installed components (610) = %s",
             hex(self._device_installed_components),
@@ -186,9 +186,28 @@ class Device:
             (self._device_installed_components & description.component_class) == 0
         ):
             install = False
-        if description.data_exclude_if is not None:
+
+        if (
+            description.data_exclude_if_above
+            or description.data_exclude_if_below
+            or description.data_exclude_if is not None
+        ):
             result = await self.read_holding_registers(description=description)
-            if description.data_exclude_if == result:
+
+            if (
+                (
+                    description.data_exclude_if is not None
+                    and description.data_exclude_if == result
+                )
+                or (
+                    description.data_exclude_if_above is not None
+                    and result >= description.data_exclude_if_above
+                )
+                or (
+                    description.data_exclude_if_below is not None
+                    and result <= description.data_exclude_if_below
+                )
+            ):
                 install = False
 
         if install:
