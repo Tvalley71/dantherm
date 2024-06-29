@@ -424,8 +424,8 @@ class Device:
 
         if not self._filter_lifetime:
             return None
-        if self._filter_remain >= self._filter_lifetime:
-            return {"level": 3}
+        if self._filter_remain > self._filter_lifetime:
+            return {"level": 0}
         return {
             "level": int(
                 (self._filter_lifetime - self._filter_remain)
