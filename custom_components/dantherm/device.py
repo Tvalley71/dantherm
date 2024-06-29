@@ -71,6 +71,14 @@ class DanthermEntity(Entity):
         return self.key
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        if not self._device.available:
+            return False
+        return self._attr_available
+
+    @property
     def device_info(self):
         """Device Info."""
         unique_id = self._device.get_device_name + " " + self._device.get_device_type
@@ -121,13 +129,15 @@ class Device:
         self._modbus = modbus.ModbusHub(self._hass, self._client_config)
         self._scan_interval = timedelta(seconds=scan_interval)
         self._entity_refresh_method = None
-        self._current_unit_mode = 0
-        self._active_unit_mode = 0
-        self._fan_level = 0
-        self._alarm = 0
-        self._bypass_damper = 0
-        self._filter_lifetime = 0
-        self._filter_remain = 0
+        self._current_unit_mode = None
+        self._active_unit_mode = None
+        self._fan_level = None
+        self._alarm = None
+        self._bypass_damper = None
+        self._filter_lifetime = None
+        self._filter_remain = None
+        self._available = True
+        self._read_errors = 0
         self._entities = []
         self.data = {}
 
@@ -256,6 +266,14 @@ class Device:
         entity.async_write_ha_state()
 
     @property
+    def available(self) -> bool:
+        """Indicates whether the device is available."""
+
+        if not self._active_unit_mode:
+            return False
+        return self._available
+
+    @property
     def get_current_unit_mode(self):
         """Get current unit mode."""
 
@@ -271,6 +289,8 @@ class Device:
     def get_operation_selection(self):
         """Get operation selection."""
 
+        if self._active_unit_mode is None:
+            return None
         if self._active_unit_mode == 0:
             return STATE_STANDBY
         if self._active_unit_mode & 0x10 == 0x10:  # away mode
@@ -449,7 +469,7 @@ class Device:
     ):
         """Read modbus holding registers."""
 
-        result = 0
+        result = None
         if description:
             if not address:
                 address = description.data_address
@@ -484,6 +504,9 @@ class Device:
                 result = decoder.decode_32bit_uint()
             elif count == 4:
                 result = decoder.decode_64bit_uint()
+        if result is None:
+            _LOGGER.debug("Reading holding register=%s failed", str(address))
+            return None
         result *= scale
         _LOGGER.debug("Reading holding register=%s result=%s", str(address), result)
         return result
@@ -555,7 +578,13 @@ class Device:
         result = await self._modbus.async_pb_call(
             self._unit_id, address, count, "holding"
         )
-        if result is None:
+        if result:
+            self._available = True
+            self._read_errors = 0
+        else:
+            self._read_errors += 1
+            if self._read_errors > 3:
+                self._available = False
             _LOGGER.error(
                 "Error reading holding register=%s count=%s", str(address), str(count)
             )
@@ -579,10 +608,12 @@ class Device:
         """Read holding int8 registers."""
 
         result = await self._read_holding_registers(address, 1)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_8bit_int()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_8bit_int()
+        return None
 
     async def _write_holding_int8(self, address, value):
         """Write holding int8 registers."""
@@ -596,10 +627,12 @@ class Device:
         """Read holding uint8 registers."""
 
         result = await self._read_holding_registers(address, 1)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_8bit_uint()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_8bit_uint()
+        return None
 
     async def _write_holding_uint8(self, address, value):
         """Write holding uint8 registers."""
@@ -613,10 +646,12 @@ class Device:
         """Read holding int16 registers."""
 
         result = await self._read_holding_registers(address, 1)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_16bit_int()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_16bit_int()
+        return None
 
     async def _write_holding_int16(self, address, value):
         """Write holding int16 registers."""
@@ -630,12 +665,12 @@ class Device:
         """Read holding uint16 registers."""
 
         result = await self._read_holding_registers(address, 1)
-        if result is None:
-            return None
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_16bit_uint()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_16bit_uint()
+        return None
 
     async def _write_holding_uint16(self, address, value):
         """Write holding uint16 registers."""
@@ -649,10 +684,12 @@ class Device:
         """Read holding int32 registers."""
 
         result = await self._read_holding_registers(address, 2)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_32bit_int()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_32bit_int()
+        return None
 
     async def _write_holding_int32(self, address, value):
         """Write holding int32 registers."""
@@ -666,10 +703,12 @@ class Device:
         """Read holding uint32 registers."""
 
         result = await self._read_holding_registers(address, 2)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_32bit_uint()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_32bit_uint()
+        return None
 
     async def _write_holding_uint32(self, address, value):
         """Write holding uint32 registers."""
@@ -683,24 +722,28 @@ class Device:
         """Read holding uint64 registers."""
 
         result = await self._read_holding_registers(address, 4)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        return decoder.decode_64bit_uint()
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            return decoder.decode_64bit_uint()
+        return None
 
     async def _read_holding_float32(self, address, precision):
         """Read holding float32 registers."""
 
         result = await self._read_holding_registers(address, 2)
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
-        )
-        result = decoder.decode_32bit_float()
-        if precision >= 0:
-            result = round(result, precision)
-        if precision == 0:
-            result = int(result)
-        return result
+        if result:
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                result.registers, byteorder=Endian.BIG, wordorder=Endian.LITTLE
+            )
+            result = decoder.decode_32bit_float()
+            if precision >= 0:
+                result = round(result, precision)
+            if precision == 0:
+                result = int(result)
+            return result
+        return None
 
     async def _write_holding_float32(self, address, value):
         """Write holding float32 registers."""

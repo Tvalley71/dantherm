@@ -42,6 +42,7 @@ class DanthermNumber(NumberEntity, DanthermEntity):
     @property
     def native_value(self):
         """Return the state."""
+
         return self._device.data.get(self.key, None)
 
     async def async_set_native_value(self, value: int) -> None:
