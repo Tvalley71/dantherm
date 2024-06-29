@@ -124,7 +124,7 @@
       "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filter tilbage" },
       "work_time": { "name": "Drifttid" },
-      "preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
+      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },

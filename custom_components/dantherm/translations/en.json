@@ -124,7 +124,7 @@
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
       "work_time": { "name": "Work Time" },
-      "preheater_dutycycle": { "name": "Preheater Dutycycle"}
+      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
     },
     "switch": {
       "away_mode": { "name": "Away Mode" },

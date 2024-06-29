@@ -449,7 +449,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
-        key="preheater_dutycycle",
+        key="internal_preheater_dutycycle",
         icon="mdi:heating-coil",
         data_address=160,
         data_class=DataClass.UInt32,

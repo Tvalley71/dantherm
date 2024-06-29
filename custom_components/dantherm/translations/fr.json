@@ -124,7 +124,7 @@
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
       "work_time": { "name": "Temps de fonctionnement" },
-      "preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
+      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },
