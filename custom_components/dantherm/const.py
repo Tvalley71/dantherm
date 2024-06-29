@@ -235,11 +235,13 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
         key="filter_reset",
         data_setaddress=558,
         state=1,
+        data_class=DataClass.UInt32,
     ),
     DanthermButtonEntityDescription(
         key="alarm_reset",
         data_setaddress=514,
         state_entity="alarm",
+        data_class=DataClass.UInt32,
     ),
 )
 
