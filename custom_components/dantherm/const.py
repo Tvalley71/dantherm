@@ -124,6 +124,8 @@ class DanthermButtonEntityDescription(ButtonEntityDescription):
 
     data_address: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -145,6 +147,8 @@ class DanthermCoverEntityDescription(CoverEntityDescription):
     data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
     state_opening: int = None
     state_opened: int = None
@@ -166,6 +170,8 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
     data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -184,6 +190,8 @@ class DanthermSelectEntityDescription(SelectEntityDescription):
     data_entity: str | None = None
     data_bitwise_and: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -198,6 +206,8 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_precision: int | None = None
     data_scale: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_entity: str | None = None
     data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
@@ -225,6 +235,8 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     data_address: int | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -405,6 +417,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         data_class=DataClass.Float32,
         data_address=140,
         data_precision=1,
+        data_exclude_if_above=70,
+        data_exclude_if_below=-40,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
