@@ -36,7 +36,7 @@ Known supported units:
 | room_temperature       | Room temperature sensor<sup>\* &dagger;<sup> |
 | filter_remain          | Remaining filter time sensor          |
 | work_time              | Work time sensor<sup>&dagger;<sup>    |
-| preheater_dutycycle    | Preheater power dutycycle<sup>\* &dagger;<sup> |
+| internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | away_mode              | Away mode switch                      |
 | night_mode             | Night mode switch                     |
 | fireplace_mode         | Fireplace mode switch                 |
