@@ -121,7 +121,10 @@
       "extract_temperature": { "name": "Température extraction" },
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
-      "filter_remain": { "name": "Remplacement filtre dans" }
+      "room_temperature": { "name": "Température ambiante" },
+      "filter_remain": { "name": "Remplacement filtre dans" },
+      "work_time": { "name": "Temps de fonctionnement" },
+      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },

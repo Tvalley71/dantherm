@@ -111,6 +111,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
     @property
     def native_value(self):
         """Return the state."""
+
         return self._device.data.get(self.key, None)
 
     async def async_update(self, now: datetime | None = None) -> None:

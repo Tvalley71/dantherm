@@ -42,6 +42,7 @@ class DanthermSensor(SensorEntity, DanthermEntity):
     @property
     def native_value(self):
         """Return the state."""
+
         return self._device.data.get(self.key, None)
 
     @property

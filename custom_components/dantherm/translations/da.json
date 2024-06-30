@@ -121,7 +121,10 @@
       "extract_temperature": { "name": "Udsugningstemperatur" },
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
-      "filter_remain": { "name": "Filter tilbage" }
+      "room_temperature": { "name": "Rumtemperatur" },
+      "filter_remain": { "name": "Filter tilbage" },
+      "work_time": { "name": "Drifttid" },
+      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },

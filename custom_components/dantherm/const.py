@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 
 DOMAIN = "dantherm"
 DEFAULT_NAME = "Dantherm"
@@ -123,6 +124,8 @@ class DanthermButtonEntityDescription(ButtonEntityDescription):
 
     data_address: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -144,6 +147,8 @@ class DanthermCoverEntityDescription(CoverEntityDescription):
     data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
     state_opening: int = None
     state_opened: int = None
@@ -165,6 +170,8 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
     data_getinternal: str | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -183,6 +190,8 @@ class DanthermSelectEntityDescription(SelectEntityDescription):
     data_entity: str | None = None
     data_bitwise_and: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -197,6 +206,8 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_precision: int | None = None
     data_scale: int | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_entity: str | None = None
     data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
@@ -224,6 +235,8 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     data_address: int | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -234,11 +247,13 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
         key="filter_reset",
         data_setaddress=558,
         state=1,
+        data_class=DataClass.UInt32,
     ),
     DanthermButtonEntityDescription(
         key="alarm_reset",
         data_setaddress=514,
         state_entity="alarm",
+        data_class=DataClass.UInt32,
     ),
 )
 
@@ -268,6 +283,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="d",
         mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -300,6 +316,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         data_class=DataClass.UInt32,
         options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
         component_class=ComponentClass.Week,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -307,6 +324,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="operation_mode",
         data_getinternal="get_current_unit_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DanthermSensorEntityDescription(
         key="alarm",
@@ -395,6 +413,20 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
+        key="room_temperature",
+        data_class=DataClass.Float32,
+        data_address=140,
+        data_precision=1,
+        data_exclude_if_above=70,
+        data_exclude_if_below=-40,
+        native_unit_of_measurement="°C",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        component_class=ComponentClass.HRC2,
+    ),
+    DanthermSensorEntityDescription(
         key="filter_remain",
         icon="mdi:air-filter",
         data_getinternal="get_filter_remain",
@@ -402,6 +434,30 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
+    ),
+    DanthermSensorEntityDescription(
+        key="work_time",
+        icon="mdi:progress-clock",
+        data_class=DataClass.UInt32,
+        data_address=624,
+        native_unit_of_measurement="h",
+        suggested_display_precision=0,
+        suggested_unit_of_measurement="h",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
+        key="internal_preheater_dutycycle",
+        icon="mdi:heating-coil",
+        data_address=160,
+        data_class=DataClass.UInt32,
+        device_class=NumberDeviceClass.POWER_FACTOR,
+        native_unit_of_measurement="%",
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        component_class=ComponentClass.Internal_preheater,
     ),
 )
 
@@ -428,6 +484,7 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_off=0x8020,
         icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
     ),
     DanthermSwitchEntityDescription(
         key="fireplace_mode",

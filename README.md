@@ -33,7 +33,10 @@ Known supported units:
 | extract_temperature    | Extract temperature sensor            |
 | supply_temperature     | Supply temperature sensor             |
 | outdoor_temperature    | Outdoor temperature sensor            |
+| room_temperature       | Room temperature sensor<sup>\* &dagger;<sup> |
 | filter_remain          | Remaining filter time sensor          |
+| work_time              | Work time sensor<sup>&dagger;<sup>    |
+| internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | away_mode              | Away mode switch                      |
 | night_mode             | Night mode switch                     |
 | fireplace_mode         | Fireplace mode switch                 |
@@ -44,12 +47,14 @@ Known supported units:
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
+_&dagger; The entity is disabled by default._
+
 ### Installation
 
 > [!IMPORTANT]
 > Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
 
-<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&amp;repository=dantherm"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&repository=Dantherm&category=Integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
 #### Installation via HACS (Home Assistant Community Store)
 

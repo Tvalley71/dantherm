@@ -43,6 +43,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
     @property
     def icon(self) -> str | None:
         """Switch icon."""
+
         if self._attr_is_on:
             return self.entity_description.icon_on
         return self.entity_description.icon_off

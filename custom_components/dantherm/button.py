@@ -47,7 +47,7 @@ class DanthermButton(ButtonEntity, DanthermEntity):
         else:
             value = self.entity_description.state
 
-        if not value:
+        if value:
             await self._device.write_holding_registers(
                 description=self.entity_description, value=value
             )
