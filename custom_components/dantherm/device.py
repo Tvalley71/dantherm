@@ -52,7 +52,6 @@ class DanthermEntity(Entity):
 
     def suspend_refresh(self, seconds: int):
         """Suspend entity refresh for specified number of seconds."""
-
         self.attr_suspend_refresh = datetime.now() + timedelta(seconds=seconds)
 
     @property
@@ -63,7 +62,7 @@ class DanthermEntity(Entity):
     @property
     def unique_id(self) -> str | None:
         """Return the unique id."""
-        return f"dantherm_{self.key}"
+        return f"{self._device.get_device_name}_{self.key}"
 
     @property
     def translation_key(self) -> str:
@@ -81,7 +80,7 @@ class DanthermEntity(Entity):
     @property
     def device_info(self):
         """Device Info."""
-        unique_id = self._device.get_device_name + " " + self._device.get_device_type
+        unique_id = self._device.get_device_name
 
         return {
             "identifiers": {
@@ -118,7 +117,7 @@ class Device:
         self._port = port
         self._unit_id = int(unit_id)
         self._client_config = {
-            "name": self._device_name,
+            "name": name,
             "type": "tcp",
             "method": "rtu",
             "delay": 0,
@@ -568,6 +567,7 @@ class Device:
     @property
     def get_device_name(self) -> str:
         """Device name."""
+
         return self._device_name
 
     @property
@@ -582,6 +582,7 @@ class Device:
     @property
     def get_device_fw_version(self) -> str:
         """Device firmware version."""
+
         minor = (self._device_fw_version >> 8) & 0xFF
         major = self._device_fw_version & 0xFF
         return f"({major}.{minor:02})"
