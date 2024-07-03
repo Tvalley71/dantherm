@@ -11,7 +11,7 @@ Known supported units:
 - RCV320 P1/P2
 
 > [!NOTE]
-> The listed units are known to have been tested with the integration. Basicly all unit that use the _Dantherm Residential_ app
+> The listed units are known to have been tested with the integration. Basicly all unit that use the _Dantherm Residential_ app ought to work with the integration.
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
