@@ -117,7 +117,7 @@ class Device:
         self._port = port
         self._unit_id = int(unit_id)
         self._client_config = {
-            "name": self._device_name,
+            "name": name,
             "type": "tcp",
             "method": "rtu",
             "delay": 0,
