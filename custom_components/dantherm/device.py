@@ -279,8 +279,6 @@ class Device:
                 return
 
         _LOGGER.debug("Refresh entity=%s", entity.name)
-
-        await entity.async_update_ha_state(True)
         entity.async_write_ha_state()
 
     @property
