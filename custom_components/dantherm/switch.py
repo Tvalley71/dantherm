@@ -109,5 +109,3 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
-
-            self._device.data[self.key] = self._attr_is_on
