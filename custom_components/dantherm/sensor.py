@@ -78,4 +78,4 @@ class DanthermSensor(SensorEntity, DanthermEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            self._device.data[self.key] = self._attr_state = result
+            self._device.data[self.key] = result
