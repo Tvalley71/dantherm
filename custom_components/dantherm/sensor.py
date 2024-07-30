@@ -52,7 +52,7 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         result = super().icon
         if hasattr(self._device, f"get_{self.key}_icon"):
             result = getattr(self._device, f"get_{self.key}_icon")
-        elif self.entity_description.data_zero_icon and not self._attr_state:
+        elif self.entity_description.data_zero_icon and not self.native_value:
             result = self.entity_description.data_zero_icon
 
         return result
