@@ -55,8 +55,8 @@ class DanthermNumber(NumberEntity, DanthermEntity):
                 description=self.entity_description
             )
 
-    async def async_update(self) -> None:
-        """Read holding register."""
+    async def async_refresh_callback(self) -> None:
+        """Update the state of the number."""
 
         if hasattr(self._device, f"get_{self.key}_attrs"):
             self._attr_extra_state_attributes = getattr(
