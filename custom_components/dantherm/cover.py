@@ -113,7 +113,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
 
         return self._device.data.get(self.key, None)
 
-    async def async_refresh_callback(self) -> None:
+    async def async_update(self) -> None:
         """Update the state of the cover."""
 
         if self.entity_description.data_getinternal:

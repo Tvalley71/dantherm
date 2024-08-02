@@ -57,7 +57,7 @@ class DanthermSensor(SensorEntity, DanthermEntity):
 
         return result
 
-    async def async_refresh_callback(self) -> None:
+    async def async_update(self) -> None:
         """Update the state of the sensor."""
 
         if hasattr(self._device, f"get_{self.key}_attrs"):

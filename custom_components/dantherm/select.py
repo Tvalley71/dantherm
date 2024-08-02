@@ -60,7 +60,7 @@ class DanthermSelect(SelectEntity, DanthermEntity):
                 description=self.entity_description, value=int(option)
             )
 
-    async def async_refresh_callback(self) -> None:
+    async def async_update(self) -> None:
         """Update state of the select."""
 
         if self.entity_description.data_getinternal:

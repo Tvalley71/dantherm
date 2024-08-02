@@ -82,7 +82,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 description=self.entity_description, value=state
             )
 
-    async def async_refresh_callback(self) -> None:
+    async def async_update(self) -> None:
         """Update the state of the switch."""
 
         if self.attr_suspend_refresh:

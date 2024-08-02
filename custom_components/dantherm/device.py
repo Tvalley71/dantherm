@@ -279,9 +279,7 @@ class Device:
                 return
 
         _LOGGER.debug("Refresh entity=%s", entity.name)
-        if hasattr(entity, "async_refresh_callback"):
-            await getattr(entity, "async_refresh_callback")()
-        entity.async_write_ha_state()
+        await entity.async_update_ha_state(True)
 
     @property
     def available(self) -> bool:
