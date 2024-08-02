@@ -346,6 +346,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
         key="fan2_speed",
@@ -356,6 +358,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
         key="humidity",
