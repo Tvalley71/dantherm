@@ -44,11 +44,11 @@ class DanthermEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register entity for refresh interval."""
-        self._device.async_add_refresh_entity(self)
+        await self._device.async_add_refresh_entity(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister entity for refresh interval."""
-        self._device.async_remove_refresh_entity(self)
+        await self._device.async_remove_refresh_entity(self)
 
     def suspend_refresh(self, seconds: int):
         """Suspend entity refresh for specified number of seconds."""
@@ -132,8 +132,12 @@ class Device:
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
+        self._bypass_damper_enabled = False
+        self._manual_bypass_mode_enabled = False
         self._bypass_damper = None
+        self._filter_lifetime_enabled = False
         self._filter_lifetime = None
+        self._filter_remain_enabled = False
         self._filter_remain = None
         self._available = True
         self._read_errors = 0
@@ -214,18 +218,40 @@ class Device:
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    def async_add_refresh_entity(self, entity):
+    async def async_add_refresh_entity(self, entity):
         """Add entity for refresh."""
+
         # This is the first entity, set up interval.
         if not self._entities:
             self._entity_refresh_method = async_track_time_interval(
                 self._hass, self.async_refresh_entities, self._scan_interval
             )
 
+        if entity.key == "bypass_damper":
+            self._bypass_damper_enabled = True
+        elif entity.key == "manual_bypass_mode":
+            self._manual_bypass_mode_enabled = True
+        elif entity.key == "filter_lifetime":
+            self._filter_lifetime_enabled = True
+        elif entity.key == "filter_remain":
+            self._filter_remain_enabled = True
+
+        _LOGGER.debug("Adding refresh entity=%s", entity.name)
         self._entities.append(entity)
 
-    def async_remove_refresh_entity(self, entity):
+    async def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
+
+        if entity.key == "bypass_damper":
+            self._bypass_damper_enabled = False
+        elif entity.key == "manual_bypass_mode":
+            self._manual_bypass_mode_enabled = False
+        elif entity.key == "filter_lifetime":
+            self._filter_lifetime_enabled = False
+        elif entity.key == "filter_remain":
+            self._filter_remain_enabled = False
+
+        _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
 
         if not self._entities:
@@ -255,14 +281,23 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
-        self._bypass_damper = await self._read_holding_int32(198)
-        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        if self._bypass_damper_enabled or self._manual_bypass_mode_enabled:
+            self._bypass_damper = await self._read_holding_int32(198)
+            _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        else:
+            self._bypass_damper = None
 
-        self._filter_lifetime = await self._read_holding_uint32(556)
-        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+        if self._filter_lifetime_enabled:
+            self._filter_lifetime = await self._read_holding_uint32(556)
+            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+        else:
+            self._filter_lifetime = None
 
-        self._filter_remain = await self._read_holding_uint32(554)
-        _LOGGER.debug("Filter remain = %s", self._filter_remain)
+        if self._filter_remain_enabled:
+            self._filter_remain = await self._read_holding_uint32(554)
+            _LOGGER.debug("Filter remain = %s", self._filter_remain)
+        else:
+            self._filter_remain = None
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
