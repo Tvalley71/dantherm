@@ -96,11 +96,12 @@ If you encounter any issues or have questions regarding the Dantherm integration
 
 ### Screenshots
 
-![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/fa9b31b6-5ec8-4c3b-a381-ef7061495560)
+![Skærmbillede 2024-05-04 090219](https://github.com/user-attachments/assets/e8750622-f33c-4652-b3d5-33c2f3f13c54)
 
-![Skærmbillede 2024-05-13 070737](https://github.com/Tvalley71/dantherm/assets/83084467/d6493c4e-ab10-493d-b2ec-c4f192383192)
-![Skærmbillede 2024-05-13 070838](https://github.com/Tvalley71/dantherm/assets/83084467/8032983f-f55e-425e-8c55-c8d2ae918ea7)
-![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/4b2665b1-6abe-491b-8c3b-e5b3322402ee)
+![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/ef216a93-bdd6-4746-8515-83772554f0fe)
+![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/b888c8b9-53b9-45e6-8018-3e1147218ead)
+![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/0224a83e-b937-42e6-99d9-3e6fd0e1fe1e)
+![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/64e127e1-7933-46a7-8886-b5880d267788)
 
 > [!NOTE]
 > Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
@@ -289,7 +290,7 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
 
-![Skærmbillede 2024-05-21 104804](https://github.com/Tvalley71/dantherm/assets/83084467/075df325-03e1-4855-bb74-a4cf90780266)
+![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
 
 <details>
 
