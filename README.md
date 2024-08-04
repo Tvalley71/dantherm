@@ -86,8 +86,9 @@ After installation, add the Dantherm integration to your Home Assistant configur
 3. Search for "Dantherm" and select it from the list of available integrations.
 4. Follow the on-screen instructions to complete the integration setup.
 
-![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/f085a769-c55c-45f1-952e-6ee8884eaad1)
-![Skærmbillede 2024-05-04 090125](https://github.com/Tvalley71/dantherm/assets/83084467/1a66e37c-3c0e-498d-995f-c2bb5c778f35)
+![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
+![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
+
 
 ### Support
 
@@ -98,13 +99,17 @@ If you encounter any issues or have questions regarding the Dantherm integration
 
 ![Skærmbillede 2024-05-04 090219](https://github.com/user-attachments/assets/e8750622-f33c-4652-b3d5-33c2f3f13c54)
 
-![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/ef216a93-bdd6-4746-8515-83772554f0fe)
-![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/b888c8b9-53b9-45e6-8018-3e1147218ead)
-![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/0224a83e-b937-42e6-99d9-3e6fd0e1fe1e)
-![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/64e127e1-7933-46a7-8886-b5880d267788)
+![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/1f1ce55b-4a9a-4b4c-b09d-4e18e34a08a2)
+![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/cb4c686b-ed84-42f2-896e-6c5f0b126f52)
+
+![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/6ecca514-7595-4b64-8e1d-1e1fffa5aae4)
+![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/b84b9ac7-3586-40da-9a74-2808ced478e2)
+
+![Skærmbillede 2024-08-04 084430](https://github.com/user-attachments/assets/814bafd5-e03f-496f-98ce-7faafe2e4729)
+
 
 > [!NOTE]
-> Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
+> The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
 ### Languages
 
@@ -262,27 +267,29 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
           top: 45%
           left: 36%
           font-weight: bold
-          text-align: center;
+          font-style: italic
+          text-align: center
           font-size: 100%
       - type: state-label
         entity: sensor.dantherm_humidity
         style:
           top: 29%
           left: 38%
-          font-size: 125%
+          font-size: 100%
       - type: state-label
         entity: select.dantherm_fan_selection
         style:
           top: 29%
           left: 63%
           font-weight: bold
+          font-style: italic
           font-size: 100%
 
 ```
 
 #### Helper template sensor.
 
-![Skærmbillede 2024-05-04 094747](https://github.com/Tvalley71/dantherm/assets/83084467/49b4e3b5-e419-458d-ada8-ffc3a92e0395)
+![Skærmbillede 2024-05-04 094747](https://github.com/user-attachments/assets/5fc0c6dc-a1e5-4579-8453-7837037b3f9a)
 
 </details>
 
