@@ -27,8 +27,8 @@ Known supported units:
 | operation_mode         | Operation mode sensor                 |
 | alarm                  | Alarm sensor                          |
 | fan_level              | Fan level sensor                      |
-| fan1_speed             | Fan 1 speed sensor                    |
-| fan2_speed             | Fan 2 speed sensor                    |
+| fan1_speed             | Fan 1 speed sensor<sup>&dagger;<sup>  |
+| fan2_speed             | Fan 2 speed sensor<sup>&dagger;<sup>  |
 | humidity               | Humidity sensor<sup>\*<sup>           |
 | air_quality            | Air quality sensor<sup>\*<sup>        |
 | exhaust_temperature    | Exhaust temperature sensor            |
