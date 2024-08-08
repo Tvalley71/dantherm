@@ -363,6 +363,15 @@ class Device:
         return STATE_MANUAL  # manual
 
     @property
+    def get_operation_mode_icon(self) -> str:
+        """Get operation mode icon."""
+
+        result = self.get_operation_selection
+        if not result or result == STATE_STANDBY:
+            return "mdi:hvac-off"
+        return "mdi:hvac"
+
+    @property
     def get_fan_level_selection_icon(self) -> str:
         """Get fan level selection icon."""
 
