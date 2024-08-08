@@ -202,6 +202,7 @@ class DanthermSelectEntityDescription(SelectEntityDescription):
 class DanthermSensorEntityDescription(SensorEntityDescription):
     """Dantherm Sensor Entity Description."""
 
+    icon_zero: str | None = None
     data_address: int | None = None
     data_getinternal: str | None = None
     data_precision: int | None = None
@@ -210,7 +211,6 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
     data_entity: str | None = None
-    data_zero_icon: str | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -330,8 +330,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="alarm",
         icon="mdi:alert-circle-outline",
+        icon_zero="mdi:alert-circle-check-outline",
         data_getinternal="get_alarm",
-        data_zero_icon="mdi:alert-circle-check-outline",
     ),
     DanthermSensorEntityDescription(
         key="fan_level",
@@ -340,9 +340,9 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="fan1_speed",
         icon="mdi:fan",
+        icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
         data_address=100,
-        data_zero_icon="mdi:fan-off",
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
@@ -352,9 +352,9 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key="fan2_speed",
         icon="mdi:fan",
+        icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
         data_address=102,
-        data_zero_icon="mdi:fan-off",
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
