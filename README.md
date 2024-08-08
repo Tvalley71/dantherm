@@ -295,7 +295,7 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 #### Mushroom-chips card
 
-Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+An example of a Mushroom-chips card showing the current state of operation and fan level in a single display. This can also be achieved with many of the other entities.
 
 ![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
 
@@ -355,6 +355,8 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 ```
 
 </details>
+
+Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve the same result.
 
 ## Disclaimer
 
