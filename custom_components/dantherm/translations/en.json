@@ -39,7 +39,8 @@
           "week_program": "Week Program",
           "away": "Away",
           "summer": "Summer",
-          "fireplace": "Fireplace"
+          "fireplace": "Fireplace",
+          "night": "Night"
         }
       },
       "fan_level_selection": {
