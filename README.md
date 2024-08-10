@@ -357,7 +357,14 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 </details>
 
 > [!NOTE]
-> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve the same result.
+> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve same results as the Mushroom chips card.
+
+#### Dashboard Badges
+
+Here are some examples of badges added to the dashboard. The pop-up that appears when clicking on a badge will vary depending on the selected entities, either displaying information or enabling manipulation of the Dantherm unit.
+
+![Skærmbillede badge example](https://github.com/user-attachments/assets/77ae39a9-edb2-4648-bb88-feac6a997087)
+
 
 ## Disclaimer
 
