@@ -54,7 +54,7 @@ _&dagger; The entity is disabled by default._
 ### Installation
 
 > [!IMPORTANT]
-> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
+> Installation directly through HACS is not yet available because the integration is not yet official included into HACS. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
 
 <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&repository=Dantherm&category=Integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
@@ -295,7 +295,7 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 #### Mushroom-chips card
 
-Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+An example of a Mushroom-chips card showing the current state of operation and fan level in a single display. This can also be achieved with many of the other entities.
 
 ![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
 
@@ -355,6 +355,9 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 ```
 
 </details>
+
+> [!NOTE]
+> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve the same result.
 
 ## Disclaimer
 
