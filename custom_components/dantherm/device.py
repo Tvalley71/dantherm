@@ -373,7 +373,7 @@ class Device:
             return STATE_WEEKPROGRAM
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
-        return STATE_MANUAL  # manual
+        return STATE_MANUAL
 
     @property
     def get_operation_mode_icon(self) -> str:
@@ -548,23 +548,14 @@ class Device:
             await self.set_active_unit_mode(ActiveUnitMode.Manuel)
             if self._fan_level != 0:
                 await self.set_fan_level(0)
-
         elif value == STATE_AUTOMATIC:
             await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
             await self.set_active_unit_mode(ActiveUnitMode.Manuel)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
-
         elif value == STATE_AWAY:
             await self.set_active_unit_mode(ActiveUnitMode.StartAway)
-        elif value == STATE_SUMMER:
-            await self.set_active_unit_mode(ActiveUnitMode.StartSummer)
-        elif value == STATE_FIREPLACE:
-            await self.set_active_unit_mode(ActiveUnitMode.StartFireplace)
-
-        elif value == STATE_NIGHT:
-            await self.set_active_unit_mode(ActiveUnitMode.NightEnable)
 
     async def set_fan_level(self, value):
         """Set fan level."""
