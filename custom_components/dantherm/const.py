@@ -523,7 +523,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_seton=ActiveUnitMode.StartFireplace,
         icon_on="mdi:fireplace",
         state_setoff=ActiveUnitMode.EndFireplace,
-        # state_on=OpMode.Fireplace,
         icon_off="mdi:fireplace-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
