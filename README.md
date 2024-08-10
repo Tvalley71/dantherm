@@ -356,7 +356,8 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 
 </details>
 
-Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve the same result.
+> [!NOTE]
+> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve the same result.
 
 ## Disclaimer
 
