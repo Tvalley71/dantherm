@@ -20,12 +20,14 @@ from .const import (
     STATE_AWAY,
     STATE_FIREPLACE,
     STATE_MANUAL,
+    STATE_NIGHT,
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    ActiveUnitMode,
     BypassDamperState,
+    CurrentUnitMode,
     DataClass,
-    OpMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -340,23 +342,34 @@ class Device:
     def get_operation_selection(self):
         """Get operation selection."""
 
-        if self._active_unit_mode is None:
+        if (self._active_unit_mode or self._current_unit_mode) is None:
             return None
-        if self._active_unit_mode == 0:
-            return STATE_STANDBY
-        if self._active_unit_mode & 0x10 == 0x10:  # away mode
+
+        if self._current_unit_mode == CurrentUnitMode.Away:
             return STATE_AWAY
-        if self._active_unit_mode & 0x800 == 0x800:  # summer mode
+        if self._current_unit_mode == CurrentUnitMode.Summer:
             return STATE_SUMMER
-        if self._active_unit_mode & 0x40 == 0x40:  # boost fireplace mode
+        if self._current_unit_mode == CurrentUnitMode.Fireplace:
             return STATE_FIREPLACE
-        if self._active_unit_mode & 2 == 2:  # demand mode
+        if self._current_unit_mode == CurrentUnitMode.Night:
+            return STATE_NIGHT
+
+        if (self._active_unit_mode or self._fan_level) == 0:
+            return STATE_STANDBY
+
+        if (
+            self._active_unit_mode & ActiveUnitMode.Automatic
+            == ActiveUnitMode.Automatic
+        ):
             return STATE_AUTOMATIC
-        if self._active_unit_mode & 4 == 4:  # manual mode
-            if self._fan_level == 0:
-                return STATE_STANDBY  # if fan level is 0 return standby
-            return STATE_MANUAL  # manual
-        if self._active_unit_mode & 8 == 8:  # week program
+
+        if self._active_unit_mode & ActiveUnitMode.Manuel == ActiveUnitMode.Manuel:
+            return STATE_MANUAL
+
+        if (
+            self._active_unit_mode & ActiveUnitMode.WeekProgram
+            == ActiveUnitMode.WeekProgram
+        ):
             return STATE_WEEKPROGRAM
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
@@ -400,19 +413,19 @@ class Device:
             return "mdi:fan-alert"
 
         result = self.get_current_unit_mode
-        if result == OpMode.Standby:
+        if result == CurrentUnitMode.Standby:
             return "mdi:fan-off"
-        if result == OpMode.Away:
+        if result == CurrentUnitMode.Away:
             return "mdi:bag-suitcase"
-        if result == OpMode.Summer:
+        if result == CurrentUnitMode.Summer:
             return "mdi:weather-sunny"
-        if result == OpMode.Fireplace:
+        if result == CurrentUnitMode.Fireplace:
             return "mdi:fire"
-        if result == OpMode.Night:
+        if result == CurrentUnitMode.Night:
             return "mdi:weather-night"
-        if result == OpMode.Automatic:
+        if result == CurrentUnitMode.Automatic:
             return "mdi:fan-auto"
-        if result == OpMode.WeekProgram:
+        if result == CurrentUnitMode.WeekProgram:
             return "mdi:fan-clock"
 
         result = self.get_operation_selection
@@ -446,6 +459,49 @@ class Device:
         if self.get_bypass_damper == BypassDamperState.Opened:
             return "mdi:valve-open"
         return "mdi:valve"
+
+    @property
+    def get_away_mode(self) -> bool | None:
+        """Get away mode."""
+
+        if (self._current_unit_mode or self._active_unit_mode) is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Away
+            or self._active_unit_mode & ActiveUnitMode.Away == ActiveUnitMode.Away
+        ):
+            return True
+        return False
+
+    @property
+    def get_fireplace_mode(self) -> bool | None:
+        """Get fireplace mode."""
+
+        if (self._current_unit_mode or self._active_unit_mode) is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Fireplace
+            or self._active_unit_mode & ActiveUnitMode.Fireplace
+            == ActiveUnitMode.Fireplace
+        ):
+            return True
+        return False
+
+    @property
+    def get_summer_mode(self) -> bool | None:
+        """Get summer mode."""
+
+        if (self._current_unit_mode or self._active_unit_mode) is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Summer
+            or self._active_unit_mode & ActiveUnitMode.Summer == ActiveUnitMode.Summer
+        ):
+            return True
+        return False
 
     @property
     def get_filter_lifetime(self):
@@ -483,21 +539,26 @@ class Device:
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
-            await self.set_active_unit_mode(4)  # manual mode
+            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
             if self._fan_level != 0:
                 await self.set_fan_level(0)
+
         elif value == STATE_AUTOMATIC:
-            await self.set_active_unit_mode(2)  # demand mode
+            await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
-            await self.set_active_unit_mode(4)  # manual mode
+            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
         elif value == STATE_WEEKPROGRAM:
-            await self.set_active_unit_mode(8)  # week program mode
+            await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
+
         elif value == STATE_AWAY:
-            await self.set_active_unit_mode(0x0010)  # away mode
+            await self.set_active_unit_mode(ActiveUnitMode.StartAway)
         elif value == STATE_SUMMER:
-            await self.set_active_unit_mode(0x0800)  # summer mode
+            await self.set_active_unit_mode(ActiveUnitMode.StartSummer)
         elif value == STATE_FIREPLACE:
-            await self.set_active_unit_mode(0x0040)  # boost fireplace mode
+            await self.set_active_unit_mode(ActiveUnitMode.StartFireplace)
+
+        elif value == STATE_NIGHT:
+            await self.set_active_unit_mode(ActiveUnitMode.NightEnable)
 
     async def set_fan_level(self, value):
         """Set fan level."""

@@ -82,8 +82,8 @@ class DataClass(Enum):
     Float32 = 8
 
 
-class OpMode(int):
-    """Dantherm mode of operation class."""
+class CurrentUnitMode(int):
+    """Dantherm current unit mode class."""
 
     Standby = 0
     Manual = 1
@@ -95,6 +95,29 @@ class OpMode(int):
     Night = 16
 
 
+class ActiveUnitMode(int):
+    """Dantherm active unit mode class."""
+
+    Automatic = 0x0002
+    Manuel = 0x0004
+    WeekProgram = 0x0008
+
+    Away = StartAway = 0x0010
+    EndAway = 0x8010
+
+    Night = NightEnable = 0x0020
+    NightDisable = 0x8020
+
+    Fireplace = StartFireplace = 0x0040
+    EndFireplace = 0x8040
+
+    ManuelBypass = SelectManuelBypass = 0x0080
+    DeselectManuelBypass = 0x8080
+
+    Summer = StartSummer = 0x0800
+    EndSummer = 0x8800
+
+
 STATE_STANDBY: Final = "standby"
 STATE_AUTOMATIC: Final = "automatic"
 STATE_MANUAL: Final = "manual"
@@ -102,6 +125,7 @@ STATE_WEEKPROGRAM: Final = "week_program"
 STATE_AWAY: Final = "away"
 STATE_SUMMER: Final = "summer"
 STATE_FIREPLACE: Final = "fireplace"
+STATE_NIGHT: Final = "night"
 
 
 class BypassDamperState(int):
@@ -302,6 +326,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
             "away",
             "summer",
             "fireplace",
+            "night",
         ],
     ),
     DanthermSelectEntityDescription(
@@ -470,12 +495,11 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     DanthermSwitchEntityDescription(
         key="away_mode",
         data_setinternal="set_active_unit_mode",
-        state_seton=0x10,
-        state_setoff=0x8010,
-        data_getinternal="get_current_unit_mode",
-        state_on=OpMode.Away,
+        data_getinternal="get_away_mode",
         state_suspend_for=30,
+        state_on=ActiveUnitMode.StartAway,
         icon_on="mdi:bag-suitcase-outline",
+        state_off=ActiveUnitMode.EndAway,
         icon_off="mdi:bag-suitcase-off-outline",
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -484,9 +508,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_setinternal="set_active_unit_mode",
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
-        state_on=0x20,
+        state_on=ActiveUnitMode.NightEnable,
         icon_on="mdi:sleep",
-        state_off=0x8020,
+        state_off=ActiveUnitMode.NightDisable,
         icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
@@ -494,12 +518,12 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     DanthermSwitchEntityDescription(
         key="fireplace_mode",
         data_setinternal="set_active_unit_mode",
-        state_seton=0x40,
-        state_setoff=0x8040,
-        data_getinternal="get_current_unit_mode",
-        state_on=OpMode.Fireplace,
+        data_getinternal="get_fireplace_mode",
         state_suspend_for=30,
+        state_seton=ActiveUnitMode.StartFireplace,
         icon_on="mdi:fireplace",
+        state_setoff=ActiveUnitMode.EndFireplace,
+        # state_on=OpMode.Fireplace,
         icon_off="mdi:fireplace-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -508,9 +532,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_setinternal="set_active_unit_mode",
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
-        state_on=0x80,
+        state_on=ActiveUnitMode.SelectManuelBypass,
         icon_on="mdi:hand-back-right-outline",
-        state_off=0x8080,
+        state_off=ActiveUnitMode.DeselectManuelBypass,
         icon_off="mdi:hand-back-right-off-outline",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
@@ -518,12 +542,11 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     DanthermSwitchEntityDescription(
         key="summer_mode",
         data_setinternal="set_active_unit_mode",
-        state_seton=0x800,
-        state_setoff=0x8800,
-        data_getinternal="get_current_unit_mode",
-        state_on=OpMode.Summer,
+        data_getinternal="get_summer_mode",
         state_suspend_for=30,
+        state_seton=ActiveUnitMode.StartSummer,
         icon_on="mdi:weather-sunny",
+        state_setoff=ActiveUnitMode.EndSummer,
         icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),

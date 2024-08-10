@@ -103,7 +103,9 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            if (
+            if type(result) is bool:
+                self._attr_is_on = result
+            elif (
                 result & self.entity_description.state_on
             ) == self.entity_description.state_on:
                 self._attr_is_on = True
