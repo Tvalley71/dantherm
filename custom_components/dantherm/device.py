@@ -342,7 +342,7 @@ class Device:
     def get_operation_selection(self):
         """Get operation selection."""
 
-        if (self._active_unit_mode or self._current_unit_mode) is None:
+        if self._active_unit_mode is None or self._current_unit_mode is None:
             return None
 
         if self._current_unit_mode == CurrentUnitMode.Away:
@@ -354,7 +354,7 @@ class Device:
         if self._current_unit_mode == CurrentUnitMode.Night:
             return STATE_NIGHT
 
-        if (self._active_unit_mode or self._fan_level) == 0:
+        if self._active_unit_mode == 0 or self._fan_level == 0:
             return STATE_STANDBY
 
         if (
@@ -470,7 +470,7 @@ class Device:
     def get_away_mode(self) -> bool | None:
         """Get away mode."""
 
-        if (self._current_unit_mode or self._active_unit_mode) is None:
+        if self._current_unit_mode is None or self._active_unit_mode is None:
             return None
 
         if (
@@ -484,7 +484,7 @@ class Device:
     def get_fireplace_mode(self) -> bool | None:
         """Get fireplace mode."""
 
-        if (self._current_unit_mode or self._active_unit_mode) is None:
+        if self._current_unit_mode is None or self._active_unit_mode is None:
             return None
 
         if (
@@ -499,7 +499,7 @@ class Device:
     def get_summer_mode(self) -> bool | None:
         """Get summer mode."""
 
-        if (self._current_unit_mode or self._active_unit_mode) is None:
+        if self._current_unit_mode is None or self._active_unit_mode is None:
             return None
 
         if (
