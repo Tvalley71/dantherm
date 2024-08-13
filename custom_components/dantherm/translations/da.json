@@ -39,7 +39,8 @@
           "week_program": "Ugeprogram",
           "away": "Rejse",
           "summer": "Sommer",
-          "fireplace": "Brændeovn"
+          "fireplace": "Brændeovn",
+          "night": "Nat"
         }
       },
       "fan_level_selection": {

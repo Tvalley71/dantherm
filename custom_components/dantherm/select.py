@@ -59,10 +59,9 @@ class DanthermSelect(SelectEntity, DanthermEntity):
             await self._device.write_holding_registers(
                 description=self.entity_description, value=int(option)
             )
-        self._attr_force_update = True
 
     async def async_update(self) -> None:
-        """Fetch new state data for the select."""
+        """Update state of the select."""
 
         if self.entity_description.data_getinternal:
             result = getattr(self._device, self.entity_description.data_getinternal)

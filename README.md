@@ -11,7 +11,7 @@ Known supported units:
 - RCV320 P1/P2
 
 > [!NOTE]
-> The listed units are known to have been tested with the integration. Basicly all unit that use the _Dantherm Residential_ app ought to work with the integration.
+> The listed units are known to have been used with the integration. Basicly all units that use the _Dantherm Residential_ app ought to work with the integration
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
@@ -27,8 +27,8 @@ Known supported units:
 | operation_mode         | Operation mode sensor                 |
 | alarm                  | Alarm sensor                          |
 | fan_level              | Fan level sensor                      |
-| fan1_speed             | Fan 1 speed sensor                    |
-| fan2_speed             | Fan 2 speed sensor                    |
+| fan1_speed             | Fan 1 speed sensor<sup>&dagger;<sup>  |
+| fan2_speed             | Fan 2 speed sensor<sup>&dagger;<sup>  |
 | humidity               | Humidity sensor<sup>\*<sup>           |
 | air_quality            | Air quality sensor<sup>\*<sup>        |
 | exhaust_temperature    | Exhaust temperature sensor            |
@@ -54,7 +54,7 @@ _&dagger; The entity is disabled by default._
 ### Installation
 
 > [!IMPORTANT]
-> Installation directly through HACS is not yet available because the integration is not yet included. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
+> Installation directly through HACS is not yet available because the integration is not yet official included into HACS. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
 
 <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&repository=Dantherm&category=Integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
@@ -86,8 +86,9 @@ After installation, add the Dantherm integration to your Home Assistant configur
 3. Search for "Dantherm" and select it from the list of available integrations.
 4. Follow the on-screen instructions to complete the integration setup.
 
-![Skærmbillede 2024-05-04 090018](https://github.com/Tvalley71/dantherm/assets/83084467/f085a769-c55c-45f1-952e-6ee8884eaad1)
-![Skærmbillede 2024-05-04 090125](https://github.com/Tvalley71/dantherm/assets/83084467/1a66e37c-3c0e-498d-995f-c2bb5c778f35)
+![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
+![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
+
 
 ### Support
 
@@ -96,14 +97,19 @@ If you encounter any issues or have questions regarding the Dantherm integration
 
 ### Screenshots
 
-![Skærmbillede 2024-05-04 090219](https://github.com/Tvalley71/dantherm/assets/83084467/fa9b31b6-5ec8-4c3b-a381-ef7061495560)
+![Skærmbillede 2024-05-04 090219](https://github.com/user-attachments/assets/e8750622-f33c-4652-b3d5-33c2f3f13c54)
 
-![Skærmbillede 2024-05-13 070737](https://github.com/Tvalley71/dantherm/assets/83084467/d6493c4e-ab10-493d-b2ec-c4f192383192)
-![Skærmbillede 2024-05-13 070838](https://github.com/Tvalley71/dantherm/assets/83084467/8032983f-f55e-425e-8c55-c8d2ae918ea7)
-![Skærmbillede 2024-05-04 090422](https://github.com/Tvalley71/dantherm/assets/83084467/4b2665b1-6abe-491b-8c3b-e5b3322402ee)
+![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/1f1ce55b-4a9a-4b4c-b09d-4e18e34a08a2)
+![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/cb4c686b-ed84-42f2-896e-6c5f0b126f52)
+
+![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/6ecca514-7595-4b64-8e1d-1e1fffa5aae4)
+![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/b84b9ac7-3586-40da-9a74-2808ced478e2)
+
+![Skærmbillede 2024-08-04 084430](https://github.com/user-attachments/assets/814bafd5-e03f-496f-98ce-7faafe2e4729)
+
 
 > [!NOTE]
-> Preheater and HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
+> The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
 ### Languages
 
@@ -261,35 +267,37 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
           top: 45%
           left: 36%
           font-weight: bold
-          text-align: center;
+          font-style: italic
+          text-align: center
           font-size: 100%
       - type: state-label
         entity: sensor.dantherm_humidity
         style:
           top: 29%
           left: 38%
-          font-size: 125%
+          font-size: 100%
       - type: state-label
         entity: select.dantherm_fan_selection
         style:
           top: 29%
           left: 63%
           font-weight: bold
+          font-style: italic
           font-size: 100%
 
 ```
 
 #### Helper template sensor.
 
-![Skærmbillede 2024-05-04 094747](https://github.com/Tvalley71/dantherm/assets/83084467/49b4e3b5-e419-458d-ada8-ffc3a92e0395)
+![Skærmbillede 2024-05-04 094747](https://github.com/user-attachments/assets/5fc0c6dc-a1e5-4579-8453-7837037b3f9a)
 
 </details>
 
 #### Mushroom-chips card
 
-Example of a Mushroom-chips card displaying the current state of operation and fan level, in the order automatic, week program, manual, and standby mode.
+An example of a Mushroom-chips card showing the current state of operation and fan level in a single display. This can also be achieved with many of the other entities.
 
-![Skærmbillede 2024-05-21 104804](https://github.com/Tvalley71/dantherm/assets/83084467/075df325-03e1-4855-bb74-a4cf90780266)
+![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
 
 <details>
 
@@ -347,6 +355,16 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 ```
 
 </details>
+
+> [!NOTE]
+> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve same results as the Mushroom chips card.
+
+#### Dashboard Badges
+
+Here are some examples of badges added to the dashboard. The pop-up that appears when clicking on a badge will vary depending on the selected entities, either displaying information or enabling manipulation of the Dantherm unit.
+
+![Skærmbillede badge example](https://github.com/user-attachments/assets/77ae39a9-edb2-4648-bb88-feac6a997087)
+
 
 ## Disclaimer
 

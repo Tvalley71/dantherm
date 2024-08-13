@@ -83,7 +83,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             )
 
     async def async_update(self) -> None:
-        """Read holding register."""
+        """Update the state of the switch."""
 
         if self.attr_suspend_refresh:
             if self.attr_suspend_refresh > datetime.now():
@@ -103,11 +103,11 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            if (
+            if type(result) is bool:
+                self._attr_is_on = result
+            elif (
                 result & self.entity_description.state_on
             ) == self.entity_description.state_on:
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
-
-            self._device.data[self.key] = self._attr_is_on

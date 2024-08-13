@@ -1,6 +1,5 @@
 """Cover implementation."""
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -114,7 +113,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
 
         return self._device.data.get(self.key, None)
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Update the state of the cover."""
 
         if self.entity_description.data_getinternal:

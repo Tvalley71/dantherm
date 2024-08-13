@@ -39,7 +39,8 @@
           "week_program": "Programme hebdo",
           "away": "Absent",
           "summer": "Été",
-          "fireplace": "Cheminée"
+          "fireplace": "Cheminée",
+          "night": "Nuit"
         }
       },
       "fan_level_selection": {

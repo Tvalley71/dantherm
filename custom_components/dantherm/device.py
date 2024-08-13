@@ -20,12 +20,14 @@ from .const import (
     STATE_AWAY,
     STATE_FIREPLACE,
     STATE_MANUAL,
+    STATE_NIGHT,
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    ActiveUnitMode,
     BypassDamperState,
+    CurrentUnitMode,
     DataClass,
-    OpMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,11 +46,11 @@ class DanthermEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register entity for refresh interval."""
-        self._device.async_add_refresh_entity(self)
+        await self._device.async_add_refresh_entity(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister entity for refresh interval."""
-        self._device.async_remove_refresh_entity(self)
+        await self._device.async_remove_refresh_entity(self)
 
     def suspend_refresh(self, seconds: int):
         """Suspend entity refresh for specified number of seconds."""
@@ -132,8 +134,12 @@ class Device:
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
+        self._bypass_damper_enabled = False
+        self._manual_bypass_mode_enabled = False
         self._bypass_damper = None
+        self._filter_lifetime_enabled = False
         self._filter_lifetime = None
+        self._filter_remain_enabled = False
         self._filter_remain = None
         self._available = True
         self._read_errors = 0
@@ -214,18 +220,40 @@ class Device:
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    def async_add_refresh_entity(self, entity):
+    async def async_add_refresh_entity(self, entity):
         """Add entity for refresh."""
+
         # This is the first entity, set up interval.
         if not self._entities:
             self._entity_refresh_method = async_track_time_interval(
                 self._hass, self.async_refresh_entities, self._scan_interval
             )
 
+        if entity.key == "bypass_damper":
+            self._bypass_damper_enabled = True
+        elif entity.key == "manual_bypass_mode":
+            self._manual_bypass_mode_enabled = True
+        elif entity.key == "filter_lifetime":
+            self._filter_lifetime_enabled = True
+        elif entity.key == "filter_remain":
+            self._filter_remain_enabled = True
+
+        _LOGGER.debug("Adding refresh entity=%s", entity.name)
         self._entities.append(entity)
 
-    def async_remove_refresh_entity(self, entity):
+    async def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
+
+        if entity.key == "bypass_damper":
+            self._bypass_damper_enabled = False
+        elif entity.key == "manual_bypass_mode":
+            self._manual_bypass_mode_enabled = False
+        elif entity.key == "filter_lifetime":
+            self._filter_lifetime_enabled = False
+        elif entity.key == "filter_remain":
+            self._filter_remain_enabled = False
+
+        _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
 
         if not self._entities:
@@ -255,14 +283,23 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
-        self._bypass_damper = await self._read_holding_int32(198)
-        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        if self._bypass_damper_enabled or self._manual_bypass_mode_enabled:
+            self._bypass_damper = await self._read_holding_int32(198)
+            _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        else:
+            self._bypass_damper = None
 
-        self._filter_lifetime = await self._read_holding_uint32(556)
-        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+        if self._filter_lifetime_enabled:
+            self._filter_lifetime = await self._read_holding_uint32(556)
+            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+        else:
+            self._filter_lifetime = None
 
-        self._filter_remain = await self._read_holding_uint32(554)
-        _LOGGER.debug("Filter remain = %s", self._filter_remain)
+        if self._filter_remain_enabled:
+            self._filter_remain = await self._read_holding_uint32(554)
+            _LOGGER.debug("Filter remain = %s", self._filter_remain)
+        else:
+            self._filter_remain = None
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -279,9 +316,7 @@ class Device:
                 return
 
         _LOGGER.debug("Refresh entity=%s", entity.name)
-
         await entity.async_update_ha_state(True)
-        entity.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -307,27 +342,53 @@ class Device:
     def get_operation_selection(self):
         """Get operation selection."""
 
-        if self._active_unit_mode is None:
+        if self._active_unit_mode is None or self._current_unit_mode is None:
             return None
-        if self._active_unit_mode == 0:
-            return STATE_STANDBY
-        if self._active_unit_mode & 0x10 == 0x10:  # away mode
+
+        if self._current_unit_mode == CurrentUnitMode.Away:
             return STATE_AWAY
-        if self._active_unit_mode & 0x800 == 0x800:  # summer mode
+        if self._current_unit_mode == CurrentUnitMode.Summer:
             return STATE_SUMMER
-        if self._active_unit_mode & 0x40 == 0x40:  # boost fireplace mode
+        if self._current_unit_mode == CurrentUnitMode.Fireplace:
             return STATE_FIREPLACE
-        if self._active_unit_mode & 2 == 2:  # demand mode
+        if self._current_unit_mode == CurrentUnitMode.Night:
+            return STATE_NIGHT
+
+        if self._active_unit_mode == 0 or self._fan_level == 0:
+            return STATE_STANDBY
+
+        if (
+            self._active_unit_mode & ActiveUnitMode.Automatic
+            == ActiveUnitMode.Automatic
+        ):
             return STATE_AUTOMATIC
-        if self._active_unit_mode & 4 == 4:  # manual mode
-            if self._fan_level == 0:
-                return STATE_STANDBY  # if fan level is 0 return standby
-            return STATE_MANUAL  # manual
-        if self._active_unit_mode & 8 == 8:  # week program
+
+        if self._active_unit_mode & ActiveUnitMode.Manuel == ActiveUnitMode.Manuel:
+            return STATE_MANUAL
+
+        if (
+            self._active_unit_mode & ActiveUnitMode.WeekProgram
+            == ActiveUnitMode.WeekProgram
+        ):
             return STATE_WEEKPROGRAM
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
-        return STATE_MANUAL  # manual
+        return STATE_MANUAL
+
+    @property
+    def get_operation_mode_icon(self) -> str:
+        """Get operation mode icon."""
+
+        result = self.get_fan_level
+        if not result:
+            return "mdi:fan-off"
+        if result == 1:
+            return "mdi:fan-speed-1"
+        if result == 2:
+            return "mdi:fan-speed-2"
+        if result == 3:
+            return "mdi:fan-speed-3"
+        return "mdi:fan-plus"
 
     @property
     def get_fan_level_selection_icon(self) -> str:
@@ -358,19 +419,19 @@ class Device:
             return "mdi:fan-alert"
 
         result = self.get_current_unit_mode
-        if result == OpMode.Standby:
+        if result == CurrentUnitMode.Standby:
             return "mdi:fan-off"
-        if result == OpMode.Away:
+        if result == CurrentUnitMode.Away:
             return "mdi:bag-suitcase"
-        if result == OpMode.Summer:
+        if result == CurrentUnitMode.Summer:
             return "mdi:weather-sunny"
-        if result == OpMode.Fireplace:
+        if result == CurrentUnitMode.Fireplace:
             return "mdi:fire"
-        if result == OpMode.Night:
+        if result == CurrentUnitMode.Night:
             return "mdi:weather-night"
-        if result == OpMode.Automatic:
+        if result == CurrentUnitMode.Automatic:
             return "mdi:fan-auto"
-        if result == OpMode.WeekProgram:
+        if result == CurrentUnitMode.WeekProgram:
             return "mdi:fan-clock"
 
         result = self.get_operation_selection
@@ -404,6 +465,49 @@ class Device:
         if self.get_bypass_damper == BypassDamperState.Opened:
             return "mdi:valve-open"
         return "mdi:valve"
+
+    @property
+    def get_away_mode(self) -> bool | None:
+        """Get away mode."""
+
+        if self._current_unit_mode is None or self._active_unit_mode is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Away
+            or self._active_unit_mode & ActiveUnitMode.Away == ActiveUnitMode.Away
+        ):
+            return True
+        return False
+
+    @property
+    def get_fireplace_mode(self) -> bool | None:
+        """Get fireplace mode."""
+
+        if self._current_unit_mode is None or self._active_unit_mode is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Fireplace
+            or self._active_unit_mode & ActiveUnitMode.Fireplace
+            == ActiveUnitMode.Fireplace
+        ):
+            return True
+        return False
+
+    @property
+    def get_summer_mode(self) -> bool | None:
+        """Get summer mode."""
+
+        if self._current_unit_mode is None or self._active_unit_mode is None:
+            return None
+
+        if (
+            self._current_unit_mode == CurrentUnitMode.Summer
+            or self._active_unit_mode & ActiveUnitMode.Summer == ActiveUnitMode.Summer
+        ):
+            return True
+        return False
 
     @property
     def get_filter_lifetime(self):
@@ -441,21 +545,17 @@ class Device:
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
-            await self.set_active_unit_mode(4)  # manual mode
+            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
             if self._fan_level != 0:
                 await self.set_fan_level(0)
         elif value == STATE_AUTOMATIC:
-            await self.set_active_unit_mode(2)  # demand mode
+            await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
-            await self.set_active_unit_mode(4)  # manual mode
+            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
         elif value == STATE_WEEKPROGRAM:
-            await self.set_active_unit_mode(8)  # week program mode
+            await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
         elif value == STATE_AWAY:
-            await self.set_active_unit_mode(0x0010)  # away mode
-        elif value == STATE_SUMMER:
-            await self.set_active_unit_mode(0x0800)  # summer mode
-        elif value == STATE_FIREPLACE:
-            await self.set_active_unit_mode(0x0040)  # boost fireplace mode
+            await self.set_active_unit_mode(ActiveUnitMode.StartAway)
 
     async def set_fan_level(self, value):
         """Set fan level."""

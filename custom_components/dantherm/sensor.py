@@ -52,13 +52,13 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         result = super().icon
         if hasattr(self._device, f"get_{self.key}_icon"):
             result = getattr(self._device, f"get_{self.key}_icon")
-        elif self.entity_description.data_zero_icon and not self._attr_state:
-            result = self.entity_description.data_zero_icon
+        elif self.entity_description.icon_zero and not self.native_value:
+            result = self.entity_description.icon_zero
 
         return result
 
     async def async_update(self) -> None:
-        """Read holding register."""
+        """Update the state of the sensor."""
 
         if hasattr(self._device, f"get_{self.key}_attrs"):
             self._attr_extra_state_attributes = getattr(
@@ -78,4 +78,4 @@ class DanthermSensor(SensorEntity, DanthermEntity):
             self._attr_available = False
         else:
             self._attr_available = True
-            self._device.data[self.key] = self._attr_state = result
+            self._device.data[self.key] = result
