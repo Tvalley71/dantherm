@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "Dantherm modbus forbindelse",
+        "title": "Modbus forbindelse",
         "data": {
-          "host": "Indtast ip-adresse til din Dantherm enhed",
+          "host": "Indtast ip-adresse til din enhed",
           "name": "Indtast prefix til din enheds entiteter",
           "port": "Indtast TCP port der skal forbindes til på din enhed",
           "scan_interval": "Indtast opdateringsfrekvens for modbus registere i sekunder"

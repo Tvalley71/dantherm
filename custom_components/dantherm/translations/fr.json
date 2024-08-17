@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connexion modbus Dantherm",
+        "title": "Connexion Modbus",
         "data": {
           "host": "Adresse IP de la VMC",
           "name": "Préfixe à utiliser pour les entités",
