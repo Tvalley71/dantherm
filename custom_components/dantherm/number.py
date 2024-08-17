@@ -5,8 +5,9 @@ import logging
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, NUMBERS, DanthermNumberEntityDescription
+from .const import DOMAIN
 from .device import DanthermEntity, Device
+from .device_map import NUMBERS, DanthermNumberEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
