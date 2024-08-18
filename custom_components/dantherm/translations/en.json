@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus-connection",
+        "title": "Modbus connection",
         "data": {
           "host": "Enter ip-address of your unit",
           "name": "Enter prefix for the device entities",
