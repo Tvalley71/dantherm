@@ -27,7 +27,10 @@
       "bypass_damper": { "name": "Bypass" }
     },
     "number": {
-      "filter_lifetime": { "name": "Durée de vie filtre" }
+      "filter_lifetime": { "name": "Durée de vie filtre" },
+      "bypass_minimum_temperature": { "name": "Bypass température minimale" },
+      "bypass_maximum_temperature": { "name": "Bypass température maximale" },
+      "manual_bypass_duration": { "name": "Durée du bypass manuel" }
     },
     "select": {
       "operation_selection": {

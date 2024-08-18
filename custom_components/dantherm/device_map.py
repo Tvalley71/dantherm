@@ -187,6 +187,7 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
 
     data_address: int | None = None
     data_getinternal: str | None = None
+    data_precision: int | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
     data_exclude_if_above: int | None = None
@@ -303,6 +304,51 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         native_unit_of_measurement="d",
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermNumberEntityDescription(
+        key="bypass_minimum_temperature",
+        data_address=444,
+        native_max_value=15,
+        native_min_value=12,
+        data_class=DataClass.Float32,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        data_precision=1,
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key="bypass_maximum_temperature",
+        data_address=446,
+        native_max_value=27,
+        native_min_value=21,
+        data_class=DataClass.Float32,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        data_precision=1,
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key="manual_bypass_duration",
+        data_address=264,
+        native_max_value=480,
+        native_min_value=60,
+        data_class=DataClass.UInt32,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        native_step=15,
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
     ),
 )
 
