@@ -13,9 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
-    DEVICE_TYPES,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
