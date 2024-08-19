@@ -375,8 +375,8 @@ The trademark "Dantherm" is owned by Dantherm Group A/S, a leading supplier of c
 
 All product names, trademarks, and registered trademarks mentioned in this repository are the property of their respective owners.
 
-I am not affiliated with Dantherm, except as an owner of one of their units, the HCV400 P2.
+#### I am not affiliated with Dantherm, except as an owner of one of their units, the HCV400 P2.
 
-The author does not guarantee the functionality of this integration and is not responsible for any damage.
+### The author does not guarantee the functionality of this integration and is not responsible for any damage.
 
-Tvalley71
+_Tvalley71_
