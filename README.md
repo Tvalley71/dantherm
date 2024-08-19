@@ -17,35 +17,38 @@ Known supported units:
 
 ### Controls and sensors
 
-| key                    | description                           |
-| :--------------------- | :------------------------------------ |
-| operation_selection    | Mode of operation selection           |
-| fan_level_selection    | Fan level selection                   |
-| week_program_selection | Week program selection<sup>\*<sup>    |
-| bypass_damper          | Bypass damper cover<sup>\*<sup>       |
-| filter_lifetime        | Input filter lifetime box             |
-| operation_mode         | Operation mode sensor                 |
-| alarm                  | Alarm sensor                          |
-| fan_level              | Fan level sensor                      |
-| fan1_speed             | Fan 1 speed sensor<sup>&dagger;<sup>  |
-| fan2_speed             | Fan 2 speed sensor<sup>&dagger;<sup>  |
-| humidity               | Humidity sensor<sup>\*<sup>           |
-| air_quality            | Air quality sensor<sup>\*<sup>        |
-| exhaust_temperature    | Exhaust temperature sensor            |
-| extract_temperature    | Extract temperature sensor            |
-| supply_temperature     | Supply temperature sensor             |
-| outdoor_temperature    | Outdoor temperature sensor            |
-| room_temperature       | Room temperature sensor<sup>\* &dagger;<sup> |
-| filter_remain          | Remaining filter time sensor          |
-| work_time              | Work time sensor<sup>&dagger;<sup>    |
+| key                          | description                           |
+| :--------------------------- | :------------------------------------ |
+| operation_selection          | Mode of operation selection           |
+| fan_level_selection          | Fan level selection                   |
+| week_program_selection       | Week program selection<sup>\*<sup>    |
+| bypass_damper                | Bypass damper cover<sup>\*<sup>       |
+| filter_lifetime              | Input filter lifetime box             |
+| bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
+| bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
+| manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
+| operation_mode               | Operation mode sensor                 |
+| alarm                        | Alarm sensor                          |
+| fan_level                    | Fan level sensor                      |
+| fan1_speed                   | Fan 1 speed sensor<sup>&dagger;<sup>  |
+| fan2_speed                   | Fan 2 speed sensor<sup>&dagger;<sup>  |
+| humidity                     | Humidity sensor<sup>\*<sup>           |
+| air_quality                  | Air quality sensor<sup>\*<sup>        |
+| exhaust_temperature          | Exhaust temperature sensor            |
+| extract_temperature          | Extract temperature sensor            |
+| supply_temperature           | Supply temperature sensor             |
+| outdoor_temperature          | Outdoor temperature sensor            |
+| room_temperature             | Room temperature sensor<sup>\* &dagger;<sup> |
+| filter_remain                | Remaining filter time sensor          |
+| work_time                    | Work time sensor<sup>&dagger;<sup>    |
 | internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| away_mode              | Away mode switch                      |
-| night_mode             | Night mode switch                     |
-| fireplace_mode         | Fireplace mode switch                 |
-| manual_bypass_mode     | Manual bypass mode switch<sup>\*<sup> |
-| summer_mode            | Summer mode switch                    |
-| filter_reset           | Reset remain filter time button       |
-| alarm_reset            | Reset alarm button                    |
+| away_mode                    | Away mode switch                      |
+| night_mode                   | Night mode switch                     |
+| fireplace_mode               | Fireplace mode switch                 |
+| manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
+| summer_mode                  | Summer mode switch                    |
+| filter_reset                 | Reset remain filter time button       |
+| alarm_reset                  | Reset alarm button                    |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
