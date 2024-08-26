@@ -6,8 +6,9 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SWITCHES, DanthermSwitchEntityDescription
+from .const import DOMAIN
 from .device import DanthermEntity, Device
+from .device_map import SWITCHES, DanthermSwitchEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

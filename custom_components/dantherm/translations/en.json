@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "Dantherm modbus-connection",
+        "title": "Modbus connection",
         "data": {
-          "host": "Enter ip-address of your Dantherm unit",
+          "host": "Enter ip-address of your unit",
           "name": "Enter prefix for the device entities",
           "port": "Enter TCP port on which to connect to the device",
           "scan_interval": "Enter polling frequency of the modbus registers in seconds"
@@ -27,7 +27,10 @@
       "bypass_damper": { "name": "Bypass Damper" }
     },
     "number": {
-      "filter_lifetime": { "name": "Filter Lifetime" }
+      "filter_lifetime": { "name": "Filter Lifetime" },
+      "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
+      "bypass_maximum_temperature": { "name": "Bypass Maxumum Temperature" },
+      "manual_bypass_duration": { "name": "Manual Bypass Duration" }
     },
     "select": {
       "operation_selection": {

@@ -7,8 +7,9 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 
-from .const import COVERS, DOMAIN, DanthermCoverEntityDescription
+from .const import DOMAIN
 from .device import DanthermEntity, Device
+from .device_map import COVERS, DanthermCoverEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

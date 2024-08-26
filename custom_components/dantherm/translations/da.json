@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "Dantherm modbus forbindelse",
+        "title": "Modbus forbindelse",
         "data": {
-          "host": "Indtast ip-adresse til din Dantherm enhed",
+          "host": "Indtast ip-adresse til din enhed",
           "name": "Indtast prefix til din enheds entiteter",
           "port": "Indtast TCP port der skal forbindes til på din enhed",
           "scan_interval": "Indtast opdateringsfrekvens for modbus registere i sekunder"
@@ -27,7 +27,10 @@
       "bypass_damper": { "name": "Bypass spjæld"}
     },
     "number": {
-      "filter_lifetime": { "name": "Filter livstid" }
+      "filter_lifetime": { "name": "Filter livstid" },
+      "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
+      "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
+      "manual_bypass_duration": { "name": "Manuel bypass varighed" }
     },
     "select": {
       "operation_selection": {

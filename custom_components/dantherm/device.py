@@ -13,9 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    DEVICE_TYPES,
-    DOMAIN,
+from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
+from .device_map import (
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -89,7 +88,7 @@ class DanthermEntity(Entity):
                 (DOMAIN, unique_id),
             },
             "name": self._device.get_device_name,
-            "manufacturer": "Dantherm",
+            "manufacturer": DEFAULT_NAME,
             "model": self._device.get_device_type,
             "sw_version": self._device.get_device_fw_version,
             "serial_number": self._device.get_device_serial_number,
@@ -168,7 +167,7 @@ class Device:
 
         result = await self._read_holding_uint32(610)
         if result is None:
-            raise ValueError("Dantherm unit probably not responding")
+            raise ValueError(f"{DEFAULT_NAME} unit probably not responding")
 
         self._device_installed_components = result & 0xFFFF
         _LOGGER.debug(

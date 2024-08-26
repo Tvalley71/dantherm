@@ -5,8 +5,9 @@ import logging
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, NUMBERS, DanthermNumberEntityDescription
+from .const import DOMAIN
 from .device import DanthermEntity, Device
+from .device_map import NUMBERS, DanthermNumberEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class DanthermNumber(NumberEntity, DanthermEntity):
             await getattr(self._device, self.entity_description.data_setinternal)(value)
         else:
             await self._device.write_holding_registers(
-                description=self.entity_description
+                description=self.entity_description, value=value
             )
 
     async def async_update(self) -> None:
