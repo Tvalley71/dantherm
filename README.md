@@ -374,11 +374,13 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ## Disclaimer
 
-The trademark "Dantherm" is owned by Dantherm Group A/S, a leading supplier of climate control solutions.
+The trademark "Dantherm" is owned by Dantherm Group A/S.
+
+The trademark "Pluggit" is owned by Pluggit GmbH.
 
 All product names, trademarks, and registered trademarks mentioned in this repository are the property of their respective owners.
 
-#### I am not affiliated with Dantherm, except as an owner of one of their units, the HCV400 P2.
+#### I am not affiliated with Dantherm or Pluggit, except as the owner of a Dantherm HCV400 P2 unit.
 
 ### The author does not guarantee the functionality of this integration and is not responsible for any damage.
 
