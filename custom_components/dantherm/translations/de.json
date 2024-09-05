@@ -1,0 +1,141 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Modbus-Verbindung",
+        "data": {
+          "host": "Geben Sie die IP-Adresse Ihres Geräts ein",
+          "name": "Geben Sie ein Präfix für die Geräteeinheiten ein",
+          "port": "Geben Sie den TCP-Port ein, über den die Verbindung zum Gerät hergestellt wird",
+          "scan_interval": "Geben Sie die Abfragefrequenz der Modbus-Register in Sekunden ein"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "filter_reset": { "name": "Filter zurücksetzen" },
+      "alarm_reset": { "name": "Alarm zurücksetzen" }
+    },
+    "cover": {
+      "bypass_damper": { "name": "Bypass-Klappe" }
+    },
+    "number": {
+      "filter_lifetime": { "name": "Filterlebensdauer" },
+      "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
+      "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
+      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" }
+    },
+    "select": {
+      "operation_selection": {
+        "name": "Betriebsauswahl",
+        "state": {
+          "standby": "Standby",
+          "automatic": "Automatisch",
+          "manual": "Manuell",
+          "week_program": "Wochenprogramm",
+          "away": "Abwesend",
+          "summer": "Sommer",
+          "fireplace": "Kamin",
+          "night": "Nacht"
+        }
+      },
+      "fan_level_selection": {
+        "name": "Lüfterauswahl",
+        "state": {
+          "0": "Stufe 0",
+          "1": "Stufe 1",
+          "2": "Stufe 2",
+          "3": "Stufe 3",
+          "4": "Stufe 4"
+        }
+      },
+      "week_program_selection": {
+        "name": "Wochenprogramm",
+        "state": {
+          "0": "Wochenprogramm 1",
+          "1": "Wochenprogramm 2",
+          "2": "Wochenprogramm 3",
+          "3": "Wochenprogramm 4",
+          "4": "Wochenprogramm 5",
+          "5": "Wochenprogramm 6",
+          "6": "Wochenprogramm 7",
+          "7": "Wochenprogramm 8",
+          "8": "Wochenprogramm 9",
+          "9": "Wochenprogramm 10"
+        }
+      }
+    },
+    "sensor": {
+      "operation_mode": {
+        "name": "Betriebsmodus",
+        "state": {
+          "0": "Standby",
+          "1": "Manuell",
+          "2": "Automatisch",
+          "3": "Wochenprogramm",
+          "4": "Servoflow",
+          "5": "Abwesend",
+          "6": "Sommer",
+          "7": "DI-Übersteuerung",
+          "8": "Hygrostat-Übersteuerung",
+          "9": "Kamin",
+          "10": "Installateur",
+          "11": "Fail Safe 1",
+          "12": "Fail Safe 2",
+          "13": "Abschaltung",
+          "14": "Abtauabschaltung",
+          "15": "Abtauen",
+          "16": "Nacht"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "0": "Keiner",
+          "1": "Abluft-Lüfteralarm",
+          "2": "Zuluft-Lüfteralarm",
+          "3": "Bypass-Alarm",
+          "4": "T1 Alarm",
+          "5": "T2 Alarm",
+          "6": "T3 Alarm",
+          "7": "T4 Alarm",
+          "8": "T5 Alarm",
+          "9": "RH Alarm",
+          "10": "Außen13 Alarm",
+          "11": "Zuluft5 Alarm",
+          "12": "Feueralarm",
+          "13": "Kommunikationsalarm",
+          "14": "Feuerthermostatalarm",
+          "15": "Alarm bei hohem Wasserstand"
+        }
+      },
+      "fan_level": { "name": "Lüfterstufe" },
+      "fan1_speed": { "name": "Lüftergeschwindigkeit 1" },
+      "fan2_speed": { "name": "Lüftergeschwindigkeit 2" },
+      "humidity": { "name": "Luftfeuchtigkeit" },
+      "air_quality": { "name": "Luftqualität" },
+      "exhaust_temperature": { "name": "Ablufttemperatur" },
+      "extract_temperature": { "name": "Absaugtemperatur" },
+      "supply_temperature": { "name": "Zulufttemperatur" },
+      "outdoor_temperature": { "name": "Außentemperatur" },
+      "room_temperature": { "name": "Raumtemperatur" },
+      "filter_remain": { "name": "Filter verbleiben" },
+      "work_time": { "name": "Arbeitszeit" },
+      "internal_preheater_dutycycle": { "name": "Vorheizer-Dutycycle" }
+    },
+    "switch": {
+      "away_mode": { "name": "Abwesenheitsmodus" },
+      "night_mode": { "name": "Nachtmodus" },
+      "fireplace_mode": { "name": "Kaminmodus" },
+      "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
+      "summer_mode": { "name": "Sommermodus" }
+    }
+  }
+}
