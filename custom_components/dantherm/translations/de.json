@@ -87,8 +87,8 @@
           "8": "Hygrostat-Übersteuerung",
           "9": "Kamin",
           "10": "Installateur",
-          "11": "Fail Safe 1",
-          "12": "Fail Safe 2",
+          "11": "Notbetrieb 1",
+          "12": "Notbetrieb 2",
           "13": "Abschaltung",
           "14": "Abtauabschaltung",
           "15": "Abtauen",
@@ -113,7 +113,7 @@
           "12": "Feueralarm",
           "13": "Kommunikationsalarm",
           "14": "Feuerthermostatalarm",
-          "15": "Alarm bei hohem Wasserstand"
+          "15": "Wasserstandsalarm"
         }
       },
       "fan_level": { "name": "Lüfterstufe" },
@@ -126,9 +126,9 @@
       "supply_temperature": { "name": "Zulufttemperatur" },
       "outdoor_temperature": { "name": "Außentemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
-      "filter_remain": { "name": "Filter verbleiben" },
-      "work_time": { "name": "Arbeitszeit" },
-      "internal_preheater_dutycycle": { "name": "Vorheizer-Dutycycle" }
+      "filter_remain": { "name": "Filter verbleibend" },
+      "work_time": { "name": "Laufzeit" },
+      "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" }
     },
     "switch": {
       "away_mode": { "name": "Abwesenheitsmodus" },
