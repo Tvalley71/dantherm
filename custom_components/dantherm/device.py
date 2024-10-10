@@ -25,8 +25,10 @@ from .device_map import (
     STATE_WEEKPROGRAM,
     ActiveUnitMode,
     BypassDamperState,
+    ComponentClass,
     CurrentUnitMode,
     DataClass,
+    HacComponentClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,6 +183,45 @@ class Device:
         _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
         self._device_serial_number = await self._read_holding_uint64(address=4)
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
+
+        if (
+            self._device_installed_components & ComponentClass.HAC1
+            == ComponentClass.HAC1
+        ):
+            _LOGGER.critical(
+                "HAC controller found, please reach out for support collaboration"
+            )
+
+            result = await self._read_holding_uint32(574)
+            _LOGGER.debug("HAC CO2 Level = %s ppm (574)", result)
+            result = await self._read_holding_uint32(568)
+            _LOGGER.debug("Low Threshold of CO2 = %s ppm (568)", result)
+            result = await self._read_holding_uint32(570)
+            _LOGGER.debug("Middle Threshold of CO2 = %s ppm (570)", result)
+            result = await self._read_holding_uint32(572)
+            _LOGGER.debug("High Threshold of CO2 = %s ppm (572)", result)
+            result = await self._read_holding_uint32(244)
+            _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
+            if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
+                _LOGGER.debug("CO2 sensor found")
+            if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
+                _LOGGER.debug("Pre-heater found")
+            if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
+                _LOGGER.debug("Pre-cooler found")
+            if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
+                _LOGGER.debug("After-heater found")
+            if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
+                _LOGGER.debug("After-cooler found")
+            result = await self._read_holding_uint32(300)
+            _LOGGER.debug("Hac active component = %s (300)", hex(result))
+            result = await self._read_holding_int32(344)
+            _LOGGER.debug("Setpoint of the T2 = %s °C (344)", result)
+            result = await self._read_holding_int32(346)
+            _LOGGER.debug("Setpoint of the T3 = %s °C (346)", result)
+            result = await self._read_holding_int32(348)
+            _LOGGER.debug("Setpoint of the T5 = %s °C (348)", result)
+        else:
+            _LOGGER.debug("No HAC controller installed")
 
     async def async_install_entity(self, description: EntityDescription) -> bool:
         """Test if the component is installed on the device."""

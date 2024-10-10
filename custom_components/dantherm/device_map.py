@@ -46,6 +46,17 @@ class ComponentClass(int):
     DI2_Override = 0x8000
 
 
+class HacComponentClass(int):
+    """Dantherm HAC components."""
+
+    CO2Sensor = 0x0001
+    PreHeater = 0x0004
+    PreCooler = 0x0008
+    AfterHeater = 0x0010
+    AfterCooler = 0x0020
+    Hygrostat = 0x0040
+
+
 class DataClass(Enum):
     """Dantherm modbus data class."""
 
