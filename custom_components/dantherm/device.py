@@ -188,7 +188,9 @@ class Device:
             self._device_installed_components & ComponentClass.HAC1
             == ComponentClass.HAC1
         ):
-            _LOGGER.debug("HAC controller found")
+            _LOGGER.critical(
+                "HAC controller found, please reach out for support collaboration"
+            )
 
             result = await self._read_holding_uint32(574)
             _LOGGER.debug("HAC CO2 Level = %s ppm (574)", result)
