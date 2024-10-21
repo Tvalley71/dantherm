@@ -10,6 +10,7 @@ Currently only support for Modbus over TCP/IP.
 Known supported units:
 
 - HCV300 ALU
+- HCV700 ALU
 - HCV400 P2
 - RCV320 P1/P2
 
