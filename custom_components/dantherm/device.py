@@ -403,7 +403,7 @@ class Device:
         ):
             return STATE_AUTOMATIC
 
-        if self._active_unit_mode & ActiveUnitMode.Manuel == ActiveUnitMode.Manuel:
+        if self._active_unit_mode & ActiveUnitMode.Manual == ActiveUnitMode.Manual:
             return STATE_MANUAL
 
         if (
@@ -585,13 +585,13 @@ class Device:
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
-            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
+            await self.set_active_unit_mode(ActiveUnitMode.Manual)
             if self._fan_level != 0:
                 await self.set_fan_level(0)
         elif value == STATE_AUTOMATIC:
             await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
-            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
+            await self.set_active_unit_mode(ActiveUnitMode.Manual)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
         elif value == STATE_AWAY:
