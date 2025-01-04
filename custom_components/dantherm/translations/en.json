@@ -127,7 +127,7 @@
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
-      "filter_remain level": { "name": "Filter Remain Level" },
+      "filter_remain_level": { "name": "Filter Remain Level" },
       "work_time": { "name": "Work Time" },
       "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
     },
@@ -140,7 +140,7 @@
     }
   },
   "selector": {
-    "operation_selection": {
+    "operations": {
       "options": {
         "standby": "Standby",
         "automatic": "Automatic",
@@ -148,7 +148,7 @@
         "week_program": "Week Program"
       }
     },
-    "fan_level_selection": {
+    "fan_levels": {
       "options": {
         "0": "Level 0",
         "1": "Level 1",

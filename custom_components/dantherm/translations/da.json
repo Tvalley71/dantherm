@@ -140,7 +140,7 @@
     }
   },
   "selector": {
-    "operation_selection": {
+    "operations": {
       "options": {
         "standby": "Standby",
         "automatic": "Automatik",
@@ -148,7 +148,7 @@
         "week_program": "Ugeprogram"
       }
     },
-    "fan_level_selection": {
+    "fan_levels": {
       "options": {
         "0": "Niveau 0",
         "1": "Niveau 1",
