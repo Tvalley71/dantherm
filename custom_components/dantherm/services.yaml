@@ -14,10 +14,6 @@ set_state:
             - "automatic"
             - "manual"
             - "week_program"
-            - "away"
-            - "summer"
-            - "fireplace"
-            - "night"
     fan_level_selection:
       selector:
         select:
