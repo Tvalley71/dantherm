@@ -127,6 +127,7 @@
       "outdoor_temperature": { "name": "Außenlufttemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
       "filter_remain": { "name": "Filter verbleibend" },
+      "filter_remain_level": { "name": "Filter verbleiben niveau" },
       "work_time": { "name": "Laufzeit" },
       "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" }
     },
@@ -136,6 +137,46 @@
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
       "summer_mode": { "name": "Sommermodus" }
+    }
+  },
+  "services": {
+    "set_state": {
+      "name": "Zustand setzen",
+      "description": "Steuern Sie den Zustand des Lüftungsgeräts mit einem Aktionsaufruf.",
+      "fields": {
+        "operation_selection": {
+          "name": "Betriebsauswahl",
+          "description": "Wählen Sie den gewünschten Betriebsmodus aus."
+        },
+        "fan_level_selection": {
+          "name": "Lüfterauswahl",
+          "description": "Wählen Sie die gewünschte Lüfterstufe aus."
+        },
+        "away_mode": {
+          "name": "Abwesenheitsmodus",
+          "description": "Schalten Sie den Abwesenheitsmodus ein oder aus."
+        },
+        "summer_mode": {
+          "name": "Sommermodus",
+          "description": "Schalten Sie den Sommermodus ein oder aus."
+        },
+        "fireplace_mode": {
+          "name": "Kaminmodus",
+          "description": "Schalten Sie den Kaminmodus ein oder aus. Der Kaminmodus bleibt für einen begrenzten Zeitraum aktiviert."
+        },
+        "manual_bypass_mode": {
+          "name": "Manueller Bypass-Modus",
+          "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus."
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Filter zurücksetzen",
+      "description": "Setzen Sie die verbleibenden Tage des Filters auf seine Lebensdauer zurück."
+    },
+    "alarm_reset": {
+      "name": "Alarm zurücksetzen",
+      "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
     }
   }
 }

@@ -127,6 +127,7 @@
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
+      "filter_remain_level": { "name": "Filtre de remplacement dans le niveau" },
       "work_time": { "name": "Temps de fonctionnement" },
       "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
@@ -136,6 +137,46 @@
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
       "summer_mode": { "name": "Mode été" }
+    }
+  },
+  "services": {
+    "set_state": {
+      "name": "Définir l'état",
+      "description": "Contrôlez l'état de l'unité de ventilation avec un appel d'action.",
+      "fields": {
+        "operation_selection": {
+          "name": "Sélection mode",
+          "description": "Sélectionnez le mode d'opération souhaité."
+        },
+        "fan_level_selection": {
+          "name": "Vitesse ventilation",
+          "description": "Sélectionnez le niveau de ventilation souhaité."
+        },
+        "away_mode": {
+          "name": "Mode absent",
+          "description": "Activez ou désactivez le mode absent."
+        },
+        "summer_mode": {
+          "name": "Mode été",
+          "description": "Activez ou désactivez le mode été."
+        },
+        "fireplace_mode": {
+          "name": "Mode cheminée",
+          "description": "Activez ou désactivez le mode cheminée. Le mode cheminée restera activé pendant une période limitée."
+        },
+        "manual_bypass_mode": {
+          "name": "Mode bypass manuel",
+          "description": "Activez ou désactivez le mode de contournement manuel."
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Réinitialisation du filtre",
+      "description": "Réinitialisez les jours restants du filtre à sa durée de vie."
+    },
+    "alarm_reset": {
+      "name": "Réinitialisation de l'alarme",
+      "description": "Réinitialisez la première alarme en attente."
     }
   }
 }
