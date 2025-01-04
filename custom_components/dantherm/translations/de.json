@@ -139,6 +139,25 @@
       "summer_mode": { "name": "Sommermodus" }
     }
   },
+  "selector": {
+    "operation_selection": {
+      "options": {
+        "standby": "Standby",
+        "automatic": "Automatisch",
+        "manual": "Manuell",
+        "week_program": "Wochenprogramm"
+      }
+    },
+    "fan_level_selection": {
+      "options": {
+        "0": "Stufe 0",
+        "1": "Stufe 1",
+        "2": "Stufe 2",
+        "3": "Stufe 3",
+        "4": "Stufe 4"
+      }
+    }
+  },
   "services": {
     "set_state": {
       "name": "Zustand setzen",

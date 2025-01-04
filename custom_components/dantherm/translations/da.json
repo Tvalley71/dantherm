@@ -139,6 +139,25 @@
       "summer_mode": { "name": "Sommertilstand" }
     }
   },
+  "selector": {
+    "operation_selection": {
+      "options": {
+        "standby": "Standby",
+        "automatic": "Automatik",
+        "manual": "Manuel",
+        "week_program": "Ugeprogram"
+      }
+    },
+    "fan_level_selection": {
+      "options": {
+        "0": "Niveau 0",
+        "1": "Niveau 1",
+        "2": "Niveau 2",
+        "3": "Niveau 3",
+        "4": "Niveau 4"
+      }
+    }
+  },
   "services": {
     "set_state": {
       "name": "Sæt tilstand",
