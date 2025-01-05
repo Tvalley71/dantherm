@@ -402,7 +402,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
 
-![image](https://github.com/user-attachments/assets/0f23cd28-8b23-47a5-b0ef-05e071f42446)
+![image](https://github.com/user-attachments/assets/450665b9-7091-42b5-837a-8b214824f643)
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
