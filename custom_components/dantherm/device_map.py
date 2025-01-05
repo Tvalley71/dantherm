@@ -24,6 +24,86 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 
+SERVICE_SET_STATE = "set_state"
+SERVICE_FILTER_RESET = "filter_reset"
+SERVICE_ALARM_RESET = "alarm_reset"
+
+ATTR_OPERATION_SELECTION: Final = "operation_selection"
+STATE_STANDBY: Final = "standby"
+STATE_AUTOMATIC: Final = "automatic"
+STATE_MANUAL: Final = "manual"
+STATE_WEEKPROGRAM: Final = "week_program"
+STATE_AWAY: Final = "away"
+STATE_SUMMER: Final = "summer"
+STATE_FIREPLACE: Final = "fireplace"
+STATE_NIGHT: Final = "night"
+
+ATTR_FAN_LEVEL_SELECTION: Final = "fan_level_selection"
+ATTR_FAN_LEVEL: Final = "fan_level"
+STATE_FAN_LEVEL_0: Final = "0"
+STATE_FAN_LEVEL_1: Final = "1"
+STATE_FAN_LEVEL_2: Final = "2"
+STATE_FAN_LEVEL_3: Final = "3"
+STATE_FAN_LEVEL_4: Final = "4"
+
+ATTR_WEEK_PROGRAM: Final = "week_program_selection"
+STATE_WEEKPROGRAM_1: Final = "0"
+STATE_WEEKPROGRAM_2: Final = "1"
+STATE_WEEKPROGRAM_3: Final = "2"
+STATE_WEEKPROGRAM_4: Final = "3"
+STATE_WEEKPROGRAM_5: Final = "4"
+STATE_WEEKPROGRAM_6: Final = "5"
+STATE_WEEKPROGRAM_7: Final = "6"
+STATE_WEEKPROGRAM_8: Final = "7"
+STATE_WEEKPROGRAM_9: Final = "8"
+STATE_WEEKPROGRAM_10: Final = "9"
+
+ATTR_AWAY_MODE: Final = "away_mode"
+
+ATTR_SUMMER_MODE: Final = "summer_mode"
+
+ATTR_FIREPLACE_MODE: Final = "fireplace_mode"
+
+ATTR_NIGHT_MODE: Final = "night_mode"
+
+ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
+
+ATTR_FILTER_RESET: Final = "filter_reset"
+
+ATTR_ALARM_RESET: Final = "alarm_reset"
+
+OPERATION_SELECTIONS = [
+    STATE_STANDBY,
+    STATE_AUTOMATIC,
+    STATE_MANUAL,
+    STATE_WEEKPROGRAM,
+    STATE_AWAY,
+    STATE_SUMMER,
+    STATE_FIREPLACE,
+    STATE_NIGHT,
+]
+
+FAN_LEVEL_SELECTIONS = [
+    STATE_FAN_LEVEL_0,
+    STATE_FAN_LEVEL_1,
+    STATE_FAN_LEVEL_2,
+    STATE_FAN_LEVEL_3,
+    STATE_FAN_LEVEL_4,
+]
+
+WEEK_PROGRAM_SELECTIONS = [
+    STATE_WEEKPROGRAM_1,
+    STATE_WEEKPROGRAM_2,
+    STATE_WEEKPROGRAM_3,
+    STATE_WEEKPROGRAM_4,
+    STATE_WEEKPROGRAM_5,
+    STATE_WEEKPROGRAM_6,
+    STATE_WEEKPROGRAM_7,
+    STATE_WEEKPROGRAM_8,
+    STATE_WEEKPROGRAM_9,
+    STATE_WEEKPROGRAM_10,
+]
+
 
 class ComponentClass(int):
     """Danterm components."""
@@ -87,7 +167,7 @@ class ActiveUnitMode(int):
     """Dantherm active unit mode class."""
 
     Automatic = 0x0002
-    Manuel = 0x0004
+    Manual = 0x0004
     WeekProgram = 0x0008
 
     Away = StartAway = 0x0010
@@ -99,21 +179,11 @@ class ActiveUnitMode(int):
     Fireplace = StartFireplace = 0x0040
     EndFireplace = 0x8040
 
-    ManuelBypass = SelectManuelBypass = 0x0080
-    DeselectManuelBypass = 0x8080
+    ManualBypass = SelectManualBypass = 0x0080
+    DeselectManualBypass = 0x8080
 
     Summer = StartSummer = 0x0800
     EndSummer = 0x8800
-
-
-STATE_STANDBY: Final = "standby"
-STATE_AUTOMATIC: Final = "automatic"
-STATE_MANUAL: Final = "manual"
-STATE_WEEKPROGRAM: Final = "week_program"
-STATE_AWAY: Final = "away"
-STATE_SUMMER: Final = "summer"
-STATE_FIREPLACE: Final = "fireplace"
-STATE_NIGHT: Final = "night"
 
 
 class BypassDamperState(int):
@@ -131,6 +201,7 @@ class DanthermButtonEntityDescription(ButtonEntityDescription):
     """Dantherm Button Entity Description."""
 
     data_setaddress: int | None = None
+    data_setinternal: str | None = None
     data_setclass: DataClass | None = None
     state: int = None
     state_entity: str | None = None
@@ -258,15 +329,13 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
 
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     DanthermButtonEntityDescription(
-        key="filter_reset",
-        data_setaddress=558,
-        state=1,
+        key=ATTR_FILTER_RESET,
+        data_setinternal="filter_reset",
         data_class=DataClass.UInt32,
     ),
     DanthermButtonEntityDescription(
-        key="alarm_reset",
-        data_setaddress=514,
-        state_entity="alarm",
+        key=ATTR_ALARM_RESET,
+        data_setinternal="alarm_reset",
         data_class=DataClass.UInt32,
     ),
 )
@@ -348,33 +417,24 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
 
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
-        key="operation_selection",
+        key=ATTR_OPERATION_SELECTION,
         icon="mdi:state-machine",
-        data_setinternal="set_operation_selection",
-        data_getinternal="get_operation_selection",
-        options=[
-            "standby",
-            "automatic",
-            "manual",
-            "week_program",
-            "away",
-            "summer",
-            "fireplace",
-            "night",
-        ],
+        data_setinternal=f"set_{ATTR_OPERATION_SELECTION}",
+        data_getinternal=f"get_{ATTR_OPERATION_SELECTION}",
+        options=OPERATION_SELECTIONS,
     ),
     DanthermSelectEntityDescription(
-        key="fan_level_selection",
-        data_setinternal="set_fan_level",
-        data_getinternal="get_fan_level",
-        options=["0", "1", "2", "3", "4"],
+        key=ATTR_FAN_LEVEL_SELECTION,
+        data_setinternal=f"set_{ATTR_FAN_LEVEL}",
+        data_getinternal=f"get_{ATTR_FAN_LEVEL}",
+        options=FAN_LEVEL_SELECTIONS,
     ),
     DanthermSelectEntityDescription(
-        key="week_program_selection",
+        key=ATTR_WEEK_PROGRAM,
         icon="mdi:clock-edit-outline",
         data_address=466,
         data_class=DataClass.UInt32,
-        options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        options=WEEK_PROGRAM_SELECTIONS,
         component_class=ComponentClass.Week,
         entity_category=EntityCategory.CONFIG,
     ),
@@ -393,8 +453,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         data_getinternal="get_alarm",
     ),
     DanthermSensorEntityDescription(
-        key="fan_level",
-        data_getinternal="get_fan_level",
+        key=ATTR_FAN_LEVEL,
+        data_getinternal=f"get_{ATTR_FAN_LEVEL}",
     ),
     DanthermSensorEntityDescription(
         key="fan1_speed",
@@ -500,6 +560,13 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
     ),
     DanthermSensorEntityDescription(
+        key="filter_remain_level",
+        icon="mdi:air-filter",
+        data_getinternal="get_filter_remain_level",
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
         key="work_time",
         icon="mdi:progress-clock",
         data_class=DataClass.UInt32,
@@ -527,9 +594,9 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
 
 SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     DanthermSwitchEntityDescription(
-        key="away_mode",
+        key=ATTR_AWAY_MODE,
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_away_mode",
+        data_getinternal=f"get_{ATTR_AWAY_MODE}",
         state_suspend_for=30,
         state_on=ActiveUnitMode.StartAway,
         icon_on="mdi:bag-suitcase-outline",
@@ -538,7 +605,7 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
-        key="night_mode",
+        key=ATTR_NIGHT_MODE,
         data_setinternal="set_active_unit_mode",
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
@@ -550,9 +617,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     DanthermSwitchEntityDescription(
-        key="fireplace_mode",
+        key=ATTR_FIREPLACE_MODE,
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_fireplace_mode",
+        data_getinternal=f"get_{ATTR_FIREPLACE_MODE}",
         state_suspend_for=30,
         state_seton=ActiveUnitMode.StartFireplace,
         icon_on="mdi:fireplace",
@@ -561,21 +628,21 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
-        key="manual_bypass_mode",
+        key=ATTR_MANUAL_BYPASS_MODE,
         data_setinternal="set_active_unit_mode",
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
-        state_on=ActiveUnitMode.SelectManuelBypass,
+        state_on=ActiveUnitMode.SelectManualBypass,
         icon_on="mdi:hand-back-right-outline",
-        state_off=ActiveUnitMode.DeselectManuelBypass,
+        state_off=ActiveUnitMode.DeselectManualBypass,
         icon_off="mdi:hand-back-right-off-outline",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
-        key="summer_mode",
+        key=ATTR_SUMMER_MODE,
         data_setinternal="set_active_unit_mode",
-        data_getinternal="get_summer_mode",
+        data_getinternal=f"get_{ATTR_SUMMER_MODE}",
         state_suspend_for=30,
         state_seton=ActiveUnitMode.StartSummer,
         icon_on="mdi:weather-sunny",

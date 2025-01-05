@@ -403,7 +403,7 @@ class Device:
         ):
             return STATE_AUTOMATIC
 
-        if self._active_unit_mode & ActiveUnitMode.Manuel == ActiveUnitMode.Manuel:
+        if self._active_unit_mode & ActiveUnitMode.Manual == ActiveUnitMode.Manual:
             return STATE_MANUAL
 
         if (
@@ -490,6 +490,13 @@ class Device:
 
         return self._alarm
 
+    async def alarm_reset(self, value=None):
+        """Reset alarm."""
+
+        if value is None:
+            value = 0
+        await self._write_holding_uint32(514, value)
+
     @property
     def get_bypass_damper(self):
         """Get bypass damper."""
@@ -562,19 +569,31 @@ class Device:
         return self._filter_remain
 
     @property
+    def get_filter_remain_level(self):
+        """Get filter remain level."""
+
+        if not self._filter_lifetime:
+            return None
+        if self._filter_remain > self._filter_lifetime:
+            return 0
+        return int(
+            (self._filter_lifetime - self._filter_remain) / (self._filter_lifetime / 3)
+        )
+
+    @property
     def get_filter_remain_attrs(self):
         """Get filter remain attributes."""
 
         if not self._filter_lifetime:
             return None
-        if self._filter_remain > self._filter_lifetime:
-            return {"level": 0}
-        return {
-            "level": int(
-                (self._filter_lifetime - self._filter_remain)
-                / (self._filter_lifetime / 3)
-            )
-        }
+        return {"level": self.get_filter_remain_level}
+
+    async def filter_reset(self, value=None):
+        """Reset filter."""
+
+        if value is None:
+            value = 1
+        await self._write_holding_uint32(558, value)
 
     async def set_active_unit_mode(self, value):
         """Set active unit mode."""
@@ -585,13 +604,13 @@ class Device:
         """Set operation mode selection."""
 
         if value == STATE_STANDBY:
-            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
+            await self.set_active_unit_mode(ActiveUnitMode.Manual)
             if self._fan_level != 0:
                 await self.set_fan_level(0)
         elif value == STATE_AUTOMATIC:
             await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
-            await self.set_active_unit_mode(ActiveUnitMode.Manuel)
+            await self.set_active_unit_mode(ActiveUnitMode.Manual)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
         elif value == STATE_AWAY:
@@ -778,6 +797,8 @@ class Device:
     async def _write_holding_int8(self, address, value):
         """Write holding int8 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_8bit_int(value)
         payload = builder.to_registers()
@@ -797,6 +818,8 @@ class Device:
     async def _write_holding_uint8(self, address, value):
         """Write holding uint8 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_8bit_uint(value)
         payload = builder.to_registers()
@@ -816,6 +839,8 @@ class Device:
     async def _write_holding_int16(self, address, value):
         """Write holding int16 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_16bit_int(value)
         payload = builder.to_registers()
@@ -835,6 +860,8 @@ class Device:
     async def _write_holding_uint16(self, address, value):
         """Write holding uint16 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_16bit_uint(value)
         payload = builder.to_registers()
@@ -854,6 +881,8 @@ class Device:
     async def _write_holding_int32(self, address, value):
         """Write holding int32 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_32bit_int(value)
         payload = builder.to_registers()
@@ -873,6 +902,8 @@ class Device:
     async def _write_holding_uint32(self, address, value):
         """Write holding uint32 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_32bit_uint(int(value))
         payload = builder.to_registers()
@@ -908,6 +939,8 @@ class Device:
     async def _write_holding_float32(self, address, value):
         """Write holding float32 registers."""
 
+        if value is None:
+            return
         builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=Endian.LITTLE)
         builder.add_32bit_float(value)
         payload = builder.to_registers()

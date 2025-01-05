@@ -1,0 +1,54 @@
+set_state:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
+  fields:
+    operation_selection:
+      selector:
+        select:
+          translation_key: operations
+          options:
+            - "standby"
+            - "automatic"
+            - "manual"
+            - "week_program"
+    fan_level_selection:
+      selector:
+        select:
+          translation_key: fan_levels
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+    away_mode:
+      example: true
+      selector:
+        boolean:
+    summer_mode:
+      example: true
+      selector:
+        boolean:
+    fireplace_mode:
+      example: true
+      selector:
+        boolean:
+    manual_bypass_mode:
+      example: true
+      selector:
+        boolean:
+filter_reset:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
+alarm_reset:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm

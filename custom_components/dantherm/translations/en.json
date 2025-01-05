@@ -127,6 +127,7 @@
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
+      "filter_remain_level": { "name": "Filter Remain Level" },
       "work_time": { "name": "Work Time" },
       "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
     },
@@ -136,6 +137,65 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" }
+    }
+  },
+  "selector": {
+    "operations": {
+      "options": {
+        "standby": "Standby",
+        "automatic": "Automatic",
+        "manual": "Manual",
+        "week_program": "Week Program"
+      }
+    },
+    "fan_levels": {
+      "options": {
+        "0": "Level 0",
+        "1": "Level 1",
+        "2": "Level 2",
+        "3": "Level 3",
+        "4": "Level 4"
+      }
+    }
+  },
+  "services": {
+    "set_state": {
+      "name": "Set state",
+      "description": "Control the state of the ventilation unit with an action call.",
+      "fields": {
+        "operation_selection": {
+          "name": "Operation Selection",
+          "description": "Select the decired operation mode."
+        },
+        "fan_level_selection": {
+          "name": "Fan Selection",
+          "description": "Select the decired fan level."
+        },
+        "away_mode": {
+          "name": "Away Mode",
+          "description": "Turn away mode on or off."
+        },
+        "summer_mode": {
+          "name": "Summer Mode",
+          "description": "Turn summer mode on or off."
+        },
+        "fireplace_mode": {
+          "name": "Fireplace Mode",
+          "description": "Turn fireplace mode on or off. The fireplace mode will be on for a limited time period."
+        },
+        "manual_bypass_mode": {
+          "name": "Manual Bypass Mode",
+          "description": "Turn manual bypass mode on or off."
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Filter reset",
+      "description": "Reset the filter remaining days to its filter lifetime."
+    },
+    "alarm_reset": {
+      "name": "Alarm reset",
+      "description": "Reset first pending alarm."
     }
   }
 }

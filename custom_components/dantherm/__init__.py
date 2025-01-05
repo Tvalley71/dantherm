@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import Device
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ PLATFORMS = [
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Dantherm component."""
     hass.data[DOMAIN] = {}
+    await async_setup_services(hass)
     return True
 
 

@@ -127,6 +127,7 @@
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filter tilbage" },
+      "filter_remain_level": { "name": "Filter tilbage niveau" },
       "work_time": { "name": "Drifttid" },
       "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
@@ -136,6 +137,65 @@
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
       "summer_mode": { "name": "Sommertilstand" }
+    }
+  },
+  "selector": {
+    "operations": {
+      "options": {
+        "standby": "Standby",
+        "automatic": "Automatik",
+        "manual": "Manuel",
+        "week_program": "Ugeprogram"
+      }
+    },
+    "fan_levels": {
+      "options": {
+        "0": "Niveau 0",
+        "1": "Niveau 1",
+        "2": "Niveau 2",
+        "3": "Niveau 3",
+        "4": "Niveau 4"
+      }
+    }
+  },
+  "services": {
+    "set_state": {
+      "name": "Sæt tilstand",
+      "description": "Kontroller tilstande på ventilationsenheden med et action kald.",
+      "fields": {
+        "operation_selection": {
+          "name": "Driftindstilling",
+          "description": "Vælg den ønskede drifttilstand."
+          },
+        "fan_level_selection": {
+          "name": "Ventilatorindstilling",
+          "description": "Vælg det ønskede ventilatorniveau."
+        },
+        "away_mode": {
+          "name": "Rejsetilstand",
+          "description": "Slå rejsetilstand til eller fra."
+        },
+        "summer_mode": {
+          "name": "Sommertilstand",
+          "description": "Slå sommertilstand til eller fra."
+        },
+        "fireplace_mode": {
+          "name": "Brændeovnstilstand",
+          "description": "Slå brændeovnstilstand til eller fra. Brændeovnstilstand vil være til i en begrænset tidsperiode."
+        },
+        "manual_bypass_mode": {
+          "name": "Manuel bypasstilstand",
+          "description": "Slå manuel bypasstilstand til eller fra."
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Nulstil filter",
+      "description": "Nulstil filterets resterende dage til dets filterlevetid."
+    },
+    "alarm_reset": {
+      "name": "Nulstil alarm",
+      "description": "Nulstil første ventende alarm."
     }
   }
 }
