@@ -181,7 +181,7 @@
         },
         "fireplace_mode": {
           "name": "Brændeovnstilstand",
-          "description": "Slå brændeovnstilstand til eller fra. Brændeovnstilstand vil være til i en tidsbegrænset tidsperiode."
+          "description": "Slå brændeovnstilstand til eller fra. Brændeovnstilstand vil være til i en begrænset tidsperiode."
         },
         "manual_bypass_mode": {
           "name": "Manuel bypasstilstand",
