@@ -381,8 +381,9 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 2. **Configure a Trigger:**
    - Add a trigger that fits your use case. For example:
      - A time-based trigger to schedule changes.    
-     - A sensor-based trigger to react to environmental changes, e.g.:
-        - Humidity Sensor: Trigger when humidity exceeds 70%.
+     - A sensor-based trigger to react to environmental changes.
+        - Air Quality Sensor: Trigger when CO2 levels exceed a threshold, e.g., 1000 ppm.
+        - Humidity Sensor: Trigger when humidity exceeds, e.g., 70%.
         - Window Sensor: Trigger when a window opens.
         - Cooker Hood: Trigger when the smart plug detects power usage above a threshold.
 
