@@ -44,6 +44,7 @@ Known supported units:
 | outdoor_temperature          | Outdoor temperature sensor            |
 | room_temperature             | Room temperature sensor<sup>\* &dagger;<sup> |
 | filter_remain                | Remaining filter time sensor          |
+| filter_remain_level          | Remaining filter time sensor level<sup>&dagger;<sup> |
 | work_time                    | Work time sensor<sup>&dagger;<sup>    |
 | internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | away_mode                    | Away mode switch                      |
@@ -150,7 +151,7 @@ I might consider creating a custom card based on this in the future.
 
 To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15397672/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
 
-Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to create the below helper template sensor.
+Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to enable the filter_remain_level sensor.
 
 #### The code
 
@@ -293,11 +294,6 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
           font-size: 100%
 
 ```
-
-#### Helper template sensor.
-
-![Skærmbillede 2024-05-04 094747](https://github.com/user-attachments/assets/5fc0c6dc-a1e5-4579-8453-7837037b3f9a)
-
 </details>
 
 #### Mushroom-chips card
@@ -371,6 +367,44 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 Here are some examples of badges added to the dashboard. The pop-up that appears when clicking on a badge will vary depending on the selected entities, either displaying information or enabling manipulation of the Dantherm unit.
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
+
+### Using the "Dantherm: Set State" Action in Automations
+
+The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
+
+#### Steps to Use the "Set State" Action
+
+1. **Create a New Automation:**
+   - Navigate to `Settings` > `Automations & Scenes`.
+   - Click on **Add Automation** and select **Start with an empty automation**.
+
+2. **Configure a Trigger:**
+   - Add a trigger that fits your use case. For example:
+     - A time-based trigger to schedule changes.    
+     - A sensor-based trigger to react to environmental changes, e.g.:
+        - Humidity Sensor: Trigger when humidity exceeds 70%.
+        - Window Sensor: Trigger when a window opens.
+        - Cooker Hood: Trigger when the smart plug detects power usage above a threshold.
+
+3. **Add the "Dantherm: Set State" Action:**
+   - Under the **Actions** section, click **Add Action**.
+   - Search for `Dantherm: Set state` in the action picker and select it.
+
+4. **Configure the Action:**
+   - Use the options provided to control the Dantherm ventilation unit:
+     - **Targets:** Choose the area, device, or entity to apply the action.
+     - **Operation Selection:** Set the desired operating mode (e.g., Standby, Automatic, Manual, or Week Program).
+     - **Fan Selection:** Choose the desired fan level (Level 0–4).
+     - **Modes:** Toggle special modes like:
+       - **Away Mode**: Enable or disable away mode.
+       - **Summer Mode**: Turn summer mode on or off.
+       - **Fireplace Mode**: Activate fireplace mode for a limited period.
+       - **Manual Bypass Mode**: Enable or disable manual bypass.
+
+![image](https://github.com/user-attachments/assets/0f23cd28-8b23-47a5-b0ef-05e071f42446)
+
+5. **Save the Automation:**
+   - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
 
 
 ## Disclaimer
