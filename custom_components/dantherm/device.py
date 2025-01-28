@@ -611,6 +611,8 @@ class Device:
             await self.set_active_unit_mode(ActiveUnitMode.Automatic)
         elif value == STATE_MANUAL:
             await self.set_active_unit_mode(ActiveUnitMode.Manual)
+            if self._fan_level == 0:
+                await self.set_fan_level(1)
         elif value == STATE_WEEKPROGRAM:
             await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
         elif value == STATE_AWAY:
