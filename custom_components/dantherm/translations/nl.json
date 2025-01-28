@@ -1,0 +1,201 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Modbus Connectie",
+        "data": {
+          "host": "Voer het ip-address in van uw apparaat",
+          "name": "Voer prefix in voor de apparaat entiteiten",
+          "port": "Voer de TCP poort in waarop verbinding moet worden gemaakt met het apparaat",
+          "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "filter_reset": { "name": "Filter Resetten" },
+      "alarm_reset": { "name": "Foutmelding Resetten" }
+    },
+    "cover": {
+      "bypass_damper": { "name": "Demper Bypass" }
+    },
+    "number": {
+      "filter_lifetime": { "name": "Levensduur Filter" },
+      "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
+      "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
+      "manual_bypass_duration": { "name": "Duur Manuele Bypass" }
+    },
+    "select": {
+      "operation_selection": {
+        "name": "Bedieningsselectie",
+        "state": {
+          "standby": "Standby",
+          "automatic": "Automatisch",
+          "manual": "Manueel",
+          "week_program": "Weekprogramma",
+          "away": "Afwezig",
+          "summer": "Zomer",
+          "fireplace": "Open Haard",
+          "night": "Nacht"
+        }
+      },
+      "fan_level_selection": {
+        "name": "Ventilator Selectie",
+        "state": {
+          "0": "Niveau 0",
+          "1": "Niveau 1",
+          "2": "Niveau 2",
+          "3": "Niveau 3",
+          "4": "Niveau 4"
+        }
+      },
+      "week_program_selection": {
+        "name": "Weekprogramma",
+        "state": {
+          "0": "Weekprogramma 1",
+          "1": "Weekprogramma 2",
+          "2": "Weekprogramma 3",
+          "3": "Weekprogramma 4",
+          "4": "Weekprogramma 5",
+          "5": "Weekprogramma 6",
+          "6": "Weekprogramma 7",
+          "7": "Weekprogramma 8",
+          "8": "Weekprogramma 9",
+          "9": "Weekprogramma 10"
+        }
+      }
+    },
+    "sensor": {
+      "operation_mode": {
+        "name": "Bedieningsmodus",
+        "state": {
+          "0": "Standby",
+          "1": "Manueel",
+          "2": "Automatisch",
+          "3": "Weekprogramma",
+          "4": "Servoflow",
+          "5": "Afwezig",
+          "6": "Zomer",
+          "7": "DI override",
+          "8": "Hygrostat override",
+          "9": "Open Haard",
+          "10": "Installer",
+          "11": "Fail Safe 1",
+          "12": "Fail Safe 2",
+          "13": "Fail Off",
+          "14": "Defrost Off",
+          "15": "Defrost",
+          "16": "Nacht"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "0": "None",
+          "1": "Exhaust FAN Alarm",
+          "2": "Supply FAN Alarm",
+          "3": "Bypass Alarm",
+          "4": "T1 Alarm",
+          "5": "T2 Alarm",
+          "6": "T3 Alarm",
+          "7": "T4 Alarm",
+          "8": "T5 Alarm",
+          "9": "RH Alarm",
+          "10": "Outdoor Alarm",
+          "11": "Supply Alarm",
+          "12": "Fire Alarm",
+          "13": "Comminication Alarm",
+          "14": "Fire Termostat Alarm",
+          "15": "High Waterlevel Alarm"
+        }
+      },
+      "fan_level": { "name": " Ventilatorniveau" },
+      "fan1_speed": { "name": "Snelheid Ventilator 1" },
+      "fan2_speed": { "name": "Snelheid Ventilator 2" },
+      "humidity": { "name": "Vochtigheid" },
+      "air_quality": { "name": "Luchtkwaliteit" },
+      "exhaust_temperature": { "name": "Uitlaattemperatuur" },
+      "extract_temperature": { "name": "Afzuigtemperatuur" },
+      "supply_temperature": { "name": "Aanvoertemperatuur" },
+      "outdoor_temperature": { "name": "Buitentemperatuur" },
+      "room_temperature": { "name": "Kamertemperatuur" },
+      "filter_remain": { "name": "Levenduur Filter" },
+      "filter_remain_level": { "name": "Levensduur Filter Niveau" },
+      "work_time": { "name": "Inschakelduur" },
+      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"}
+    },
+    "switch": {
+      "away_mode": { "name": "Afwezigheidsmodus" },
+      "night_mode": { "name": "Nachtmodus" },
+      "fireplace_mode": { "name": "Open Haardmodus" },
+      "manual_bypass_mode": { "name": "Manuele Bypassmodus" },
+      "summer_mode": { "name": "Zomermodus" }
+    }
+  },
+  "selector": {
+    "operations": {
+      "options": {
+        "standby": "Standby",
+        "automatic": "Automatisch",
+        "manual": "Manueel",
+        "week_program": "Weekprogramma"
+      }
+    },
+    "fan_levels": {
+      "options": {
+        "0": "Niveau 0",
+        "1": "Niveau 1",
+        "2": "Niveau 2",
+        "3": "Niveau 3",
+        "4": "Niveau 4"
+      }
+    }
+  },
+  "services": {
+    "set_state": {
+      "name": "Status Instellen",
+      "description": "De status van de ventilatie-unit regelen met een actieoproep.",
+      "fields": {
+        "operation_selection": {
+          "name": "Bedieningsselectie",
+          "description": "Selecteer de gewenste bedieningsmodus."
+        },
+        "fan_level_selection": {
+          "name": "Ventilator Selectie",
+          "description": "Selecteer het gewenste ventilatorniveau."
+        },
+        "away_mode": {
+          "name": "Afwezigheidsmodus",
+          "description": "Schakel de afwezigheidsmodus in of uit."
+        },
+        "summer_mode": {
+          "name": "Zomermodus",
+          "description": "Schakel de zomermodus in of uit."
+        },
+        "fireplace_mode": {
+          "name": "Open Haardmodus",
+          "description": "Schakel de open haardmodus in of uit. De open haardmodus is voor een beperkte tijd ingeschakeld."
+        },
+        "manual_bypass_mode": {
+          "name": "Manuele Bypassmodus",
+          "description": "Manuele bypassmodus in- of uitschakelen."
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Filter Resetten",
+      "description": "Reset de resterende dagen van het filter naar de filterlevensduur."
+    },
+    "alarm_reset": {
+      "name": "Foutmelding Resetten",
+      "description": "Reset de eerste in behandeling zijnde foutmelding."
+    }
+  }
+}
