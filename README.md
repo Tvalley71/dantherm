@@ -123,7 +123,7 @@ If you encounter any issues or have questions regarding the Dantherm integration
 
 Currently supported languages:
 
-Danish, English, German and French.
+Danish, Dutch, English, German and French.
 
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
