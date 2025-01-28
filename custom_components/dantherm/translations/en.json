@@ -29,7 +29,7 @@
     "number": {
       "filter_lifetime": { "name": "Filter Lifetime" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
-      "bypass_maximum_temperature": { "name": "Bypass Maxumum Temperature" },
+      "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
       "manual_bypass_duration": { "name": "Manual Bypass Duration" }
     },
     "select": {
@@ -108,10 +108,10 @@
           "7": "T4 Alarm",
           "8": "T5 Alarm",
           "9": "RH Alarm",
-          "10": "Outdoor13 Alarm",
-          "11": "Supply5 Alarm",
+          "10": "Outdoor Alarm",
+          "11": "Supply Alarm",
           "12": "Fire Alarm",
-          "13": "Comminication Alarm",
+          "13": "Communication Alarm",
           "14": "Fire Termostat Alarm",
           "15": "High Waterlevel Alarm"
         }
@@ -165,11 +165,11 @@
       "fields": {
         "operation_selection": {
           "name": "Operation Selection",
-          "description": "Select the decired operation mode."
+          "description": "Select the desired operation mode."
         },
         "fan_level_selection": {
           "name": "Fan Selection",
-          "description": "Select the decired fan level."
+          "description": "Select the desired fan level."
         },
         "away_mode": {
           "name": "Away Mode",
