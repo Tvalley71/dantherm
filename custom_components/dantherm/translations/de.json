@@ -138,6 +138,10 @@
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
       "summer_mode": { "name": "Sommermodus" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
+      "night_mode_end_time": { "name": "Endzeit des Nachtmodus" }
     }
   },
   "selector": {
@@ -197,6 +201,11 @@
     "alarm_reset": {
       "name": "Alarm zurücksetzen",
       "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
+    }
+  },
+  "exceptions": {
+    "invalid_time": {
+      "message": "Ungültiges Zeitformat. Verwenden Sie SS:MM."
     }
   }
 }

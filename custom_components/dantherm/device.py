@@ -142,6 +142,12 @@ class Device:
         self._filter_lifetime = None
         self._filter_remain_enabled = False
         self._filter_remain = None
+        self._night_mode_start_time_enabled = False
+        self._night_mode_start_hour = None
+        self._night_mode_start_minute = None
+        self._night_mode_end_time_enabled = False
+        self._night_mode_end_hour = None
+        self._night_mode_end_minute = None
         self._available = True
         self._read_errors = 0
         self._entities = []
@@ -153,23 +159,27 @@ class Device:
         _LOGGER.debug("Setup has started")
 
         success = await self._modbus.async_setup()
-
-        if success:
-            task = [
-                task
-                for task in asyncio.all_tasks()
-                if task.get_name() == "modbus-connect"
-            ]
-            await asyncio.wait(task, timeout=5)
-            _LOGGER.debug("Modbus has been setup")
-        else:
+        if not success:
+            _LOGGER.error("Modbus setup was unsuccessful for %s", self._device_name)
             await self._modbus.async_close()
-            _LOGGER.error("Modbus setup was unsuccessful")
-            raise ValueError("Modbus setup was unsuccessful")
+            raise ValueError("Modbus setup failed")
 
-        result = await self._read_holding_uint32(610)
-        if result is None:
-            raise ValueError(f"{DEFAULT_NAME} unit probably not responding")
+        _LOGGER.debug("Modbus setup completed, testing connection")
+
+        # Wait up to 5 seconds for connection establishment
+        for _ in range(5):
+            result = await self._read_holding_uint32(610)
+            if result is not None:
+                _LOGGER.debug("Modbus client is connected!")
+                self._available = True
+                break
+            await asyncio.sleep(1)  # Wait before retrying
+        else:
+            _LOGGER.error("Modbus client failed to respond for %s", self._device_name)
+            await self._modbus.async_close()
+            raise ValueError("Modbus client failed to respond")
+
+        _LOGGER.info("Modbus setup completed successfully for %s", self._device_name)
 
         self._device_installed_components = result & 0xFFFF
         _LOGGER.debug(
@@ -277,6 +287,10 @@ class Device:
             self._filter_lifetime_enabled = True
         elif entity.key == "filter_remain":
             self._filter_remain_enabled = True
+        elif entity.key == "night_mode_start_time":
+            self._night_mode_start_time_enabled = True
+        elif entity.key == "night_mode_end_time":
+            self._night_mode_end_time_enabled = True
 
         _LOGGER.debug("Adding refresh entity=%s", entity.name)
         self._entities.append(entity)
@@ -292,6 +306,10 @@ class Device:
             self._filter_lifetime_enabled = False
         elif entity.key == "filter_remain":
             self._filter_remain_enabled = False
+        elif entity.key == "night_mode_start_time":
+            self._night_mode_start_time_enabled = False
+        elif entity.key == "night_mode_end_time":
+            self._night_mode_end_time_enabled = False
 
         _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
@@ -340,6 +358,24 @@ class Device:
             _LOGGER.debug("Filter remain = %s", self._filter_remain)
         else:
             self._filter_remain = None
+
+        if self._night_mode_start_time_enabled:
+            self._night_mode_start_hour = await self._read_holding_uint32(332)
+            _LOGGER.debug("Night mode start hour = %s", self._night_mode_start_hour)
+            self._night_mode_start_minute = await self._read_holding_uint32(334)
+            _LOGGER.debug("Night mode start minute = %s", self._night_mode_start_minute)
+        else:
+            self._night_mode_start_hour = None
+            self._night_mode_start_minute = None
+
+        if self._night_mode_end_time_enabled:
+            self._night_mode_end_hour = await self._read_holding_uint32(336)
+            _LOGGER.debug("Night mode end hour = %s", self._night_mode_end_hour)
+            self._night_mode_end_minute = await self._read_holding_uint32(338)
+            _LOGGER.debug("Night mode end minute = %s", self._night_mode_end_minute)
+        else:
+            self._night_mode_end_hour = None
+            self._night_mode_end_minute = None
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -588,6 +624,22 @@ class Device:
             return None
         return {"level": self.get_filter_remain_level}
 
+    @property
+    def get_night_mode_start_time(self):
+        """Get night mode start time."""
+
+        if self._night_mode_start_hour is None or self._night_mode_start_minute is None:
+            return None
+        return f"{self._night_mode_start_hour:02}:{self._night_mode_start_minute:02}"
+
+    @property
+    def get_night_mode_end_time(self):
+        """Get night mode end time."""
+
+        if self._night_mode_end_hour is None or self._night_mode_end_minute is None:
+            return None
+        return f"{self._night_mode_end_hour:02}:{self._night_mode_end_minute:02}"
+
     async def filter_reset(self, value=None):
         """Reset filter."""
 
@@ -635,6 +687,38 @@ class Device:
             await self.set_active_unit_mode(0x8080)
         else:
             await self.set_active_unit_mode(0x80)
+
+    async def set_night_mode_start_time(self, value):
+        """Set night mode start time."""
+
+        # Split the time string into hours and minutes
+        hours, minutes = map(int, value.split(":"))
+
+        if not (0 <= hours < 24 and 0 <= minutes < 60):
+            _LOGGER.error("Invalid time format: %s", value)
+            return
+
+        # Write the hours to the hour register
+        await self._write_holding_uint32(332, hours)
+
+        # Write the minutes to the minute register
+        await self._write_holding_uint32(334, minutes)
+
+    async def set_night_mode_end_time(self, value):
+        """Set night mode end time."""
+
+        # Split the time string into hours and minutes
+        hours, minutes = map(int, value.split(":"))
+
+        if not (0 <= hours < 24 and 0 <= minutes < 60):
+            _LOGGER.error("Invalid time format: %s", value)
+            return
+
+        # Write the hours to the hour register
+        await self._write_holding_uint32(336, hours)
+
+        # Write the minutes to the minute register
+        await self._write_holding_uint32(338, minutes)
 
     async def read_holding_registers(
         self,

@@ -138,6 +138,10 @@
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
       "summer_mode": { "name": "Sommertilstand" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Nattilstand start tid" },
+      "night_mode_end_time": { "name": "Nattilstand slut tid" }
     }
   },
   "selector": {
@@ -197,6 +201,11 @@
     "alarm_reset": {
       "name": "Nulstil alarm",
       "description": "Nulstil første ventende alarm."
+    }
+  },
+  "exceptions": {
+    "invalid_time": {
+      "message": "Ugyldigt tidsformat. Brug TT:MM."
     }
   }
 }

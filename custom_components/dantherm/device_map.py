@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
+from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
 
 SERVICE_SET_STATE = "set_state"
@@ -325,6 +326,20 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
     data_class: DataClass = DataClass.UInt16
+
+    component_class: ComponentClass = None
+
+
+@dataclass
+class DanthermTimeTextEntityDescription(TextEntityDescription):
+    """Dantherm Time Text Entity Description."""
+
+    data_setinternal: str | None = None
+    data_getinternal: str | None = None
+
+    data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
 
     component_class: ComponentClass = None
 
@@ -651,5 +666,28 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_setoff=ActiveUnitMode.EndSummer,
         icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+)
+
+TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
+    DanthermTimeTextEntityDescription(
+        key="night_mode_start_time",
+        icon="mdi:clock-start",
+        data_setinternal="set_night_mode_start_time",
+        data_getinternal="get_night_mode_start_time",
+        mode=TextMode.TEXT,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
+    DanthermTimeTextEntityDescription(
+        key="night_mode_end_time",
+        icon="mdi:clock-end",
+        data_setinternal="set_night_mode_end_time",
+        data_getinternal="get_night_mode_end_time",
+        mode=TextMode.TEXT,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
 )

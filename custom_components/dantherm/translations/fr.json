@@ -138,6 +138,10 @@
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
       "summer_mode": { "name": "Mode été" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Heure de début du mode nuit" },
+      "night_mode_end_time": { "name": "Heure de fin du mode nuit" }
     }
   },
   "selector": {
@@ -197,6 +201,11 @@
     "alarm_reset": {
       "name": "Réinitialisation de l'alarme",
       "description": "Réinitialisez la première alarme en attente."
+    }
+  },
+  "exceptions": {
+    "invalid_time": {
+      "message": "Format de l'heure invalide. Utilisez HH:MM."
     }
   }
 }

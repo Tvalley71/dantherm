@@ -138,6 +138,10 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Night Mode Start Time" },
+      "night_mode_end_time": { "name": "Night Mode End Time" }
     }
   },
   "selector": {
@@ -197,6 +201,11 @@
     "alarm_reset": {
       "name": "Alarm reset",
       "description": "Reset first pending alarm."
+    }
+  },
+  "exceptions": {
+    "invalid_time": {
+      "message": "Invalid time format. Use HH:MM."
     }
   }
 }

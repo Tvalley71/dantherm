@@ -138,6 +138,10 @@
       "fireplace_mode": { "name": "Open Haardmodus" },
       "manual_bypass_mode": { "name": "Manuele Bypassmodus" },
       "summer_mode": { "name": "Zomermodus" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Starttijd van de nachtmodus" },
+      "night_mode_end_time": { "name": "Eindtijd van de nachtmodus" }
     }
   },
   "selector": {
@@ -197,6 +201,11 @@
     "alarm_reset": {
       "name": "Foutmelding Resetten",
       "description": "Reset de eerste in behandeling zijnde foutmelding."
+    }
+  },
+  "exceptions": {
+    "invalid_time": {
+      "message": "Ongeldig tijdformaat. Gebruik UU:MM."
     }
   }
 }
