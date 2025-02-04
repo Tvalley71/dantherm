@@ -135,19 +135,10 @@ class Device:
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
-        self._bypass_damper_enabled = False
-        self._manual_bypass_mode_enabled = False
         self._bypass_damper = None
-        self._filter_lifetime_enabled = False
         self._filter_lifetime = None
-        self._filter_remain_enabled = False
         self._filter_remain = None
-        self._night_mode_start_time_enabled = False
-        self._night_mode_start_hour = None
-        self._night_mode_start_minute = None
-        self._night_mode_end_time_enabled = False
-        self._night_mode_end_hour = None
-        self._night_mode_end_minute = None
+        self._filter_remain_level = None
         self._available = True
         self._read_errors = 0
         self._entities = []
@@ -279,37 +270,11 @@ class Device:
                 self._hass, self.async_refresh_entities, self._scan_interval
             )
 
-        if entity.key == "bypass_damper":
-            self._bypass_damper_enabled = True
-        elif entity.key == "manual_bypass_mode":
-            self._manual_bypass_mode_enabled = True
-        elif entity.key == "filter_lifetime":
-            self._filter_lifetime_enabled = True
-        elif entity.key == "filter_remain":
-            self._filter_remain_enabled = True
-        elif entity.key == "night_mode_start_time":
-            self._night_mode_start_time_enabled = True
-        elif entity.key == "night_mode_end_time":
-            self._night_mode_end_time_enabled = True
-
         _LOGGER.debug("Adding refresh entity=%s", entity.name)
         self._entities.append(entity)
 
     async def async_remove_refresh_entity(self, entity):
         """Remove entity for refresh."""
-
-        if entity.key == "bypass_damper":
-            self._bypass_damper_enabled = False
-        elif entity.key == "manual_bypass_mode":
-            self._manual_bypass_mode_enabled = False
-        elif entity.key == "filter_lifetime":
-            self._filter_lifetime_enabled = False
-        elif entity.key == "filter_remain":
-            self._filter_remain_enabled = False
-        elif entity.key == "night_mode_start_time":
-            self._night_mode_start_time_enabled = False
-        elif entity.key == "night_mode_end_time":
-            self._night_mode_end_time_enabled = False
 
         _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
@@ -341,41 +306,10 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
-        if self._bypass_damper_enabled or self._manual_bypass_mode_enabled:
-            self._bypass_damper = await self._read_holding_int32(198)
-            _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
-        else:
-            self._bypass_damper = None
-
-        if self._filter_lifetime_enabled:
-            self._filter_lifetime = await self._read_holding_uint32(556)
-            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
-        else:
-            self._filter_lifetime = None
-
-        if self._filter_remain_enabled:
-            self._filter_remain = await self._read_holding_uint32(554)
-            _LOGGER.debug("Filter remain = %s", self._filter_remain)
-        else:
-            self._filter_remain = None
-
-        if self._night_mode_start_time_enabled:
-            self._night_mode_start_hour = await self._read_holding_uint32(332)
-            _LOGGER.debug("Night mode start hour = %s", self._night_mode_start_hour)
-            self._night_mode_start_minute = await self._read_holding_uint32(334)
-            _LOGGER.debug("Night mode start minute = %s", self._night_mode_start_minute)
-        else:
-            self._night_mode_start_hour = None
-            self._night_mode_start_minute = None
-
-        if self._night_mode_end_time_enabled:
-            self._night_mode_end_hour = await self._read_holding_uint32(336)
-            _LOGGER.debug("Night mode end hour = %s", self._night_mode_end_hour)
-            self._night_mode_end_minute = await self._read_holding_uint32(338)
-            _LOGGER.debug("Night mode end minute = %s", self._night_mode_end_minute)
-        else:
-            self._night_mode_end_hour = None
-            self._night_mode_end_minute = None
+        self._bypass_damper = None
+        self._filter_remain_level = None
+        self._filter_lifetime = None
+        self._filter_remain = None
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -520,6 +454,14 @@ class Device:
 
         return "mdi:fan"
 
+    async def async_get_week_program_selection(self):
+        """Get week program selection."""
+
+        result = await self._read_holding_uint32(466)
+        _LOGGER.debug("Week program selection = %s", result)
+
+        return result
+
     @property
     def get_alarm(self):
         """Get alarm."""
@@ -533,9 +475,12 @@ class Device:
             value = 0
         await self._write_holding_uint32(514, value)
 
-    @property
-    def get_bypass_damper(self):
+    async def async_get_bypass_damper(self):
         """Get bypass damper."""
+
+        if not self._bypass_damper:
+            self._bypass_damper = await self._read_holding_uint32(198)
+            _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
 
         return self._bypass_damper
 
@@ -543,9 +488,9 @@ class Device:
     def get_bypass_damper_icon(self) -> str:
         """Get bypass damper icon."""
 
-        if self.get_bypass_damper == BypassDamperState.Closed:
+        if self._bypass_damper == BypassDamperState.Closed:
             return "mdi:valve-closed"
-        if self.get_bypass_damper == BypassDamperState.Opened:
+        if self._bypass_damper == BypassDamperState.Opened:
             return "mdi:valve-open"
         return "mdi:valve"
 
@@ -592,53 +537,98 @@ class Device:
             return True
         return False
 
-    @property
-    def get_filter_lifetime(self):
+    async def async_get_filter_lifetime(self):
         """Get filter lifetime."""
+
+        if not self._filter_lifetime:
+            self._filter_lifetime = await self._read_holding_uint32(556)
+            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
 
         return self._filter_lifetime
 
-    @property
-    def get_filter_remain(self):
+    async def async_get_filter_remain(self):
         """Get filter remain."""
+
+        if not self._filter_remain:
+            self._filter_remain = await self._read_holding_uint32(554)
+            _LOGGER.debug("Filter remain = %s", self._filter_remain)
 
         return self._filter_remain
 
-    @property
-    def get_filter_remain_level(self):
+    async def async_get_filter_remain_level(self):
         """Get filter remain level."""
 
         if not self._filter_lifetime:
-            return None
-        if self._filter_remain > self._filter_lifetime:
-            return 0
-        return int(
-            (self._filter_lifetime - self._filter_remain) / (self._filter_lifetime / 3)
-        )
+            await self.async_get_filter_lifetime()
 
-    @property
-    def get_filter_remain_attrs(self):
+        if not self._filter_remain:
+            await self.async_get_filter_remain()
+
+        if self._filter_remain > self._filter_lifetime:
+            self._filter_remain_level = 0
+        else:
+            self._filter_remain_level = int(
+                (self._filter_lifetime - self._filter_remain)
+                / (self._filter_lifetime / 3)
+            )
+
+        return self._filter_remain_level
+
+    async def async_get_filter_remain_attrs(self):
         """Get filter remain attributes."""
 
-        if not self._filter_lifetime:
-            return None
-        return {"level": self.get_filter_remain_level}
+        if not self._filter_remain_level:
+            await self.async_get_filter_remain_level()
 
-    @property
-    def get_night_mode_start_time(self):
+        return {"level": self._filter_remain_level}
+
+    async def async_get_night_mode_start_time(self):
         """Get night mode start time."""
 
-        if self._night_mode_start_hour is None or self._night_mode_start_minute is None:
-            return None
-        return f"{self._night_mode_start_hour:02}:{self._night_mode_start_minute:02}"
+        hour = await self._read_holding_uint32(332)
+        _LOGGER.debug("Night mode start hour = %s", hour)
+        minute = await self._read_holding_uint32(334)
+        _LOGGER.debug("Night mode start minute = %s", minute)
 
-    @property
-    def get_night_mode_end_time(self):
+        if hour is None or minute is None:
+            return None
+        return f"{hour:02}:{minute:02}"
+
+    async def async_get_night_mode_end_time(self):
         """Get night mode end time."""
 
-        if self._night_mode_end_hour is None or self._night_mode_end_minute is None:
+        hour = await self._read_holding_uint32(336)
+        _LOGGER.debug("Night mode end hour = %s", hour)
+        minute = await self._read_holding_uint32(338)
+        _LOGGER.debug("Night mode end minute = %s", minute)
+
+        if hour is None or minute is None:
             return None
-        return f"{self._night_mode_end_hour:02}:{self._night_mode_end_minute:02}"
+        return f"{hour:02}:{minute:02}"
+
+    async def async_get_bypass_minimum_temperature(self):
+        """Get bypass minimum temperature."""
+
+        result = await self._read_holding_float32(444, 1)
+        _LOGGER.debug("Bypass minimum temperature = %.1f", result)
+
+        return result
+
+    async def async_get_bypass_maximum_temperature(self):
+        """Get bypass maximum temperature."""
+
+        result = await self._read_holding_float32(446, 1)
+        _LOGGER.debug("Bypass maximum temperature = %.1f", result)
+
+        return result
+
+    async def async_get_manual_bypass_duration(self):
+        """Get manual bypass duration."""
+
+        result = await self._read_holding_uint32(264)
+        _LOGGER.debug("Manual bypass duration = %s", result)
+
+        return result
 
     async def filter_reset(self, value=None):
         """Reset filter."""
@@ -673,11 +663,19 @@ class Device:
     async def set_fan_level(self, value):
         """Set fan level."""
 
+        # Write the level to the fan level register
         await self._write_holding_uint32(324, value)
+
+    async def set_week_program_selection(self, value):
+        """Set week program selection."""
+
+        # Write the program selection to the week program selection register
+        await self._write_holding_uint32(466, value)
 
     async def set_filter_lifetime(self, value):
         """Set filter lifetime."""
 
+        # Write the lifetime to filter lifetime register
         await self._write_holding_uint32(556, value)
 
     async def set_bypass_damper(self, feature: CoverEntityFeature = None):
@@ -719,6 +717,24 @@ class Device:
 
         # Write the minutes to the minute register
         await self._write_holding_uint32(338, minutes)
+
+    async def set_bypass_minimum_temperature(self, value):
+        """Set bypass minimum temperature."""
+
+        # Write the temperature to the minimum temperature register
+        await self._write_holding_float32(444, value)
+
+    async def set_bypass_maximum_temperature(self, value):
+        """Set bypass maximum temperature."""
+
+        # Write the temperature to the maximum temperature register
+        await self._write_holding_float32(446, value)
+
+    async def set_manual_bypass_duration(self, value):
+        """Set manual bypass duration."""
+
+        # Write the duration to the manual bypass duration register
+        await self._write_holding_uint32(264, value)
 
     async def read_holding_registers(
         self,

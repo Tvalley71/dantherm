@@ -161,6 +161,21 @@
           "3": "Stufe 3",
           "4": "Stufe 4"
       }
+    },
+    "week_program_selections": {
+      "options": {
+        "0": "Wochenprogramm 1",
+        "1": "Wochenprogramm 2",
+        "2": "Wochenprogramm 3",
+        "3": "Wochenprogramm 4",
+        "4": "Wochenprogramm 5",
+        "5": "Wochenprogramm 6",
+        "6": "Wochenprogramm 7",
+        "7": "Wochenprogramm 8",
+        "8": "Wochenprogramm 9",
+        "9": "Wochenprogramm 10",
+        "10": "Wochenprogramm 11"
+      }
     }
   },
   "services": {
@@ -194,6 +209,44 @@
         }
       }
     },
+    "set_configuration": {
+      "name": "Konfiguration festlegen",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Minimale Bypass-Temperatur",
+          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Maximale Bypass-Temperatur",
+          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
+        },
+        "filter_lifetime": {
+          "name": "Filterlebensdauer",
+          "description": "Legen Sie die Lebensdauer des Filters in Tagen fest."
+        },
+        "manual_bypass_duration": {
+          "name": "Manuelle Bypass-Dauer",
+          "description": "Legen Sie die Dauer des manuellen Bypass-Modus in Minuten fest."
+        },
+        "night_mode": {
+          "name": "Nachtmodus",
+          "description": "Nachtmodus aktivieren oder deaktivieren."
+        },
+        "night_mode_start_time": {
+          "name": "Startzeit des Nachtmodus",
+          "description": "Legen Sie die Startzeit für den Nachtmodus fest (HH:MM)."
+        },
+        "night_mode_end_time": {
+          "name": "Endzeit des Nachtmodus",
+          "description": "Legen Sie die Endzeit für den Nachtmodus fest (HH:MM)."
+        },
+        "week_program_selection": {
+          "name": "Wochentagsprogramm Auswahl",
+          "description": "Wählen Sie das aktive Wochenprogramm aus."
+        }
+      }
+    },
     "filter_reset": {
       "name": "Filter zurücksetzen",
       "description": "Setzen Sie die verbleibenden Tage des Filters auf seine Lebensdauer zurück."
@@ -204,8 +257,11 @@
     }
   },
   "exceptions": {
-    "invalid_time": {
+    "invalid_timeformat": {
       "message": "Ungültiges Zeitformat. Verwenden Sie SS:MM."
+    },
+    "invalid_filter_lifetime": {
+      "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
     }
   }
 }

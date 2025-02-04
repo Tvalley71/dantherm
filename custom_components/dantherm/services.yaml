@@ -40,6 +40,75 @@ set_state:
       example: true
       selector:
         boolean:
+set_configuration:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
+  fields:
+    bypass_minimum_temperature:
+      example: 15
+      selector:
+        number:
+          min: 12
+          max: 15
+          step: 0.1
+          unit_of_measurement: "°C"
+    bypass_maximum_temperature:
+      example: 24
+      selector:
+        number:
+          min: 21
+          max: 27
+          step: 0.1
+          unit_of_measurement: "°C"
+    filter_lifetime:
+      example: "180"
+      selector:
+        text:
+          type: text
+          multiline: false
+    manual_bypass_duration:
+      example: 360
+      selector:
+        number:
+          min: 60
+          max: 480
+          step: 15
+          unit_of_measurement: "min"
+    night_mode:
+      example: true
+      selector:
+        boolean:
+    night_mode_start_time:
+      example: "22:30"
+      selector:
+        text:
+          type: text
+          multiline: false
+    night_mode_end_time:
+      example: "06:00"
+      selector:
+        text:
+          type: text
+          multiline: false
+    week_program_selection:
+      selector:
+        select:
+          translation_key: week_program_selections
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+            - "6"
+            - "7"
+            - "8"
+            - "9"
+            - "10"
 filter_reset:
   target:
     device:

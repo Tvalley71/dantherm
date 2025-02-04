@@ -161,6 +161,21 @@
         "3": "Niveau 3",
         "4": "Niveau 4"
       }
+    },
+    "week_program_selections": {
+      "options": {
+        "0": "Ugeprogram 1",
+        "1": "Ugeprogram 2",
+        "2": "Ugeprogram 3",
+        "3": "Ugeprogram 4",
+        "4": "Ugeprogram 5",
+        "5": "Ugeprogram 6",
+        "6": "Ugeprogram 7",
+        "7": "Ugeprogram 8",
+        "8": "Ugeprogram 9",
+        "9": "Ugeprogram 10",
+        "10": "Ugeprogram 11"
+      }
     }
   },
   "services": {
@@ -194,6 +209,44 @@
         }
       }
     },
+    "set_configuration": {
+      "name": "Sæt konfiguration",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass minimum temperatur",
+          "description": "Indstil den minimale temperatur for bypass-drift."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass maksimum temperatur",
+          "description": "Indstil den maksimale temperatur for bypass-drift."
+        },
+        "filter_lifetime": {
+          "name": "Filter levetid",
+          "description": "Indstil filterets levetid i dage."
+        },
+        "manual_bypass_duration": {
+          "name": "Manuel bypass varighed",
+          "description": "Indstil varigheden for manuel bypass-tilstand i minutter."
+        },
+        "night_mode": {
+          "name": "Nattilstand",
+          "description": "Aktiver eller deaktiver nattilstand."
+        },
+        "night_mode_start_time": {
+          "name": "Nattilstand starttid",
+          "description": "Indstil starttidspunktet for nattilstand (TT:MM)."
+        },
+        "night_mode_end_time": {
+          "name": "Nattilstand sluttid",
+          "description": "Indstil sluttidspunktet for nattilstand (TT:MM)."
+        },
+        "week_program_selection": {
+          "name": "Ugeprogram",
+          "description": "Vælg det aktive ugeprogram."
+        }
+      }
+    },
     "filter_reset": {
       "name": "Nulstil filter",
       "description": "Nulstil filterets resterende dage til dets filterlevetid."
@@ -204,8 +257,11 @@
     }
   },
   "exceptions": {
-    "invalid_time": {
+    "invalid_timeformat": {
       "message": "Ugyldigt tidsformat. Brug TT:MM."
+    },
+    "invalid_filter_lifetime": {
+      "message": "Ugyldig filter levetid. Brug værdier mellem 0 og 360 dage."
     }
   }
 }

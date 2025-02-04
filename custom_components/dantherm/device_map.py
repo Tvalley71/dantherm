@@ -26,6 +26,7 @@ from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
 
 SERVICE_SET_STATE = "set_state"
+SERVICE_SET_CONFIGURATION = "set_configuration"
 SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
 
@@ -47,7 +48,7 @@ STATE_FAN_LEVEL_2: Final = "2"
 STATE_FAN_LEVEL_3: Final = "3"
 STATE_FAN_LEVEL_4: Final = "4"
 
-ATTR_WEEK_PROGRAM: Final = "week_program_selection"
+ATTR_WEEK_PROGRAM_SELECTION: Final = "week_program_selection"
 STATE_WEEKPROGRAM_1: Final = "0"
 STATE_WEEKPROGRAM_2: Final = "1"
 STATE_WEEKPROGRAM_3: Final = "2"
@@ -67,8 +68,17 @@ ATTR_SUMMER_MODE: Final = "summer_mode"
 ATTR_FIREPLACE_MODE: Final = "fireplace_mode"
 
 ATTR_NIGHT_MODE: Final = "night_mode"
+ATTR_NIGHT_MODE_START_TIME: Final = "night_mode_start_time"
+ATTR_NIGHT_MODE_END_TIME: Final = "night_mode_end_time"
 
 ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
+ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
+ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
+ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
+
+ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
+ATTR_FILTER_REMAIN: Final = "filter_remain"
+ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
 
 ATTR_FILTER_RESET: Final = "filter_reset"
 
@@ -255,11 +265,11 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
 
     data_address: int | None = None
     data_getinternal: str | None = None
-    data_precision: int | None = None
+    data_precision: float | None = None
     data_entity: str | None = None
     data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
+    data_exclude_if_above: float | None = None
+    data_exclude_if_below: float | None = None
     data_class: DataClass = DataClass.UInt16
 
     component_class: ComponentClass = None
@@ -374,10 +384,10 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
 
 NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     DanthermNumberEntityDescription(
-        key="filter_lifetime",
+        key=ATTR_FILTER_LIFETIME,
         icon="mdi:air-filter",
-        data_setinternal="set_filter_lifetime",
-        data_getinternal="get_filter_lifetime",
+        data_setinternal=f"set_{ATTR_FILTER_LIFETIME}",
+        data_getinternal=f"get_{ATTR_FILTER_LIFETIME}",
         native_max_value=360,
         native_min_value=0,
         device_class=NumberDeviceClass.DURATION,
@@ -386,14 +396,14 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     DanthermNumberEntityDescription(
-        key="bypass_minimum_temperature",
-        data_address=444,
+        key=ATTR_BYPASS_MINIMUM_TEMPERATURE,
+        data_setinternal=f"set_{ATTR_BYPASS_MINIMUM_TEMPERATURE}",
+        data_getinternal=f"get_{ATTR_BYPASS_MINIMUM_TEMPERATURE}",
         native_max_value=15,
         native_min_value=12,
-        data_class=DataClass.Float32,
+        native_step=0.1,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement="°C",
-        data_precision=1,
         mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
@@ -401,14 +411,14 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         component_class=ComponentClass.Bypass,
     ),
     DanthermNumberEntityDescription(
-        key="bypass_maximum_temperature",
-        data_address=446,
+        key=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+        data_setinternal=f"set_{ATTR_BYPASS_MAXIMUM_TEMPERATURE}",
+        data_getinternal=f"get_{ATTR_BYPASS_MAXIMUM_TEMPERATURE}",
         native_max_value=27,
         native_min_value=21,
-        data_class=DataClass.Float32,
+        native_step=0.1,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement="°C",
-        data_precision=1,
         mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
@@ -416,14 +426,14 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         component_class=ComponentClass.Bypass,
     ),
     DanthermNumberEntityDescription(
-        key="manual_bypass_duration",
-        data_address=264,
+        key=ATTR_MANUAL_BYPASS_DURATION,
+        data_setinternal=f"set_{ATTR_MANUAL_BYPASS_DURATION}",
+        data_getinternal=f"get_{ATTR_MANUAL_BYPASS_DURATION}",
         native_max_value=480,
         native_min_value=60,
-        data_class=DataClass.UInt32,
+        native_step=15,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="min",
-        native_step=15,
         mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
@@ -447,10 +457,10 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         options=FAN_LEVEL_SELECTIONS,
     ),
     DanthermSelectEntityDescription(
-        key=ATTR_WEEK_PROGRAM,
+        key=ATTR_WEEK_PROGRAM_SELECTION,
         icon="mdi:clock-edit-outline",
-        data_address=466,
-        data_class=DataClass.UInt32,
+        data_setinternal=f"set_{ATTR_WEEK_PROGRAM_SELECTION}",
+        data_getinternal=f"get_{ATTR_WEEK_PROGRAM_SELECTION}",
         options=WEEK_PROGRAM_SELECTIONS,
         component_class=ComponentClass.Week,
         entity_category=EntityCategory.CONFIG,
@@ -568,18 +578,18 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.HRC2,
     ),
     DanthermSensorEntityDescription(
-        key="filter_remain",
+        key=ATTR_FILTER_REMAIN,
         icon="mdi:air-filter",
-        data_getinternal="get_filter_remain",
+        data_getinternal=f"get_{ATTR_FILTER_REMAIN}",
         native_unit_of_measurement="d",
         suggested_display_precision=0,
         suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
     ),
     DanthermSensorEntityDescription(
-        key="filter_remain_level",
+        key=ATTR_FILTER_REMAIN_LEVEL,
         icon="mdi:air-filter",
-        data_getinternal="get_filter_remain_level",
+        data_getinternal=f"get_{ATTR_FILTER_REMAIN_LEVEL}",
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
@@ -671,20 +681,20 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
 
 TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
     DanthermTimeTextEntityDescription(
-        key="night_mode_start_time",
+        key=ATTR_NIGHT_MODE_START_TIME,
         icon="mdi:clock-start",
-        data_setinternal="set_night_mode_start_time",
-        data_getinternal="get_night_mode_start_time",
+        data_setinternal=f"set_{ATTR_NIGHT_MODE_START_TIME}",
+        data_getinternal=f"get_{ATTR_NIGHT_MODE_START_TIME}",
         mode=TextMode.TEXT,
         entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
     DanthermTimeTextEntityDescription(
-        key="night_mode_end_time",
+        key=ATTR_NIGHT_MODE_END_TIME,
         icon="mdi:clock-end",
-        data_setinternal="set_night_mode_end_time",
-        data_getinternal="get_night_mode_end_time",
+        data_setinternal=f"set_{ATTR_NIGHT_MODE_END_TIME}",
+        data_getinternal=f"get_{ATTR_NIGHT_MODE_END_TIME}",
         mode=TextMode.TEXT,
         entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,

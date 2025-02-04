@@ -161,6 +161,21 @@
         "3": "Niveau 3",
         "4": "Niveau 4"
       }
+    },
+    "week_program_selections": {
+      "options": {
+        "0": "Weekprogramma 1",
+        "1": "Weekprogramma 2",
+        "2": "Weekprogramma 3",
+        "3": "Weekprogramma 4",
+        "4": "Weekprogramma 5",
+        "5": "Weekprogramma 6",
+        "6": "Weekprogramma 7",
+        "7": "Weekprogramma 8",
+        "8": "Weekprogramma 9",
+        "9": "Weekprogramma 10",
+        "10": "Weekprogramma 11"
+      }
     }
   },
   "services": {
@@ -194,6 +209,44 @@
         }
       }
     },
+    "set_configuration": {
+      "name": "Configuratie instellen",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Minimale bypass-temperatuur",
+          "description": "Stel de minimale temperatuur in voor bypass-bediening."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Maximale bypass-temperatuur",
+          "description": "Stel de maximale temperatuur in voor bypass-bediening."
+        },
+        "filter_lifetime": {
+          "name": "Filter levensduur",
+          "description": "Stel de levensduur van het filter in (dagen)."
+        },
+        "manual_bypass_duration": {
+          "name": "Duur van handmatige bypass",
+          "description": "Stel de duur van de handmatige bypass-modus in (minuten)."
+        },
+        "night_mode": {
+          "name": "Nachtmodus",
+          "description": "Schakel de nachtmodus in of uit."
+        },
+        "night_mode_start_time": {
+          "name": "Starttijd nachtmodus",
+          "description": "Stel de starttijd voor de nachtmodus in (UU:MM)."
+        },
+        "night_mode_end_time": {
+          "name": "Eindtijd nachtmodus",
+          "description": "Stel de eindtijd voor de nachtmodus in (UU:MM)."
+        },
+        "week_program_selection": {
+          "name": "Weekprogramma selectie",
+          "description": "Selecteer het actieve weekprogramma."
+        }
+      }
+    },
     "filter_reset": {
       "name": "Filter Resetten",
       "description": "Reset de resterende dagen van het filter naar de filterlevensduur."
@@ -204,8 +257,11 @@
     }
   },
   "exceptions": {
-    "invalid_time": {
+    "invalid_timeformat": {
       "message": "Ongeldig tijdformaat. Gebruik UU:MM."
+    },
+    "invalid_filter_lifetime": {
+      "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
     }
   }
 }
