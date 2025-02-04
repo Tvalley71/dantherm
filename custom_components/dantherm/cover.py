@@ -118,7 +118,15 @@ class DanthermCover(CoverEntity, DanthermEntity):
         """Update the state of the cover."""
 
         if self.entity_description.data_getinternal:
-            result = getattr(self._device, self.entity_description.data_getinternal)
+            if hasattr(
+                self._device, f"async_{self.entity_description.data_getinternal}"
+            ):
+                func = getattr(
+                    self._device, f"async_{self.entity_description.data_getinternal}"
+                )
+                result = await func()
+            else:
+                result = getattr(self._device, self.entity_description.data_getinternal)
         else:
             result = await self._device.read_holding_registers(
                 description=self.entity_description

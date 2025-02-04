@@ -46,7 +46,7 @@ class DanthermNumber(NumberEntity, DanthermEntity):
 
         return self._device.data.get(self.key, None)
 
-    async def async_set_native_value(self, value: int) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 
         if self.entity_description.data_setinternal:
@@ -59,13 +59,24 @@ class DanthermNumber(NumberEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update the state of the number."""
 
-        if hasattr(self._device, f"get_{self.key}_attrs"):
+        if hasattr(self._device, f"async_get_{self.key}_attrs"):
+            func = getattr(self._device, f"async_{self.key}_attrs")
+            self._attr_extra_state_attributes = await func()
+        elif hasattr(self._device, f"get_{self.key}_attrs"):
             self._attr_extra_state_attributes = getattr(
                 self._device, f"{self.key}_attrs"
             )
 
         if self.entity_description.data_getinternal:
-            result = getattr(self._device, self.entity_description.data_getinternal)
+            if hasattr(
+                self._device, f"async_{self.entity_description.data_getinternal}"
+            ):
+                func = getattr(
+                    self._device, f"async_{self.entity_description.data_getinternal}"
+                )
+                result = await func()
+            else:
+                result = getattr(self._device, self.entity_description.data_getinternal)
         else:
             result = await self._device.read_holding_registers(
                 description=self.entity_description

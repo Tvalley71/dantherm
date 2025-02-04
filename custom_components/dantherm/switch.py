@@ -92,7 +92,15 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 return
 
         if self.entity_description.data_getinternal:
-            result = getattr(self._device, self.entity_description.data_getinternal)
+            if hasattr(
+                self._device, f"async_{self.entity_description.data_getinternal}"
+            ):
+                func = getattr(
+                    self._device, f"async_{self.entity_description.data_getinternal}"
+                )
+                result = await func()
+            else:
+                result = getattr(self._device, self.entity_description.data_getinternal)
         elif self.entity_description.data_entity:
             result = self._device.data.get(self.entity_description.data_entity, None)
         else:

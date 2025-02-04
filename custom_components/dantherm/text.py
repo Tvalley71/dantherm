@@ -52,7 +52,15 @@ class DanthermTimeText(TextEntity, DanthermEntity):
         """Update the state of the sensor."""
 
         if self.entity_description.data_getinternal:
-            result = getattr(self._device, self.entity_description.data_getinternal)
+            if hasattr(
+                self._device, f"async_{self.entity_description.data_getinternal}"
+            ):
+                func = getattr(
+                    self._device, f"async_{self.entity_description.data_getinternal}"
+                )
+                result = await func()
+            else:
+                result = getattr(self._device, self.entity_description.data_getinternal)
 
         if result is None:
             self._attr_available = False
@@ -70,5 +78,5 @@ class DanthermTimeText(TextEntity, DanthermEntity):
                 )
         else:
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_time"
+                translation_domain=DOMAIN, translation_key="invalid_timeformat"
             )
