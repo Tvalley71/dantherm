@@ -30,6 +30,8 @@ SERVICE_SET_CONFIGURATION = "set_configuration"
 SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
 
+ATTR_BYPASS_DAMPER: Final = "bypass_damper"
+
 ATTR_OPERATION_SELECTION: Final = "operation_selection"
 STATE_STANDBY: Final = "standby"
 STATE_AUTOMATIC: Final = "automatic"
@@ -61,6 +63,28 @@ STATE_WEEKPROGRAM_9: Final = "8"
 STATE_WEEKPROGRAM_10: Final = "9"
 STATE_WEEKPROGRAM_11: Final = "10"
 
+ATTR_OPERATION_MODE: Final = "operation_mode"
+
+ATTR_ALARM: Final = "alarm"
+
+ATTR_FAN1_SPEED: Final = "fan1_speed"
+ATTR_FAN2_SPEED: Final = "fan2_speed"
+
+ATTR_HUMIDITY = "humidity"
+
+ATTR_AIR_QUALITY: Final = "air_quality"
+
+ATTR_EXHAUST_TEMPERATURE: Final = "exhaust_temperature"
+
+ATTR_EXTRACT_TEMPERATURE: Final = "extract_temperature"
+
+ATTR_SUPPLY_TEMPERATURE: Final = "supply_temperature"
+
+ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
+
+ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
+
+
 ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
@@ -79,6 +103,10 @@ ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
 ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
 ATTR_FILTER_REMAIN: Final = "filter_remain"
 ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
+
+ATTR_WORK_TIME: Final = "work_time"
+
+ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
 ATTR_FILTER_RESET: Final = "filter_reset"
 
@@ -369,10 +397,10 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
 
 COVERS: tuple[DanthermCoverEntityDescription, ...] = (
     DanthermCoverEntityDescription(
-        key="bypass_damper",
+        key=ATTR_BYPASS_DAMPER,
         supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
-        data_setinternal="set_bypass_damper",
-        data_getinternal="get_bypass_damper",
+        data_setinternal=f"set_{ATTR_BYPASS_DAMPER}",
+        data_getinternal=f"get_{ATTR_BYPASS_DAMPER}",
         state_opening=BypassDamperState.Opening,
         state_opened=BypassDamperState.Opened,
         state_closing=BypassDamperState.Closing,
@@ -469,22 +497,22 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
 
 SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
-        key="operation_mode",
+        key=ATTR_OPERATION_MODE,
         data_getinternal="get_current_unit_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DanthermSensorEntityDescription(
-        key="alarm",
+        key=ATTR_ALARM,
         icon="mdi:alert-circle-outline",
         icon_zero="mdi:alert-circle-check-outline",
-        data_getinternal="get_alarm",
+        data_getinternal=f"get_{ATTR_ALARM}",
     ),
     DanthermSensorEntityDescription(
         key=ATTR_FAN_LEVEL,
         data_getinternal=f"get_{ATTR_FAN_LEVEL}",
     ),
     DanthermSensorEntityDescription(
-        key="fan1_speed",
+        key=ATTR_FAN1_SPEED,
         icon="mdi:fan",
         icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
@@ -496,7 +524,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
-        key="fan2_speed",
+        key=ATTR_FAN2_SPEED,
         icon="mdi:fan",
         icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
@@ -508,7 +536,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
-        key="humidity",
+        key=ATTR_HUMIDITY,
         data_address=196,
         data_exclude_if=0,
         data_class=DataClass.UInt32,
@@ -518,7 +546,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.RH_Senser,
     ),
     DanthermSensorEntityDescription(
-        key="air_quality",
+        key=ATTR_AIR_QUALITY,
         data_address=430,
         data_exclude_if=0,
         data_class=DataClass.UInt32,
@@ -528,7 +556,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.VOC_sensor,
     ),
     DanthermSensorEntityDescription(
-        key="exhaust_temperature",
+        key=ATTR_EXHAUST_TEMPERATURE,
         data_class=DataClass.Float32,
         data_address=138,
         data_precision=1,
@@ -537,7 +565,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
-        key="extract_temperature",
+        key=ATTR_EXTRACT_TEMPERATURE,
         data_class=DataClass.Float32,
         data_address=136,
         data_precision=1,
@@ -546,7 +574,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
-        key="supply_temperature",
+        key=ATTR_SUPPLY_TEMPERATURE,
         data_class=DataClass.Float32,
         data_address=134,
         data_precision=1,
@@ -555,7 +583,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
-        key="outdoor_temperature",
+        key=ATTR_OUTDOOR_TEMPERATURE,
         data_class=DataClass.Float32,
         data_address=132,
         data_precision=1,
@@ -564,7 +592,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
-        key="room_temperature",
+        key=ATTR_ROOM_TEMPERATURE,
         data_class=DataClass.Float32,
         data_address=140,
         data_precision=1,
@@ -587,14 +615,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
     ),
     DanthermSensorEntityDescription(
-        key=ATTR_FILTER_REMAIN_LEVEL,
-        icon="mdi:air-filter",
-        data_getinternal=f"get_{ATTR_FILTER_REMAIN_LEVEL}",
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
-    ),
-    DanthermSensorEntityDescription(
-        key="work_time",
+        key=ATTR_WORK_TIME,
         icon="mdi:progress-clock",
         data_class=DataClass.UInt32,
         data_address=624,
@@ -607,7 +628,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
-        key="internal_preheater_dutycycle",
+        key=ATTR_INTERNAL_PREHEATER_DUTYCYCLE,
         icon="mdi:heating-coil",
         data_address=160,
         data_class=DataClass.UInt32,
@@ -616,6 +637,13 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.Internal_preheater,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_FILTER_REMAIN_LEVEL,
+        icon="mdi:air-filter",
+        data_getinternal=f"get_{ATTR_FILTER_REMAIN_LEVEL}",
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
 )
 
