@@ -421,6 +421,8 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="d",
         mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
     DanthermNumberEntityDescription(
@@ -492,6 +494,8 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         options=WEEK_PROGRAM_SELECTIONS,
         component_class=ComponentClass.Week,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -671,6 +675,8 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_FIREPLACE_MODE,
