@@ -506,6 +506,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:alert-circle-outline",
         icon_zero="mdi:alert-circle-check-outline",
         data_getinternal=f"get_{ATTR_ALARM}",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_FAN_LEVEL,
