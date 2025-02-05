@@ -84,7 +84,6 @@ ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
 
 ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
 
-
 ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
