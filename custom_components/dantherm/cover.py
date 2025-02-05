@@ -92,7 +92,6 @@ class DanthermCover(CoverEntity, DanthermEntity):
                 description=self.entity_description,
                 value=self.entity_description.state_close,
             )
-        # await self.async_update_ha_state(True)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
@@ -106,7 +105,6 @@ class DanthermCover(CoverEntity, DanthermEntity):
                 description=self.entity_description,
                 value=self.entity_description.state_stop,
             )
-        # await self.async_update_ha_state(True)
 
     @property
     def native_value(self):
