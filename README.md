@@ -25,9 +25,9 @@ Known supported units:
 | :--------------------------- | :------------------------------------ |
 | operation_selection          | Mode of operation selection           |
 | fan_level_selection          | Fan level selection                   |
-| week_program_selection       | Week program selection<sup>\*<sup>    |
+| week_program_selection       | Week program selection<sup>\* &dagger;<sup> |
 | bypass_damper                | Bypass damper cover<sup>\*<sup>       |
-| filter_lifetime              | Input filter lifetime box             |
+| filter_lifetime              | Input filter lifetime box<sup>&dagger;<sup> |
 | bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
 | bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
 | manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
@@ -48,7 +48,7 @@ Known supported units:
 | work_time                    | Work time sensor<sup>&dagger;<sup>    |
 | internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | away_mode                    | Away mode switch                      |
-| night_mode                   | Night mode switch                     |
+| night_mode                   | Night mode switch<sup>&dagger;<sup> |
 | fireplace_mode               | Fireplace mode switch                 |
 | manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
 | summer_mode                  | Summer mode switch                    |
