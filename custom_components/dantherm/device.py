@@ -326,7 +326,7 @@ class Device:
                 return
 
         _LOGGER.debug("Refresh entity=%s", entity.name)
-        await entity.async_update_ha_state(True)
+        await entity.async_update_ha_state()
 
     @property
     def available(self) -> bool:
@@ -478,7 +478,7 @@ class Device:
     async def async_get_bypass_damper(self):
         """Get bypass damper."""
 
-        if not self._bypass_damper:
+        if self._bypass_damper is None:
             self._bypass_damper = await self._read_holding_uint32(198)
             _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
 
@@ -540,7 +540,7 @@ class Device:
     async def async_get_filter_lifetime(self):
         """Get filter lifetime."""
 
-        if not self._filter_lifetime:
+        if self._filter_lifetime is None:
             self._filter_lifetime = await self._read_holding_uint32(556)
             _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
 
@@ -549,7 +549,7 @@ class Device:
     async def async_get_filter_remain(self):
         """Get filter remain."""
 
-        if not self._filter_remain:
+        if self._filter_remain is None:
             self._filter_remain = await self._read_holding_uint32(554)
             _LOGGER.debug("Filter remain = %s", self._filter_remain)
 
@@ -558,10 +558,10 @@ class Device:
     async def async_get_filter_remain_level(self):
         """Get filter remain level."""
 
-        if not self._filter_lifetime:
+        if self._filter_lifetime is None:
             await self.async_get_filter_lifetime()
 
-        if not self._filter_remain:
+        if self._filter_remain is None:
             await self.async_get_filter_remain()
 
         if self._filter_remain > self._filter_lifetime:
@@ -577,7 +577,7 @@ class Device:
     async def async_get_filter_remain_attrs(self):
         """Get filter remain attributes."""
 
-        if not self._filter_remain_level:
+        if self._filter_remain_level is None:
             await self.async_get_filter_remain_level()
 
         return {"level": self._filter_remain_level}
