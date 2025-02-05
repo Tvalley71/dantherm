@@ -211,11 +211,7 @@
     },
     "set_configuration": {
       "name": "Set Configuration",
-      "description": "Adjust the configuration settings for the Dantherm device.",
-      "target": {
-        "device": {
-          "description": "Choose which areas, devices, or entities to apply this action to."
-        }
+      "description": "Adjust the configuration settings for the Dantherm device."
       },
       "fields": {
         "bypass_minimum_temperature": {
