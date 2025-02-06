@@ -54,6 +54,8 @@ Known supported units:
 | summer_mode                  | Summer mode switch                    |
 | filter_reset                 | Reset remain filter time button       |
 | alarm_reset                  | Reset alarm button                    |
+| night_mode_start_time        | Night mode start time                 |
+| night_mode_end_time          | Night mode end time                   |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
@@ -368,7 +370,7 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
-### Using the "Dantherm: Set State" Action in Automations
+### Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
 
 The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
 
@@ -406,6 +408,8 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
+
+The **Dantherm: Set configuration** action ....
 
 
 ## Disclaimer
