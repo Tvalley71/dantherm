@@ -54,8 +54,8 @@ Known supported units:
 | summer_mode                  | Summer mode switch                    |
 | filter_reset                 | Reset remain filter time button       |
 | alarm_reset                  | Reset alarm button                    |
-| night_mode_start_time        | Night mode start time                 |
-| night_mode_end_time          | Night mode end time                   |
+| night_mode_start_time        | Night mode start time text<sup>&dagger;<sup> |
+| night_mode_end_time          | Night mode end time text<sup>&dagger;<sup> |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
