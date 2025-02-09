@@ -22,7 +22,7 @@ Known supported units:
 
 ### Controls and sensors
 
-| key                          | description                           |
+| entity                       | description                           |
 | :--------------------------- | :------------------------------------ |
 | operation_selection          | Mode of operation selection           |
 | fan_level_selection          | Fan level selection                   |
@@ -108,15 +108,16 @@ If you encounter any issues or have questions regarding the Dantherm integration
 
 ### Screenshots
 
-![Skærmbillede 2024-05-04 090219](https://github.com/user-attachments/assets/e8750622-f33c-4652-b3d5-33c2f3f13c54)
+![Skærmbillede fra 2025-02-09 15-49-04](https://github.com/user-attachments/assets/81ded97a-ff08-41f6-8ac4-8042501e355d)
 
-![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/1f1ce55b-4a9a-4b4c-b09d-4e18e34a08a2)
-![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/cb4c686b-ed84-42f2-896e-6c5f0b126f52)
+![Skærmbillede fra 2025-02-09 15-26-39](https://github.com/user-attachments/assets/f12ce875-5f48-47d2-a975-3872f6415c07)
+![Skærmbillede fra 2025-02-09 15-27-48](https://github.com/user-attachments/assets/2ca03de0-a469-4b0e-b362-5f6d486d1f9e)
 
-![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/6ecca514-7595-4b64-8e1d-1e1fffa5aae4)
-![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/b84b9ac7-3586-40da-9a74-2808ced478e2)
+![Skærmbillede fra 2025-02-09 15-28-23](https://github.com/user-attachments/assets/0efe815a-51fb-4e4b-bee8-d62bea40d4a7)
+![Skærmbillede fra 2025-02-09 15-28-58](https://github.com/user-attachments/assets/6c192224-03cf-4094-b944-942c7395cd5b)
 
-![Skærmbillede 2024-08-04 084430](https://github.com/user-attachments/assets/814bafd5-e03f-496f-98ce-7faafe2e4729)
+![Skærmbillede fra 2025-02-09 15-31-03](https://github.com/user-attachments/assets/1d17f88b-c3f0-441a-917c-55bee87f287e)
+
 
 
 > [!NOTE]
