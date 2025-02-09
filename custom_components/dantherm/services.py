@@ -84,6 +84,14 @@ async def async_setup_services(hass: HomeAssistant):
                 translation_domain=DOMAIN, translation_key="invalid_timeformat"
             )
 
+    def render_template(value):
+        """Render a value as a template if it's a string, otherwise return it directly."""
+        return (
+            Template(str(value), hass).async_render()
+            if isinstance(value, str)
+            else value
+        )
+
     async def async_apply_device_function(call, apply_func):
         """Extract config entries and apply function."""
         config_entry_ids = await async_extract_config_entry_ids(hass, call)
@@ -102,6 +110,16 @@ async def async_setup_services(hass: HomeAssistant):
         async def apply_state(device, call):
             if ATTR_OPERATION_SELECTION in call.data:
                 await device.set_operation_selection(
+                    render_template(call.data[ATTR_OPERATION_SELECTION])
+                )
+
+            if ATTR_FAN_LEVEL_SELECTION in call.data:
+                await device.set_fan_level(
+                    render_template(call.data[ATTR_FAN_LEVEL_SELECTION])
+                )
+
+            if ATTR_OPERATION_SELECTION in call.data:
+                await device.set_operation_selection(
                     Template(call.data[ATTR_OPERATION_SELECTION], hass).async_render()
                 )
             if ATTR_FAN_LEVEL_SELECTION in call.data:
@@ -111,33 +129,25 @@ async def async_setup_services(hass: HomeAssistant):
             if ATTR_AWAY_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.StartAway
-                    if Template(
-                        call.data[ATTR_AWAY_MODE], hass
-                    ).async_render_as_boolean()
+                    if bool(render_template(call.data[ATTR_AWAY_MODE]))
                     else ActiveUnitMode.EndAway
                 )
             if ATTR_SUMMER_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.StartSummer
-                    if Template(
-                        call.data[ATTR_SUMMER_MODE], hass
-                    ).async_render_as_boolean()
+                    if bool(render_template(call.data[ATTR_SUMMER_MODE]))
                     else ActiveUnitMode.EndSummer
                 )
             if ATTR_FIREPLACE_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.StartFireplace
-                    if Template(
-                        call.data[ATTR_FIREPLACE_MODE], hass
-                    ).async_render_as_boolean()
+                    if bool(render_template(call.data[ATTR_FIREPLACE_MODE]))
                     else ActiveUnitMode.EndFireplace
                 )
             if ATTR_MANUAL_BYPASS_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.SelectManualBypass
-                    if Template(
-                        call.data[ATTR_MANUAL_BYPASS_MODE], hass
-                    ).async_render_as_boolean()
+                    if bool(render_template(call.data[ATTR_MANUAL_BYPASS_MODE]))
                     else ActiveUnitMode.DeselectManualBypass
                 )
 
@@ -149,59 +159,44 @@ async def async_setup_services(hass: HomeAssistant):
         async def apply_config(device, call):
             if ATTR_BYPASS_MINIMUM_TEMPERATURE in call.data:
                 await device.set_bypass_minimum_temperature(
-                    float(
-                        Template(
-                            call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE], hass
-                        ).async_render()
-                    )
+                    float(render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE]))
                 )
+
             if ATTR_BYPASS_MAXIMUM_TEMPERATURE in call.data:
                 await device.set_bypass_maximum_temperature(
-                    float(
-                        Template(
-                            call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE], hass
-                        ).async_render()
-                    )
+                    float(render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE]))
                 )
+
             if ATTR_FILTER_LIFETIME in call.data:
                 await device.set_filter_lifetime(
-                    int(Template(call.data[ATTR_FILTER_LIFETIME], hass).async_render())
+                    int(render_template(call.data[ATTR_FILTER_LIFETIME]))
                 )
+
             if ATTR_MANUAL_BYPASS_DURATION in call.data:
                 await device.set_manual_bypass_duration(
-                    int(
-                        Template(
-                            call.data[ATTR_MANUAL_BYPASS_DURATION], hass
-                        ).async_render()
-                    )
+                    int(render_template(call.data[ATTR_MANUAL_BYPASS_DURATION]))
                 )
+
             if ATTR_NIGHT_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.NightEnable
-                    if Template(
-                        call.data[ATTR_NIGHT_MODE], hass
-                    ).async_render_as_boolean()
+                    if bool(render_template(call.data[ATTR_NIGHT_MODE]))
                     else ActiveUnitMode.NightDisable
                 )
+
             if ATTR_NIGHT_MODE_START_TIME in call.data:
-                start_time = Template(
-                    call.data[ATTR_NIGHT_MODE_START_TIME], hass
-                ).async_render()
+                start_time = render_template(call.data[ATTR_NIGHT_MODE_START_TIME])
                 validate_time_format(start_time)
                 await device.set_night_mode_start_time(start_time)
 
             if ATTR_NIGHT_MODE_END_TIME in call.data:
-                end_time = Template(
-                    call.data[ATTR_NIGHT_MODE_END_TIME], hass
-                ).async_render()
+                end_time = render_template(call.data[ATTR_NIGHT_MODE_END_TIME])
                 validate_time_format(end_time)
                 await device.set_night_mode_end_time(end_time)
 
             if ATTR_WEEK_PROGRAM_SELECTION in call.data:
                 await device.set_week_program_selection(
-                    Template(
-                        call.data[ATTR_WEEK_PROGRAM_SELECTION], hass
-                    ).async_render()
+                    render_template(call.data[ATTR_WEEK_PROGRAM_SELECTION])
                 )
 
         await async_apply_device_function(call, apply_config)
