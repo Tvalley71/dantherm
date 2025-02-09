@@ -210,7 +210,7 @@
       }
     },
     "set_configuration": {
-      "name": "Set Configuration",
+      "name": "Set configuration",
       "description": "Adjust the configuration settings for the Dantherm device.",
       "fields": {
         "bypass_minimum_temperature": {
