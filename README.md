@@ -12,6 +12,7 @@ Known supported units:
 - HCV300 ALU
 - HCV700 ALU
 - HCV400 P2
+- HCV460 P2
 - RCV320 P1/P2
 
 > [!NOTE]
@@ -404,13 +405,14 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
 
-![image](https://github.com/user-attachments/assets/450665b9-7091-42b5-837a-8b214824f643)
+![Skærmbillede fra 2025-02-09 14-46-28](https://github.com/user-attachments/assets/679f4582-4fcf-4adf-bb71-6042409aadb9)
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
 
-The **Dantherm: Set configuration** action ....
+The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
 
+![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
 ## Disclaimer
 
