@@ -180,14 +180,10 @@ class HacComponentClass(int):
 class DataClass(Enum):
     """Dantherm modbus data class."""
 
-    Int8 = 1
-    UInt8 = 2
-    Int16 = 3
-    UInt16 = 4
-    Int32 = 5
-    UInt32 = 6
-    UInt64 = 7
-    Float32 = 8
+    Int32 = 1
+    UInt32 = 2
+    UInt64 = 3
+    Float32 = 4
 
 
 class CurrentUnitMode(int):
@@ -250,7 +246,7 @@ class DanthermButtonEntityDescription(ButtonEntityDescription):
     data_exclude_if: Any | None = None
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass = None
 
@@ -273,7 +269,7 @@ class DanthermCoverEntityDescription(CoverEntityDescription):
     data_exclude_if: Any | None = None
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
     state_opening: int = None
     state_opened: int = None
     state_closing: int = None
@@ -297,7 +293,7 @@ class DanthermNumberEntityDescription(NumberEntityDescription):
     data_exclude_if: Any | None = None
     data_exclude_if_above: float | None = None
     data_exclude_if_below: float | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass = None
 
@@ -317,7 +313,7 @@ class DanthermSelectEntityDescription(SelectEntityDescription):
     data_exclude_if: Any | None = None
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass = None
 
@@ -335,7 +331,7 @@ class DanthermSensorEntityDescription(SensorEntityDescription):
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
     data_entity: str | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass = None
 
@@ -362,7 +358,7 @@ class DanthermSwitchEntityDescription(SwitchEntityDescription):
     data_exclude_if: Any | None = None
     data_exclude_if_above: int | None = None
     data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt16
+    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass = None
 
