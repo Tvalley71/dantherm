@@ -422,57 +422,64 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ## Preliminary >>>
 
-The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **presence detection**, providing a **comfortable and energy-efficient environment**.  
+The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **presence detection**, providing a comfortable and energy-efficient environment.
 
 
 ### Home Mode 🏡  
-Home Mode allows for automatic adjustments based on **presence detection**, ensuring efficient ventilation when you are unexpectedly home.  
+Home Mode allows for automatic adjustments based on presence detection, ensuring efficient ventilation when you are unexpectedly home.  
 
 - **Home Mode Switch**: This must be **enabled** for presence detection to affect the ventilation.  
 - **Presence-Based Activation**: If Home Mode is **enabled** and presence is detected, the fan level switches to the **Home Operation Selection** mode.  
 - **Home Presence Timeout**: This entity specifies the **timeout duration** for Home Mode. Once presence is detected, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
-- **Fallback Behavior**: When Home Mode is **disabled** or presence is **not detected**, the unit falls back to the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+- **Fallback Behavior**: When Home Mode is **disabled** or presence is not detected, the unit falls back to the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
 
+The avalilable operations within Home Mode is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
 ### Boost Mode 🚀  
-The Boost Mode is similar to Home Mode but is designed for **short bursts of increased ventilation**, useful after activities like cooking or showering.  
+The Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
 
 - **Boost Mode Switch**: This must be **enabled** for presence detection to activate Boost Mode.  
 - **Presence-Based Activation**: If Boost Mode is **enabled** and presence is detected, the fan level switches to the **Boost Operation Selection** mode.  
-- **Boost Presence Timeout**: This entity specifies the **timeout duration** for Boost Mode. Once presence is detected, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
+- **Boost Presence Timeout**: This entity specifies the timeout duration for Boost Mode. Once presence is detected, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
 - **Fallback Behavior**: If Boost Mode is **disabled** or no presence is detected, the unit follows the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+
+The avalilable operations within Boost Mode is **Level 4**, **Level 3**, or **Level 2**.
 
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
-- **Scheduled Modes**: You can schedule **Boost Mode**, **Night Mode**, **Home Mode**, **Away Mode**, **Automatic**, **Level 1**, **Level 2**, **Level 3**, and **Week Program**.  
-- **Predefined Timeouts**:  
-  - If a mode like **Level 1** is scheduled, the unit will operate at **Level 1** **from start to end**, unless another scheduled mode with a **higher priority** takes over.  
-  - If **Home Mode** is scheduled, the **Home Mode Switch** enables presence detection, allowing the unit to switch to **Home Operation Selection** for the configured timeout if presence is detected.  
-  - If **Boost Mode** is scheduled, the **Boost Mode Switch** enables presence detection, allowing the unit to switch to **Boost Operation Selection** for the configured timeout if presence is detected.  
-- **Priority System**: The following is the **priority order** for calendar scheduling:
-  1. **Boost Mode** (highest priority)
-  2. **Night Mode** 
-  3. **Home Mode**
-  4. **Away Mode**
-  5. **Level 3**
-  6. **Level 2**
-  9. **Level 1**
-  7. **Automatic**
-  8. **Week Program** (lowest priority)
+- **Schedule Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
 
-- **Operation Selections**: The available modes within each operation selection are as follows:
-  - **Boost Operation Selection**: Can select **Level 4**, **Level 3**, or **Level 2**.
-  - **Home Operation Selection**: Can select **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
-  - **Default Operation Selection**: Can select **Last State**, **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.  
-- **Fallback Behavior**: If no calendar entry is active, or no other higher-priority mode is scheduled, the unit follows the **Default Operation Selection**.  
+- **Calendar Events**:  
+  By entering a schedule word into the **summary** of a calendar event, the selected operation will take effect when the schedule starts, assuming it has a **higher priority** than an ongoing schedule. When the event ends, the system will revert to the **previously active schedule**. If no underlying schedule exists, the unit will follow the **Default Operation Selection**.
+  
+  - If **Level 1** to **Level 3** is scheduled, the unit will run in manual mode at the selected fan level from the **start to the end** of the schedule.
+  - If **Automatic** is scheduled, the unit will operate in Demand Mode.
+  - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the schedule.
+  - If **Night Mode** is scheduled, Night Mode will be **enabled**. Note that the **Night Mode Start Time** and **Night Mode End Time** may further influence operation within that schedule.
+  - If **Boost Mode** or **Home Mode** is scheduled, they will enable or disable presence detection, allowing the unit to switch to their respective operation when presence is detected.
+  - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
+
+- **Priority System**: The following is the **priority order** for calendar scheduling:  
+  1. **Boost Mode** (highest priority)  
+  2. **Night Mode**  
+  3. **Home Mode**  
+  4. **Away Mode**  
+  5. **Level 3**  
+  6. **Level 2**  
+  7. **Level 1**  
+  8. **Automatic**  
+  9. **Week Program** (lowest priority)  
+
+The available operations within **Default Operation Selection** are **Last State**, **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.  
+
+- **Last State Behavior**: If **Last State** is selected, the unit will revert to the operation mode that was active **at the beginning of the schedule** or **when presence was detected** in Boost or Home Mode.  
 
 > [!NOTE]
-> The Dantherm unit have an automatic setback from **Level 4** to **Level 3** after a fixed time period.
+> The Dantherm unit has an **automatic setback** from **Level 4** to **Level 3** after a fixed time period.
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time presence detection**. 🚀🏡📅
-
 
 ## Disclaimer
 
