@@ -452,16 +452,16 @@ The avalilable operations in **Boost Operation Selection** is **Level 4**, **Lev
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
-- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
-
 - **Integration - Calendar Events**:  
-  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will follow the **Default Operation Selection**.
+  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will revert to the **Default Operation Selection**.
+
+- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
   
-  - If **Level 1** to **Level 3** is scheduled, the unit will run in manual mode at the selected fan level from the **start to the end** of the schedule.
+  - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the schedule.
-  - If **Night Mode** is scheduled, Night Mode will be **enabled**.
-  - If **Boost Mode** or **Home Mode** is scheduled, they will enable or disable presence detection, allowing the unit to switch to their respective operation when presence is detected.
+  - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the schedule.
+  - If **Boost Mode** or **Home Mode** is scheduled, presence detection will be **enabled at the start** and **disabled at the end**, allowing the unit to switch to their respective operation when presence is detected.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
 - **Priority System**: The following is the **priority order** for calendar scheduling:  
