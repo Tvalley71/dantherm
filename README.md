@@ -435,7 +435,7 @@ Home Mode allows for automatic adjustments based on **presence detection**, ensu
 
 
 ### Boost Mode 🚀  
-Boost Mode functions similarly to Home Mode but is designed for **short bursts of increased ventilation**, useful after activities like cooking or showering.  
+The Boost Mode is similar to Home Mode but is designed for **short bursts of increased ventilation**, useful after activities like cooking or showering.  
 
 - **Boost Mode Switch**: This must be **enabled** for presence detection to activate Boost Mode.  
 - **Presence-Based Activation**: If Boost Mode is **enabled** and presence is detected, the fan level switches to the **Boost Operation Selection** mode.  
@@ -452,10 +452,10 @@ The Calendar Function allows precise scheduling of different operation modes, pr
   - If **Home Mode** is scheduled, the **Home Mode Switch** enables presence detection, allowing the unit to switch to **Home Operation Selection** for the configured timeout if presence is detected.  
   - If **Boost Mode** is scheduled, the **Boost Mode Switch** enables presence detection, allowing the unit to switch to **Boost Operation Selection** for the configured timeout if presence is detected.  
 - **Priority System**: The following is the **priority order** for calendar scheduling:
-  1. **Night Mode** (highest priority)
-  2. **Away Mode**
-  3. **Boost Mode**
-  4. **Home Mode**
+  1. **Boost Mode** (highest priority)
+  2. **Night Mode** 
+  3. **Home Mode**
+  4. **Away Mode**
   5. **Automatic**
   6. **Level 4** (only available within Boost Mode operation)
   7. **Level 3**
