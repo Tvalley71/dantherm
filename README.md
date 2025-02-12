@@ -446,7 +446,7 @@ The Boost Mode is similar to Home Mode but is designed for **short bursts of inc
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
-- **Scheduled Modes**: You can schedule **Night Mode**, **Away Mode**, **Boost Mode**, **Home Mode**, **Automatic**, **Level 1**, **Level 2**, **Level 3**, and **Week Program**.  
+- **Scheduled Modes**: You can schedule **Boost Mode**, **Night Mode**, **Home Mode**, **Away Mode**, **Automatic**, **Level 1**, **Level 2**, **Level 3**, and **Week Program**.  
 - **Predefined Timeouts**:  
   - If a mode like **Level 1** is scheduled, the unit will operate at **Level 1** **from start to end**, unless another scheduled mode with a **higher priority** takes over.  
   - If **Home Mode** is scheduled, the **Home Mode Switch** enables presence detection, allowing the unit to switch to **Home Operation Selection** for the configured timeout if presence is detected.  
@@ -456,12 +456,11 @@ The Calendar Function allows precise scheduling of different operation modes, pr
   2. **Night Mode** 
   3. **Home Mode**
   4. **Away Mode**
-  5. **Automatic**
-  6. **Level 4** (only available within Boost Mode operation)
-  7. **Level 3**
-  8. **Level 2**
+  5. **Level 3**
+  6. **Level 2**
   9. **Level 1**
-  10. **Week Program** (lowest priority)
+  7. **Automatic**
+  8. **Week Program** (lowest priority)
 
 - **Operation Selections**: The available modes within each operation selection are as follows:
   - **Boost Operation Selection**: Can select **Level 4**, **Level 3**, or **Level 2**.
