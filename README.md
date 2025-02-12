@@ -431,9 +431,9 @@ Home Mode allows for automatic adjustments based on presence detection, ensuring
 - **Home Mode Switch**: This must be **enabled** for presence detection to affect the ventilation.  
 - **Presence-Based Activation**: If Home Mode is **enabled** and presence is detected, the fan level switches to the **Home Operation Selection** mode.  
 - **Home Presence Timeout**: This entity specifies the **timeout duration** for Home Mode. Once presence is detected, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
-- **Fallback Behavior**: When Home Mode is **disabled** or presence is not detected, the unit falls back to the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+- **Fallback Behavior**: When a Home Mode presence session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
 
-The avalilable operations within Home Mode is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+The avalilable operations in **Home Operation Selection** is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
 ### Boost Mode 🚀  
 The Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
@@ -441,23 +441,26 @@ The Boost Mode is similar to Home Mode but is designed for short bursts of incre
 - **Boost Mode Switch**: This must be **enabled** for presence detection to activate Boost Mode.  
 - **Presence-Based Activation**: If Boost Mode is **enabled** and presence is detected, the fan level switches to the **Boost Operation Selection** mode.  
 - **Boost Presence Timeout**: This entity specifies the timeout duration for Boost Mode. Once presence is detected, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
-- **Fallback Behavior**: If Boost Mode is **disabled** or no presence is detected, the unit follows the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+- **Fallback Behavior**: When a Boost Mode presence session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
 
-The avalilable operations within Boost Mode is **Level 4**, **Level 3**, or **Level 2**.
+The avalilable operations in **Boost Operation Selection** is **Level 4**, **Level 3**, or **Level 2**.
+
+> [!NOTE]
+> The Dantherm unit has builtin **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
 
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
-- **Schedule Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
+- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
 
-- **Calendar Events**:  
-  By entering a schedule word into the **summary** of a calendar event, the selected operation will take effect when the schedule starts, assuming it has a **higher priority** than an ongoing schedule. When the event ends, the system will revert to the **previously active schedule**. If no underlying schedule exists, the unit will follow the **Default Operation Selection**.
+- **Integration - Calendar Events**:  
+  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will follow the **Default Operation Selection**.
   
   - If **Level 1** to **Level 3** is scheduled, the unit will run in manual mode at the selected fan level from the **start to the end** of the schedule.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the schedule.
-  - If **Night Mode** is scheduled, Night Mode will be **enabled**. Note that the **Night Mode Start Time** and **Night Mode End Time** may further influence operation within that schedule.
+  - If **Night Mode** is scheduled, Night Mode will be **enabled**.
   - If **Boost Mode** or **Home Mode** is scheduled, they will enable or disable presence detection, allowing the unit to switch to their respective operation when presence is detected.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
@@ -472,12 +475,11 @@ The Calendar Function allows precise scheduling of different operation modes, pr
   8. **Automatic**  
   9. **Week Program** (lowest priority)  
 
-The available operations within **Default Operation Selection** are **Last State**, **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.  
-
-- **Last State Behavior**: If **Last State** is selected, the unit will revert to the operation mode that was active **at the beginning of the schedule** or **when presence was detected** in Boost or Home Mode.  
+The avalilable operations in **Default Operation Selection** is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
 > [!NOTE]
-> The Dantherm unit has an **automatic setback** from **Level 4** to **Level 3** after a fixed time period.
+> The Dantherm unit has builtin **Night Mode Start Time** and **Night Mode End Time**. Scheduling of Night Mode outside of the start and end time will influence the operation.
+
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time presence detection**. 🚀🏡📅
 
