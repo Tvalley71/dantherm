@@ -22,45 +22,54 @@ Known supported units:
 
 ### Controls and sensors
 
-| entity                       | description                           |
+| entity                       | description |
 | :--------------------------- | :------------------------------------ |
-| operation_selection          | Mode of operation selection           |
-| fan_level_selection          | Fan level selection                   |
+| operation_selection          | Mode of operation selection |
+| fan_level_selection          | Fan level selection |
 | week_program_selection       | Week program selection<sup>\* &dagger;<sup> |
-| bypass_damper                | Bypass damper cover<sup>\*<sup>       |
+| boost_operation_selection    | Boost operation selection<sup>&Dagger;<sup> |
+| home_operation_selection     | Home operation selection<sup>&Dagger;<sup> |
+| default_operation_selection  | Default operation selection<sup>&Dagger;<sup> |
+| bypass_damper                | Bypass damper cover<sup>\*<sup> |
 | filter_lifetime              | Input filter lifetime box<sup>&dagger;<sup> |
 | bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
 | bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
 | manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
-| operation_mode               | Operation mode sensor                 |
-| alarm                        | Alarm sensor                          |
-| fan_level                    | Fan level sensor                      |
-| fan1_speed                   | Fan 1 speed sensor<sup>&dagger;<sup>  |
-| fan2_speed                   | Fan 2 speed sensor<sup>&dagger;<sup>  |
-| humidity                     | Humidity sensor<sup>\*<sup>           |
-| air_quality                  | Air quality sensor<sup>\*<sup>        |
-| exhaust_temperature          | Exhaust temperature sensor            |
-| extract_temperature          | Extract temperature sensor            |
-| supply_temperature           | Supply temperature sensor             |
-| outdoor_temperature          | Outdoor temperature sensor            |
+| boost_presence_timeout       | Boost presence timeout<sup>&Dagger;<sup> |
+| home_presence_timeout        | Boost presence timeout<sup>&Dagger;<sup> |
+| operation_mode               | Operation mode sensor |
+| alarm                        | Alarm sensor |
+| fan_level                    | Fan level sensor |
+| fan1_speed                   | Fan 1 speed sensor<sup>&dagger;<sup> |
+| fan2_speed                   | Fan 2 speed sensor<sup>&dagger;<sup> |
+| humidity                     | Humidity sensor<sup>\*<sup> |
+| air_quality                  | Air quality sensor<sup>\*<sup> |
+| exhaust_temperature          | Exhaust temperature sensor |
+| extract_temperature          | Extract temperature sensor |
+| supply_temperature           | Supply temperature sensor |
+| outdoor_temperature          | Outdoor temperature sensor |
 | room_temperature             | Room temperature sensor<sup>\* &dagger;<sup> |
-| filter_remain                | Remaining filter time sensor          |
+| filter_remain                | Remaining filter time sensor |
 | filter_remain_level          | Remaining filter time sensor level<sup>&dagger;<sup> |
-| work_time                    | Work time sensor<sup>&dagger;<sup>    |
+| work_time                    | Work time sensor<sup>&dagger;<sup> |
 | internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| away_mode                    | Away mode switch                      |
+| away_mode                    | Away mode switch |
 | night_mode                   | Night mode switch<sup>&dagger;<sup> |
-| fireplace_mode               | Fireplace mode switch                 |
+| fireplace_mode               | Fireplace mode switch |
 | manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
-| summer_mode                  | Summer mode switch                    |
-| filter_reset                 | Reset remain filter time button       |
-| alarm_reset                  | Reset alarm button                    |
+| summer_mode                  | Summer mode switch |
+| boost_mode                   | Boost mode switch<sup>&Dagger;<sup> |
+| home_mode                    | Home mode switch<sup>&Dagger;<sup> |
+| filter_reset                 | Reset remain filter time button |
+| alarm_reset                  | Reset alarm button |
 | night_mode_start_time        | Night mode start time text<sup>&dagger;<sup> |
 | night_mode_end_time          | Night mode end time text<sup>&dagger;<sup> |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 _&dagger; The entity is disabled by default._
+
+_&Dagger; The entity is disabled if the associated presence entity is not configured._
 
 ### Installation
 
@@ -409,6 +418,62 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
 
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
+
+
+## Preliminary >>>
+
+The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **presence detection**, providing a **comfortable and energy-efficient environment**.  
+
+
+### Home Mode 🏡  
+Home Mode allows for automatic adjustments based on **presence detection**, ensuring efficient ventilation when you are unexpectedly home.  
+
+- **Home Mode Switch**: This must be **enabled** for presence detection to affect the ventilation.  
+- **Presence-Based Activation**: If Home Mode is **enabled** and presence is detected, the fan level switches to the **Home Operation Selection** mode.  
+- **Home Presence Timeout**: This entity specifies the **timeout duration** for Home Mode. Once presence is detected, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
+- **Fallback Behavior**: When Home Mode is **disabled** or presence is **not detected**, the unit falls back to the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+
+
+### Boost Mode 🚀  
+Boost Mode functions similarly to Home Mode but is designed for **short bursts of increased ventilation**, useful after activities like cooking or showering.  
+
+- **Boost Mode Switch**: This must be **enabled** for presence detection to activate Boost Mode.  
+- **Presence-Based Activation**: If Boost Mode is **enabled** and presence is detected, the fan level switches to the **Boost Operation Selection** mode.  
+- **Boost Presence Timeout**: This entity specifies the **timeout duration** for Boost Mode. Once presence is detected, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
+- **Fallback Behavior**: If Boost Mode is **disabled** or no presence is detected, the unit follows the **Default Operation Selection**, unless overridden by a **calendar schedule**.  
+
+
+### Calendar Function 📅  
+The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
+
+- **Scheduled Modes**: You can schedule **Night Mode**, **Away Mode**, **Boost Mode**, **Home Mode**, **Automatic**, **Level 1**, **Level 2**, **Level 3**, and **Week Program**.  
+- **Predefined Timeouts**:  
+  - If a mode like **Level 1** is scheduled, the unit will operate at **Level 1** **from start to end**, unless another scheduled mode with a **higher priority** takes over.  
+  - If **Home Mode** is scheduled, the **Home Mode Switch** enables presence detection, allowing the unit to switch to **Home Operation Selection** for the configured timeout if presence is detected.  
+  - If **Boost Mode** is scheduled, the **Boost Mode Switch** enables presence detection, allowing the unit to switch to **Boost Operation Selection** for the configured timeout if presence is detected.  
+- **Priority System**: The following is the **priority order** for calendar scheduling:
+  1. **Night Mode** (highest priority)
+  2. **Away Mode**
+  3. **Boost Mode**
+  4. **Home Mode**
+  5. **Automatic**
+  6. **Level 4** (only available within Boost Mode operation)
+  7. **Level 3**
+  8. **Level 2**
+  9. **Level 1**
+  10. **Week Program** (lowest priority)
+
+- **Operation Selections**: The available modes within each operation selection are as follows:
+  - **Boost Operation Selection**: Can select **Level 4**, **Level 3**, or **Level 2**.
+  - **Home Operation Selection**: Can select **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+  - **Default Operation Selection**: Can select **Last State**, **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.  
+- **Fallback Behavior**: If no calendar entry is active, or no other higher-priority mode is scheduled, the unit follows the **Default Operation Selection**.  
+
+> [!NOTE]
+> The Dantherm unit have an automatic setback from **Level 4** to **Level 3** after a fixed time period.
+
+These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time presence detection**. 🚀🏡📅
+
 
 ## Disclaimer
 
