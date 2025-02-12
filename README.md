@@ -459,8 +459,8 @@ The Calendar Function allows precise scheduling of different operation modes, pr
   
   - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
-  - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the schedule.
-  - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the schedule.
+  - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
+  - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the event.
   - If **Boost Mode** or **Home Mode** is scheduled, presence detection will be **enabled at the start** and **disabled at the end**, allowing the unit to switch to their respective operation when presence is detected.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
