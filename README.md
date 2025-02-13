@@ -449,6 +449,45 @@ The avalilable operations in **Boost Operation Selection** is **Level 4**, **Lev
 > The Dantherm unit has builtin **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
 
 
+### Configuring Home and Boost Presence Entities 🏡🚀  
+
+To enable **Home Mode** and **Boost Mode**, you need to configure **presence entities** in the integration settings. These entities can be motion sensors, person trackers, or other Home Assistant entities that report occupancy.  
+
+The entity selection is done by **manually entering the entity ID** in the integration settings.  
+
+
+#### Home Presence Entity 🏡  
+The **Home Presence Entity** determines whether **Home Mode** should activate based on presence detection.  
+
+- **Configuration:**  
+  1. Navigate to **Settings > Devices & Services > Integrations** in Home Assistant.  
+  2. Find your **Dantherm** integration and select **Configure**.  
+  3. In the **Home Presence Entity** field, **manually enter** the entity ID of a presence sensor (e.g., `binary_sensor.living_room_motion`, `person.john_doe`).  
+  4. Save the configuration.  
+
+
+#### Boost Presence Entity 🚀  
+The **Boost Presence Entity** determines whether **Boost Mode** should activate based on presence detection.  
+
+- **Configuration:**  
+  1. Navigate to **Settings > Devices & Services > Integrations** in Home Assistant.  
+  2. Find your **Dantherm** integration and select **Configure**.  
+  3. In the **Boost Presence Entity** field, **manually enter** the entity ID of a presence sensor (e.g., `binary_sensor.kitchen_motion`, `binary_sensor.bathroom_humidity`).  
+  4. Save the configuration.  
+
+#### Combining Multiple Presence Sources (Helpers)  
+If you want to **combine multiple presence sensors** (e.g., motion sensors, door sensors, humidity sensors) into a single presence entity, you can use Home Assistant **helpers**.
+
+#### Example: Creating a Combined Presence Entity  
+1. Go to **Settings > Devices & Services > Helpers**.  
+2. Click **Create Helper** → **Binary Sensor**.  
+3. Select **"Combine the state of several entities"** (OR logic).  
+4. Choose the presence-related sensors (e.g., kitchen motion, humidity sensor for cooking).  
+5. Save the helper and manually enter the new helper entity (e.g., `binary_sensor.presence_combined`) into the **Home Presence Entity** or **Boost Presence Entity** field in the Dantherm integration settings.  
+
+By using helpers, you can **combine multiple presence conditions** to control ventilation **more accurately** (e.g., boost mode triggering from either motion, humidity or power consumption to detect if a cooker hood runnig).  
+
+
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
