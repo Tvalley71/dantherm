@@ -74,6 +74,7 @@ _&dagger; The entity is disabled by default._
 
 _&Dagger; The entity is disabled if the associated presence entity is not configured._
 
+
 ### Installation
 
 #### Installation via HACS (Home Assistant Community Store)
@@ -113,7 +114,18 @@ After installation, add the Dantherm integration to your Home Assistant configur
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
 
-### Screenshots
+### Languages
+
+Currently supported languages:
+
+Danish, Dutch, English, German and French.
+
+> [!NOTE]
+> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
+
+---
+
+## Screenshots
 
 ![Skærmbillede fra 2025-02-09 15-49-04](https://github.com/user-attachments/assets/81ded97a-ff08-41f6-8ac4-8042501e355d)
 
@@ -126,20 +138,12 @@ If you encounter any issues or have questions regarding the Dantherm integration
 ![Skærmbillede fra 2025-02-09 15-31-03](https://github.com/user-attachments/assets/1d17f88b-c3f0-441a-917c-55bee87f287e)
 
 
-
 > [!NOTE]
 > The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
-### Languages
+---
 
-Currently supported languages:
-
-Danish, Dutch, English, German and French.
-
-> [!NOTE]
-> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
-
-### Examples of use
+## Examples
 
 #### Picture-elements card
 
@@ -379,7 +383,9 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
-### Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
+---
+
+## Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
 
 The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
 
@@ -423,11 +429,10 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
 
-## Preliminary >>>
+## Integration enhancements - Preliminary >>>
 
 The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
----
 
 ### Home Mode 🏡  
 Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are unexpectedly home.  
@@ -439,7 +444,6 @@ Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ens
 
 The available operations in **Home Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
----
 
 ### Boost Mode 🚀  
 Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
@@ -454,7 +458,6 @@ The available operations in **Boost Operation Selection** are **Level 4**, **Lev
 > [!NOTE]
 > The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
 
----
 
 ### Eco Mode 🌱  
 Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.  
@@ -469,7 +472,6 @@ The available operations in **Eco Operation Selection** are **Standby** and **Le
 > [!NOTE]
 > The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This can influence the operation of Eco Mode.
 
----
 
 ### Mode Triggers ⚡  
 Home, Boost, and Eco Modes rely on **Mode Triggers**, which are binary sensors that determine when a mode should activate.  
@@ -483,7 +485,7 @@ A **Mode Trigger** can be:
 
 Mode Triggers are **manually configured** in the integration settings.
 
-### Configuring a Mode Trigger ⚡  
+### Configuring a Mode Trigger
 
 #### Steps to configure a Mode Trigger:
 1. **Go to Home Assistant → Integrations → Dantherm.**  
@@ -494,7 +496,7 @@ Mode Triggers are **manually configured** in the integration settings.
    - Example entities could be: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
 5. **Save the configuration.**  
    
-Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. 🚀
+Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. ⚡
 
 ---
 
@@ -530,7 +532,6 @@ The available operations in **Default Operation Selection** are **Automatic**, *
 > [NOTE:]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
 
----
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
 
