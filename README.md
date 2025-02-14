@@ -28,6 +28,7 @@ Known supported units:
 | fan_level_selection          | Fan level selection |
 | week_program_selection       | Week program selection<sup>\* &dagger;<sup> |
 | boost_operation_selection    | Boost operation selection<sup>&Dagger;<sup> |
+| eco_operation_selection      | Eco operation selection<sup>&Dagger;<sup> |
 | home_operation_selection     | Home operation selection<sup>&Dagger;<sup> |
 | default_operation_selection  | Default operation selection<sup>&Dagger;<sup> |
 | bypass_damper                | Bypass damper cover<sup>\*<sup> |
@@ -36,7 +37,8 @@ Known supported units:
 | bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
 | manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
 | boost_presence_timeout       | Boost presence timeout<sup>&Dagger;<sup> |
-| home_presence_timeout        | Boost presence timeout<sup>&Dagger;<sup> |
+| eco_presence_timeout         | Eco presence timeout<sup>&Dagger;<sup> |
+| home_presence_timeout        | Home presence timeout<sup>&Dagger;<sup> |
 | operation_mode               | Operation mode sensor |
 | alarm                        | Alarm sensor |
 | fan_level                    | Fan level sensor |
@@ -59,6 +61,7 @@ Known supported units:
 | manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
 | summer_mode                  | Summer mode switch |
 | boost_mode                   | Boost mode switch<sup>&Dagger;<sup> |
+| eco_mode                     | Eco mode switch<sup>&Dagger;<sup> |
 | home_mode                    | Home mode switch<sup>&Dagger;<sup> |
 | filter_reset                 | Reset remain filter time button |
 | alarm_reset                  | Reset alarm button |
@@ -422,71 +425,80 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ## Preliminary >>>
 
-The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **presence detection**, providing a comfortable and energy-efficient environment.
+The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
+---
 
 ### Home Mode 🏡  
-Home Mode allows for automatic adjustments based on presence detection, ensuring efficient ventilation when you are unexpectedly home.  
+Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are unexpectedly home.  
 
-- **Home Mode Switch**: This must be **enabled** for presence detection to affect the ventilation.  
-- **Presence-Based Activation**: If Home Mode is **enabled** and presence is detected, the fan level switches to the **Home Operation Selection** mode.  
-- **Home Presence Timeout**: This entity specifies the **timeout duration** for Home Mode. Once presence is detected, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
-- **Fallback Behavior**: When a Home Mode presence session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
+- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the operation of the unit switches to the **Home Operation Selection**.  
+- **Home Mode Timeout**: This entity specifies the **timeout duration** for Home Mode. Once triggered, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When a Home Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
 
-The avalilable operations in **Home Operation Selection** is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+The available operations in **Home Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+
+---
 
 ### Boost Mode 🚀  
-The Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
+Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
 
-- **Boost Mode Switch**: This must be **enabled** for presence detection to activate Boost Mode.  
-- **Presence-Based Activation**: If Boost Mode is **enabled** and presence is detected, the fan level switches to the **Boost Operation Selection** mode.  
-- **Boost Presence Timeout**: This entity specifies the timeout duration for Boost Mode. Once presence is detected, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if presence is detected again during this time.  
-- **Fallback Behavior**: When a Boost Mode presence session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+- **Boost Mode Switch**: This must be **enabled** for Boost Mode to activate.  
+- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the operation of the unit switches to the **Boost Operation Selection**.  
+- **Boost Mode Timeout**: This entity specifies the timeout duration for Boost Mode. Once triggered, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When a Boost Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
 
-The avalilable operations in **Boost Operation Selection** is **Level 4**, **Level 3**, or **Level 2**.
+The available operations in **Boost Operation Selection** are **Level 4**, **Level 3**, or **Level 2**.
 
 > [!NOTE]
-> The Dantherm unit has builtin **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
+> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
 
+---
 
-### Configuring Home and Boost Presence Entities 🏡🚀  
+### Eco Mode 🌱  
+Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.  
 
-To enable **Home Mode** and **Boost Mode**, you need to configure **presence entities** in the integration settings. These entities can be motion sensors, person trackers, or other Home Assistant entities that report occupancy.  
+- **Eco Mode Switch**: This must be **enabled** for Eco Mode to activate.  
+- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the operation of the unit switches to the **Eco Operation Selection**.  
+- **Eco Mode Timeout**: This entity specifies the **timeout duration** for Eco Mode. Once triggered, the unit will operate in **Eco Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When an Eco Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
 
-The entity selection is done by **manually entering the entity ID** in the integration settings.  
+The available operations in **Eco Operation Selection** are **Standby** and **Level 1**.  
 
+> [!NOTE]
+> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This can influence the operation of Eco Mode.
 
-#### Home Presence Entity 🏡  
-The **Home Presence Entity** determines whether **Home Mode** should activate based on presence detection.  
+---
 
-- **Configuration:**  
-  1. Navigate to **Settings > Devices & Services > Integrations** in Home Assistant.  
-  2. Find your **Dantherm** integration and select **Configure**.  
-  3. In the **Home Presence Entity** field, **manually enter** the entity ID of a presence sensor (e.g., `binary_sensor.living_room_motion`, `person.john_doe`).  
-  4. Save the configuration.  
+### Mode Triggers ⚡  
+Home, Boost, and Eco Modes rely on **Mode Triggers**, which are binary sensors that determine when a mode should activate.  
 
+A **Mode Trigger** can be:  
+- A **motion sensor** (e.g., presence detection in Home Mode)  
+- A **humidity sensor** (e.g., detecting high humidity after a shower)  
+- A **power sensor** (e.g., detecting when a stove or shower fan is running)  
+- An **external temperature sensor** (e.g., lowering fan speed in cold weather for Eco Mode)  
+- A **custom logic helper** combining multiple conditions  
 
-#### Boost Presence Entity 🚀  
-The **Boost Presence Entity** determines whether **Boost Mode** should activate based on presence detection.  
+Mode Triggers are **manually configured** in the integration settings.
 
-- **Configuration:**  
-  1. Navigate to **Settings > Devices & Services > Integrations** in Home Assistant.  
-  2. Find your **Dantherm** integration and select **Configure**.  
-  3. In the **Boost Presence Entity** field, **manually enter** the entity ID of a presence sensor (e.g., `binary_sensor.kitchen_motion`, `binary_sensor.bathroom_humidity`).  
-  4. Save the configuration.  
+### Configuring a Mode Trigger ⚡  
 
-#### Combining Multiple Presence Sources (Helpers)  
-If you want to **combine multiple presence sensors** (e.g., motion sensors, door sensors, humidity sensors) into a single presence entity, you can use Home Assistant **helpers**.
+A **Mode Trigger** is a binary sensor that activates **Home Mode**, **Boost Mode**, or **Eco Mode** based on environmental conditions or user-defined logic.  
 
-#### Example: Creating a Combined Presence Entity  
-1. Go to **Settings > Devices & Services > Helpers**.  
-2. Click **Create Helper** → **Binary Sensor**.  
-3. Select **"Combine the state of several entities"** (OR logic).  
-4. Choose the presence-related sensors (e.g., kitchen motion, humidity sensor for cooking).  
-5. Save the helper and manually enter the new helper entity (e.g., `binary_sensor.presence_combined`) into the **Home Presence Entity** or **Boost Presence Entity** field in the Dantherm integration settings.  
+#### Steps to configure a Mode Trigger:
+1. **Go to Home Assistant → Integrations → Dantherm.**  
+2. **Select your Dantherm device** and open the integration settings.  
+3. **Enable the desired Mode** (Home, Boost, or Eco Mode).  
+4. **Enter the Mode Trigger entity**:
+   - In the respective Mode field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, **Eco Mode Trigger**), **enter the entity ID** of the binary sensor that will trigger the mode. This can be a motion sensor, humidity sensor, power sensor, or custom binary sensor.
+   - Example entities could be: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
+5. **Save the configuration.**  
+   
+Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. 🚀
 
-By using helpers, you can **combine multiple presence conditions** to control ventilation **more accurately** (e.g., boost mode triggering from either motion, humidity or power consumption to detect if a cooker hood runnig).  
-
+---
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
@@ -494,33 +506,36 @@ The Calendar Function allows precise scheduling of different operation modes, pr
 - **Integration - Calendar Events**:  
   By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will revert to the **Default Operation Selection**.
 
-- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
+- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", "**Eco Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
   
   - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
   - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the event.
-  - If **Boost Mode** or **Home Mode** is scheduled, presence detection will be **enabled at the start** and **disabled at the end**, allowing the unit to switch to their respective operation when presence is detected.
+  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode’s trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
 - **Priority System**: The following is the **priority order** for calendar scheduling:  
-  1. **Boost Mode** (highest priority)  
-  2. **Night Mode**  
-  3. **Home Mode**  
-  4. **Away Mode**  
-  5. **Level 3**  
-  6. **Level 2**  
-  7. **Level 1**  
-  8. **Automatic**  
-  9. **Week Program** (lowest priority)  
+  1. **Away Mode** (highest priority)  
+  2. **Boost Mode**  
+  3. **Night Mode**  
+  4. **Home Mode**  
+  5. **Eco Mode**  
+  6. **Level 3**  
+  7. **Level 2**  
+  8. **Level 1**  
+  9. **Automatic**  
+  10. **Week Program** (lowest priority)  
 
-The avalilable operations in **Default Operation Selection** is **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+The available operations in **Default Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
-> [!NOTE]
-> The Dantherm unit has builtin **Night Mode Start Time** and **Night Mode End Time**. Scheduling of Night Mode outside of the start and end time will influence the operation.
+> [NOTE:]
+> The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
 
+---
 
-These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time presence detection**. 🚀🏡📅
+These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
+
 
 ## Disclaimer
 
