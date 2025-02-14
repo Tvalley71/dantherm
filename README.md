@@ -26,7 +26,7 @@ Known supported units:
 | :--------------------------- | :------------------------------------ |
 | operation_selection          | Mode of operation selection |
 | fan_level_selection          | Fan level selection |
-| week_program_selection       | Week program selection<sup>\* &dagger;<sup> |
+| week_program_selection       | Week program selection<sup>&dagger;<sup> |
 | boost_operation_selection    | Boost operation selection |
 | eco_operation_selection      | Eco operation selection |
 | home_operation_selection     | Home operation selection |
@@ -453,8 +453,8 @@ Boost Mode is similar to Home Mode but is designed for short bursts of increased
 
 The available operations in **Boost Operation Selection** are **Level 4**, **Level 3**, or **Level 2**.
 
-> [!NOTE]
-> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This can influence the operation of Boost Mode.
+> [!IMPORTANT]
+> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This may cause Boost Mode to behave unexpectedly if **Level 4** is used.
 
 
 ### Eco Mode 🌱  
@@ -467,8 +467,8 @@ Eco Mode is designed to **reduce fan speed** under specific environmental condit
 
 The available operations in **Eco Operation Selection** are **Standby** and **Level 1**.  
 
-> [!NOTE]
-> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This can influence the operation of Eco Mode.
+> [!IMPORTANT]
+> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used.
 
 
 ### Mode Triggers ⚡  
@@ -527,7 +527,7 @@ The Calendar Function allows precise scheduling of different operation modes, pr
 
 The available operations in **Default Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
 
-> [NOTE:]
+> [!IMPORTANT]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
 
 
