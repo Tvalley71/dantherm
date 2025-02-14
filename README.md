@@ -485,8 +485,6 @@ Mode Triggers are **manually configured** in the integration settings.
 
 ### Configuring a Mode Trigger ⚡  
 
-A **Mode Trigger** is a binary sensor that activates **Home Mode**, **Boost Mode**, or **Eco Mode** based on environmental conditions or user-defined logic.  
-
 #### Steps to configure a Mode Trigger:
 1. **Go to Home Assistant → Integrations → Dantherm.**  
 2. **Select your Dantherm device** and open the integration settings.  
