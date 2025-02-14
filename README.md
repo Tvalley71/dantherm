@@ -27,18 +27,18 @@ Known supported units:
 | operation_selection          | Mode of operation selection |
 | fan_level_selection          | Fan level selection |
 | week_program_selection       | Week program selection<sup>\* &dagger;<sup> |
-| boost_operation_selection    | Boost operation selection<sup>&Dagger;<sup> |
-| eco_operation_selection      | Eco operation selection<sup>&Dagger;<sup> |
-| home_operation_selection     | Home operation selection<sup>&Dagger;<sup> |
-| default_operation_selection  | Default operation selection<sup>&Dagger;<sup> |
+| boost_operation_selection    | Boost operation selection |
+| eco_operation_selection      | Eco operation selection |
+| home_operation_selection     | Home operation selection |
+| default_operation_selection  | Default operation selection |
 | bypass_damper                | Bypass damper cover<sup>\*<sup> |
 | filter_lifetime              | Input filter lifetime box<sup>&dagger;<sup> |
 | bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
 | bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
 | manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
-| boost_presence_timeout       | Boost presence timeout<sup>&Dagger;<sup> |
-| eco_presence_timeout         | Eco presence timeout<sup>&Dagger;<sup> |
-| home_presence_timeout        | Home presence timeout<sup>&Dagger;<sup> |
+| boost_presence_timeout       | Boost presence timeout |
+| eco_presence_timeout         | Eco presence timeout |
+| home_presence_timeout        | Home presence timeout |
 | operation_mode               | Operation mode sensor |
 | alarm                        | Alarm sensor |
 | fan_level                    | Fan level sensor |
@@ -60,9 +60,9 @@ Known supported units:
 | fireplace_mode               | Fireplace mode switch |
 | manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
 | summer_mode                  | Summer mode switch |
-| boost_mode                   | Boost mode switch<sup>&Dagger;<sup> |
-| eco_mode                     | Eco mode switch<sup>&Dagger;<sup> |
-| home_mode                    | Home mode switch<sup>&Dagger;<sup> |
+| boost_mode                   | Boost mode switch |
+| eco_mode                     | Eco mode switch |
+| home_mode                    | Home mode switch |
 | filter_reset                 | Reset remain filter time button |
 | alarm_reset                  | Reset alarm button |
 | night_mode_start_time        | Night mode start time text<sup>&dagger;<sup> |
@@ -71,8 +71,6 @@ Known supported units:
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 _&dagger; The entity is disabled by default._
-
-_&Dagger; The entity is disabled if the associated presence entity is not configured._
 
 
 ### Installation
