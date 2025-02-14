@@ -454,7 +454,7 @@ Boost Mode is similar to Home Mode but is designed for short bursts of increased
 The available operations in **Boost Operation Selection** are **Level 4**, **Level 3**, or **Level 2**.
 
 > [!IMPORTANT]
-> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This may cause Boost Mode to behave unexpectedly if **Level 4** is used.
+> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This may cause Boost Mode to behave unexpectedly if **Level 4** is used for longer periods.
 
 
 ### Eco Mode 🌱  
@@ -468,7 +468,7 @@ Eco Mode is designed to **reduce fan speed** under specific environmental condit
 The available operations in **Eco Operation Selection** are **Standby** and **Level 1**.  
 
 > [!IMPORTANT]
-> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used.
+> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used for longer periods.
 
 
 ### Mode Triggers ⚡  
