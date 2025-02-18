@@ -23,51 +23,73 @@ Known supported units:
 
 ### Controls and sensors
 
-| entity                       | description |
-| :--------------------------- | :------------------------------------ |
-| operation_selection          | Mode of operation selection |
-| fan_level_selection          | Fan level selection |
-| week_program_selection       | Week program selection<sup>&dagger;<sup> |
-| boost_operation_selection    | Boost operation selection |
-| eco_operation_selection      | Eco operation selection |
-| home_operation_selection     | Home operation selection |
-| default_operation_selection  | Default operation selection |
-| bypass_damper                | Bypass damper cover<sup>\*<sup> |
-| filter_lifetime              | Input filter lifetime box<sup>&dagger;<sup> |
-| bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
-| bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
-| manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
-| boost_presence_timeout       | Boost presence timeout |
-| eco_presence_timeout         | Eco presence timeout |
-| home_presence_timeout        | Home presence timeout |
-| operation_mode               | Operation mode sensor |
-| alarm                        | Alarm sensor |
-| fan_level                    | Fan level sensor |
-| fan1_speed                   | Fan 1 speed sensor<sup>&dagger;<sup> |
-| fan2_speed                   | Fan 2 speed sensor<sup>&dagger;<sup> |
-| humidity                     | Humidity sensor<sup>\*<sup> |
-| air_quality                  | Air quality sensor<sup>\*<sup> |
-| exhaust_temperature          | Exhaust temperature sensor |
-| extract_temperature          | Extract temperature sensor |
-| supply_temperature           | Supply temperature sensor |
-| outdoor_temperature          | Outdoor temperature sensor |
-| room_temperature             | Room temperature sensor<sup>\* &dagger;<sup> |
-| filter_remain                | Remaining filter time sensor |
-| filter_remain_level          | Remaining filter time sensor level<sup>&dagger;<sup> |
-| work_time                    | Work time sensor<sup>&dagger;<sup> |
-| internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| away_mode                    | Away mode switch |
-| night_mode                   | Night mode switch<sup>&dagger;<sup> |
-| fireplace_mode               | Fireplace mode switch |
-| manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
-| summer_mode                  | Summer mode switch |
-| boost_mode                   | Boost mode switch |
-| eco_mode                     | Eco mode switch |
-| home_mode                    | Home mode switch |
-| filter_reset                 | Reset remain filter time button |
-| alarm_reset                  | Reset alarm button |
-| night_mode_start_time        | Night mode start time text<sup>&dagger;<sup> |
-| night_mode_end_time          | Night mode end time text<sup>&dagger;<sup> |
+| Buttons Entities               | Description |
+| :-                             | :- |
+| `alarm_reset`                  | Reset alarm |
+| `filter_reset`                 | Reset remain filter time |
+
+| **Calendar Entity**            | **Description** |
+| :-                             | :- |
+| `calendar`                     | Operation Calender |
+
+| **Cover Entity**               | **Description** |
+| :-                             | :- |
+| `bypass_damper`                | Bypass damper<sup>\*<sup> |
+
+| **Number Entities**            | **Description** |
+| :-                             | :- |
+| `boost_presence_timeout`       | Boost presence timeout |
+| `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
+| `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
+| `eco_presence_timeout`         | Eco presence timeout |
+| `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
+| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
+| `home_presence_timeout`        | Home presence timeout |
+
+| **Select Entities**            | **Description** |
+| :-                             | :- |
+| `boost_operation_selection`    | Boost operation selection |
+| `default_operation_selection`  | Default operation selection |
+| `eco_operation_selection`      | Eco operation selection |
+| `fan_level_selection`          | Fan level selection |
+| `home_operation_selection`     | Home operation selection |
+| `operation_selection`          | Mode of operation selection |
+| `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
+
+| **Sensor Entities**            | **Description** |
+| :-                             | :- |
+| `air_quality`                  | Air quality sensor<sup>\*<sup> |
+| `alarm`                        | Alarm sensor |
+| `exhaust_temperature`          | Exhaust temperature sensor |
+| `extract_temperature`          | Extract temperature sensor |
+| `fan_level`                    | Fan level |
+| `fan1_speed`                   | Fan 1 speed<sup>&dagger;<sup> |
+| `fan2_speed`                   | Fan 2 speed<sup>&dagger;<sup> |
+| `filter_remain`                | Remaining filter time |
+| `filter_remain_level`          | Remaining filter time level<sup>&dagger;<sup> |
+| `humidity`                     | Humidity sensor<sup>\*<sup> |
+| `internal_preheater_dutycycle` | Preheater power dutycycle<sup>\* &dagger;<sup> |
+| `operation_mode`               | Operation mode |
+| `outdoor_temperature`          | Outdoor temperature sensor |
+| `room_temperature`             | Room temperature sensor<sup>\* &dagger;<sup> |
+| `supply_temperature`           | Supply temperature sensor |
+| `work_time`                    | Work time<sup>&dagger;<sup> |
+
+| **Switch Entities**            | **Description** |
+| :-                             | :- |
+| `away_mode`                    | Away mode |
+| `boost_mode`                   | Boost mode |
+| `eco_mode`                     | Eco mode |
+| `fireplace_mode`               | Fireplace mode |
+| `home_mode`                    | Home mode |
+| `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
+| `night_mode`                   | Night mode<sup>&dagger;<sup> |
+| `summer_mode`                  | Summer mode |
+
+| **Text Entities**              | **Description** |
+| :-                             | :- |
+| `night_mode_end_time`          | Night mode end time text<sup>&dagger;<sup> |
+| `night_mode_start_time`        | Night mode start time text<sup>&dagger;<sup> |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
