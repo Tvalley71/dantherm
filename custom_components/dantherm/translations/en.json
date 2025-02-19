@@ -1,27 +1,45 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "Modbus connection",
-        "data": {
-          "host": "Enter ip-address of your unit",
-          "name": "Enter prefix for the device entities",
-          "port": "Enter TCP port on which to connect to the device",
-          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
+        "user": {
+            "title": "Modbus connection",
+            "data": {
+                "host": "Enter ip-address of your unit",
+                "name": "Enter prefix for the device entities",
+                "port": "Enter TCP port on which to connect to the device",
+                "scan_interval": "Enter polling frequency of the modbus registers in seconds"
+            }
         }
-      }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integration Options",
+            "data": {
+                "boost_mode_trigger": "Boost Mode Trigger Entity",
+                "eco_mode_trigger": "Eco Mode Trigger Entity",
+                "home_mode_trigger": "Home Mode Trigger Entity"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Invalid entity ID. Please enter a valid binary sensor or input boolean."
     }
   },
   "entity": {
     "button": {
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }
+    },
+    "calendar": {
+      "calendar": { "name": "Calendar" }
     },
     "cover": {
       "bypass_damper": { "name": "Bypass Damper" }
@@ -30,7 +48,10 @@
       "filter_lifetime": { "name": "Filter Lifetime" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
-      "manual_bypass_duration": { "name": "Manual Bypass Duration" }
+      "manual_bypass_duration": { "name": "Manual Bypass Duration" },
+      "boost_mode_timeout": { "name": "Boost Mode Timeout" },
+      "eco_mode_timeout": { "name": "Eco Mode Timeout" },
+      "home_mode_timeout": { "name": "Home Mode Timeout" }
     },
     "select": {
       "operation_selection": {
@@ -70,6 +91,42 @@
           "8": "Week Program 9",
           "9": "Week Program 10",
           "10": "Week Program 11"
+        }
+      },
+      "boost_operation_selection": {
+        "name": "Boost Operation Selection",
+        "state": {
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco Operation Selection",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Level 1",
+          "level_2": "Level 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Home Operation Selection",
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "week_program": "Week Program"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Default Operation Selection",
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "week_program": "Week Program"
         }
       }
     },
@@ -137,7 +194,10 @@
       "night_mode": { "name": "Night Mode" },
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
-      "summer_mode": { "name": "Summer Mode" }
+      "summer_mode": { "name": "Summer Mode" },
+      "boost_mode": { "name": "Boost Mode" },
+      "eco_mode": { "name": "Eco Mode" },
+      "home_mode": { "name": "Home Mode" }
     },
     "text": {
       "night_mode_start_time": { "name": "Night Mode Start Time" },
@@ -262,6 +322,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Invalid filter lifetime. Use values between 0 to 360 days."
+    },
+    "invalid_event_word": {
+      "message": "Invalid event word in summary."
     }
   }
 }

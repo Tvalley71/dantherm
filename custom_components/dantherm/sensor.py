@@ -14,7 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """."""
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
+    device = device_entry.get("device")
+    if device is None:
+        _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
+        return False
 
     entities = []
     for description in SENSORS:
@@ -22,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             sensor = DanthermSensor(device, description)
             entities.append(sensor)
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)  # True
     return True
 
 
@@ -79,8 +87,6 @@ class DanthermSensor(SensorEntity, DanthermEntity):
                 result = await func()
             else:
                 result = getattr(self._device, self.entity_description.data_getinternal)
-        elif self.entity_description.data_entity:
-            result = self._device.data.get(self.entity_description.data_entity, None)
         else:
             result = await self._device.read_holding_registers(
                 description=self.entity_description

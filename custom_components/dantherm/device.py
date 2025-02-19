@@ -3,20 +3,42 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
+from config.custom_components.dantherm.config_flow import (
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
+)
 from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.http.auth import Store
 from homeassistant.components.modbus import modbus
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 
 from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
+    ATTR_BOOST_MODE,
+    ATTR_BYPASS_DAMPER,
+    ATTR_ECO_MODE,
+    ATTR_FILTER_LIFETIME,
+    ATTR_FILTER_REMAIN,
+    ATTR_HOME_MODE,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_LEVEL_4,
     STATE_MANUAL,
     STATE_NIGHT,
+    STATE_PRIORITIES,
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
@@ -97,6 +119,9 @@ class DanthermEntity(Entity):
 class Device:
     """Dantherm Device."""
 
+    _global_calendar_store = None  # Static variable for shared calendar storage
+    _cached_calendar_events = None  # Cache for calendar events
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -105,6 +130,7 @@ class Device:
         port,
         unit_id,
         scan_interval,
+        config_entry: ConfigEntry,
     ) -> None:
         """Init device."""
         self._hass = hass
@@ -125,14 +151,39 @@ class Device:
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
-        self._bypass_damper = None
-        self._filter_lifetime = None
-        self._filter_remain = None
-        self._filter_remain_level = None
+        self._last_current_operation = None
+        self._operation_last_change_time = datetime.min
+        self._boost_trigger = None
+        self._unsub_boost = None
+        self._boost_trigger_changed = False
+        self._boost_trigger_detected = False
+        self._boost_timeout_time = datetime.min
+        self._eco_trigger = None
+        self._unsub_eco = None
+        self._eco_trigger_changed = False
+        self._eco_trigger_detected = False
+        self._eco_timeout_time = datetime.min
+        self._home_trigger = None
+        self._unsub_home = None
+        self._home_trigger_changed = False
+        self._home_trigger_detected = False
+        self._home_timeout_time = datetime.min
+        self._store = Store(hass, version=1, key=f"{name}_store")
+        self._events = EventStack()
         self._available = True
         self._read_errors = 0
         self._entities = []
+        self.store = {}
         self.data = {}
+
+        # Use a static store instance for the shared calendar
+        if Device._global_calendar_store is None:
+            Device._global_calendar_store = Store(
+                hass, version=1, key=f"{name}_calendar"
+            )
+
+        # Set up initial triggers from the config options
+        self.update_mode_triggers_event(config_entry.options)
 
     async def setup(self):
         """Modbus setup for Dantherm Device."""
@@ -291,13 +342,10 @@ class Device:
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
 
-        self._bypass_damper = None
-        self._filter_remain_level = None
-        self._filter_lifetime = None
-        self._filter_remain = None
-
         for entity in self._entities:
             await self.async_refresh_entity(entity)
+
+        await self._update_mode_triggers()
 
     async def async_refresh_entity(self, entity: DanthermEntity) -> None:
         """Refresh an entity."""
@@ -312,6 +360,109 @@ class Device:
 
         _LOGGER.debug("Refresh entity=%s", entity.name)
         await entity.async_update_ha_state(True)
+
+    async def async_load_store(self):
+        """Load device-specific data store."""
+        store = await self._store.async_load()
+        if store is None:
+            store = {"entities": {}}
+        self.store = store
+
+    async def async_save_store(self):
+        """Save device-specific data store."""
+        await self._store.async_save(self.store)
+
+    async def set_entity_state(self, entity_key, value):
+        """Set entity state for this device instance."""
+        self.store["entities"][entity_key] = value
+        await self.async_save_store()
+
+    def get_entity_state(self, entity_key, default=None):
+        """Get entity state for this device instance."""
+
+        return self.store["entities"].get(entity_key, default)
+
+    @classmethod
+    async def async_load_calendar(cls, force_reload=False):
+        """Load calendar events from storage (only when needed)."""
+        if cls._cached_calendar_events is None or force_reload:
+            calendar_data = await cls._global_calendar_store.async_load()
+            cls._cached_calendar_events = (
+                calendar_data.get("calendar_events", []) if calendar_data else []
+            )
+        return cls._cached_calendar_events
+
+    @classmethod
+    async def _async_save_calendar(cls):
+        """Save the cached calendar events to storage."""
+        if cls._global_calendar_store is not None:
+            await cls._global_calendar_store.async_save(
+                {"calendar_events": cls._cached_calendar_events}
+            )
+
+    @classmethod
+    async def add_calendar_event(cls, event_data):
+        """Add an event and update both cache & storage."""
+        await cls.async_load_calendar()  # Ensure cache is initialized
+        cls._cached_calendar_events.append(event_data)
+        await cls._async_save_calendar()
+
+    @classmethod
+    async def update_calendar_event(cls, uid, event_data):
+        """Update an existing calendar event, modifying only specified fields."""
+        await cls.async_load_calendar()
+
+        for event in cls._cached_calendar_events:
+            if event["uid"] == uid:
+                for key, value in event_data.items():
+                    if value is not None:
+                        if key in ["dtstart", "dtend"]:
+                            value = value.isoformat()
+
+                        event[key] = value  # Update only provided fields
+                break
+
+        await cls._async_save_calendar()
+
+    @classmethod
+    async def delete_calendar_event(cls, uid):
+        """Delete an event and update storage."""
+        await cls.async_load_calendar()
+        cls._cached_calendar_events = [
+            event for event in cls._cached_calendar_events if event["uid"] != uid
+        ]
+
+        await cls._async_save_calendar()
+
+    @classmethod
+    async def get_calendar_events(cls):
+        """Retrieve cached events instead of reloading every time."""
+        return await cls.async_load_calendar()
+
+    # async def async_update_store(self, store: Store, state):
+    #     """Save the current state."""
+
+    #     await store.async_save(state)
+
+    # async def async_store_entity_state(self, store: Store, state):
+    #     """Store entity state."""
+
+    #     if self.data.get(store.key, None) != state:
+    #         self._hass.async_create_task(self.async_update_store(store, state))
+    #         setattr(self, f"_{store.key}", state)
+
+    # async def async_load_entity_state(self, store: Store, default) -> Any:
+    #     """Load entity state."""
+
+    #     if store is None:
+    #         return None
+    #     result = self.data.get(store.key, None)
+    #     if result is None:
+    #         result = await store.async_load()
+    #         if result is None:
+    #             result = default
+    #         setattr(self, f"_{store.key}", result)
+    #     return result
 
     @property
     def available(self) -> bool:
@@ -369,6 +520,43 @@ class Device:
 
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
         return STATE_MANUAL
+
+    @property
+    def get_current_operation(self):
+        """Get current operation."""
+
+        if self._active_unit_mode is None:
+            return None
+
+        current_operation = None
+        if (
+            self._active_unit_mode & ActiveUnitMode.Automatic
+            == ActiveUnitMode.Automatic
+        ):
+            current_operation = STATE_AUTOMATIC
+        elif self._active_unit_mode & ActiveUnitMode.Manual == ActiveUnitMode.Manual:
+            if self._fan_level == 0:
+                current_operation = STATE_STANDBY
+            elif self._fan_level == 1:
+                current_operation = STATE_LEVEL_1
+            elif self._fan_level == 2:
+                current_operation = STATE_LEVEL_2
+            elif self._fan_level == 3:
+                current_operation = STATE_LEVEL_3
+            elif self._fan_level == 4:
+                current_operation = STATE_LEVEL_4
+        elif (
+            self._active_unit_mode & ActiveUnitMode.WeekProgram
+            == ActiveUnitMode.WeekProgram
+        ):
+            current_operation = STATE_WEEKPROGRAM
+        elif self._active_unit_mode & ActiveUnitMode.Away == ActiveUnitMode.Away:
+            current_operation = STATE_AWAY
+        else:
+            return self._last_current_operation
+
+        self._last_current_operation = current_operation
+        return current_operation
 
     @property
     def get_operation_mode_icon(self) -> str:
@@ -463,19 +651,19 @@ class Device:
     async def async_get_bypass_damper(self):
         """Get bypass damper."""
 
-        if self._bypass_damper is None:
-            self._bypass_damper = await self._read_holding_uint32(198)
-            _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        result = await self._read_holding_uint32(198)
+        _LOGGER.debug("Bypass damper = %s", result)
 
-        return self._bypass_damper
+        return result
 
     @property
     def get_bypass_damper_icon(self) -> str:
         """Get bypass damper icon."""
 
-        if self._bypass_damper == BypassDamperState.Closed:
+        bypass_damper = self.data.get(ATTR_BYPASS_DAMPER, None)
+        if bypass_damper == BypassDamperState.Closed:
             return "mdi:valve-closed"
-        if self._bypass_damper == BypassDamperState.Opened:
+        if bypass_damper == BypassDamperState.Opened:
             return "mdi:valve-open"
         return "mdi:valve"
 
@@ -525,47 +713,44 @@ class Device:
     async def async_get_filter_lifetime(self):
         """Get filter lifetime."""
 
-        if self._filter_lifetime is None:
-            self._filter_lifetime = await self._read_holding_uint32(556)
-            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+        result = await self._read_holding_uint32(556)
+        _LOGGER.debug("Filter lifetime = %s", result)
 
-        return self._filter_lifetime
+        return result
 
     async def async_get_filter_remain(self):
         """Get filter remain."""
 
-        if self._filter_remain is None:
-            self._filter_remain = await self._read_holding_uint32(554)
-            _LOGGER.debug("Filter remain = %s", self._filter_remain)
+        result = await self._read_holding_uint32(554)
+        _LOGGER.debug("Filter remain = %s", result)
 
-        return self._filter_remain
+        return result
 
     async def async_get_filter_remain_level(self):
         """Get filter remain level."""
 
-        if self._filter_lifetime is None:
-            await self.async_get_filter_lifetime()
+        filter_lifetime = self.data.get(ATTR_FILTER_LIFETIME, None)
+        if filter_lifetime is None:
+            filter_lifetime = await self.async_get_filter_lifetime()
+        filter_remain = self.data.get(ATTR_FILTER_REMAIN, None)
+        if filter_remain is None:
+            filter_remain = await self.async_get_filter_remain()
 
-        if self._filter_remain is None:
-            await self.async_get_filter_remain()
+        if filter_lifetime is None or filter_remain is None:
+            return None
 
-        if self._filter_remain > self._filter_lifetime:
-            self._filter_remain_level = 0
-        else:
-            self._filter_remain_level = int(
-                (self._filter_lifetime - self._filter_remain)
-                / (self._filter_lifetime / 3)
-            )
-
-        return self._filter_remain_level
+        if filter_remain > filter_lifetime:
+            return 0
+        return int((filter_lifetime - filter_remain) / (filter_lifetime / 3))
 
     async def async_get_filter_remain_attrs(self):
         """Get filter remain attributes."""
 
-        if self._filter_remain_level is None:
-            await self.async_get_filter_remain_level()
+        result = await self.async_get_filter_remain_level()
 
-        return {"level": self._filter_remain_level}
+        if result is not None:
+            return {"level": result}
+        return None
 
     async def async_get_night_mode_start_time(self):
         """Get night mode start time."""
@@ -628,22 +813,47 @@ class Device:
         await self._write_holding_uint32(168, value)
 
     async def set_operation_selection(self, value):
-        """Set operation mode selection."""
+        """Set operation selection."""
 
-        if value == STATE_STANDBY:
-            await self.set_active_unit_mode(ActiveUnitMode.Manual)
-            if self._fan_level != 0:
-                await self.set_fan_level(0)
-        elif value == STATE_AUTOMATIC:
-            await self.set_active_unit_mode(ActiveUnitMode.Automatic)
-        elif value == STATE_MANUAL:
-            await self.set_active_unit_mode(ActiveUnitMode.Manual)
-            if self._fan_level == 0:
-                await self.set_fan_level(1)
-        elif value == STATE_WEEKPROGRAM:
-            await self.set_active_unit_mode(ActiveUnitMode.WeekProgram)
+        async def update_operation(
+            current_mode, active_mode, fan_level: int | None = None
+        ):
+            """Update the unit operation with a short delay between mode and fan level.
+
+            If fan_level is None, only the unit mode is updated.
+            """
+            if self._current_unit_mode != current_mode:
+                await self.set_active_unit_mode(active_mode)
+            await asyncio.sleep(0.3)
+            if fan_level is not None and self._fan_level != fan_level:
+                await self.set_fan_level(fan_level)
+
+        if value == STATE_AUTOMATIC:
+            await update_operation(CurrentUnitMode.Automatic, ActiveUnitMode.Automatic)
         elif value == STATE_AWAY:
-            await self.set_active_unit_mode(ActiveUnitMode.StartAway)
+            # For away mode, update the mode accordingly
+            await update_operation(CurrentUnitMode.Away, ActiveUnitMode.StartAway)
+        elif value == STATE_LEVEL_1:
+            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 1)
+        elif value == STATE_LEVEL_2:
+            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 2)
+        elif value == STATE_LEVEL_3:
+            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 3)
+        elif value == STATE_LEVEL_4:
+            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 4)
+        elif value == STATE_MANUAL:
+            # If in manual mode and the fan level is 0, change it to 1; otherwise leave it as is.
+            fan_level = 1 if self._fan_level == 0 else None
+            await update_operation(
+                CurrentUnitMode.Manual, ActiveUnitMode.Manual, fan_level
+            )
+        elif value == STATE_STANDBY:
+            # Standby means the fan should be off (0)
+            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 0)
+        elif value == STATE_WEEKPROGRAM:
+            await update_operation(
+                CurrentUnitMode.WeekProgram, ActiveUnitMode.WeekProgram
+            )
 
     async def set_fan_level(self, value):
         """Set fan level."""
@@ -720,6 +930,170 @@ class Device:
 
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(264, value)
+
+    async def set_calendar_event(self, event):
+        """Set calendar event."""
+
+        if self._events.has_priority(event):
+            if event == ATTR_BOOST_MODE:
+                self.data[ATTR_BOOST_MODE]
+            self.set_operation_selection(event)
+
+    def update_mode_triggers_event(self, options: dict):
+        """Update tracking triggers based on new options."""
+
+        new_boost = options.get(ATTR_BOOST_MODE_TRIGGER)
+        new_eco = options.get(ATTR_ECO_MODE_TRIGGER)
+        new_home = options.get(ATTR_HOME_MODE_TRIGGER)
+
+        # Update boost trigger
+        if new_boost != self._boost_trigger:
+            self.data[ATTR_BOOST_MODE] = None
+            if self._unsub_boost:
+                self._unsub_boost()  # remove previous listener
+            self._boost_trigger = new_boost
+            if self._boost_trigger:
+                self._unsub_boost = async_track_state_change_event(
+                    self._hass,
+                    [self._boost_trigger],
+                    self._async_boost_trigger_changed,
+                )
+
+        # Update eco trigger
+        if new_eco != self._eco_trigger:
+            self.data[ATTR_ECO_MODE] = None
+            if self._unsub_eco:
+                self._unsub_eco()
+            self._eco_trigger = new_eco
+            if self._eco_trigger:
+                self._unsub_eco = async_track_state_change_event(
+                    self._hass,
+                    [self._eco_trigger],
+                    self._async_eco_trigger_changed,
+                )
+
+        # Update home trigger
+        if new_home != self._home_trigger:
+            self.data[ATTR_HOME_MODE] = None
+            if self._unsub_home:
+                self._unsub_home()
+            self._home_trigger = new_home
+            if self._home_trigger:
+                self._unsub_home = async_track_state_change_event(
+                    self._hass,
+                    [self._home_trigger],
+                    self._async_home_trigger_changed,
+                )
+
+    async def _async_boost_trigger_changed(self, event):
+        """Boost trigger state change callback."""
+
+        new_state = event.data.get("new_state")
+        if new_state and new_state.state == "on":
+            self._boost_trigger_detected = True
+            _LOGGER.debug("Boost triggered!")
+        else:
+            self._boost_trigger_detected = False
+        self._boost_trigger_changed = True
+
+    async def _async_eco_trigger_changed(self, event):
+        """Eco trigger state change callback."""
+
+        new_state = event.data.get("new_state")
+        if new_state and new_state.state == "on":
+            self._eco_trigger_detected = True
+            _LOGGER.debug("Eco triggered!")
+        else:
+            self._eco_trigger_detected = False
+        self._eco_trigger_changed = True
+
+    async def _async_home_trigger_changed(self, event):
+        """Home trigger state change callback."""
+
+        new_state = event.data.get("new_state")
+        if new_state and new_state.state == "on":
+            self._home_trigger_detected = True
+            _LOGGER.debug("Home triggered!")
+        else:
+            self._home_trigger_detected = False
+        self._home_trigger_changed = True
+
+    async def _update_mode_triggers(self):
+        """Update mode triggers."""
+
+        if self._boost_trigger:
+            if self._boost_trigger_changed:
+                await self._update_mode_trigger("boost")
+        elif self.data.get(ATTR_BOOST_MODE, None):
+            self.data[ATTR_BOOST_MODE] = False
+
+        if self._eco_trigger:
+            if self._eco_trigger_changed:
+                await self._update_mode_trigger("eco")
+        elif self.data.get(ATTR_ECO_MODE, None):
+            self.data[ATTR_ECO_MODE] = False
+
+        if self._home_trigger:
+            if self._home_trigger_changed:
+                await self._update_mode_trigger("home")
+        elif self.data.get(ATTR_HOME_MODE, None):
+            self.data[ATTR_HOME_MODE] = False
+
+    async def _update_mode_trigger(self, name: str):
+        """Update mode."""
+
+        if not self.data.get(f"{name}_mode", False):
+            return
+
+        current_time = datetime.now()
+
+        # Check if timeout have passed since last mode change
+        if current_time < getattr(self, f"_{name}_timeout_time"):
+            return
+
+        # Check if timeout have passed since last operation change
+        if current_time - self._operation_last_change_time < timedelta(seconds=5):
+            return
+
+        _LOGGER.debug("Before: %s", self._events)
+
+        current_operation = self.get_current_operation
+
+        # Get the state of the trigger
+        if getattr(self, f"_{name}_trigger_detected", False):
+            # Set the timeout of the trigger
+            setattr(
+                self,
+                f"_{name}_timeout_time",
+                current_time
+                + timedelta(seconds=self.data.get(f"{name}_trigger_timeout", 5)),
+            )
+
+            if self._events.any(name):
+                return
+
+            target_operation = self.data.get(f"{name}_operation_selection", None)
+
+            self._events.push(name, current_operation)
+            if not self._events.has_priority(name):
+                target_operation = None
+        else:
+            target_operation = self._events.pop(name)
+
+            setattr(self, f"_{name}_trigger_changed", False)
+
+        _LOGGER.debug("After: %s", self._events)
+
+        if target_operation and target_operation == current_operation:
+            return
+
+        # Update last change times
+        self._operation_last_change_time = current_time
+
+        setattr(self, f"_{name}_last_trigger_time", current_time)
+
+        # Change the operation mode if different from the current one
+        await self.set_operation_selection(target_operation)
 
     async def read_holding_registers(
         self,
@@ -882,3 +1256,92 @@ class Device:
             float(value), self._client.DATATYPE.FLOAT32
         )
         await self._write_holding_registers(address, payload, "little")
+
+
+class EventStack:
+    """Event Stack."""
+
+    def __init__(self) -> None:
+        """."""
+        self.stack = []
+
+    def push(self, event, operation):
+        """Push an event onto the stack or increase its count if it already exists."""
+        for item in self.stack:
+            if item["event"] == event:
+                item["count"] += 1
+                return False
+
+        # If event does not exist, push it with count 1
+        self.stack.append({"event": event, "operation": operation, "count": 1})
+        return True
+
+    def pop(self, event):
+        """Remove an event from the stack, handling operation shifts if necessary."""
+        for i in range(len(self.stack) - 1, -1, -1):  # Iterate from top to bottom
+            if self.stack[i]["event"] == event:
+                if self.stack[i]["count"] > 1:
+                    self.stack[i]["count"] -= 1
+                    return None
+
+                # If count is 1, remove it
+                removed_operation = self.stack[i]["operation"]
+                del self.stack[i]
+
+                # Shift operation to the event directly above it
+                if i < len(self.stack):
+                    self.stack[i]["operation"] = removed_operation
+                    return None
+
+                return removed_operation
+
+        return None  # Event not found
+
+    def any(self, event):
+        """Check if a specific event is present in the stack.
+
+        :param event: The event to look for.
+        :return: True if the event is in the stack, False otherwise.
+        """
+        return any(item["event"] == event for item in self.stack)
+
+    def lookup(self, event):
+        """Find the latest occurrence of an event in the stack and return its operation."""
+        for item in reversed(self.stack):
+            if item["event"] == event:
+                return item["operation"]
+        return None
+
+    def top(self):
+        """Return the operation of the top event (last pushed)."""
+        return self.stack[-1]["operation"] if self.stack else None
+
+    def is_top(self, event):
+        """Check if the given event is currently the top event.
+
+        :param event: The event to check.
+        :return: True if the event is on top, False otherwise.
+        """
+        return bool(self.stack) and self.stack[-1]["event"] == event
+
+    def has_priority(self, event):
+        """Check if the top event has a lower priority than the event.
+
+        :param event: The event to compare against.
+        :return: True if top event has lower priority, False otherwise.
+        """
+
+        if not self.stack:
+            return True  # If stack is empty, allow new event
+
+        if len(self.stack) == 1:
+            if self.stack[0]["event"] == event and self.stack[0]["count"] == 1:
+                return True  # If the only event matches and count is 1
+
+        return STATE_PRIORITIES.get(self.stack[-1]["event"], 0) < STATE_PRIORITIES.get(
+            event, 0
+        )
+
+    def __repr__(self):
+        """."""
+        return f"Stack: {self.stack}"
