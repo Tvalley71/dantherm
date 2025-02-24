@@ -119,8 +119,7 @@ class DanthermEntity(Entity):
 class Device:
     """Dantherm Device."""
 
-    _global_calendar_store = None  # Static variable for shared calendar storage
-    _cached_calendar_events = None  # Cache for calendar events
+    global_calendar_store = None  # Static variable for shared calendar storage
 
     def __init__(
         self,
@@ -168,7 +167,7 @@ class Device:
         self._home_trigger_changed = False
         self._home_trigger_detected = False
         self._home_timeout_time = datetime.min
-        self._store = Store(hass, version=1, key=f"{name}_store")
+        self._entity_store = Store(hass, version=1, key=f"{name}_entities")
         self._events = EventStack()
         self._available = True
         self._read_errors = 0
@@ -177,8 +176,8 @@ class Device:
         self.data = {}
 
         # Use a static store instance for the shared calendar
-        if Device._global_calendar_store is None:
-            Device._global_calendar_store = Store(
+        if Device.global_calendar_store is None:
+            Device.global_calendar_store = Store(
                 hass, version=1, key=f"{name}_calendar"
             )
 
@@ -361,108 +360,25 @@ class Device:
         _LOGGER.debug("Refresh entity=%s", entity.name)
         await entity.async_update_ha_state(True)
 
-    async def async_load_store(self):
-        """Load device-specific data store."""
-        store = await self._store.async_load()
+    async def async_load_entities(self):
+        """Load device-specific entities."""
+        store = await self._entity_store.async_load()
         if store is None:
             store = {"entities": {}}
         self.store = store
 
-    async def async_save_store(self):
-        """Save device-specific data store."""
-        await self._store.async_save(self.store)
+    async def async_save_entities(self):
+        """Save device-specific entities."""
+        await self._entity_store.async_save(self.store)
 
     async def set_entity_state(self, entity_key, value):
         """Set entity state for this device instance."""
         self.store["entities"][entity_key] = value
-        await self.async_save_store()
+        await self.async_save_entities()
 
     def get_entity_state(self, entity_key, default=None):
         """Get entity state for this device instance."""
-
         return self.store["entities"].get(entity_key, default)
-
-    @classmethod
-    async def async_load_calendar(cls, force_reload=False):
-        """Load calendar events from storage (only when needed)."""
-        if cls._cached_calendar_events is None or force_reload:
-            calendar_data = await cls._global_calendar_store.async_load()
-            cls._cached_calendar_events = (
-                calendar_data.get("calendar_events", []) if calendar_data else []
-            )
-        return cls._cached_calendar_events
-
-    @classmethod
-    async def _async_save_calendar(cls):
-        """Save the cached calendar events to storage."""
-        if cls._global_calendar_store is not None:
-            await cls._global_calendar_store.async_save(
-                {"calendar_events": cls._cached_calendar_events}
-            )
-
-    @classmethod
-    async def add_calendar_event(cls, event_data):
-        """Add an event and update both cache & storage."""
-        await cls.async_load_calendar()  # Ensure cache is initialized
-        cls._cached_calendar_events.append(event_data)
-        await cls._async_save_calendar()
-
-    @classmethod
-    async def update_calendar_event(cls, uid, event_data):
-        """Update an existing calendar event, modifying only specified fields."""
-        await cls.async_load_calendar()
-
-        for event in cls._cached_calendar_events:
-            if event["uid"] == uid:
-                for key, value in event_data.items():
-                    if value is not None:
-                        if key in ["dtstart", "dtend"]:
-                            value = value.isoformat()
-
-                        event[key] = value  # Update only provided fields
-                break
-
-        await cls._async_save_calendar()
-
-    @classmethod
-    async def delete_calendar_event(cls, uid):
-        """Delete an event and update storage."""
-        await cls.async_load_calendar()
-        cls._cached_calendar_events = [
-            event for event in cls._cached_calendar_events if event["uid"] != uid
-        ]
-
-        await cls._async_save_calendar()
-
-    @classmethod
-    async def get_calendar_events(cls):
-        """Retrieve cached events instead of reloading every time."""
-        return await cls.async_load_calendar()
-
-    # async def async_update_store(self, store: Store, state):
-    #     """Save the current state."""
-
-    #     await store.async_save(state)
-
-    # async def async_store_entity_state(self, store: Store, state):
-    #     """Store entity state."""
-
-    #     if self.data.get(store.key, None) != state:
-    #         self._hass.async_create_task(self.async_update_store(store, state))
-    #         setattr(self, f"_{store.key}", state)
-
-    # async def async_load_entity_state(self, store: Store, default) -> Any:
-    #     """Load entity state."""
-
-    #     if store is None:
-    #         return None
-    #     result = self.data.get(store.key, None)
-    #     if result is None:
-    #         result = await store.async_load()
-    #         if result is None:
-    #             result = default
-    #         setattr(self, f"_{store.key}", result)
-    #     return result
 
     @property
     def available(self) -> bool:

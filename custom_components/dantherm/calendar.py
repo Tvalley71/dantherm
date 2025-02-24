@@ -1,11 +1,10 @@
-import asyncio
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+"""Calendar implementation."""
+
+from datetime import datetime
 import logging
 from typing import Any, Optional
 import uuid
 
-from dateutil import tz
 from dateutil.rrule import rrulestr
 
 from homeassistant.components.calendar import (
@@ -22,7 +21,6 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import parse_datetime
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -54,6 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 class DanthermCalendar(CalendarEntity, DanthermEntity):
     """Dantherm schedule calendar."""
 
+    _global_events = {}
+    _global_loaded = False
+
     def __init__(
         self,
         device: Device,
@@ -69,624 +70,384 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
             | CalendarEntityFeature.DELETE_EVENT
         )
         self.entity_description: DanthermCalendarEntityDescription = description
-        self._events: dict[str, CalendarEvent] = {}
         self._next_event: Optional[CalendarEvent] = None
+
+    async def async_added_to_hass(self) -> None:
+        """Load stored events when entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        if not self._global_loaded:
+            self._global_loaded = True
+            await self._load_events()
 
     @property
     def event(self):
         """Return the next upcoming event."""
         return self._next_event
 
+    def _normalize_datetime(self, dt: datetime) -> datetime | None:
+        """Ensure consistent timezone handling for datetime objects."""
+        return dt.astimezone(datetime.now().astimezone().tzinfo).replace(microsecond=0)
+
+    def _get_event(self, uid: str) -> dict:
+        """Retrieve an event with its EXDATE list."""
+        return self._global_events.get(uid, {"event": None, "exdates": []})
+
+    def _set_event(self, uid: str, event_data):
+        """Store an event with its EXDATE list."""
+        self._global_events[uid] = event_data
+
+    def _add_exdate(self, uid: str, exdate: datetime):
+        """Add an EXDATE to the specified event, ensuring timezone consistency."""
+        event_data = self._get_event(uid)
+        if exdate not in event_data["exdates"]:
+            event_data["exdates"].extend([self._normalize_datetime(exdate)])
+            self._set_event(uid, event_data)
+            _LOGGER.info("Added EXDATE %s for event: %s", exdate, uid)
+
+    def _remove_exdate(self, uid: str, exdate: datetime):
+        """Remove an EXDATE from the specified event."""
+        exdate = self._normalize_datetime(exdate)
+        event_data = self._get_event(uid)
+        if exdate in event_data["exdates"]:
+            event_data["exdates"].remove(exdate)
+            self._set_event(uid, event_data)
+            _LOGGER.info("Removed EXDATE %s for event: %s", exdate, uid)
+
+    def _delete_event(self, uid: str):
+        """Delete an event from the calendar."""
+        del self._global_events[uid]
+
+    async def _load_events(self):
+        """Load events from storage."""
+        data = await self._device.global_calendar_store.async_load()
+        if data:
+            for uid, event_data in data.items():
+                self._global_events[uid] = {
+                    "event": CalendarEvent(
+                        uid=event_data["uid"],
+                        summary=event_data["summary"],
+                        start=datetime.fromisoformat(event_data["start"]),
+                        end=datetime.fromisoformat(event_data["end"]),
+                        location=event_data.get("location", ""),
+                        description=event_data.get("description", ""),
+                        rrule=event_data.get("rrule", ""),
+                    ),
+                    "exdates": [
+                        datetime.fromisoformat(ex)
+                        for ex in event_data.get("exdates", [])
+                    ],
+                }
+            _LOGGER.info("Loaded %d events from storage", len(self._global_events))
+
+    async def _save_events(self):
+        """Save current events to storage."""
+        data = {
+            uid: {
+                "uid": event["event"].uid,
+                "summary": event["event"].summary,
+                "start": event["event"].start.isoformat(),
+                "end": event["event"].end.isoformat(),
+                "location": event["event"].location,
+                "description": event["event"].description,
+                "rrule": event["event"].rrule,
+                "exdates": [ex.isoformat() for ex in event["exdates"]],
+            }
+            for uid, event in self._global_events.items()
+        }
+        await self._device.global_calendar_store.async_save(data)
+        _LOGGER.info("Saved %d events to storage", len(self._global_events))
+
     async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+        self,
+        hass: HomeAssistant,
+        start_date: datetime,
+        end_date: datetime,
     ):
-        """Retrieve events occurring within the specified date range, including recurring instances."""
-        all_events = []
-        for event in self._events.values():
+        """Return calendar events within a datetime range."""
+        events = []
+
+        for data in self._global_events.values():
+            event = data["event"]
+            exdates = {self._normalize_datetime(ex) for ex in data["exdates"]}
+
             if event.rrule:
-                rrule = rrulestr(event.rrule, dtstart=event.start_datetime_local)
-                instances = [
-                    CalendarEvent(
-                        uid=f"{event.uid}-{start.strftime('%Y%m%dT%H%M%S')}",
-                        summary=event.summary,
-                        start=start,
-                        end=start
-                        + (event.end_datetime_local - event.start_datetime_local),
-                        location=event.location,
-                        description=event.description,
-                        rrule=event.rrule,
-                    )
-                    for start in rrule.between(start_date, end_date, inc=True)
-                    if f"{event.uid}-{start.strftime('%Y%m%dT%H%M%S')}"
-                    not in self._recurring_exceptions
-                ]
-                all_events.extend(instances)
-            elif start_date <= event.start_datetime_local <= end_date:
-                all_events.append(event)
-        return all_events
+                rule = rrulestr(
+                    event.rrule,
+                    dtstart=self._normalize_datetime(event.start),
+                )
 
-    async def async_create_event(self, event_data: dict):
-        """Create a new calendar event."""
-        uid = event_data.get("uid", str(uuid.uuid4()))  # Generate UID if not provided
-        start = parse_datetime(event_data.get("start"))
-        end = parse_datetime(event_data.get("end"))
-        rrule = event_data.get("rrule")
+                for start in rule.between(start_date, end_date, inc=True):
+                    if start not in exdates:
+                        events.append(  # noqa: PERF401
+                            CalendarEvent(
+                                uid=event.uid,
+                                summary=event.summary,
+                                start=start,
+                                end=start
+                                + (
+                                    self._normalize_datetime(event.end)
+                                    - self._normalize_datetime(event.start)
+                                ),
+                                location=event.location,
+                                description=event.description,
+                                rrule=event.rrule,
+                                recurrence_id=start.strftime("%Y%m%dT%H%M%S"),
+                            )
+                        )
+            elif start_date <= self._normalize_datetime(event.start) <= end_date:
+                events.append(event)
 
-        if not start or not end:
-            _LOGGER.error("Invalid start or end time")
-            return None
+        return events
 
-        self._events[uid] = CalendarEvent(
+    async def async_create_event(self, **kwargs: Any) -> None:
+        """Add a new event to calendar."""
+        if not self._evaluate_event(**kwargs):
+            return False
+
+        uid = kwargs.get(EVENT_UID, str(uuid.uuid4()))
+        event = CalendarEvent(
             uid=uid,
-            summary=event_data.get("summary", "Unnamed Event"),
-            start=start,
-            end=end,
-            location=event_data.get("location"),
-            description=event_data.get("description"),
-            rrule=rrule,
+            summary=kwargs.get(EVENT_SUMMARY, "Unnamed Event"),
+            start=self._normalize_datetime(kwargs.get(EVENT_START)),
+            end=self._normalize_datetime(kwargs.get(EVENT_END)),
+            location=kwargs.get(EVENT_LOCATION, ""),
+            description=kwargs.get(EVENT_DESCRIPTION, ""),
+            rrule=kwargs.get(EVENT_RRULE, ""),
         )
-
+        self._set_event(uid, {"event": event, "exdates": []})
+        await self._save_events()  # Save changes persistently
         _LOGGER.info("Created event: %s", uid)
         return uid
 
-    async def async_update_event(self, uid: str, event_data: dict):
-        """Update an existing calendar event."""
-        if uid not in self._events and uid not in self._recurring_exceptions:
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> bool:
+        """Update an existing calendar event, handling recurrence instances and ranges."""
+        if uid not in self._global_events:
             _LOGGER.error("Event not found: %s", uid)
             return False
 
-        start = parse_datetime(event_data.get("start"))
-        end = parse_datetime(event_data.get("end"))
-        rrule = event_data.get("rrule")
+        event_data = self._get_event(uid)
+        current_event = event_data["event"]
 
-        if uid in self._events:
-            event = self._events[uid]
-        else:
-            event = self._recurring_exceptions[uid]
-
-        self._events[uid] = CalendarEvent(
-            uid=uid,
-            summary=event_data.get("summary", event.summary),
-            start=start if start else event.start_datetime_local,
-            end=end if end else event.end_datetime_local,
-            location=event_data.get("location", event.location),
-            description=event_data.get("description", event.description),
-            rrule=rrule if rrule else event.rrule,
+        # Normalize new event data for update
+        updated_event = CalendarEvent(
+            uid=current_event.uid,
+            summary=event.get(EVENT_SUMMARY, current_event.summary),
+            start=self._normalize_datetime(event.get(EVENT_START, current_event.start)),
+            end=self._normalize_datetime(event.get(EVENT_END, current_event.end)),
+            location=event.get(EVENT_LOCATION, current_event.location),
+            description=event.get(EVENT_DESCRIPTION, current_event.description),
+            rrule=current_event.rrule,
         )
 
-        _LOGGER.info("Updated event: %s", uid)
+        if recurrence_id:
+            recurrence_datetime = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
+
+            if recurrence_range in ("THISINSTANCE", ""):
+                # Add an EXDATE for the original instance and create a new single event
+                self._add_exdate(uid, recurrence_datetime)
+
+                new_uid = str(
+                    uuid.uuid4()
+                )  # Generate a new UID for the updated instance
+                instance_event = CalendarEvent(
+                    uid=new_uid,
+                    summary=updated_event.summary,
+                    start=self._normalize_datetime(recurrence_datetime),
+                    end=self._normalize_datetime(recurrence_datetime)
+                    + (updated_event.end - updated_event.start),
+                    location=updated_event.location,
+                    description=updated_event.description,
+                )
+                self._set_event(new_uid, {"event": instance_event, "exdates": []})
+
+                _LOGGER.info(
+                    "Updated specific instance %s for event: %s (new UID: %s)",
+                    recurrence_id,
+                    uid,
+                    new_uid,
+                )
+
+            elif recurrence_range == "THISANDALLFUTURE":
+                # Adjust the original event to end before the current instance
+                old_rrule = rrulestr(current_event.rrule, dtstart=current_event.start)
+                new_until = recurrence_datetime - (
+                    current_event.end - current_event.start
+                )
+                new_rrule = old_rrule.replace(until=new_until)
+
+                current_event.rrule = new_rrule.to_ical().decode("utf-8")
+                self._set_event(
+                    uid, {"event": current_event, "exdates": event_data["exdates"]}
+                )
+
+                # Create a new recurring event from this instance onward
+                new_uid = str(uuid.uuid4())
+                future_event = CalendarEvent(
+                    uid=new_uid,
+                    summary=updated_event.summary,
+                    start=self._normalize_datetime(recurrence_datetime),
+                    end=self._normalize_datetime(recurrence_datetime)
+                    + (updated_event.end - updated_event.start),
+                    location=updated_event.location,
+                    description=updated_event.description,
+                    rrule=current_event.rrule,
+                )
+                self._set_event(new_uid, {"event": future_event, "exdates": []})
+
+                _LOGGER.info(
+                    "Updated this and all future occurrences starting from %s for event: %s (new UID: %s)",
+                    recurrence_id,
+                    uid,
+                    new_uid,
+                )
+
+            else:
+                _LOGGER.warning("Unsupported recurrence range: %s", recurrence_range)
+                return False
+
+        else:
+            # Update the entire event if no recurrence ID
+            self._set_event(
+                uid, {"event": updated_event, "exdates": event_data["exdates"]}
+            )
+            _LOGGER.info("Updated entire event: %s", uid)
+
+        await self._save_events()  # Ensure persistence after modification
         return True
 
-    async def async_delete_event(self, uid: str):
-        """Delete an event or a specific recurrence instance."""
-        if uid in self._events:
-            del self._events[uid]
-            _LOGGER.info("Deleted event: %s", uid)
-            return True
-        elif uid in self._recurring_exceptions:
-            del self._recurring_exceptions[uid]
-            _LOGGER.info("Deleted recurring instance: %s", uid)
-            return True
-        _LOGGER.error("Event not found: %s", uid)
-        return False
-
-    async def async_create_recurring_exception(
-        self, uid: str, recurrence_id: str, event_data: dict
-    ):
-        """Create an exception for a recurring event instance."""
-        if uid not in self._events:
-            _LOGGER.error("Parent recurring event not found: %s", uid)
-            return None
-
-        start = parse_datetime(event_data.get("start"))
-        end = parse_datetime(event_data.get("end"))
-
-        if not start or not end:
-            _LOGGER.error("Invalid start or end time for exception")
-            return None
-
-        exception_uid = f"{uid}-{recurrence_id}"
-        self._recurring_exceptions[exception_uid] = CalendarEvent(
-            uid=exception_uid,
-            summary=event_data.get("summary", self._events[uid].summary),
-            start=start,
-            end=end,
-            location=event_data.get("location", self._events[uid].location),
-            description=event_data.get("description", self._events[uid].description),
-        )
-
-        _LOGGER.info("Created recurring exception: %s", exception_uid)
-        return exception_uid
-
-    # async def async_get_events(
-    #     self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    # ):
-    #     """."""
-    #     all_events = []
-    #     for event in self._events.values():
-    #         if event.rrule:
-    #             rrule = rrulestr(event.rrule, dtstart=event.start_datetime_local)
-    #             instances = [
-    #                 CalendarEvent(
-    #                     uid=event.uid,
-    #                     summary=event.summary,
-    #                     start=start,
-    #                     end=start
-    #                     + (event.end_datetime_local - event.start_datetime_local),
-    #                     location=event.location,
-    #                     description=event.description,
-    #                     rrule=event.rrule,
-    #                 )
-    #                 for start in rrule.between(start_date, end_date, inc=True)
-    #             ]
-    #             all_events.extend(instances)
-    #         elif start_date <= event.start_datetime <= end_date:
-    #             all_events.append(event)
-    #     return all_events
-
-    # async def async_create_event(self, **event_data):
-    #     """."""
-    #     uid = event_data.get(
-    #         EVENT_UID, str(uuid.uuid4())
-    #     )  # Generate UID if not provided
-    #     start = event_data.get(EVENT_START)
-    #     end = event_data.get(EVENT_END)
-    #     rrule = event_data.get(EVENT_RRULE)
-
-    #     if not start or not end:
-    #         _LOGGER.error("Invalid start or end time")
-    #         return None
-
-    #     self._events[uid] = CalendarEvent(
-    #         uid=uid,
-    #         summary=event_data.get(EVENT_SUMMARY, "Unnamed Event"),
-    #         start=start,
-    #         end=end,
-    #         location=event_data.get(EVENT_LOCATION),
-    #         description=event_data.get(EVENT_DESCRIPTION),
-    #         rrule=rrule,
-    #     )
-
-    #     _LOGGER.info("Created event: %s", uid)
-    #     return uid
-
-    # async def async_update_event(self, uid: str, event_data: dict):
-    #     """."""
+    # async def async_update_event(
+    #     self,
+    #     uid: str,
+    #     event: dict[str, Any],
+    #     recurrence_id: str | None = None,
+    #     recurrence_range: str | None = None,
+    # ) -> None:
+    #     """Update an existing calendar event."""
     #     if uid not in self._events:
     #         _LOGGER.error("Event not found: %s", uid)
     #         return False
 
-    #     start = event_data.get(EVENT_START, self._events[uid].start)
-    #     end = event_data.get(EVENT_END, self._events[uid].end)
-    #     rrule = event_data.get("rrule", self._events[uid].rrule)
+    #     event_data = self._get_event(uid)
+    #     ev = event_data["event"]
+    #     for key, value in event_data.items():
+    #         if value is not None and hasattr(ev, key):
+    #             setattr(ev, key, value)
 
-    #     self._events[uid] = CalendarEvent(
-    #         uid=uid,
-    #         summary=event_data.get(EVENT_SUMMARY, self._events[uid].summary),
-    #         start=start,
-    #         end=end,
-    #         location=event_data.get(EVENT_LOCATION, self._events[uid].location),
-    #         description=event_data.get(
-    #             EVENT_DESCRIPTION, self._events[uid].description
-    #         ),
-    #         rrule=rrule,
-    #     )
-
+    #     self._set_event(uid, event_data)
+    #     await self._save_events()  # Save changes persistently
     #     _LOGGER.info("Updated event: %s", uid)
     #     return True
 
-    # async def async_delete_event(self, uid: str):
-    #     """."""
-    #     if uid in self._events:
-    #         del self._events[uid]
-    #         _LOGGER.info("Deleted event: %s", uid)
-    #         return True
-    #     _LOGGER.error("Event not found: %s", uid)
-    #     return False
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> bool:
+        """Delete an event on the calendar, handling recurrence instances and ranges."""
 
-    # def process_recurrence(self, uid: str, start_date: datetime, end_date: datetime):
-    #     """."""
-    #     if uid not in self._events:
+        event_data = self._get_event(uid)
+        if event_data["event"] is None:
+            _LOGGER.error("Event not found: %s", uid)
+            return False
+
+        event = event_data["event"]
+
+        if recurrence_id:
+            exdate = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
+            self._add_exdate(uid, exdate)
+
+            if recurrence_range == "THISANDALLFUTURE":
+                # Adjust the RRULE to end before this recurrence.
+                old_rrule = rrulestr(event.rrule, dtstart=event.start)
+                new_until = (
+                    exdate - event.end + event.start
+                )  # Ensure recurrence ends before the current instance
+                new_rrule = old_rrule.replace(until=new_until)
+
+                # Update the event's RRULE
+                event.rrule = new_rrule.to_ical().decode("utf-8")
+                self._set_event(uid, {"event": event, "exdates": event_data["exdates"]})
+
+                _LOGGER.info(
+                    "Deleted instance and all future occurrences starting from %s for event: %s",
+                    recurrence_id,
+                    uid,
+                )
+
+            elif recurrence_range == "THISINSTANCE":
+                # Only exclude the specific instance
+                _LOGGER.info(
+                    "Deleted specific recurrence instance %s for event: %s",
+                    recurrence_id,
+                    uid,
+                )
+
+            await self._save_events()  # Ensure persistence after modification
+            return True
+
+        # If no recurrence_id, delete the entire event.
+        self._delete_event(uid)
+        await self._save_events()  # Ensure persistence after modification
+        _LOGGER.info("Deleted entire event: %s", uid)
+        return True
+
+    # async def async_delete_event(
+    #     self,
+    #     uid: str,
+    #     recurrence_id: str | None = None,
+    #     recurrence_range: str | None = None,
+    # ) -> None:
+    #     """Delete an event on the calendar."""
+
+    #     event_data = self._get_event(uid)
+    #     if event_data["event"] is None:
     #         _LOGGER.error("Event not found: %s", uid)
-    #         return []
-
-    #     event = self._events[uid]
-    #     if not event.rrule:
-    #         return [event]
-
-    #     rrule = rrulestr(event.rrule, dtstart=event.start_datetime)
-    #     return [
-    #         CalendarEvent(
-    #             uid=uid,
-    #             summary=event.summary,
-    #             start=start,
-    #             end=start + (event.end_datetime - event.start_datetime),
-    #             location=event.location,
-    #             description=event.description,
-    #             rrule=event.rrule,
-    #         )
-    #         for start in rrule.between(start_date, end_date, inc=True)
-    #     ]
-
-    # # @property
-    # # def event(self):
-    # #     """Return the next upcoming event."""
-    # #     return self._next_event
-
-    # # async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
-    # #     """Retrieve all scheduled events, including repeated ones."""
-    # #     all_events = await Device.get_calendar_events()
-    # #     filtered_events = []
-
-    # #     for event in all_events:
-    # #         event_start = datetime.fromisoformat(event["dtstart"])
-    # #         event_end = datetime.fromisoformat(event["dtend"])
-
-    # #         # Ensure `start_date` and `end_date` have the same timezone as event_start
-    # #         if event_start.tzinfo:
-    # #             start_date = start_date.replace(tzinfo=event_start.tzinfo)
-    # #             end_date = end_date.replace(tzinfo=event_start.tzinfo)
-    # #         else:
-    # #             # If event_start is naive, make everything naive
-    # #             start_date = start_date.replace(tzinfo=None)
-    # #             end_date = end_date.replace(tzinfo=None)
-
-    # #         # Handle non-recurring events
-    # #         if "rrule" not in event:
-    # #             if start_date <= event_start <= end_date:
-    # #                 filtered_events.append(
-    # #                     CalendarEvent(
-    # #                         start=event_start,
-    # #                         end=event_end,
-    # #                         summary=event["summary"],
-    # #                         description=event.get("description", ""),
-    # #                         uid=event["uid"],
-    # #                     )
-    # #                 )
-    # #             continue
-
-    # #         # Handle repeating events
-    # #         recurrence = rrulestr(event["rrule"], dtstart=event_start)
-    # #         occurrences = list(recurrence.between(start_date, end_date, inc=True))
-
-    # #         for occurrence in occurrences:
-    # #             repeated_end = (
-    # #                 occurrence + (event_end - event_start) if event_end else None
-    # #             )
-
-    # #             filtered_events.append(
-    # #                 CalendarEvent(
-    # #                     start=occurrence,
-    # #                     end=repeated_end,
-    # #                     summary=event["summary"],
-    # #                     description=event.get("description", ""),
-    # #                     uid=event["uid"],
-    # #                     rrule=event["rrule"],
-    # #                     recurrence_id=occurrence.isoformat(),
-    # #                 )
-    # #             )
-
-    # #     return filtered_events
-
-    # # # async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
-    # # #     """Retrieve all scheduled events, including repeated ones."""
-    # # #     all_events = await Device.get_calendar_events()
-    # # #     filtered_events = []
-
-    # # #     for event in all_events:
-    # # #         event_start = datetime.fromisoformat(event["dtstart"])
-    # # #         event_end = datetime.fromisoformat(event["dtend"])
-
-    # # #         # Handle non-recurring events
-    # # #         if "rrule" not in event:
-    # # #             if start_date <= event_start <= end_date:
-    # # #                 filtered_events.append(
-    # # #                     CalendarEvent(
-    # # #                         start=event_start,
-    # # #                         end=event_end,
-    # # #                         summary=event["summary"],
-    # # #                         description=event.get("description", ""),
-    # # #                         uid=event["uid"],
-    # # #                     )
-    # # #                 )
-    # # #             continue
-
-    # # #         # Handle repeating events
-    # # #         recurrence = rrulestr(event["rrule"], dtstart=event_start)
-    # # #         occurrences = list(recurrence.between(start_date, end_date, inc=True))
-
-    # # #         for occurrence in occurrences:
-    # # #             repeated_end = (
-    # # #                 occurrence + (event_end - event_start) if event_end else None
-    # # #             )
-
-    # # #             filtered_events.append(
-    # # #                 CalendarEvent(
-    # # #                     start=occurrence,  # Use the correct occurrence time
-    # # #                     end=repeated_end,
-    # # #                     summary=event["summary"],
-    # # #                     description=event.get("description", ""),
-    # # #                     uid=event["uid"],
-    # # #                     rrule=event["rrule"],
-    # # #                     recurrence_id=occurrence.isoformat(),  # Unique identifier for this instance
-    # # #                 )
-    # # #             )
-
-    # # #     return filtered_events
-
-    # # async def async_create_event(self, **kwargs) -> None:
-    # #     """Create a new calendar event."""
-
-    # #     summary = kwargs.get("summary", "")
-    # #     if EVENT_WORDS.get(summary, None):
-    # #         # Ensure start and end are properly formatted
-    # #         start = kwargs.get("dtstart").isoformat() if "dtstart" in kwargs else None
-    # #         if not start:
-    # #             raise HomeAssistantError(
-    # #                 translation_domain=DOMAIN,
-    # #                 translation_key="invalid_event_start_time",
-    # #             )
-
-    # #         end = kwargs.get("dtend").isoformat() if "dtend" in kwargs else None
-    # #         if not end:
-    # #             raise HomeAssistantError(
-    # #                 translation_domain=DOMAIN,
-    # #                 translation_key="invalid_event_end_time",
-    # #             )
-
-    # #         # Store full kwargs, including repeat (RRULE)
-    # #         new_event = {
-    # #             "uid": str(uuid.uuid4()),  # Generate a unique ID
-    # #             **kwargs,
-    # #         }
-
-    # #         # Add event to the shared calendar store
-    # #         await Device.add_calendar_event(new_event)
-
-    # #     else:
-    # #         raise HomeAssistantError(
-    # #             translation_domain=DOMAIN, translation_key="invalid_event_word"
-    # #         )
-
-    # # async def async_update_event(
-    # #     self,
-    # #     uid: str,
-    # #     event: dict[str, Any],
-    # #     recurrence_id: str | None = None,
-    # #     recurrence_range: str | None = None,
-    # # ) -> None:
-    # #     """Update an existing calendar event, handling recurrence when needed."""
-
-    # #     # Load all events
-    # #     all_events = await Device.get_calendar_events()
-
-    # #     # Find the event to update
-    # #     event_to_update = next((ev for ev in all_events if ev["uid"] == uid), None)
-
-    # #     if not event_to_update:
-    # #         _LOGGER.error("Event with UID %s not found for update", uid)
-    # #         return
-
-    # #     # Handle single occurrence updates for recurring events
-    # #     if recurrence_id and "rrule" in event_to_update:
-    # #         _LOGGER.debug(
-    # #             "Updating a single occurrence for UID %s on %s", uid, recurrence_id
-    # #         )
-
-    # #         # Convert recurrence_id to datetime
-    # #         recurrence_datetime = datetime.fromisoformat(recurrence_id)
-
-    # #         # Store an exception date for this occurrence
-    # #         if "exdate" not in event_to_update:
-    # #             event_to_update["exdate"] = []
-
-    # #         event_to_update["exdate"].append(recurrence_datetime.isoformat())
-
-    # #         # Save the updated event with exceptions
-    # #         await Device.update_calendar_event(
-    # #             uid, {"exdate": event_to_update["exdate"]}
-    # #         )
-    # #         return
-
-    # #     # Update the entire event series
-    # #     _LOGGER.debug("Updating event %s with %s", uid, event)
-    # #     event_to_update.update(event)
-
-    # #     # Save the updated event
-    # #     await self._device.update_calendar_event(uid, event_to_update)
-
-    # # # async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
-    # # #     """Retrieve all scheduled events, including repeated ones."""
-    # # #     all_events = await Device.get_calendar_events()
-    # # #     filtered_events = []
-
-    # # #     for event in all_events:
-    # # #         event_start = datetime.fromisoformat(event["dtstart"])
-    # # #         event_end = datetime.fromisoformat(event["dtend"])
-
-    # # #         # Handle non-recurring events
-    # # #         if "rrule" not in event:
-    # # #             if start_date <= event_start <= end_date:
-    # # #                 filtered_events.append(
-    # # #                     CalendarEvent(
-    # # #                         start=event_start,
-    # # #                         end=event_end,
-    # # #                         summary=event["summary"],
-    # # #                         description=event.get("description", ""),
-    # # #                         uid=event["uid"],
-    # # #                     )
-    # # #                 )
-    # # #             continue
-
-    # # #         # Handle repeating events
-    # # #         recurrence = rrulestr(event["rrule"], dtstart=event_start)
-    # # #         occurrences = list(recurrence.between(start_date, end_date, inc=True))
-
-    # # #         for occurrence in occurrences:
-    # # #             repeated_end = (
-    # # #                 occurrence + (event_end - event_start) if event_end else None
-    # # #             )
-
-    # # #             filtered_events.append(
-    # # #                 CalendarEvent(
-    # # #                     start=occurrence,  # Use the correct occurrence time
-    # # #                     end=repeated_end,
-    # # #                     summary=event["summary"],
-    # # #                     description=event.get("description", ""),
-    # # #                     uid=event["uid"],
-    # # #                     rrule=event["rrule"],
-    # # #                     recurrence_id=occurrence.isoformat(),  # Unique identifier for this instance
-    # # #                 )
-    # # #             )
-
-    # # #     return filtered_events
-
-    # # # async def async_create_event(self, **kwargs) -> None:
-    # # #     """Create a new calendar event."""
-
-    # # #     summary = kwargs.get("summary", "")
-    # # #     if EVENT_WORDS.get(summary, None):
-    # # #         # Ensure start and end are properly formatted
-    # # #         start = kwargs.get("dtstart").isoformat() if "dtstart" in kwargs else None
-    # # #         if not start:
-    # # #             raise HomeAssistantError(
-    # # #                 translation_domain=DOMAIN,
-    # # #                 translation_key="invalid_event_start_time",
-    # # #             )
-
-    # # #         end = kwargs.get("dtend").isoformat() if "dtend" in kwargs else None
-    # # #         if not end:
-    # # #             raise HomeAssistantError(
-    # # #                 translation_domain=DOMAIN,
-    # # #                 translation_key="invalid_event_end_time",
-    # # #             )
-
-    # # #         # Store full kwargs, including repeat (RRULE)
-    # # #         new_event = {
-    # # #             "uid": str(uuid.uuid4()),  # Generate a unique ID
-    # # #             **kwargs,
-    # # #         }
-
-    # # #         # Add event to the shared calendar store
-    # # #         await Device.add_calendar_event(new_event)
-
-    # # #     else:
-    # # #         raise HomeAssistantError(
-    # # #             translation_domain=DOMAIN, translation_key="invalid_event_word"
-    # # #         )
-
-    # # # async def async_update_event(
-    # # #     self,
-    # # #     uid: str,
-    # # #     event: dict[str, Any],
-    # # #     recurrence_id: str | None = None,
-    # # #     recurrence_range: str | None = None,
-    # # # ) -> None:
-    # # #     """Update an existing calendar event, handling recurrence when needed."""
-
-    # # #     # Load all events
-    # # #     all_events = await Device.get_calendar_events()
-
-    # # #     # Find the event to update
-    # # #     event_to_update = next((ev for ev in all_events if ev["uid"] == uid), None)
-
-    # # #     if not event_to_update:
-    # # #         _LOGGER.error("Event with UID %s not found for update", uid)
-    # # #         return
-
-    # # #     # Handle single occurrence updates for recurring events
-    # # #     if recurrence_id and "rrule" in event_to_update:
-    # # #         _LOGGER.debug(
-    # # #             "Updating a single occurrence for UID %s on %s", uid, recurrence_id
-    # # #         )
-
-    # # #         # Convert recurrence_id to datetime
-    # # #         recurrence_datetime = datetime.fromisoformat(recurrence_id)
-
-    # # #         # Clone event for this specific occurrence
-    # # #         new_event = event_to_update.copy()
-    # # #         new_event["uid"] = str(uuid.uuid4())  # Generate a new unique ID
-    # # #         new_event["dtstart"] = recurrence_datetime.isoformat()
-
-    # # #         if "dtend" in event_to_update:
-    # # #             duration = datetime.fromisoformat(
-    # # #                 event_to_update["dtend"]
-    # # #             ) - datetime.fromisoformat(event_to_update["dtstart"])
-    # # #             new_event["dtend"] = (recurrence_datetime + duration).isoformat()
-
-    # # #         # Apply modifications
-    # # #         new_event.update(event)
-
-    # # #         # Store new modified single occurrence
-    # # #         await Device.add_calendar_event(new_event)
-    # # #         return
-
-    # # #     # Update the entire event series
-    # # #     _LOGGER.debug("Updating event %s with %s", uid, event)
-    # # #     event_to_update.update(event)
-
-    # # #     # Save the updated event
-    # # #     await Device.update_calendar_event(uid, event_to_update)
-
-    # # async def async_delete_event(self, uid, recurrence_id=None, recurrence_range=None):
-    # #     """Delete a calendar event, handling recurrence when needed."""
-
-    # #     # Load the current events
-    # #     all_events = await Device.get_calendar_events()
-
-    # #     # Find the event to delete
-    # #     event_to_delete = next(
-    # #         (event for event in all_events if event["uid"] == uid), None
-    # #     )
-
-    # #     if not event_to_delete:
-    # #         _LOGGER.error("Event with UID %s not found", uid)
-    # #         return
-
-    # #     # Handle recurring events
-    # #     if recurrence_id and "rrule" in event_to_delete:
-    # #         _LOGGER.debug(
-    # #             "Deleting a single occurrence for %s on %s", uid, recurrence_id
-    # #         )
-
-    # #         # Convert recurrence_id to datetime for comparison
-    # #         recurrence_datetime = datetime.fromisoformat(recurrence_id)
-
-    # #         # Modify the RRULE to exclude the specific recurrence
-    # #         recurrence = rrulestr(
-    # #             event_to_delete["rrule"],
-    # #             dtstart=datetime.fromisoformat(event_to_delete["dtstart"]),
-    # #         )
-    # #         modified_rule = recurrence.replace(
-    # #             until=recurrence_datetime
-    # #             - timedelta(seconds=1)  # Stop recurrence before the deleted event
-    # #         )
-
-    # #         event_to_delete["rrule"] = str(modified_rule)
-
-    # #         # Save the modified event list back to storage (Fix applied here)
-    # #         await Device.update_calendar_event(uid, {"rrule": event_to_delete["rrule"]})
-    # #         return
-
-    # #     # If it's a full event deletion (not a recurrence), remove it completely
-    # #     await Device.delete_calendar_event(uid)
-
-    # # async def async_update(self):
-    # #     """Fetch events and check for active ones."""
-    # #     now = datetime.now()
-    # #     active_event = None
-
-    # #     # for event in self._events:
-    # #     #     start = event["start"]
-    # #     #     end = event["end"]
-
-    # #     #     if start <= now <= end:
-    # #     #         active_event = event
-    # #     #         break
-
-    # #     # self._next_event = active_event
-
-    # #     # if active_event:
-    # #     #     event_word = active_event["summary"].strip().lower()
-    # #     #     _LOGGER.debug("Active calendar event summary: %s", event_word)
-    # #     #     await self._device.set_calendar_event(event_word)
+    #         return False
+
+    #     if recurrence_id:
+    #         exdate = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
+    #         self._add_exdate(uid, exdate)
+    #         await self._save_events()  # Save changes persistently
+    #         return True
+
+    #     self._delete_event(uid)
+    #     await self._save_events()  # Save changes persistently
+    #     _LOGGER.info("Deleted event: %s", uid)
+    #     return True
+
+    def _evaluate_event(self, **event_data):
+        """Evaluate the event."""
+
+        # Ensure summary and description contain valid event words
+        summary = event_data.get(EVENT_SUMMARY, "")
+        description = event_data.get(EVENT_DESCRIPTION, "")
+        if not (EVENT_WORDS.get(summary, None) or EVENT_WORDS.get(description, None)):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_event_word",
+            )
+
+        # Ensure start date
+        start = event_data.get(EVENT_START)
+        if not start:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_event_start_time",
+            )
+
+        # Ensure end date
+        end = event_data.get(EVENT_END)
+        if not end:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_event_end_time",
+            )
+
+        return True

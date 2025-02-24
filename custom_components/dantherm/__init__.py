@@ -75,12 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
     device = Device(hass, name, host, port, 1, scan_interval, entry)
-    await device.async_load_store()  # Load device-specific data
-
-    # Ensure the shared calendar is loaded only once
-    # if "dantherm_calendar_loaded" not in hass.data:
-    #    await Device.async_load_calendar()
-    #    hass.data["dantherm_calendar_loaded"] = True
+    await device.async_load_entities()  # Load device-specific data
 
     try:
         await device.setup()
