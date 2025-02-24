@@ -68,6 +68,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         state = self.entity_description.state_setoff
         if state is None:
             state = self.entity_description.state_off
+
         if self.entity_description.data_setinternal:
             await getattr(self._device, self.entity_description.data_setinternal)(state)
         elif self.entity_description.data_store:
@@ -87,6 +88,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         state = self.entity_description.state_seton
         if state is None:
             state = self.entity_description.state_on
+
         if self.entity_description.data_setinternal:
             await getattr(self._device, self.entity_description.data_setinternal)(state)
         elif self.entity_description.data_store:
