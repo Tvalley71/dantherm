@@ -68,7 +68,8 @@
           "6": "Programme hebdo 7",
           "7": "Programme hebdo 8",
           "8": "Programme hebdo 9",
-          "9": "Programme hebdo 10"
+          "9": "Programme hebdo 10",
+          "10": "Programme hebdo 11"
         }
       }
     },
@@ -137,6 +138,10 @@
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
       "summer_mode": { "name": "Mode été" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Heure de début du mode nuit" },
+      "night_mode_end_time": { "name": "Heure de fin du mode nuit" }
     }
   },
   "selector": {
@@ -155,6 +160,21 @@
         "2": "Niveau 2",
         "3": "Niveau 3",
         "4": "Niveau 4"
+      }
+    },
+    "week_program_selections": {
+      "options": {
+        "0": "Programme hebdo 1",
+        "1": "Programme hebdo 2",
+        "2": "Programme hebdo 3",
+        "3": "Programme hebdo 4",
+        "4": "Programme hebdo 5",
+        "5": "Programme hebdo 6",
+        "6": "Programme hebdo 7",
+        "7": "Programme hebdo 8",
+        "8": "Programme hebdo 9",
+        "9": "Programme hebdo 10",
+        "10": "Programme hebdo 11"
       }
     }
   },
@@ -189,6 +209,44 @@
         }
       }
     },
+    "set_configuration": {
+      "name": "Définir la configuration",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Température minimale de dérivation",
+          "description": "Définissez la température minimale pour le fonctionnement de la dérivation."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Température maximale de dérivation",
+          "description": "Définissez la température maximale pour le fonctionnement de la dérivation."
+        },
+        "filter_lifetime": {
+          "name": "Durée de vie du filtre",
+          "description": "Définissez la durée de vie du filtre en jours."
+        },
+        "manual_bypass_duration": {
+          "name": "Durée de la dérivation manuelle",
+          "description": "Définissez la durée du mode de dérivation manuelle en minutes."
+        },
+        "night_mode": {
+          "name": "Mode nuit",
+          "description": "Activer ou désactiver le mode nuit."
+        },
+        "night_mode_start_time": {
+          "name": "Heure de début du mode nuit",
+          "description": "Définissez l'heure de début du mode nuit (HH:MM)."
+        },
+        "night_mode_end_time": {
+          "name": "Heure de fin du mode nuit",
+          "description": "Définissez l'heure de fin du mode nuit (HH:MM)."
+        },
+        "week_program_selection": {
+          "name": "Sélection du programme hebdomadaire",
+          "description": "Sélectionnez le programme hebdomadaire actif."
+        }
+      }
+    },
     "filter_reset": {
       "name": "Réinitialisation du filtre",
       "description": "Réinitialisez les jours restants du filtre à sa durée de vie."
@@ -196,6 +254,14 @@
     "alarm_reset": {
       "name": "Réinitialisation de l'alarme",
       "description": "Réinitialisez la première alarme en attente."
+    }
+  },
+  "exceptions": {
+    "invalid_timeformat": {
+      "message": "Format de l'heure invalide. Utilisez HH:MM."
+    },
+    "invalid_filter_lifetime": {
+      "message": "Durée de vie du filtre invalide. Utilisez des valeurs entre 0 et 360 jours."
     }
   }
 }

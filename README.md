@@ -12,59 +12,92 @@ Known supported units:
 - HCV300 ALU
 - HCV700 ALU
 - HCV400 P2
+- HCV460 P2
 - RCV320 P1/P2
+- HCH5 MKII
 
 > [!NOTE]
-> The listed units are known to have been used with the integration. Basicly all units that use the _Dantherm Residential_ app ought to work with the integration
+> The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
 ### Controls and sensors
 
-| key                          | description                           |
-| :--------------------------- | :------------------------------------ |
-| operation_selection          | Mode of operation selection           |
-| fan_level_selection          | Fan level selection                   |
-| week_program_selection       | Week program selection<sup>\*<sup>    |
-| bypass_damper                | Bypass damper cover<sup>\*<sup>       |
-| filter_lifetime              | Input filter lifetime box             |
-| bypass_minimum_temperature   | Bypass minimum temperature slider<sup>&dagger;<sup> |
-| bypass_maximum_temperature   | Bypass maximum temperature slider<sup>&dagger;<sup> |
-| manual_bypass_duration       | Manual bypass duration slider<sup>\* &dagger;<sup> |
-| operation_mode               | Operation mode sensor                 |
-| alarm                        | Alarm sensor                          |
-| fan_level                    | Fan level sensor                      |
-| fan1_speed                   | Fan 1 speed sensor<sup>&dagger;<sup>  |
-| fan2_speed                   | Fan 2 speed sensor<sup>&dagger;<sup>  |
-| humidity                     | Humidity sensor<sup>\*<sup>           |
-| air_quality                  | Air quality sensor<sup>\*<sup>        |
-| exhaust_temperature          | Exhaust temperature sensor            |
-| extract_temperature          | Extract temperature sensor            |
-| supply_temperature           | Supply temperature sensor             |
-| outdoor_temperature          | Outdoor temperature sensor            |
-| room_temperature             | Room temperature sensor<sup>\* &dagger;<sup> |
-| filter_remain                | Remaining filter time sensor          |
-| filter_remain_level          | Remaining filter time sensor level<sup>&dagger;<sup> |
-| work_time                    | Work time sensor<sup>&dagger;<sup>    |
-| internal_preheater_dutycycle | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| away_mode                    | Away mode switch                      |
-| night_mode                   | Night mode switch                     |
-| fireplace_mode               | Fireplace mode switch                 |
-| manual_bypass_mode           | Manual bypass mode switch<sup>\*<sup> |
-| summer_mode                  | Summer mode switch                    |
-| filter_reset                 | Reset remain filter time button       |
-| alarm_reset                  | Reset alarm button                    |
+| Buttons Entities               | Description |
+| :-                             | :- |
+| `alarm_reset`                  | Reset alarm |
+| `filter_reset`                 | Reset remain filter time |
+
+| **Calendar Entity**            | **Description** |
+| :-                             | :- |
+| ~~`calendar`~~                     | ~~Operation Calender~~ |
+
+| **Cover Entity**               | **Description** |
+| :-                             | :- |
+| `bypass_damper`                | Bypass damper<sup>\*<sup> |
+
+| **Number Entities**            | **Description** |
+| :-                             | :- |
+| ~~`boost_presence_timeout`~~       | ~~Boost presence timeout~~ |
+| `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
+| `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
+| ~~`eco_presence_timeout`~~         | ~~Eco presence timeout~~ |
+| `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
+| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
+| ~~`home_presence_timeout`~~        | ~~Home presence timeout~~ |
+
+| **Select Entities**            | **Description** |
+| :-                             | :- |
+| ~~`boost_operation_selection`~~    | ~~Boost operation selection~~ |
+| ~~`default_operation_selection`~~  | ~~Default operation selection~~ |
+| ~~`eco_operation_selection`~~      | ~~Eco operation selection~~ |
+| `fan_level_selection`          | Fan level selection |
+| ~~`home_operation_selection`~~     | ~~Home operation selection~~ |
+| `operation_selection`          | Mode of operation selection |
+| `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
+
+| **Sensor Entities**            | **Description** |
+| :-                             | :- |
+| `air_quality`                  | Air quality sensor<sup>\*<sup> |
+| `alarm`                        | Alarm sensor |
+| `exhaust_temperature`          | Exhaust temperature sensor |
+| `extract_temperature`          | Extract temperature sensor |
+| `fan_level`                    | Fan level |
+| `fan1_speed`                   | Fan 1 speed<sup>&dagger;<sup> |
+| `fan2_speed`                   | Fan 2 speed<sup>&dagger;<sup> |
+| `filter_remain`                | Remaining filter time |
+| `filter_remain_level`          | Remaining filter time level<sup>&dagger;<sup> |
+| `humidity`                     | Humidity sensor<sup>\*<sup> |
+| `internal_preheater_dutycycle` | Preheater power dutycycle<sup>\* &dagger;<sup> |
+| `operation_mode`               | Operation mode |
+| `outdoor_temperature`          | Outdoor temperature sensor |
+| `room_temperature`             | Room temperature sensor<sup>\* &dagger;<sup> |
+| `supply_temperature`           | Supply temperature sensor |
+| `work_time`                    | Work time<sup>&dagger;<sup> |
+
+| **Switch Entities**            | **Description** |
+| :-                             | :- |
+| `away_mode`                    | Away mode |
+| ~~`boost_mode`~~                   | ~~Boost mode~~ |
+| ~~`eco_mode`~~                     | ~~Eco mode~~ |
+| `fireplace_mode`               | Fireplace mode |
+| ~~`home_mode`~~                    | ~~Home mode~~ |
+| `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
+| `night_mode`                   | Night mode<sup>&dagger;<sup> |
+| `summer_mode`                  | Summer mode |
+
+| **Text Entities**              | **Description** |
+| :-                             | :- |
+| `night_mode_end_time`          | Night mode end time text<sup>&dagger;<sup> |
+| `night_mode_start_time`        | Night mode start time text<sup>&dagger;<sup> |
 
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 _&dagger; The entity is disabled by default._
 
+_~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
+
 ### Installation
-
-> [!IMPORTANT]
-> Installation directly through HACS is not yet available because the integration is not yet official included into HACS. This process will take some time. In the meantime, please use the manual installation method or click the below **Open HACS Repository** button.
-
-<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=Tvalley71&repository=Dantherm&category=Integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open a repository inside the Home Assistant Community Store." width="" height=""></a>
 
 #### Installation via HACS (Home Assistant Community Store)
 
@@ -103,32 +136,36 @@ After installation, add the Dantherm integration to your Home Assistant configur
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
 
-### Screenshots
+### Languages
 
-![Skærmbillede 2024-05-04 090219](https://github.com/user-attachments/assets/e8750622-f33c-4652-b3d5-33c2f3f13c54)
+Currently supported languages:
 
-![Skærmbillede 2024-08-04 084300](https://github.com/user-attachments/assets/1f1ce55b-4a9a-4b4c-b09d-4e18e34a08a2)
-![Skærmbillede 2024-08-04 084328](https://github.com/user-attachments/assets/cb4c686b-ed84-42f2-896e-6c5f0b126f52)
+Danish, Dutch, English, German and French.
 
-![Skærmbillede 2024-08-04 084347](https://github.com/user-attachments/assets/6ecca514-7595-4b64-8e1d-1e1fffa5aae4)
-![Skærmbillede 2024-08-04 084404](https://github.com/user-attachments/assets/b84b9ac7-3586-40da-9a74-2808ced478e2)
+> [!NOTE]
+> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
-![Skærmbillede 2024-08-04 084430](https://github.com/user-attachments/assets/814bafd5-e03f-496f-98ce-7faafe2e4729)
+---
+
+## Screenshots
+
+![Skærmbillede fra 2025-02-09 15-49-04](https://github.com/user-attachments/assets/81ded97a-ff08-41f6-8ac4-8042501e355d)
+
+![Skærmbillede fra 2025-02-09 15-26-39](https://github.com/user-attachments/assets/f12ce875-5f48-47d2-a975-3872f6415c07)
+![Skærmbillede fra 2025-02-09 15-27-48](https://github.com/user-attachments/assets/2ca03de0-a469-4b0e-b362-5f6d486d1f9e)
+
+![Skærmbillede fra 2025-02-09 15-28-23](https://github.com/user-attachments/assets/0efe815a-51fb-4e4b-bee8-d62bea40d4a7)
+![Skærmbillede fra 2025-02-09 15-28-58](https://github.com/user-attachments/assets/6c192224-03cf-4094-b944-942c7395cd5b)
+
+![Skærmbillede fra 2025-02-09 15-31-03](https://github.com/user-attachments/assets/1d17f88b-c3f0-441a-917c-55bee87f287e)
 
 
 > [!NOTE]
 > The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
-### Languages
+---
 
-Currently supported languages:
-
-Danish, English, German and French.
-
-> [!NOTE]
-> Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
-
-### Examples of use
+## Examples
 
 #### Picture-elements card
 
@@ -368,7 +405,9 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
-### Using the "Dantherm: Set State" Action in Automations
+---
+
+## Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
 
 The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
 
@@ -402,10 +441,124 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
 
-![image](https://github.com/user-attachments/assets/0f23cd28-8b23-47a5-b0ef-05e071f42446)
+![Skærmbillede fra 2025-02-09 14-46-28](https://github.com/user-attachments/assets/679f4582-4fcf-4adf-bb71-6042409aadb9)
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
+
+The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
+
+![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
+
+## >>> The remaining sections are work in progress, planned for version 0.5.0
+
+## Integration enhancements
+
+The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
+
+
+### Home Mode 🏡  
+Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are unexpectedly home.  
+
+- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
+- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the operation of the unit switches to the **Home Operation Selection**.  
+- **Home Mode Timeout**: This entity specifies the **timeout duration** for Home Mode. Once triggered, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When a Home Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+
+The available operations in **Home Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+
+
+### Boost Mode 🚀  
+Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
+
+- **Boost Mode Switch**: This must be **enabled** for Boost Mode to activate.  
+- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the operation of the unit switches to the **Boost Operation Selection**.  
+- **Boost Mode Timeout**: This entity specifies the timeout duration for Boost Mode. Once triggered, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When a Boost Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+
+The available operations in **Boost Operation Selection** are **Level 4**, **Level 3**, or **Level 2**.
+
+> [!IMPORTANT]
+> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This may cause Boost Mode to behave unexpectedly if **Level 4** is used for longer periods.
+
+
+### Eco Mode 🌱  
+Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.  
+
+- **Eco Mode Switch**: This must be **enabled** for Eco Mode to activate.  
+- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the operation of the unit switches to the **Eco Operation Selection**.  
+- **Eco Mode Timeout**: This entity specifies the **timeout duration** for Eco Mode. Once triggered, the unit will operate in **Eco Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
+- **Fallback Behavior**: When an Eco Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+
+The available operations in **Eco Operation Selection** are **Standby** and **Level 1**.  
+
+> [!IMPORTANT]
+> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used for longer periods.
+
+
+### Mode Triggers ⚡  
+Home, Boost, and Eco Modes rely on **Mode Triggers**, which are binary sensors that determine when a mode should activate.  
+
+A **Mode Trigger** can be:  
+- A **motion sensor** (e.g., presence detection in Home Mode)  
+- A **humidity sensor** (e.g., detecting high humidity after a shower)  
+- A **power sensor** (e.g., detecting when a stove or shower fan is running)  
+- An **external temperature sensor** (e.g., lowering fan speed in cold weather for Eco Mode)  
+- A **custom logic helper** combining multiple conditions  
+
+Mode Triggers are **manually configured** in the integration settings.
+
+### Configuring a Mode Trigger
+
+#### Steps to configure a Mode Trigger:
+1. **Go to Home Assistant → Integrations → Dantherm.**  
+2. **Select your Dantherm device** and open the integration settings.  
+3. **Enable the desired Mode** (Home, Boost, or Eco Mode).  
+4. **Enter the Mode Trigger entity**:
+   - In the respective Mode field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, **Eco Mode Trigger**), **enter the entity ID** of the binary sensor that will trigger the mode. This can be a motion sensor, humidity sensor, power sensor, or custom binary sensor.
+   - Example entities could be: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
+5. **Save the configuration.**  
+   
+Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. ⚡
+
+---
+
+### Calendar Function 📅  
+The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
+
+- **Integration - Calendar Events**:  
+  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will revert to the **Default Operation Selection**.
+
+- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", "**Eco Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
+  
+  - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
+  - If **Automatic** is scheduled, the unit will operate in Demand Mode.
+  - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
+  - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the event.
+  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode’s trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
+  - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
+
+- **Priority System**: The following is the **priority order** for calendar scheduling:  
+  1. **Away Mode** (highest priority)  
+  2. **Boost Mode**  
+  3. **Night Mode**  
+  4. **Home Mode**  
+  5. **Eco Mode**  
+  6. **Level 3**  
+  7. **Level 2**  
+  8. **Level 1**  
+  9. **Automatic**  
+  10. **Week Program** (lowest priority)  
+
+The available operations in **Default Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+
+> [!IMPORTANT]
+> The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
+
+
+These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
+
+## <<<
 
 
 ## Disclaimer

@@ -29,7 +29,7 @@
     "number": {
       "filter_lifetime": { "name": "Filter Lifetime" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
-      "bypass_maximum_temperature": { "name": "Bypass Maxumum Temperature" },
+      "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
       "manual_bypass_duration": { "name": "Manual Bypass Duration" }
     },
     "select": {
@@ -68,7 +68,8 @@
           "6": "Week Program 7",
           "7": "Week Program 8",
           "8": "Week Program 9",
-          "9": "Week Program 10"
+          "9": "Week Program 10",
+          "10": "Week Program 11"
         }
       }
     },
@@ -108,10 +109,10 @@
           "7": "T4 Alarm",
           "8": "T5 Alarm",
           "9": "RH Alarm",
-          "10": "Outdoor13 Alarm",
-          "11": "Supply5 Alarm",
+          "10": "Outdoor Alarm",
+          "11": "Supply Alarm",
           "12": "Fire Alarm",
-          "13": "Comminication Alarm",
+          "13": "Communication Alarm",
           "14": "Fire Termostat Alarm",
           "15": "High Waterlevel Alarm"
         }
@@ -137,6 +138,10 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" }
+    },
+    "text": {
+      "night_mode_start_time": { "name": "Night Mode Start Time" },
+      "night_mode_end_time": { "name": "Night Mode End Time" }
     }
   },
   "selector": {
@@ -156,6 +161,21 @@
         "3": "Level 3",
         "4": "Level 4"
       }
+    },
+    "week_program_selections": {
+      "options": {
+        "0": "Week Program 1",
+        "1": "Week Program 2",
+        "2": "Week Program 3",
+        "3": "Week Program 4",
+        "4": "Week Program 5",
+        "5": "Week Program 6",
+        "6": "Week Program 7",
+        "7": "Week Program 8",
+        "8": "Week Program 9",
+        "9": "Week Program 10",
+        "10": "Week Program 11"
+      }
     }
   },
   "services": {
@@ -165,11 +185,11 @@
       "fields": {
         "operation_selection": {
           "name": "Operation Selection",
-          "description": "Select the decired operation mode."
+          "description": "Select the desired operation mode."
         },
         "fan_level_selection": {
           "name": "Fan Selection",
-          "description": "Select the decired fan level."
+          "description": "Select the desired fan level."
         },
         "away_mode": {
           "name": "Away Mode",
@@ -189,6 +209,44 @@
         }
       }
     },
+    "set_configuration": {
+      "name": "Set configuration",
+      "description": "Adjust the configuration settings for the Dantherm device.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass Minimum Temperature",
+          "description": "Set the minimum temperature for bypass operation."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass Maximum Temperature",
+          "description": "Set the maximum temperature for bypass operation."
+        },
+        "filter_lifetime": {
+          "name": "Filter Lifetime",
+          "description": "Set the lifetime of the filter in days."
+        },
+        "manual_bypass_duration": {
+          "name": "Manual Bypass Duration",
+          "description": "Set the duration for manual bypass mode in minutes."
+        },
+        "night_mode": {
+          "name": "Night Mode",
+          "description": "Enable or disable night mode."
+        },
+        "night_mode_start_time": {
+          "name": "Night Mode Start Time",
+          "description": "Set the start time for night mode (HH:MM)."
+        },
+        "night_mode_end_time": {
+          "name": "Night Mode End Time",
+          "description": "Set the end time for night mode (HH:MM)."
+        },
+        "week_program_selection": {
+          "name": "Week Program Selection",
+          "description": "Select the active week program."
+        }
+      }
+    },
     "filter_reset": {
       "name": "Filter reset",
       "description": "Reset the filter remaining days to its filter lifetime."
@@ -196,6 +254,14 @@
     "alarm_reset": {
       "name": "Alarm reset",
       "description": "Reset first pending alarm."
+    }
+  },
+  "exceptions": {
+    "invalid_timeformat": {
+      "message": "Invalid time format. Use HH:MM."
+    },
+    "invalid_filter_lifetime": {
+      "message": "Invalid filter lifetime. Use values between 0 to 360 days."
     }
   }
 }
