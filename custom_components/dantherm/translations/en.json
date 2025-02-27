@@ -316,6 +316,19 @@
       "description": "Reset first pending alarm."
     }
   },
+  "event_words": {
+    "away_mode": "Away Mode",
+    "boost_mode": "Boost Mode",
+    "night_mode": "Night Mode",
+    "home_mode": "Home Mode",
+    "eco_mode": "Eco Mode",
+    "standby": "Standby",
+    "level_3": "Level 3",
+    "level_2": "Level 2",
+    "level_1": "Level 1",
+    "automatic": "Automatic",
+    "week_program": "Week Program"
+  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Invalid time format. Use HH:MM."

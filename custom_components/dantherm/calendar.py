@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 import uuid
 
 from dateutil.rrule import rrulestr
@@ -18,9 +18,11 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEvent as HA_CalendarEvent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.translation import async_get_translations
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -44,16 +46,51 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     description = CALENDAR
     if await device.async_install_entity(description):
         calendar = DanthermCalendar(device, description)
+        async_add_entities([calendar], update_before_add=False)
+        return True
 
-    async_add_entities([calendar], update_before_add=False)  # True
-    return True
+    return False
+
+
+async def get_translated_event_word(hass: HomeAssistant, word: str) -> str | None:
+    """Get translated event word if found in event_words."""
+    translations = await async_get_translations(
+        hass, hass.config.language, "event_words", DOMAIN
+    )
+    return translations.get(word, None)
+
+
+async def get_event_word_from_translation(
+    hass: HomeAssistant, localized_word: str
+) -> str | None:
+    """Get event word from translation."""
+    translations = await async_get_translations(
+        hass, hass.config.language, "event_words", DOMAIN
+    )
+    for key, val in translations.items():
+        # Use case-insensitive comparison if needed
+        if val.lower() == localized_word.lower():
+            return key
+    return None
+
+
+def _normalize_datetime(dt: datetime | None) -> datetime | None:
+    """Ensure consistent timezone handling for datetime objects, including all-day events."""
+    if dt is None:
+        return None
+    if isinstance(dt, datetime):
+        return dt.astimezone(datetime.now().astimezone().tzinfo).replace(microsecond=0)
+    # If dt is a date (no time), treat it as all-day
+    return datetime.combine(dt, datetime.min.time()).astimezone(
+        datetime.now().astimezone().tzinfo
+    )
 
 
 class DanthermCalendar(CalendarEntity, DanthermEntity):
     """Dantherm schedule calendar."""
 
-    _global_events = {}
-    _global_loaded = False
+    _global_events: dict[str, dict[str, Any]] = {}
+    _global_loaded: bool = False
 
     def __init__(
         self,
@@ -70,7 +107,7 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
             | CalendarEntityFeature.DELETE_EVENT
         )
         self.entity_description: DanthermCalendarEntityDescription = description
-        self._next_event: Optional[CalendarEvent] = None
+        self._next_event: CalendarEvent | None = None
 
     async def async_added_to_hass(self) -> None:
         """Load stored events when entity is added to Home Assistant."""
@@ -80,7 +117,7 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
             await self._load_events()
 
     @property
-    def event(self):
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._next_event
 
@@ -88,36 +125,7 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
         """Ensure consistent timezone handling for datetime objects."""
         return dt.astimezone(datetime.now().astimezone().tzinfo).replace(microsecond=0)
 
-    def _get_event(self, uid: str) -> dict:
-        """Retrieve an event with its EXDATE list."""
-        return self._global_events.get(uid, {"event": None, "exdates": []})
-
-    def _set_event(self, uid: str, event_data):
-        """Store an event with its EXDATE list."""
-        self._global_events[uid] = event_data
-
-    def _add_exdate(self, uid: str, exdate: datetime):
-        """Add an EXDATE to the specified event, ensuring timezone consistency."""
-        event_data = self._get_event(uid)
-        if exdate not in event_data["exdates"]:
-            event_data["exdates"].extend([self._normalize_datetime(exdate)])
-            self._set_event(uid, event_data)
-            _LOGGER.info("Added EXDATE %s for event: %s", exdate, uid)
-
-    def _remove_exdate(self, uid: str, exdate: datetime):
-        """Remove an EXDATE from the specified event."""
-        exdate = self._normalize_datetime(exdate)
-        event_data = self._get_event(uid)
-        if exdate in event_data["exdates"]:
-            event_data["exdates"].remove(exdate)
-            self._set_event(uid, event_data)
-            _LOGGER.info("Removed EXDATE %s for event: %s", exdate, uid)
-
-    def _delete_event(self, uid: str):
-        """Delete an event from the calendar."""
-        del self._global_events[uid]
-
-    async def _load_events(self):
+    async def _load_events(self) -> None:
         """Load events from storage."""
         data = await self._device.global_calendar_store.async_load()
         if data:
@@ -125,99 +133,160 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
                 self._global_events[uid] = {
                     "event": CalendarEvent(
                         uid=event_data["uid"],
-                        summary=event_data["summary"],
-                        start=datetime.fromisoformat(event_data["start"]),
-                        end=datetime.fromisoformat(event_data["end"]),
+                        summary=await get_translated_event_word(
+                            self.hass, event_data["summary"]
+                        ),
+                        start=_normalize_datetime(
+                            datetime.fromisoformat(event_data["start"])
+                        ),
+                        end=_normalize_datetime(
+                            datetime.fromisoformat(event_data["end"])
+                        ),
                         location=event_data.get("location", ""),
                         description=event_data.get("description", ""),
                         rrule=event_data.get("rrule", ""),
                     ),
                     "exdates": [
-                        datetime.fromisoformat(ex)
+                        _normalize_datetime(datetime.fromisoformat(ex))
                         for ex in event_data.get("exdates", [])
                     ],
                 }
-            _LOGGER.info("Loaded %d events from storage", len(self._global_events))
+            _LOGGER.info("Loaded %d events into calendar", len(self._global_events))
 
-    async def _save_events(self):
-        """Save current events to storage."""
-        data = {
-            uid: {
-                "uid": event["event"].uid,
-                "summary": event["event"].summary,
-                "start": event["event"].start.isoformat(),
-                "end": event["event"].end.isoformat(),
-                "location": event["event"].location,
-                "description": event["event"].description,
-                "rrule": event["event"].rrule,
-                "exdates": [ex.isoformat() for ex in event["exdates"]],
+    def _get_event(self, uid: str) -> dict[str, Any]:
+        """Retrieve an event with its EXDATE list."""
+        return self._global_events.get(uid, {"event": None, "exdates": []})
+
+    def _set_event(self, uid: str, event_data: dict[str, Any]) -> None:
+        """Store an event with its EXDATE list."""
+        self._global_events[uid] = event_data
+
+    def _add_exdate(self, uid: str, exdate: datetime) -> None:
+        """Add an EXDATE to the specified event, ensuring timezone consistency."""
+        event_data = self._get_event(uid)
+        exdate_n = self._normalize_datetime(exdate)
+        if exdate_n not in event_data["exdates"]:
+            event_data["exdates"].append(exdate_n)
+            self._set_event(uid, event_data)
+            _LOGGER.info("Added EXDATE %s for event: %s", exdate_n, uid)
+
+    def _remove_exdate(self, uid: str, exdate: datetime) -> None:
+        """Remove an EXDATE from the specified event."""
+        exdate_n = self._normalize_datetime(exdate)
+        event_data = self._get_event(uid)
+        if exdate_n in event_data["exdates"]:
+            event_data["exdates"].remove(exdate_n)
+            self._set_event(uid, event_data)
+            _LOGGER.info("Removed EXDATE %s for event: %s", exdate_n, uid)
+
+    def _delete_event(self, uid: str) -> None:
+        """Delete an event from the calendar."""
+        if uid in self._global_events:
+            del self._global_events[uid]
+
+    async def _save_events(self) -> None:
+        """Save the current _global_events dictionary to storage."""
+        out = {}
+        for uid, evdata in self._global_events.items():
+            c_event: CalendarEvent = evdata["event"]
+            out[uid] = {
+                "uid": c_event.uid,
+                "summary": c_event.summary,
+                "start": c_event.start.isoformat() if c_event.start else None,
+                "end": c_event.end.isoformat() if c_event.end else None,
+                "location": c_event.location,
+                "description": c_event.description,
+                "rrule": c_event.rrule,
+                "exdates": [ex.isoformat() for ex in evdata["exdates"] if ex],
             }
-            for uid, event in self._global_events.items()
-        }
-        await self._device.global_calendar_store.async_save(data)
-        _LOGGER.info("Saved %d events to storage", len(self._global_events))
+        await self._device.global_calendar_store.async_save(out)
 
     async def async_get_events(
-        self,
-        hass: HomeAssistant,
-        start_date: datetime,
-        end_date: datetime,
-    ):
-        """Return calendar events within a datetime range."""
-        events = []
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Return all events in a filtered manner."""
+        events: list[CalendarEvent] = []
+        for evdict in self._global_events.values():
+            event = evdict["event"]
+            if not event:
+                continue
 
-        for data in self._global_events.values():
-            event = data["event"]
-            exdates = {self._normalize_datetime(ex) for ex in data["exdates"]}
+            # Calculate recurrence, if any.
+            # If rrule is present, we use rrulestr to expand the events.
+            rrule_str = event.rrule
+            exdates = {self._normalize_datetime(ex) for ex in evdict["exdates"]}
 
-            if event.rrule:
+            if rrule_str:
+                dtstart = self._normalize_datetime(event.start)
+                until = None
+                # We use the ICS standard param UNTIL if present in the rrule.
+                # For now, skipping that parsing; it can be extracted from the string.
                 rule = rrulestr(
-                    event.rrule,
-                    dtstart=self._normalize_datetime(event.start),
+                    rrule_str,
+                    dtstart=dtstart,
+                    forceset=True,
                 )
-
-                for start in rule.between(start_date, end_date, inc=True):
-                    if start not in exdates:
-                        events.append(  # noqa: PERF401
-                            CalendarEvent(
-                                uid=event.uid,
-                                summary=event.summary,
-                                start=start,
-                                end=start
-                                + (
-                                    self._normalize_datetime(event.end)
-                                    - self._normalize_datetime(event.start)
-                                ),
-                                location=event.location,
-                                description=event.description,
-                                rrule=event.rrule,
-                                recurrence_id=start.strftime("%Y%m%dT%H%M%S"),
-                            )
+                for occurrence in rule.between(start_date, end_date, inc=True):
+                    if occurrence in exdates:
+                        continue
+                    occurrence_start = self._normalize_datetime(occurrence)
+                    # For all-day events, if event.end is None, treat as same day.
+                    if event.end:
+                        occurrence_duration = self._normalize_datetime(
+                            event.end
+                        ) - self._normalize_datetime(event.start)
+                        occurrence_end = occurrence_start + occurrence_duration
+                    else:
+                        occurrence_end = occurrence_start
+                    if not (occurrence_end < start_date or occurrence_start > end_date):
+                        c = CalendarEvent(
+                            summary=get_translated_event_word(event.summary),
+                            start=occurrence_start,
+                            end=occurrence_end,
+                            uid=event.uid,
+                            location=event.location,
+                            description=event.description,
+                            rrule=event.rrule,
                         )
-            elif start_date <= self._normalize_datetime(event.start) <= end_date:
+                        events.append(c)
+            else:
+                # Non-recurring event
+                ev_start = self._normalize_datetime(event.start)
+                ev_end = self._normalize_datetime(event.end)
+                if ev_start is None or ev_end is None:
+                    continue
+                if ev_end < start_date or ev_start > end_date:
+                    continue
+                # Check if event is excluded by exdates
+                if any(abs((ev_start - ed).total_seconds()) < 60 for ed in exdates):
+                    continue
+
                 events.append(event)
 
-        return events
+        return sorted(events, key=lambda e: (e.start or datetime.min))
 
     async def async_create_event(self, **kwargs: Any) -> None:
-        """Add a new event to calendar."""
+        """Create a new event."""
         if not self._evaluate_event(**kwargs):
             return False
 
-        uid = kwargs.get(EVENT_UID, str(uuid.uuid4()))
-        event = CalendarEvent(
-            uid=uid,
-            summary=kwargs.get(EVENT_SUMMARY, "Unnamed Event"),
-            start=self._normalize_datetime(kwargs.get(EVENT_START)),
-            end=self._normalize_datetime(kwargs.get(EVENT_END)),
+        new_uid = str(uuid.uuid4())
+        c_event = CalendarEvent(
+            uid=new_uid,
+            summary=kwargs.get(EVENT_SUMMARY),
+            start=_normalize_datetime(kwargs.get(EVENT_START)),
+            end=_normalize_datetime(kwargs.get(EVENT_END)),
             location=kwargs.get(EVENT_LOCATION, ""),
             description=kwargs.get(EVENT_DESCRIPTION, ""),
             rrule=kwargs.get(EVENT_RRULE, ""),
         )
-        self._set_event(uid, {"event": event, "exdates": []})
-        await self._save_events()  # Save changes persistently
-        _LOGGER.info("Created event: %s", uid)
-        return uid
+        self._global_events[new_uid] = {
+            "event": c_event,
+            "exdates": [],
+        }
+        await self._save_events()
+        _LOGGER.info("Created new event %s", new_uid)
+        return c_event
 
     async def async_update_event(
         self,
@@ -226,228 +295,74 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> bool:
-        """Update an existing calendar event, handling recurrence instances and ranges."""
-        if uid not in self._global_events:
-            _LOGGER.error("Event not found: %s", uid)
-            return False
+        """Update an existing event by uid."""
+        current_data = self._get_event(uid)
+        current_event = current_data["event"]
+        if current_event is None:
+            raise HomeAssistantError(f"Event {uid} not found.")
 
-        event_data = self._get_event(uid)
-        current_event = event_data["event"]
+        new_event = {
+            EVENT_SUMMARY: event.get(EVENT_SUMMARY, current_event.summary),
+            EVENT_DESCRIPTION: event.get(EVENT_DESCRIPTION, current_event.description),
+            EVENT_LOCATION: event.get(EVENT_LOCATION, current_event.location),
+            EVENT_RRULE: event.get(EVENT_RRULE, current_event.rrule),
+            EVENT_START: event.get(EVENT_START),
+            EVENT_END: event.get(EVENT_END),
+        }
+        # If rrule changed, we might want to reset exdates
+        if new_event[EVENT_RRULE] != current_event.rrule:
+            current_data["exdates"] = []
 
-        # Normalize new event data for update
+        new_start = _normalize_datetime(new_event.get(EVENT_START, current_event.start))
+        new_end = _normalize_datetime(new_event.get(EVENT_END, current_event.end))
         updated_event = CalendarEvent(
-            uid=current_event.uid,
-            summary=event.get(EVENT_SUMMARY, current_event.summary),
-            start=self._normalize_datetime(event.get(EVENT_START, current_event.start)),
-            end=self._normalize_datetime(event.get(EVENT_END, current_event.end)),
-            location=event.get(EVENT_LOCATION, current_event.location),
-            description=event.get(EVENT_DESCRIPTION, current_event.description),
-            rrule=current_event.rrule,
+            uid=uid,
+            summary=await get_translated_event_word(
+                self.hass, new_event[EVENT_SUMMARY]
+            ),
+            start=new_start,
+            end=new_end,
+            description=new_event[EVENT_DESCRIPTION],
+            location=new_event[EVENT_LOCATION],
+            rrule=new_event[EVENT_RRULE],
         )
+        current_data["event"] = updated_event
+        self._set_event(uid, current_data)
+        await self._save_events()
+        _LOGGER.info("Updated event %s", uid)
 
-        if recurrence_id:
-            recurrence_datetime = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
-
-            if recurrence_range in ("THISINSTANCE", ""):
-                # Add an EXDATE for the original instance and create a new single event
-                self._add_exdate(uid, recurrence_datetime)
-
-                new_uid = str(
-                    uuid.uuid4()
-                )  # Generate a new UID for the updated instance
-                instance_event = CalendarEvent(
-                    uid=new_uid,
-                    summary=updated_event.summary,
-                    start=self._normalize_datetime(recurrence_datetime),
-                    end=self._normalize_datetime(recurrence_datetime)
-                    + (updated_event.end - updated_event.start),
-                    location=updated_event.location,
-                    description=updated_event.description,
-                )
-                self._set_event(new_uid, {"event": instance_event, "exdates": []})
-
-                _LOGGER.info(
-                    "Updated specific instance %s for event: %s (new UID: %s)",
-                    recurrence_id,
-                    uid,
-                    new_uid,
-                )
-
-            elif recurrence_range == "THISANDALLFUTURE":
-                # Adjust the original event to end before the current instance
-                old_rrule = rrulestr(current_event.rrule, dtstart=current_event.start)
-                new_until = recurrence_datetime - (
-                    current_event.end - current_event.start
-                )
-                new_rrule = old_rrule.replace(until=new_until)
-
-                current_event.rrule = new_rrule.to_ical().decode("utf-8")
-                self._set_event(
-                    uid, {"event": current_event, "exdates": event_data["exdates"]}
-                )
-
-                # Create a new recurring event from this instance onward
-                new_uid = str(uuid.uuid4())
-                future_event = CalendarEvent(
-                    uid=new_uid,
-                    summary=updated_event.summary,
-                    start=self._normalize_datetime(recurrence_datetime),
-                    end=self._normalize_datetime(recurrence_datetime)
-                    + (updated_event.end - updated_event.start),
-                    location=updated_event.location,
-                    description=updated_event.description,
-                    rrule=current_event.rrule,
-                )
-                self._set_event(new_uid, {"event": future_event, "exdates": []})
-
-                _LOGGER.info(
-                    "Updated this and all future occurrences starting from %s for event: %s (new UID: %s)",
-                    recurrence_id,
-                    uid,
-                    new_uid,
-                )
-
-            else:
-                _LOGGER.warning("Unsupported recurrence range: %s", recurrence_range)
-                return False
-
-        else:
-            # Update the entire event if no recurrence ID
-            self._set_event(
-                uid, {"event": updated_event, "exdates": event_data["exdates"]}
-            )
-            _LOGGER.info("Updated entire event: %s", uid)
-
-        await self._save_events()  # Ensure persistence after modification
-        return True
-
-    # async def async_update_event(
-    #     self,
-    #     uid: str,
-    #     event: dict[str, Any],
-    #     recurrence_id: str | None = None,
-    #     recurrence_range: str | None = None,
-    # ) -> None:
-    #     """Update an existing calendar event."""
-    #     if uid not in self._events:
-    #         _LOGGER.error("Event not found: %s", uid)
-    #         return False
-
-    #     event_data = self._get_event(uid)
-    #     ev = event_data["event"]
-    #     for key, value in event_data.items():
-    #         if value is not None and hasattr(ev, key):
-    #             setattr(ev, key, value)
-
-    #     self._set_event(uid, event_data)
-    #     await self._save_events()  # Save changes persistently
-    #     _LOGGER.info("Updated event: %s", uid)
-    #     return True
-
-    async def async_delete_event(
-        self,
-        uid: str,
-        recurrence_id: str | None = None,
-        recurrence_range: str | None = None,
-    ) -> bool:
-        """Delete an event on the calendar, handling recurrence instances and ranges."""
-
-        event_data = self._get_event(uid)
-        if event_data["event"] is None:
-            _LOGGER.error("Event not found: %s", uid)
-            return False
-
-        event = event_data["event"]
-
-        if recurrence_id:
-            exdate = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
-            self._add_exdate(uid, exdate)
-
-            if recurrence_range == "THISANDALLFUTURE":
-                # Adjust the RRULE to end before this recurrence.
-                old_rrule = rrulestr(event.rrule, dtstart=event.start)
-                new_until = (
-                    exdate - event.end + event.start
-                )  # Ensure recurrence ends before the current instance
-                new_rrule = old_rrule.replace(until=new_until)
-
-                # Update the event's RRULE
-                event.rrule = new_rrule.to_ical().decode("utf-8")
-                self._set_event(uid, {"event": event, "exdates": event_data["exdates"]})
-
-                _LOGGER.info(
-                    "Deleted instance and all future occurrences starting from %s for event: %s",
-                    recurrence_id,
-                    uid,
-                )
-
-            elif recurrence_range == "THISINSTANCE":
-                # Only exclude the specific instance
-                _LOGGER.info(
-                    "Deleted specific recurrence instance %s for event: %s",
-                    recurrence_id,
-                    uid,
-                )
-
-            await self._save_events()  # Ensure persistence after modification
-            return True
-
-        # If no recurrence_id, delete the entire event.
+    async def async_delete_event(self, uid: str) -> None:
+        """Delete an event by uid."""
         self._delete_event(uid)
-        await self._save_events()  # Ensure persistence after modification
-        _LOGGER.info("Deleted entire event: %s", uid)
-        return True
+        await self._save_events()
+        _LOGGER.info("Deleted event %s", uid)
 
-    # async def async_delete_event(
-    #     self,
-    #     uid: str,
-    #     recurrence_id: str | None = None,
-    #     recurrence_range: str | None = None,
-    # ) -> None:
-    #     """Delete an event on the calendar."""
-
-    #     event_data = self._get_event(uid)
-    #     if event_data["event"] is None:
-    #         _LOGGER.error("Event not found: %s", uid)
-    #         return False
-
-    #     if recurrence_id:
-    #         exdate = datetime.strptime(recurrence_id, "%Y%m%dT%H%M%S")
-    #         self._add_exdate(uid, exdate)
-    #         await self._save_events()  # Save changes persistently
-    #         return True
-
-    #     self._delete_event(uid)
-    #     await self._save_events()  # Save changes persistently
-    #     _LOGGER.info("Deleted event: %s", uid)
-    #     return True
-
-    def _evaluate_event(self, **event_data):
+    def _evaluate_event(self, **kwargs):
         """Evaluate the event."""
 
         # Ensure summary and description contain valid event words
-        summary = event_data.get(EVENT_SUMMARY, "")
-        description = event_data.get(EVENT_DESCRIPTION, "")
-        if not (EVENT_WORDS.get(summary, None) or EVENT_WORDS.get(description, None)):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_event_word",
-            )
+        summary = kwargs.get(EVENT_SUMMARY, "")
+        if EVENT_WORDS.get(summary, None) or get_event_word_from_translation(
+            self.hsas, summary
+        ):
+            return True
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_event_word",
+        )
 
-        # Ensure start date
-        start = event_data.get(EVENT_START)
-        if not start:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_event_start_time",
-            )
+        # # Ensure start date
+        # start = event_data.get(EVENT_START)
+        # if not start:
+        #     raise HomeAssistantError(
+        #         translation_domain=DOMAIN,
+        #         translation_key="invalid_event_start_time",
+        #     )
 
-        # Ensure end date
-        end = event_data.get(EVENT_END)
-        if not end:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_event_end_time",
-            )
-
-        return True
+        # # Ensure end date
+        # end = event_data.get(EVENT_END)
+        # if not end:
+        #     raise HomeAssistantError(
+        #         translation_domain=DOMAIN,
+        #         translation_key="invalid_event_end_time",
+        #     )
