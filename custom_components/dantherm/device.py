@@ -1,6 +1,7 @@
 """Device implementation."""
 
 import asyncio
+from collections import deque
 from datetime import datetime, timedelta
 import logging
 
@@ -12,6 +13,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
+    ATTR_TEMPERATURE_FILTERING,
+    ATTR_TEMPERATURE_FILTERING_THRESHOLD,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -72,7 +75,6 @@ class DanthermEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
         if not self._device.available:
             return False
         return self._attr_available
@@ -133,6 +135,25 @@ class Device:
         self._read_errors = 0
         self._entities = []
         self.data = {}
+
+        self._init_samples = 5  # Number of samples to collect for initialization
+        self._max_change = 2  # Maximum change between samples for initialization
+        # Dictionary to store history and last valid value for each temperature
+        self._temperature_sensors = {
+            "outdoor": {
+                "history": deque(maxlen=self._init_samples),
+                "last_valid": None,
+            },
+            "supply": {"history": deque(maxlen=self._init_samples), "last_valid": None},
+            "extract": {
+                "history": deque(maxlen=self._init_samples),
+                "last_valid": None,
+            },
+            "exhaust": {
+                "history": deque(maxlen=self._init_samples),
+                "last_valid": None,
+            },
+        }
 
     async def setup(self):
         """Modbus setup for Dantherm Device."""
@@ -264,10 +285,17 @@ class Device:
         _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
 
+        self.data.pop(entity.key, None)
+
         if not self._entities:
             # This is the last entity, stop the interval timer
             self._entity_refresh_method()
             self._entity_refresh_method = None
+
+            self._client.close()
+            self._client = None
+            # Wait for the client to close
+            await asyncio.sleep(5)
 
     async def async_refresh_entities(self, _now: int | None = None) -> None:
         """Time to update entities."""
@@ -721,6 +749,122 @@ class Device:
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(264, value)
 
+    @property
+    def get_temperature_filtering(self):
+        """Get temperature filtering."""
+
+        return self.data.get(ATTR_TEMPERATURE_FILTERING, False)
+
+    async def set_temperature_filtering(self, value):
+        """Set temperature filtering."""
+
+        self.data[ATTR_TEMPERATURE_FILTERING] = value
+
+    @property
+    def get_temperature_filtering_threshold(self):
+        """Get temperature filtering threshold."""
+
+        return self.data.get(ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change)
+
+    async def set_temperature_filtering_threshold(self, value):
+        """Set temperature filtering threshold."""
+
+        self.data[ATTR_TEMPERATURE_FILTERING_THRESHOLD] = value
+
+    def filter_temperature(
+        self, sensor: str, max_change: float, new_value: float
+    ) -> float:
+        """Filter the temperature for a given sensor, ensuring smooth initialization and spike reduction."""
+
+        # Ensure the sensor type is valid
+        if sensor not in self._temperature_sensors:
+            raise ValueError(f"Invalid sensor: {sensor}")
+
+        sensor_data = self._temperature_sensors[sensor]
+        history = sensor_data["history"]
+        last_valid = sensor_data["last_valid"]
+
+        # Collect initial samples and compute the average
+        history.append(new_value)
+        if len(history) < self._init_samples:
+            return new_value
+
+        # After initialization, apply normal filtering
+        if last_valid is None:
+            sensor_data["last_valid"] = round(sum(history) / len(history), 1)
+            return new_value
+
+        if abs(new_value - last_valid) > max_change:
+            return last_valid  # Ignore spikes
+
+        # Update last valid value
+        sensor_data["last_valid"] = new_value
+        return new_value
+
+    async def async_get_exhaust_temperature(self):
+        """Get exhaust temperature."""
+
+        new_value = await self._read_holding_float32(address=138, precision=1)
+
+        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
+        if not temperature_filering:
+            return new_value
+
+        temperature_filtering_theshold = self.data.get(
+            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
+        )
+        return self.filter_temperature(
+            "exhaust", temperature_filtering_theshold, new_value
+        )
+
+    async def async_get_extract_temperature(self):
+        """Get extract temperature."""
+
+        new_value = await self._read_holding_float32(address=136, precision=1)
+
+        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
+        if not temperature_filering:
+            return new_value
+
+        temperature_filtering_theshold = self.data.get(
+            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
+        )
+        return self.filter_temperature(
+            "extract", temperature_filtering_theshold, new_value
+        )
+
+    async def async_get_supply_temperature(self):
+        """Get supply temperature."""
+
+        new_value = await self._read_holding_float32(address=134, precision=1)
+
+        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
+        if not temperature_filering:
+            return new_value
+
+        temperature_filtering_theshold = self.data.get(
+            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
+        )
+        return self.filter_temperature(
+            "supply", temperature_filtering_theshold, new_value
+        )
+
+    async def async_get_outdoor_temperature(self):
+        """Get outdoor temperature."""
+
+        new_value = await self._read_holding_float32(address=132, precision=1)
+
+        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
+        if not temperature_filering:
+            return new_value
+
+        temperature_filtering_theshold = self.data.get(
+            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
+        )
+        return self.filter_temperature(
+            "outdoor", temperature_filtering_theshold, new_value
+        )
+
     async def read_holding_registers(
         self,
         description: EntityDescription | None = None,
@@ -814,12 +958,23 @@ class Device:
 
     async def _read_holding_registers(self, address, count):
         """Read holding registers."""
-        response = await self._client.read_holding_registers(address, count=count)
-        return response.registers if response.isError() is False else None
+        try:
+            response = await self._client.read_holding_registers(address, count=count)
+            return response.registers if response.isError() is False else None
+        except ConnectionError as err:
+            _LOGGER.error("Read holding registers failed: %s", err)
+            self._read_errors += 1
+            if self._read_errors > 5:
+                self._available = False
+            return None
 
     async def _write_holding_registers(self, address, values):
         """Write holding registers."""
-        await self._client.write_registers(address, values)
+        try:
+            await self._client.write_registers(address, values)
+        except ConnectionError as err:
+            _LOGGER.error("Write holding registers failed: %s", err)
+            self._available = False
 
     async def _read_holding_uint16(self, address):
         return self._read_holding_uint32(address) & 0xFFFF

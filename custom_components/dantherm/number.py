@@ -81,4 +81,17 @@ class DanthermNumber(NumberEntity, DanthermEntity):
             result = await self._device.read_holding_registers(
                 description=self.entity_description
             )
+
+        if result is None:
+            self._attr_available = False
+            self._device.data[self.key] = None
+        else:
+            self._attr_available = True
+            precision = self.entity_description.data_precision
+            if precision is not None:
+                if precision >= 0:
+                    result = round(result, precision)
+                if precision == 0:
+                    result = int(result)
+
         self._device.data[self.key] = result

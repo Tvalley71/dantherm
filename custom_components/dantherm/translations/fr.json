@@ -30,7 +30,8 @@
       "filter_lifetime": { "name": "Durée de vie filtre" },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
-      "manual_bypass_duration": { "name": "Durée du bypass manuel" }
+      "manual_bypass_duration": { "name": "Durée du bypass manuel" },
+      "temperature_filtering_threshold": { "name": "Seuil de filtrage de température" }
     },
     "select": {
       "operation_selection": {
@@ -137,7 +138,8 @@
       "night_mode": { "name": "Mode nuit" },
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
-      "summer_mode": { "name": "Mode été" }
+      "summer_mode": { "name": "Mode été" },
+      "temperature_filtering": { "name": "Filtrage température" }
     },
     "text": {
       "night_mode_start_time": { "name": "Heure de début du mode nuit" },

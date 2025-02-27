@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
 from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
+from homeassistant.helpers.entity import EntityDescription
 
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
@@ -98,6 +99,9 @@ ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
 ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
+
+ATTR_TEMPERATURE_FILTERING: Final = "temperature_filtering"
+ATTR_TEMPERATURE_FILTERING_THRESHOLD: Final = "temperature_filtering_threshold"
 
 ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
 ATTR_FILTER_REMAIN: Final = "filter_remain"
@@ -233,148 +237,91 @@ class BypassDamperState(int):
 
 
 @dataclass
-class DanthermButtonEntityDescription(ButtonEntityDescription):
-    """Dantherm Button Entity Description."""
+class DanthermBaseDescription(EntityDescription):
+    """Dantherm Base Entity Description."""
 
     data_setaddress: int | None = None
     data_setinternal: str | None = None
     data_setclass: DataClass | None = None
-    state: int = None
-    state_entity: str | None = None
 
     data_address: int | None = None
+    data_getinternal: str | None = None
+    data_entity: str | None = None
     data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
+
+    data_exclude_if_above: int | float | None = None
+    data_exclude_if_below: int | float | None = None
+
     data_class: DataClass = DataClass.UInt32
 
-    component_class: ComponentClass = None
+    component_class: ComponentClass | None = None
 
 
 @dataclass
-class DanthermCoverEntityDescription(CoverEntityDescription):
+class DanthermButtonEntityDescription(DanthermBaseDescription, ButtonEntityDescription):
+    """Dantherm Button Entity Description."""
+
+    state: int | None = None
+    state_entity: str | None = None
+
+
+@dataclass
+class DanthermCoverEntityDescription(DanthermBaseDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
     supported_features: CoverEntityFeature | None = None
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-    state_open: int = None
-    state_close: int = None
-    state_stop: int = None
 
-    data_address: int | None = None
-    data_getinternal: str | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-    state_opening: int = None
-    state_opened: int = None
-    state_closing: int = None
-    state_closed: int = None
+    state_open: int | None = None
+    state_close: int | None = None
+    state_stop: int | None = None
 
-    component_class: ComponentClass = None
+    state_opening: int | None = None
+    state_opened: int | None = None
+    state_closing: int | None = None
+    state_closed: int | None = None
 
 
 @dataclass
-class DanthermNumberEntityDescription(NumberEntityDescription):
+class DanthermNumberEntityDescription(DanthermBaseDescription, NumberEntityDescription):
     """Dantherm Number Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-
-    data_address: int | None = None
-    data_getinternal: str | None = None
     data_precision: float | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: float | None = None
-    data_exclude_if_below: float | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSelectEntityDescription(SelectEntityDescription):
+class DanthermSelectEntityDescription(DanthermBaseDescription, SelectEntityDescription):
     """Dantherm Select Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-
-    data_address: int | None = None
-    data_getinternal: str | None = None
-    data_entity: str | None = None
     data_bitwise_and: int | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSensorEntityDescription(SensorEntityDescription):
+class DanthermSensorEntityDescription(DanthermBaseDescription, SensorEntityDescription):
     """Dantherm Sensor Entity Description."""
 
     icon_zero: str | None = None
-    data_address: int | None = None
-    data_getinternal: str | None = None
     data_precision: int | None = None
     data_scale: int | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_entity: str | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSwitchEntityDescription(SwitchEntityDescription):
+class DanthermSwitchEntityDescription(DanthermBaseDescription, SwitchEntityDescription):
     """Dantherm Switch Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_getinternal: str | None = None
-    state_seton: int = None
-    state_setoff: int = None
-    data_setclass: DataClass | None = None
+    state_seton: int | None = None
+    state_setoff: int | None = None
 
     state_suspend_for: int | None = None
-    state_on: int = None
-    icon_on: str = None
-    state_off: int = None
-    icon_off: str = None
-
-    data_address: int | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
+    state_on: int | bool = True
+    icon_on: str | None = None
+    state_off: int | bool = False
+    icon_off: str | None = None
+    state_default: int | bool | None = None
 
 
 @dataclass
-class DanthermTimeTextEntityDescription(TextEntityDescription):
+class DanthermTimeTextEntityDescription(DanthermBaseDescription, TextEntityDescription):
     """Dantherm Time Text Entity Description."""
-
-    data_setinternal: str | None = None
-    data_getinternal: str | None = None
-
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-
-    component_class: ComponentClass = None
 
 
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
@@ -464,6 +411,21 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_TEMPERATURE_FILTERING_THRESHOLD,
+        data_setinternal=f"set_{ATTR_TEMPERATURE_FILTERING_THRESHOLD}",
+        data_getinternal=f"get_{ATTR_TEMPERATURE_FILTERING_THRESHOLD}",
+        icon="mdi:filter-settings",
+        native_max_value=5,
+        native_min_value=1,
+        native_step=1,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -558,8 +520,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
         data_class=DataClass.Float32,
-        data_address=138,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_EXHAUST_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -567,8 +528,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_EXTRACT_TEMPERATURE,
         data_class=DataClass.Float32,
-        data_address=136,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_EXTRACT_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -576,8 +536,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
         data_class=DataClass.Float32,
-        data_address=134,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_SUPPLY_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -585,8 +544,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_OUTDOOR_TEMPERATURE,
         data_class=DataClass.Float32,
+        data_getinternal=f"get_{ATTR_OUTDOOR_TEMPERATURE}",
         data_address=132,
-        data_precision=1,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -706,6 +665,18 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_setoff=ActiveUnitMode.EndSummer,
         icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_TEMPERATURE_FILTERING,
+        data_setinternal=f"set_{ATTR_TEMPERATURE_FILTERING}",
+        data_getinternal=f"get_{ATTR_TEMPERATURE_FILTERING}",
+        icon_on="mdi:filter",
+        icon_off="mdi:filter-off",
+        state_default=False,
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
 )
 

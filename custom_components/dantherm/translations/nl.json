@@ -30,7 +30,8 @@
       "filter_lifetime": { "name": "Levensduur Filter" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
-      "manual_bypass_duration": { "name": "Duur Manuele Bypass" }
+      "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
+      "temperature_filtering_threshold": { "name": "Temperatuurfilterdrempel" }
     },
     "select": {
       "operation_selection": {
@@ -137,7 +138,8 @@
       "night_mode": { "name": "Nachtmodus" },
       "fireplace_mode": { "name": "Open Haardmodus" },
       "manual_bypass_mode": { "name": "Manuele Bypassmodus" },
-      "summer_mode": { "name": "Zomermodus" }
+      "summer_mode": { "name": "Zomermodus" },
+      "temperature_filtering": { "name": "Temperatuurfiltering" }
     },
     "text": {
       "night_mode_start_time": { "name": "Starttijd van de nachtmodus" },

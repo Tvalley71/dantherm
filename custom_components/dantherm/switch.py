@@ -102,17 +102,21 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
             else:
                 result = getattr(self._device, self.entity_description.data_getinternal)
         elif self.entity_description.data_entity:
-            result = self._device.data.get(self.entity_description.data_entity, None)
+            result = self._device.data.get(self.entity_description.data_entity)
         else:
             result = await self._device.read_holding_registers(
                 description=self.entity_description
             )
 
+        if result is None and self.entity_description.state_default is not None:
+            result = self.entity_description.state_default
+
         if result is None:
             self._attr_available = False
+            self._device.data[self.key] = None
         else:
             self._attr_available = True
-            if type(result) is bool:
+            if isinstance(result, bool):
                 self._attr_is_on = result
             elif (
                 result & self.entity_description.state_on
@@ -120,3 +124,5 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
+
+            self._device.data[self.key] = self._attr_is_on

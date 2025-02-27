@@ -30,7 +30,8 @@
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
-      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" }
+      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
+      "temperature_filtering_threshold": { "name": "Temperaturfilterungsschwelle" }
     },
     "select": {
       "operation_selection": {
@@ -137,7 +138,8 @@
       "night_mode": { "name": "Nachtmodus" },
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
-      "summer_mode": { "name": "Sommermodus" }
+      "summer_mode": { "name": "Sommermodus" },
+      "temperature_filtering": { "name": "Temperaturfilterung" }
     },
     "text": {
       "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
