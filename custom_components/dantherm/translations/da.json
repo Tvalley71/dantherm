@@ -30,8 +30,7 @@
       "filter_lifetime": { "name": "Filter livstid" },
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
-      "manual_bypass_duration": { "name": "Manuel bypass varighed" },
-      "temperature_filtering_threshold": { "name": "Temperaturfiltrerings tærskel" }
+      "manual_bypass_duration": { "name": "Manuel bypass varighed" }
     },
     "select": {
       "operation_selection": {
@@ -139,7 +138,7 @@
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
       "summer_mode": { "name": "Sommertilstand" },
-      "temperature_filtering": { "name": "Temperaturfiltrering" }
+      "sensor_filtering": { "name": "Sensorfiltrering" }
     },
     "text": {
       "night_mode_start_time": { "name": "Nattilstand start tid" },

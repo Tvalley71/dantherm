@@ -100,8 +100,7 @@ ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
 
-ATTR_TEMPERATURE_FILTERING: Final = "temperature_filtering"
-ATTR_TEMPERATURE_FILTERING_THRESHOLD: Final = "temperature_filtering_threshold"
+ATTR_SENSOR_FILTERING: Final = "sensor_filtering"
 
 ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
 ATTR_FILTER_REMAIN: Final = "filter_remain"
@@ -412,21 +411,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
     ),
-    DanthermNumberEntityDescription(
-        key=ATTR_TEMPERATURE_FILTERING_THRESHOLD,
-        data_setinternal=f"set_{ATTR_TEMPERATURE_FILTERING_THRESHOLD}",
-        data_getinternal=f"get_{ATTR_TEMPERATURE_FILTERING_THRESHOLD}",
-        icon="mdi:filter-settings",
-        native_max_value=5,
-        native_min_value=1,
-        native_step=1,
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement="°C",
-        mode=NumberMode.SLIDER,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-    ),
 )
 
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
@@ -667,9 +651,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
-        key=ATTR_TEMPERATURE_FILTERING,
-        data_setinternal=f"set_{ATTR_TEMPERATURE_FILTERING}",
-        data_getinternal=f"get_{ATTR_TEMPERATURE_FILTERING}",
+        key=ATTR_SENSOR_FILTERING,
+        data_setinternal=f"set_{ATTR_SENSOR_FILTERING}",
+        data_getinternal=f"get_{ATTR_SENSOR_FILTERING}",
         icon_on="mdi:filter",
         icon_off="mdi:filter-off",
         state_default=False,

@@ -13,7 +13,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
-    ATTR_TEMPERATURE_FILTERING,
+    ATTR_SENSOR_FILTERING,
     ATTR_TEMPERATURE_FILTERING_THRESHOLD,
     STATE_AUTOMATIC,
     STATE_AWAY,
@@ -131,27 +131,48 @@ class Device:
         self._filter_lifetime = None
         self._filter_remain = None
         self._filter_remain_level = None
+        self._sensor_filtering = False
         self._available = True
         self._read_errors = 0
         self._entities = []
         self.data = {}
 
-        self._init_samples = 5  # Number of samples to collect for initialization
-        self._max_change = 2  # Maximum change between samples for initialization
         # Dictionary to store history and last valid value for each temperature
-        self._temperature_sensors = {
+        self._filtered_sensors = {
             "outdoor": {
-                "history": deque(maxlen=self._init_samples),
-                "last_valid": None,
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
             },
-            "supply": {"history": deque(maxlen=self._init_samples), "last_valid": None},
+            "supply": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
             "extract": {
-                "history": deque(maxlen=self._init_samples),
-                "last_valid": None,
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
             },
             "exhaust": {
-                "history": deque(maxlen=self._init_samples),
-                "last_valid": None,
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "humidity": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "voc": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "room": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
             },
         }
 
@@ -318,6 +339,9 @@ class Device:
 
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
+
+        self._sensor_filtering = self.data.get(ATTR_SENSOR_FILTERING, False)
+        _LOGGER.debug("Sensor Filtering = %s", self._sensor_filtering)
 
         self._bypass_damper = None
         self._filter_remain_level = None
@@ -753,12 +777,12 @@ class Device:
     def get_temperature_filtering(self):
         """Get temperature filtering."""
 
-        return self.data.get(ATTR_TEMPERATURE_FILTERING, False)
+        return self.data.get(ATTR_SENSOR_FILTERING, False)
 
     async def set_temperature_filtering(self, value):
         """Set temperature filtering."""
 
-        self.data[ATTR_TEMPERATURE_FILTERING] = value
+        self.data[ATTR_SENSOR_FILTERING] = value
 
     @property
     def get_temperature_filtering_threshold(self):
@@ -771,34 +795,32 @@ class Device:
 
         self.data[ATTR_TEMPERATURE_FILTERING_THRESHOLD] = value
 
-    def filter_temperature(
-        self, sensor: str, max_change: float, new_value: float
-    ) -> float:
+    def filter_temperature(self, sensor: str, new_value: float) -> float:
         """Filter the temperature for a given sensor, ensuring smooth initialization and spike reduction."""
 
         # Ensure the sensor type is valid
-        if sensor not in self._temperature_sensors:
+        if sensor not in self._filtered_sensors:
             raise ValueError(f"Invalid sensor: {sensor}")
 
-        sensor_data = self._temperature_sensors[sensor]
-        history = sensor_data["history"]
-        last_valid = sensor_data["last_valid"]
+        sensor_data = self._filtered_sensors[sensor]
+        history: deque = sensor_data["history"]
 
-        # Collect initial samples and compute the average
+        # Collect initial samples and compute average until initialized
         history.append(new_value)
-        if len(history) < self._init_samples:
-            return new_value
+        if not sensor_data["initialized"]:
+            if len(history) < history.maxlen:
+                return sum(history) / len(history)
+            sensor_data["initialized"] = True
 
-        # After initialization, apply normal filtering
-        if last_valid is None:
-            sensor_data["last_valid"] = round(sum(history) / len(history), 1)
-            return new_value
+        # Compute rolling average
+        rolling_average = sum(history) / len(history)
 
-        if abs(new_value - last_valid) > max_change:
-            return last_valid  # Ignore spikes
+        # If new value is a spike, return rolling average (reject spike)
+        if abs(new_value - rolling_average) > sensor_data["max_change"]:
+            return round(rolling_average, 1)
 
-        # Update last valid value
-        sensor_data["last_valid"] = new_value
+        # Otherwise, accept new value and update history
+        history.append(new_value)
         return new_value
 
     async def async_get_exhaust_temperature(self):
@@ -806,64 +828,36 @@ class Device:
 
         new_value = await self._read_holding_float32(address=138, precision=1)
 
-        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
-        if not temperature_filering:
+        if not self._sensor_filtering:
             return new_value
-
-        temperature_filtering_theshold = self.data.get(
-            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
-        )
-        return self.filter_temperature(
-            "exhaust", temperature_filtering_theshold, new_value
-        )
+        return self.filter_temperature("exhaust", new_value)
 
     async def async_get_extract_temperature(self):
         """Get extract temperature."""
 
         new_value = await self._read_holding_float32(address=136, precision=1)
 
-        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
-        if not temperature_filering:
+        if not self._sensor_filtering:
             return new_value
-
-        temperature_filtering_theshold = self.data.get(
-            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
-        )
-        return self.filter_temperature(
-            "extract", temperature_filtering_theshold, new_value
-        )
+        return self.filter_temperature("extract", new_value)
 
     async def async_get_supply_temperature(self):
         """Get supply temperature."""
 
         new_value = await self._read_holding_float32(address=134, precision=1)
 
-        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
-        if not temperature_filering:
+        if not self._sensor_filtering:
             return new_value
-
-        temperature_filtering_theshold = self.data.get(
-            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
-        )
-        return self.filter_temperature(
-            "supply", temperature_filtering_theshold, new_value
-        )
+        return self.filter_temperature("supply", new_value)
 
     async def async_get_outdoor_temperature(self):
         """Get outdoor temperature."""
 
         new_value = await self._read_holding_float32(address=132, precision=1)
 
-        temperature_filering = self.data.get(ATTR_TEMPERATURE_FILTERING, None)
-        if not temperature_filering:
+        if not self._sensor_filtering:
             return new_value
-
-        temperature_filtering_theshold = self.data.get(
-            ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change
-        )
-        return self.filter_temperature(
-            "outdoor", temperature_filtering_theshold, new_value
-        )
+        return self.filter_temperature("outdoor", new_value)
 
     async def read_holding_registers(
         self,
