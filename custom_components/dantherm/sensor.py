@@ -69,28 +69,13 @@ class DanthermSensor(SensorEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update the state of the sensor."""
 
-        if hasattr(self._device, f"async_get_{self.key}_attrs"):
-            func = getattr(self._device, f"async_get_{self.key}_attrs")
-            self._attr_extra_state_attributes = await func()
-        elif hasattr(self._device, f"get_{self.key}_attrs"):
-            self._attr_extra_state_attributes = getattr(
-                self._device, f"get_{self.key}_attrs"
-            )
+        # Get extra state attributes
+        self._attr_extra_state_attributes = await self._device.async_get_entity_attrs(
+            self.entity_description
+        )
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
 
         if result is None:
             self._attr_available = False

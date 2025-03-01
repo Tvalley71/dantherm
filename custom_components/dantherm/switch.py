@@ -106,24 +106,11 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 _LOGGER.debug("Skipping suspened entity=%s", self.name)
                 return
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        elif self.entity_description.data_store:
-            result = self._device.get_entity_state(
-                self.key, self.entity_description.data_default
-            )
-        else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
+
+        if result is None and self.entity_description.state_default is not None:
+            result = self.entity_description.state_default
 
         if result is None:
             self._attr_available = False

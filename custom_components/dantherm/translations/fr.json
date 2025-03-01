@@ -137,7 +137,8 @@
       "night_mode": { "name": "Mode nuit" },
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
-      "summer_mode": { "name": "Mode été" }
+      "summer_mode": { "name": "Mode été" },
+      "sensor_filtering": { "name": "Filtrage des capteurs" }
     },
     "text": {
       "night_mode_start_time": { "name": "Heure de début du mode nuit" },

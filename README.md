@@ -30,7 +30,7 @@ Known supported units:
 
 | **Calendar Entity**            | **Description** |
 | :-                             | :- |
-| `calendar`                     | Operation Calender |
+| ~~`calendar`~~                     | ~~Operation Calender~~ |
 
 | **Cover Entity**               | **Description** |
 | :-                             | :- |
@@ -38,21 +38,21 @@ Known supported units:
 
 | **Number Entities**            | **Description** |
 | :-                             | :- |
-| `boost_presence_timeout`       | Boost presence timeout |
+| ~~`boost_presence_timeout`~~       | ~~Boost presence timeout~~ |
 | `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
 | `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
-| `eco_presence_timeout`         | Eco presence timeout |
+| ~~`eco_presence_timeout`~~         | ~~Eco presence timeout~~ |
 | `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
-| `home_presence_timeout`        | Home presence timeout |
+| ~~`home_presence_timeout`~~        | ~~Home presence timeout~~ |
 | `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
 
 | **Select Entities**            | **Description** |
 | :-                             | :- |
-| `boost_operation_selection`    | Boost operation selection |
-| `default_operation_selection`  | Default operation selection |
-| `eco_operation_selection`      | Eco operation selection |
+| ~~`boost_operation_selection`~~    | ~~Boost operation selection~~ |
+| ~~`default_operation_selection`~~  | ~~Default operation selection~~ |
+| ~~`eco_operation_selection`~~      | ~~Eco operation selection~~ |
 | `fan_level_selection`          | Fan level selection |
-| `home_operation_selection`     | Home operation selection |
+| ~~`home_operation_selection`~~     | ~~Home operation selection~~ |
 | `operation_selection`          | Mode of operation selection |
 | `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
 
@@ -78,10 +78,10 @@ Known supported units:
 | **Switch Entities**            | **Description** |
 | :-                             | :- |
 | `away_mode`                    | Away mode |
-| `boost_mode`                   | Boost mode |
-| `eco_mode`                     | Eco mode |
+| ~~`boost_mode`~~                   | ~~Boost mode~~ |
+| ~~`eco_mode`~~                     | ~~Eco mode~~ |
 | `fireplace_mode`               | Fireplace mode |
-| `home_mode`                    | Home mode |
+| ~~`home_mode`~~                    | ~~Home mode~~ |
 | `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
 | `night_mode`                   | Night mode<sup>&dagger;<sup> |
 | `summer_mode`                  | Summer mode |
@@ -95,6 +95,7 @@ _\* Some of the entities may not install due to lack of support or installation 
 
 _&dagger; The entity is disabled by default._
 
+_~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
 ### Installation
 
@@ -446,8 +447,9 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
+## >>> The remaining sections are work in progress, planned for version 0.5.0
 
-## Integration enhancements - Preliminary >>>
+## Integration enhancements
 
 The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
@@ -551,6 +553,8 @@ The available operations in **Default Operation Selection** are **Automatic**, *
 
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
+
+## <<<
 
 
 ## Disclaimer

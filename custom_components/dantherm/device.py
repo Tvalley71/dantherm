@@ -1,6 +1,7 @@
 """Device implementation."""
 
 import asyncio
+from collections import deque
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -29,6 +30,7 @@ from .device_map import (
     ATTR_FILTER_LIFETIME,
     ATTR_FILTER_REMAIN,
     ATTR_HOME_MODE,
+    ATTR_SENSOR_FILTERING,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -46,6 +48,7 @@ from .device_map import (
     BypassDamperState,
     ComponentClass,
     CurrentUnitMode,
+    DanthermEntityDescription,
     DataClass,
     HacComponentClass,
 )
@@ -94,7 +97,6 @@ class DanthermEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
         if not self._device.available:
             return False
         return self._attr_available
@@ -150,6 +152,7 @@ class Device:
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
+        self._sensor_filtering = False
         self._last_current_operation = None
         self._operation_last_change_time = datetime.min
         self._boost_trigger = None
@@ -174,6 +177,45 @@ class Device:
         self._entities = []
         self.store = {}
         self.data = {}
+
+        # Initialize filtered sensors
+        self._filtered_sensors = {
+            "humidity": {
+                "history": deque(maxlen=5),
+                "max_change": 5,
+                "initialized": False,
+            },
+            "air_quality": {
+                "history": deque(maxlen=5),
+                "max_change": 50,
+                "initialized": False,
+            },
+            "exhaust": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "extract": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "supply": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "outdoor": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+            "room": {
+                "history": deque(maxlen=5),
+                "max_change": 2,
+                "initialized": False,
+            },
+        }
 
         # Use a static store instance for the shared calendar
         if Device.global_calendar_store is None:
@@ -273,7 +315,7 @@ class Device:
             or description.data_exclude_if_below
             or description.data_exclude_if is not None
         ):
-            result = await self.read_holding_registers(description=description)
+            result = await self.async_get_entity_state(description)
 
             if (
                 (
@@ -314,10 +356,19 @@ class Device:
         _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
 
+        # Remove the entity from the data dictionary
+        if entity.key in self.data:
+            self.data.pop(entity.key)
+
         if not self._entities:
             # This is the last entity, stop the interval timer
             self._entity_refresh_method()
             self._entity_refresh_method = None
+
+            self._client.close()
+            self._client = None
+            # Wait for the client to close
+            await asyncio.sleep(5)
 
     async def async_refresh_entities(self, _now: int | None = None) -> None:
         """Time to update entities."""
@@ -340,6 +391,9 @@ class Device:
 
         self._alarm = await self._read_holding_uint32(516)
         _LOGGER.debug("Alarm = %s", self._alarm)
+
+        self._sensor_filtering = self.data.get(ATTR_SENSOR_FILTERING, False)
+        _LOGGER.debug("Sensor Filtering = %s", self._sensor_filtering)
 
         for entity in self._entities:
             await self.async_refresh_entity(entity)
@@ -847,6 +901,108 @@ class Device:
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(264, value)
 
+    @property
+    def get_sensor_filtering(self):
+        """Get sensor filtering."""
+
+        return self.data.get(ATTR_SENSOR_FILTERING, False)
+
+    async def set_sensor_filtering(self, value):
+        """Set temperature filtering."""
+
+        self.data[ATTR_SENSOR_FILTERING] = value
+
+    async def async_get_humidity(self):
+        """Get humidity."""
+
+        new_value = await self._read_holding_uint32(address=196)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("humidity", new_value)
+
+    async def async_get_air_quality(self):
+        """Get air quality."""
+
+        new_value = await self._read_holding_uint32(address=430)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("air_quality", new_value)
+
+    async def async_get_exhaust_temperature(self):
+        """Get exhaust temperature."""
+
+        new_value = await self._read_holding_float32(address=138, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("exhaust", new_value)
+
+    async def async_get_extract_temperature(self):
+        """Get extract temperature."""
+
+        new_value = await self._read_holding_float32(address=136, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("extract", new_value)
+
+    async def async_get_supply_temperature(self):
+        """Get supply temperature."""
+
+        new_value = await self._read_holding_float32(address=134, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("supply", new_value)
+
+    async def async_get_outdoor_temperature(self):
+        """Get outdoor temperature."""
+
+        new_value = await self._read_holding_float32(address=132, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("outdoor", new_value)
+
+    async def async_get_room_temperature(self):
+        """Get room temperature."""
+
+        new_value = await self._read_holding_float32(address=140, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("room", new_value)
+
+    def _filter_sensor(self, sensor: str, new_value: float) -> float:
+        """Filter a given sensor, ensuring smooth initialization and spike reduction."""
+
+        # Ensure the sensor type is valid
+        if sensor not in self._filtered_sensors:
+            raise ValueError(f"Invalid sensor: {sensor}")
+
+        sensor_data = self._filtered_sensors[sensor]
+        history: deque = sensor_data["history"]
+
+        # Collect initial samples and compute average until initialized
+        history.append(new_value)
+        if not sensor_data["initialized"]:
+            if len(history) < history.maxlen:
+                return round(sum(history) / len(history), 1)
+            sensor_data["initialized"] = True
+
+        # Compute rolling average
+        rolling_average = sum(history) / len(history)
+
+        # If new value is a spike, return rolling average (reject spike)
+        if abs(new_value - rolling_average) > sensor_data["max_change"]:
+            return round(rolling_average, 1)
+
+        # Otherwise, accept new value and update history
+        history.append(new_value)
+        return new_value
+
     async def set_calendar_event(self, event):
         """Set calendar event."""
 
@@ -1011,6 +1167,35 @@ class Device:
         # Change the operation mode if different from the current one
         await self.set_operation_selection(target_operation)
 
+    async def async_get_entity_state(self, description: DanthermEntityDescription):
+        """Get entity value from description."""
+
+        if description.data_getinternal:
+            if hasattr(self, f"async_{description.data_getinternal}"):
+                result = await getattr(self, f"async_{description.data_getinternal}")()
+            else:
+                result = getattr(self, description.data_getinternal)
+        elif description.data_entity:
+            result = self.data.get(description.data_entity, None)
+        elif self.entity_description.data_store:
+            result = self._device.get_entity_state(
+                self.key, self.entity_description.data_default
+            )
+        else:
+            result = await self.read_holding_registers(description=description)
+
+        return result
+
+    async def async_get_entity_attrs(self, description: DanthermEntityDescription):
+        """Get entity attributes from description."""
+
+        result = None
+        if hasattr(self, f"async_get_{description.key}_attrs"):
+            result = await getattr(self, f"async_get_{description.key}_attrs")()
+        elif hasattr(self, f"get_{description.key}_attrs"):
+            result = getattr(self, f"get_{description.key}_attrs")
+        return result
+        
     async def read_holding_registers(
         self,
         description: EntityDescription | None = None,
@@ -1104,12 +1289,23 @@ class Device:
 
     async def _read_holding_registers(self, address, count):
         """Read holding registers."""
-        response = await self._client.read_holding_registers(address, count=count)
-        return response.registers if response.isError() is False else None
+        try:
+            response = await self._client.read_holding_registers(address, count=count)
+            return response.registers if response.isError() is False else None
+        except ConnectionError as err:
+            _LOGGER.error("Read holding registers failed: %s", err)
+            self._read_errors += 1
+            if self._read_errors > 5:
+                self._available = False
+            return None
 
     async def _write_holding_registers(self, address, values):
         """Write holding registers."""
-        await self._client.write_registers(address, values)
+        try:
+            await self._client.write_registers(address, values)
+        except ConnectionError as err:
+            _LOGGER.error("Write holding registers failed: %s", err)
+            self._available = False
 
     async def _read_holding_uint16(self, address):
         return self._read_holding_uint32(address) & 0xFFFF

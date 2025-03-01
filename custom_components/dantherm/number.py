@@ -70,34 +70,20 @@ class DanthermNumber(NumberEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update the state of the number."""
 
-        if hasattr(self._device, f"async_get_{self.key}_attrs"):
-            func = getattr(self._device, f"async_{self.key}_attrs")
-            self._attr_extra_state_attributes = await func()
-        elif hasattr(self._device, f"get_{self.key}_attrs"):
-            self._attr_extra_state_attributes = getattr(
-                self._device, f"{self.key}_attrs"
-            )
+        # Get extra state attributes
+        self._attr_extra_state_attributes = await self._device.async_get_entity_attrs(
+            self.entity_description
+        )
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        elif self.entity_description.data_store:
-            result = self._device.get_entity_state(
-                self.key, self.entity_description.data_default
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
+
+        if result is None:
+            self._attr_available = False
+            self._device.data[self.key] = None
         else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+            self._attr_available = True
 
-        if result:
             precision = self.entity_description.data_precision
             if precision is not None:
                 if precision >= 0:

@@ -195,6 +195,7 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" },
+      "sensor_filtering": { "name": "Sensor Filtering" },
       "boost_mode": { "name": "Boost Mode" },
       "eco_mode": { "name": "Eco Mode" },
       "home_mode": { "name": "Home Mode" }

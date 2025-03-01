@@ -137,7 +137,8 @@
       "night_mode": { "name": "Nattilstand" },
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
-      "summer_mode": { "name": "Sommertilstand" }
+      "summer_mode": { "name": "Sommertilstand" },
+      "sensor_filtering": { "name": "Sensorfiltrering" }
     },
     "text": {
       "night_mode_start_time": { "name": "Nattilstand start tid" },

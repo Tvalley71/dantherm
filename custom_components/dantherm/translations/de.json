@@ -137,7 +137,8 @@
       "night_mode": { "name": "Nachtmodus" },
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
-      "summer_mode": { "name": "Sommermodus" }
+      "summer_mode": { "name": "Sommermodus" },
+      "sensor_filtering": { "name": "Sensorfilterung" }
     },
     "text": {
       "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
