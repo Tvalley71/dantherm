@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.components.calendar import CalendarEntityDescription
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityDescription,
@@ -42,6 +43,9 @@ STATE_AWAY: Final = "away"
 STATE_SUMMER: Final = "summer"
 STATE_FIREPLACE: Final = "fireplace"
 STATE_NIGHT: Final = "night"
+STATE_BOOST: Final = "boost"
+STATE_ECO: Final = "eco"
+STATE_HOME: Final = "home"
 
 ATTR_FAN_LEVEL_SELECTION: Final = "fan_level_selection"
 ATTR_FAN_LEVEL: Final = "fan_level"
@@ -63,6 +67,18 @@ STATE_WEEKPROGRAM_8: Final = "7"
 STATE_WEEKPROGRAM_9: Final = "8"
 STATE_WEEKPROGRAM_10: Final = "9"
 STATE_WEEKPROGRAM_11: Final = "10"
+
+ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
+STATE_LEVEL_3: Final = "level_3"
+STATE_LEVEL_4: Final = "level_4"
+
+ATTR_ECO_OPERATION_SELECTION: Final = "eco_operation_selection"
+
+ATTR_HOME_OPERATION_SELECTION: Final = "home_operation_selection"
+STATE_LEVEL_1: Final = "level_1"
+STATE_LEVEL_2: Final = "level_2"
+
+ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 
 ATTR_OPERATION_MODE: Final = "operation_mode"
 
@@ -89,6 +105,16 @@ ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
 
+ATTR_BOOST_MODE: Final = "boost_mode"
+ATTR_BOOST_MODE_TIMEOUT: Final = "boost_mode_timeout"
+
+ATTR_ECO_MODE: Final = "eco_mode"
+ATTR_ECO_MODE_TIMEOUT: Final = "eco_mode_timeout"
+
+ATTR_HOME_MODE: Final = "home_mode"
+ATTR_HOME_MODE_TIMEOUT: Final = "home_mode_timeout"
+
+
 ATTR_FIREPLACE_MODE: Final = "fireplace_mode"
 
 ATTR_NIGHT_MODE: Final = "night_mode"
@@ -113,6 +139,8 @@ ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 ATTR_FILTER_RESET: Final = "filter_reset"
 
 ATTR_ALARM_RESET: Final = "alarm_reset"
+
+ATTR_CALENDAR: Final = "calendar"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,
@@ -146,6 +174,43 @@ WEEK_PROGRAM_SELECTIONS = [
     STATE_WEEKPROGRAM_10,
     STATE_WEEKPROGRAM_11,
 ]
+
+BOOST_OPERATION_SELECTIONS = [STATE_LEVEL_2, STATE_LEVEL_3, STATE_LEVEL_4]
+
+ECO_OPERATION_SELECTIONS = [STATE_STANDBY, STATE_LEVEL_1]
+
+HOME_OPERATION_SELECTIONS = [
+    STATE_AUTOMATIC,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_WEEKPROGRAM,
+]
+
+DEFAULT_OPERATION_SELECTIONS = [
+    STATE_AUTOMATIC,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_WEEKPROGRAM,
+]
+
+STATE_PRIORITIES = {
+    STATE_WEEKPROGRAM: 0,
+    STATE_AUTOMATIC: 1,
+    STATE_STANDBY: 2,
+    STATE_LEVEL_1: 3,
+    STATE_LEVEL_2: 4,
+    STATE_LEVEL_3: 5,
+    STATE_LEVEL_4: 6,
+    STATE_ECO: 7,
+    STATE_HOME: 8,
+    STATE_NIGHT: 9,
+    STATE_BOOST: 10,
+    STATE_AWAY: 11,
+}
+
+EVENT_WORDS = STATE_PRIORITIES
 
 
 class ComponentClass(int):
@@ -246,6 +311,8 @@ class DanthermEntityDescription(EntityDescription):
     data_address: int | None = None
     data_getinternal: str | None = None
     data_entity: str | None = None
+    data_store: bool | None = None
+    data_default: Any | None = None
     data_class: DataClass = DataClass.UInt32
 
     data_exclude_if: Any | None = None
@@ -332,14 +399,27 @@ class DanthermTimeTextEntityDescription(
     """Dantherm Time Text Entity Description."""
 
 
+@dataclass
+class DanthermCalendarEntityDescription(CalendarEntityDescription):
+    """Dantherm Calendar Entity Description."""
+
+    data_exclude_if: Any | None = None
+    data_exclude_if_above: int | None = None
+    data_exclude_if_below: int | None = None
+
+    component_class: ComponentClass = None
+
+
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     DanthermButtonEntityDescription(
         key=ATTR_FILTER_RESET,
+        icon="mdi:restore",
         data_setinternal="filter_reset",
         data_class=DataClass.UInt32,
     ),
     DanthermButtonEntityDescription(
         key=ATTR_ALARM_RESET,
+        icon="mdi:restore-alert",
         data_setinternal="alarm_reset",
         data_class=DataClass.UInt32,
     ),
@@ -414,11 +494,47 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         native_step=15,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="min",
-        mode=NumberMode.SLIDER,
+        mode=NumberMode.BOX,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BOOST_MODE_TIMEOUT,
+        data_store=True,
+        data_default=5,
+        data_precision=0,
+        native_max_value=30,
+        native_min_value=3,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_ECO_MODE_TIMEOUT,
+        data_store=True,
+        data_default=15,
+        data_precision=0,
+        native_max_value=600,
+        native_min_value=15,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_HOME_MODE_TIMEOUT,
+        data_store=True,
+        data_default=60,
+        data_precision=0,
+        native_max_value=600,
+        native_min_value=30,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -438,7 +554,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     ),
     DanthermSelectEntityDescription(
         key=ATTR_WEEK_PROGRAM_SELECTION,
-        icon="mdi:clock-edit-outline",
+        icon="mdi:clock-edit",
         data_setinternal=f"set_{ATTR_WEEK_PROGRAM_SELECTION}",
         data_getinternal=f"get_{ATTR_WEEK_PROGRAM_SELECTION}",
         options=WEEK_PROGRAM_SELECTIONS,
@@ -446,6 +562,38 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_BOOST_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_store=True,
+        data_default=STATE_LEVEL_3,
+        options=BOOST_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_ECO_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_store=True,
+        data_default=STATE_LEVEL_1,
+        options=ECO_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_HOME_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_store=True,
+        data_default=STATE_AUTOMATIC,
+        options=HOME_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_DEFAULT_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_store=True,
+        data_default=STATE_AUTOMATIC,
+        options=DEFAULT_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -457,8 +605,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_ALARM,
-        icon="mdi:alert-circle-outline",
-        icon_zero="mdi:alert-circle-check-outline",
+        icon="mdi:alert-circle",
+        icon_zero="mdi:alert-circle-check",
         data_getinternal=f"get_{ATTR_ALARM}",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -597,9 +745,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal=f"get_{ATTR_AWAY_MODE}",
         state_suspend_for=30,
         state_on=ActiveUnitMode.StartAway,
-        icon_on="mdi:bag-suitcase-outline",
+        icon_on="mdi:bag-suitcase",
         state_off=ActiveUnitMode.EndAway,
-        icon_off="mdi:bag-suitcase-off-outline",
+        icon_off="mdi:bag-suitcase-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
@@ -633,9 +781,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=ActiveUnitMode.SelectManualBypass,
-        icon_on="mdi:hand-back-right-outline",
+        icon_on="mdi:hand-back-right",
         state_off=ActiveUnitMode.DeselectManualBypass,
-        icon_off="mdi:hand-back-right-off-outline",
+        icon_off="mdi:hand-back-right-off",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -662,6 +810,30 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_BOOST_MODE,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:rocket-launch",
+        icon_off="mdi:rocket",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_ECO_MODE,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:leaf",
+        icon_off="mdi:leaf-off",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_HOME_MODE,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:home",
+        icon_off="mdi:home-off",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
 )
 
 TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
@@ -685,4 +857,9 @@ TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
+)
+
+CALENDAR: DanthermCalendarEntityDescription = DanthermCalendarEntityDescription(
+    key=ATTR_CALENDAR,
+    icon="mdi:calendar",
 )

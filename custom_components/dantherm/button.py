@@ -14,7 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """."""
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
+    device = device_entry.get("device")
+    if device is None:
+        _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
+        return False
 
     entities = []
     for description in BUTTONS:
@@ -22,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             button = DanthermButton(device, description)
             entities.append(button)
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)  # True
     return True
 
 

@@ -1,6 +1,6 @@
 # Dantherm
 
-Home Assistant integration for Dantherm ventilation units
+Home Assistant integration for Dantherm ventilation units.
 
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
@@ -43,8 +43,8 @@ Known supported units:
 | `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
 | ~~`eco_presence_timeout`~~         | ~~Eco presence timeout~~ |
 | `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
-| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
 | ~~`home_presence_timeout`~~        | ~~Home presence timeout~~ |
+| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
 
 | **Select Entities**            | **Description** |
 | :-                             | :- |
@@ -145,7 +145,6 @@ Danish, Dutch, English, German and French.
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
----
 
 ## Screenshots
 
@@ -163,7 +162,6 @@ Danish, Dutch, English, German and French.
 > [!NOTE]
 > The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
----
 
 ## Examples
 
@@ -180,11 +178,9 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 <details>
 
-<summary>The details for the above picture-elements card (challenging).</summary>
+<summary>The details for the above picture-elements card (challenging) 👈 Click to open</summary>
 
 ####
-
-I might consider creating a custom card based on this in the future.
 
 To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15397672/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
 
@@ -341,7 +337,7 @@ An example of a Mushroom-chips card showing the current state of operation and f
 
 <details>
 
-<summary>Mushroom-chips card details.</summary>
+<summary>Mushroom-chips card details 👈 Click to open</summary>
 
 ####
 
@@ -405,9 +401,10 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
----
 
-## Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
+## Actions
+
+### Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
 
 The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
 
@@ -521,7 +518,6 @@ Mode Triggers are **manually configured** in the integration settings.
    
 Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. ⚡
 
----
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  

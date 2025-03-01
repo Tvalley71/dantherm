@@ -10,6 +10,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
+from .config_flow import (
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
+)
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import Device
 from .services import async_setup_services
@@ -33,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [
     "button",
+    "calendar",
     "cover",
     "number",
     "select",
@@ -52,8 +58,14 @@ async def async_setup(hass: HomeAssistant, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the Dantherm device."""
 
+    # If options are empty, initialize them with defaults
+    if not entry.options:
+        _LOGGER.warning("No stored options found, initializing defaults")
+        hass.config_entries.async_update_entry(entry, options={})
+
+    _LOGGER.debug("Loading stored options in setup: %s", entry.options)
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
 
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
@@ -62,12 +74,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
-    device = Device(hass, name, host, port, 1, scan_interval)
+    device = Device(hass, name, host, port, 1, scan_interval, entry)
+    await device.async_load_entities()  # Load device-specific data
+
     try:
         await device.setup()
     except ValueError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
-    hass.data[DOMAIN][entry.entry_id] = device
+
+    # Store device instance and options
+    hass.data[DOMAIN][entry.entry_id] = {
+        "device": device,
+        ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
+        ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
+        ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

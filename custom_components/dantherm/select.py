@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -14,7 +15,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """."""
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
+    device = device_entry.get("device")
+    if device is None:
+        _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
+        return False
 
     entities = []
     for description in SELECTS:
@@ -22,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             select = DanthermSelect(device, description)
             entities.append(select)
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)  # True
     return True
 
 
@@ -56,7 +65,9 @@ class DanthermSelect(SelectEntity, DanthermEntity):
             await getattr(self._device, self.entity_description.data_setinternal)(
                 option
             )
-        else:
+        elif self.entity_description.data_store:
+            await self._device.set_entity_state(self, self.key, option)
+        elif option.isdigit():
             await self._device.write_holding_registers(
                 description=self.entity_description, value=int(option)
             )
@@ -76,3 +87,5 @@ class DanthermSelect(SelectEntity, DanthermEntity):
                 result &= self.entity_description.data_bitwise_and
 
             self._attr_current_option = str(result)
+
+        self._device.data[self.key] = result

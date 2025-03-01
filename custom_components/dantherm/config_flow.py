@@ -1,15 +1,21 @@
-"""."""
+"""Config Flow implamentation."""
 
 import ipaddress
+import logging
 import re
+from typing import Final
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.entity_registry as er
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -20,11 +26,17 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
+
+ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
+
+ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
+
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -39,7 +51,7 @@ def dantherm_modbus_entries(hass: HomeAssistant):
     }
 
 
-class DamthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Dantherm Modbus configflow."""
 
     VERSION = 1
@@ -71,4 +83,74 @@ class DamthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ):
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow handler."""
+
+    def __init__(self) -> None:
+        """Initialize options flow."""
+        self._conf_app_id: str | None = None
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        errors = {}
+
+        STEP_INIT_SCHEMA = vol.Schema(
+            {
+                vol.Optional(ATTR_BOOST_MODE_TRIGGER): str,
+                vol.Optional(ATTR_ECO_MODE_TRIGGER): str,
+                vol.Optional(ATTR_HOME_MODE_TRIGGER): str,
+            }
+        )
+
+        if user_input is not None:
+            # Validate the user-inputted entities
+            entity_registry = er.async_get(self.hass)
+            for entity_key in [
+                ATTR_BOOST_MODE_TRIGGER,
+                ATTR_ECO_MODE_TRIGGER,
+                ATTR_HOME_MODE_TRIGGER,
+            ]:
+                entity_id = user_input.get(entity_key)
+                if entity_id and entity_id not in [
+                    entity.entity_id for entity in entity_registry.entities.values()
+                ]:
+                    errors[entity_key] = "invalid_entity"
+
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, options=user_input
+                )
+
+                # Get the device instance and update the triggers
+                device_instance = (
+                    self.hass.data.get(DOMAIN, {})
+                    .get(self.config_entry.entry_id, {})
+                    .get("device")
+                )
+                if device_instance:
+                    device_instance.update_mode_triggers_event(user_input)
+
+                return self.async_create_entry(title="", data=user_input)
+
+            return self.async_show_form(
+                step_id="init", data_schema=STEP_INIT_SCHEMA, errors=errors
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_INIT_SCHEMA,
+                self.config_entry.options,
+            ),
         )
