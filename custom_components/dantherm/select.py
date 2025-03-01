@@ -64,22 +64,8 @@ class DanthermSelect(SelectEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update state of the select."""
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        elif self.entity_description.data_entity:
-            result = self._device.data.get(self.entity_description.data_entity, None)
-        else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
 
         if result is None:
             self._attr_available = False

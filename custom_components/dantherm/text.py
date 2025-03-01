@@ -51,16 +51,8 @@ class DanthermTimeText(TextEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update the state of the sensor."""
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
 
         if result is None:
             self._attr_available = False

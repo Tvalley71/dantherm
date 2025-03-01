@@ -14,7 +14,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
     ATTR_SENSOR_FILTERING,
-    ATTR_TEMPERATURE_FILTERING_THRESHOLD,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -27,6 +26,7 @@ from .device_map import (
     BypassDamperState,
     ComponentClass,
     CurrentUnitMode,
+    DanthermEntityDescription,
     DataClass,
     HacComponentClass,
 )
@@ -137,14 +137,19 @@ class Device:
         self._entities = []
         self.data = {}
 
-        # Dictionary to store history and last valid value for each temperature
+        # Initialize filtered sensors
         self._filtered_sensors = {
-            "outdoor": {
+            "humidity": {
                 "history": deque(maxlen=5),
-                "max_change": 2,
+                "max_change": 5,
                 "initialized": False,
             },
-            "supply": {
+            "air_quality": {
+                "history": deque(maxlen=5),
+                "max_change": 50,
+                "initialized": False,
+            },
+            "exhaust": {
                 "history": deque(maxlen=5),
                 "max_change": 2,
                 "initialized": False,
@@ -154,17 +159,12 @@ class Device:
                 "max_change": 2,
                 "initialized": False,
             },
-            "exhaust": {
+            "supply": {
                 "history": deque(maxlen=5),
                 "max_change": 2,
                 "initialized": False,
             },
-            "humidity": {
-                "history": deque(maxlen=5),
-                "max_change": 2,
-                "initialized": False,
-            },
-            "voc": {
+            "outdoor": {
                 "history": deque(maxlen=5),
                 "max_change": 2,
                 "initialized": False,
@@ -265,7 +265,7 @@ class Device:
             or description.data_exclude_if_below
             or description.data_exclude_if is not None
         ):
-            result = await self.read_holding_registers(description=description)
+            result = await self.async_get_entity_state(description)
 
             if (
                 (
@@ -306,7 +306,9 @@ class Device:
         _LOGGER.debug("Removing refresh entity=%s", entity.name)
         self._entities.remove(entity)
 
-        self.data.pop(entity.key, None)
+        # Remove the entity from the data dictionary
+        if entity.key in self.data:
+            self.data.pop(entity.key)
 
         if not self._entities:
             # This is the last entity, stop the interval timer
@@ -774,29 +776,81 @@ class Device:
         await self._write_holding_uint32(264, value)
 
     @property
-    def get_temperature_filtering(self):
-        """Get temperature filtering."""
+    def get_sensor_filtering(self):
+        """Get sensor filtering."""
 
         return self.data.get(ATTR_SENSOR_FILTERING, False)
 
-    async def set_temperature_filtering(self, value):
+    async def set_sensor_filtering(self, value):
         """Set temperature filtering."""
 
         self.data[ATTR_SENSOR_FILTERING] = value
 
-    @property
-    def get_temperature_filtering_threshold(self):
-        """Get temperature filtering threshold."""
+    async def async_get_humidity(self):
+        """Get humidity."""
 
-        return self.data.get(ATTR_TEMPERATURE_FILTERING_THRESHOLD, self._max_change)
+        new_value = await self._read_holding_uint32(address=196)
 
-    async def set_temperature_filtering_threshold(self, value):
-        """Set temperature filtering threshold."""
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("humidity", new_value)
 
-        self.data[ATTR_TEMPERATURE_FILTERING_THRESHOLD] = value
+    async def async_get_air_quality(self):
+        """Get air quality."""
 
-    def filter_temperature(self, sensor: str, new_value: float) -> float:
-        """Filter the temperature for a given sensor, ensuring smooth initialization and spike reduction."""
+        new_value = await self._read_holding_uint32(address=430)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("air_quality", new_value)
+
+    async def async_get_exhaust_temperature(self):
+        """Get exhaust temperature."""
+
+        new_value = await self._read_holding_float32(address=138, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("exhaust", new_value)
+
+    async def async_get_extract_temperature(self):
+        """Get extract temperature."""
+
+        new_value = await self._read_holding_float32(address=136, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("extract", new_value)
+
+    async def async_get_supply_temperature(self):
+        """Get supply temperature."""
+
+        new_value = await self._read_holding_float32(address=134, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("supply", new_value)
+
+    async def async_get_outdoor_temperature(self):
+        """Get outdoor temperature."""
+
+        new_value = await self._read_holding_float32(address=132, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("outdoor", new_value)
+
+    async def async_get_room_temperature(self):
+        """Get room temperature."""
+
+        new_value = await self._read_holding_float32(address=140, precision=1)
+
+        if not self._sensor_filtering:
+            return new_value
+        return self._filter_sensor("room", new_value)
+
+    def _filter_sensor(self, sensor: str, new_value: float) -> float:
+        """Filter a given sensor, ensuring smooth initialization and spike reduction."""
 
         # Ensure the sensor type is valid
         if sensor not in self._filtered_sensors:
@@ -809,7 +863,7 @@ class Device:
         history.append(new_value)
         if not sensor_data["initialized"]:
             if len(history) < history.maxlen:
-                return sum(history) / len(history)
+                return round(sum(history) / len(history), 1)
             sensor_data["initialized"] = True
 
         # Compute rolling average
@@ -823,41 +877,30 @@ class Device:
         history.append(new_value)
         return new_value
 
-    async def async_get_exhaust_temperature(self):
-        """Get exhaust temperature."""
+    async def async_get_entity_state(self, description: DanthermEntityDescription):
+        """Get entity value from description."""
 
-        new_value = await self._read_holding_float32(address=138, precision=1)
+        if description.data_getinternal:
+            if hasattr(self, f"async_{description.data_getinternal}"):
+                result = await getattr(self, f"async_{description.data_getinternal}")()
+            else:
+                result = getattr(self, description.data_getinternal)
+        elif description.data_entity:
+            result = self.data.get(description.data_entity, None)
+        else:
+            result = await self.read_holding_registers(description=description)
 
-        if not self._sensor_filtering:
-            return new_value
-        return self.filter_temperature("exhaust", new_value)
+        return result
 
-    async def async_get_extract_temperature(self):
-        """Get extract temperature."""
+    async def async_get_entity_attrs(self, description: DanthermEntityDescription):
+        """Get entity attributes from description."""
 
-        new_value = await self._read_holding_float32(address=136, precision=1)
-
-        if not self._sensor_filtering:
-            return new_value
-        return self.filter_temperature("extract", new_value)
-
-    async def async_get_supply_temperature(self):
-        """Get supply temperature."""
-
-        new_value = await self._read_holding_float32(address=134, precision=1)
-
-        if not self._sensor_filtering:
-            return new_value
-        return self.filter_temperature("supply", new_value)
-
-    async def async_get_outdoor_temperature(self):
-        """Get outdoor temperature."""
-
-        new_value = await self._read_holding_float32(address=132, precision=1)
-
-        if not self._sensor_filtering:
-            return new_value
-        return self.filter_temperature("outdoor", new_value)
+        result = None
+        if hasattr(self, f"async_get_{description.key}_attrs"):
+            result = await getattr(self, f"async_get_{description.key}_attrs")()
+        elif hasattr(self, f"get_{description.key}_attrs"):
+            result = getattr(self, f"get_{description.key}_attrs")
+        return result
 
     async def read_holding_registers(
         self,

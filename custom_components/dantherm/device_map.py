@@ -236,7 +236,7 @@ class BypassDamperState(int):
 
 
 @dataclass
-class DanthermBaseDescription(EntityDescription):
+class DanthermEntityDescription(EntityDescription):
     """Dantherm Base Entity Description."""
 
     data_setaddress: int | None = None
@@ -246,26 +246,26 @@ class DanthermBaseDescription(EntityDescription):
     data_address: int | None = None
     data_getinternal: str | None = None
     data_entity: str | None = None
-    data_exclude_if: Any | None = None
+    data_class: DataClass = DataClass.UInt32
 
+    data_exclude_if: Any | None = None
     data_exclude_if_above: int | float | None = None
     data_exclude_if_below: int | float | None = None
-
-    data_class: DataClass = DataClass.UInt32
 
     component_class: ComponentClass | None = None
 
 
 @dataclass
-class DanthermButtonEntityDescription(DanthermBaseDescription, ButtonEntityDescription):
+class DanthermButtonEntityDescription(
+    DanthermEntityDescription, ButtonEntityDescription
+):
     """Dantherm Button Entity Description."""
 
     state: int | None = None
-    state_entity: str | None = None
 
 
 @dataclass
-class DanthermCoverEntityDescription(DanthermBaseDescription, CoverEntityDescription):
+class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
     supported_features: CoverEntityFeature | None = None
@@ -281,30 +281,37 @@ class DanthermCoverEntityDescription(DanthermBaseDescription, CoverEntityDescrip
 
 
 @dataclass
-class DanthermNumberEntityDescription(DanthermBaseDescription, NumberEntityDescription):
+class DanthermNumberEntityDescription(
+    DanthermEntityDescription, NumberEntityDescription
+):
     """Dantherm Number Entity Description."""
 
     data_precision: float | None = None
 
 
 @dataclass
-class DanthermSelectEntityDescription(DanthermBaseDescription, SelectEntityDescription):
+class DanthermSelectEntityDescription(
+    DanthermEntityDescription, SelectEntityDescription
+):
     """Dantherm Select Entity Description."""
 
     data_bitwise_and: int | None = None
 
 
 @dataclass
-class DanthermSensorEntityDescription(DanthermBaseDescription, SensorEntityDescription):
+class DanthermSensorEntityDescription(
+    DanthermEntityDescription, SensorEntityDescription
+):
     """Dantherm Sensor Entity Description."""
 
     icon_zero: str | None = None
     data_precision: int | None = None
-    data_scale: int | None = None
 
 
 @dataclass
-class DanthermSwitchEntityDescription(DanthermBaseDescription, SwitchEntityDescription):
+class DanthermSwitchEntityDescription(
+    DanthermEntityDescription, SwitchEntityDescription
+):
     """Dantherm Switch Entity Description."""
 
     state_seton: int | None = None
@@ -319,7 +326,9 @@ class DanthermSwitchEntityDescription(DanthermBaseDescription, SwitchEntityDescr
 
 
 @dataclass
-class DanthermTimeTextEntityDescription(DanthermBaseDescription, TextEntityDescription):
+class DanthermTimeTextEntityDescription(
+    DanthermEntityDescription, TextEntityDescription
+):
     """Dantherm Time Text Entity Description."""
 
 
@@ -483,9 +492,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_HUMIDITY,
-        data_address=196,
+        data_getinternal=f"get_{ATTR_HUMIDITY}",
         data_exclude_if=0,
-        data_class=DataClass.UInt32,
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -493,9 +501,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
-        data_address=430,
+        data_getinternal=f"get_{ATTR_AIR_QUALITY}",
         data_exclude_if=0,
-        data_class=DataClass.UInt32,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
@@ -503,7 +510,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
-        data_class=DataClass.Float32,
         data_getinternal=f"get_{ATTR_EXHAUST_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -511,7 +517,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_EXTRACT_TEMPERATURE,
-        data_class=DataClass.Float32,
         data_getinternal=f"get_{ATTR_EXTRACT_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -519,7 +524,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
-        data_class=DataClass.Float32,
         data_getinternal=f"get_{ATTR_SUPPLY_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -527,18 +531,14 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_OUTDOOR_TEMPERATURE,
-        data_class=DataClass.Float32,
         data_getinternal=f"get_{ATTR_OUTDOOR_TEMPERATURE}",
-        data_address=132,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_ROOM_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=140,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_ROOM_TEMPERATURE}",
         data_exclude_if_above=70,
         data_exclude_if_below=-40,
         native_unit_of_measurement="°C",
