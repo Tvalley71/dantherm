@@ -310,7 +310,6 @@ class DanthermEntityDescription(EntityDescription):
 
     data_address: int | None = None
     data_getinternal: str | None = None
-    data_entity: str | None = None
     data_store: bool | None = None
     data_default: Any | None = None
     data_class: DataClass = DataClass.UInt32
@@ -800,8 +799,8 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_SENSOR_FILTERING,
-        data_setinternal=f"set_{ATTR_SENSOR_FILTERING}",
-        data_getinternal=f"get_{ATTR_SENSOR_FILTERING}",
+        data_store=True,
+        data_default=False,
         icon_on="mdi:filter",
         icon_off="mdi:filter-off",
         state_default=False,

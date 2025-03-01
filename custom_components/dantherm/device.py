@@ -901,17 +901,6 @@ class Device:
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(264, value)
 
-    @property
-    def get_sensor_filtering(self):
-        """Get sensor filtering."""
-
-        return self.data.get(ATTR_SENSOR_FILTERING, False)
-
-    async def set_sensor_filtering(self, value):
-        """Set temperature filtering."""
-
-        self.data[ATTR_SENSOR_FILTERING] = value
-
     async def async_get_humidity(self):
         """Get humidity."""
 
@@ -1175,12 +1164,8 @@ class Device:
                 result = await getattr(self, f"async_{description.data_getinternal}")()
             else:
                 result = getattr(self, description.data_getinternal)
-        elif description.data_entity:
-            result = self.data.get(description.data_entity, None)
-        elif self.entity_description.data_store:
-            result = self._device.get_entity_state(
-                self.key, self.entity_description.data_default
-            )
+        elif description.data_store:
+            result = self.get_entity_state(description.key, description.data_default)
         else:
             result = await self.read_holding_registers(description=description)
 
@@ -1195,7 +1180,7 @@ class Device:
         elif hasattr(self, f"get_{description.key}_attrs"):
             result = getattr(self, f"get_{description.key}_attrs")
         return result
-        
+
     async def read_holding_registers(
         self,
         description: EntityDescription | None = None,
