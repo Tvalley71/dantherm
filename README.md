@@ -38,21 +38,21 @@ Known supported units:
 
 | **Number Entities**            | **Description** |
 | :-                             | :- |
-| ~~`boost_presence_timeout`~~       | ~~Boost presence timeout~~ |
+| `boost_mode_timeout`           | Boost mode timeout<sup>&sect;<sup> |
 | `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
 | `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
-| ~~`eco_presence_timeout`~~         | ~~Eco presence timeout~~ |
+| `eco_mode_timeout`             | Eco mode timeout<sup>&sect;<sup> |
 | `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
-| ~~`home_presence_timeout`~~        | ~~Home presence timeout~~ |
+| `home_mode_timeout`            | Home mode timeout<sup>&sect;<sup> |
 | `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
 
 | **Select Entities**            | **Description** |
 | :-                             | :- |
-| ~~`boost_operation_selection`~~    | ~~Boost operation selection~~ |
+| `boost_operation_selection`    | Boost operation selection<sup>&sect;<sup> |
 | ~~`default_operation_selection`~~  | ~~Default operation selection~~ |
-| ~~`eco_operation_selection`~~      | ~~Eco operation selection~~ |
+| `eco_operation_selection`      | Eco operation selection<sup>&sect;<sup> |
 | `fan_level_selection`          | Fan level selection |
-| ~~`home_operation_selection`~~     | ~~Home operation selection~~ |
+| `home_operation_selection`     | Home operation selection<sup>&sect;<sup> |
 | `operation_selection`          | Mode of operation selection |
 | `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
 
@@ -78,10 +78,10 @@ Known supported units:
 | **Switch Entities**            | **Description** |
 | :-                             | :- |
 | `away_mode`                    | Away mode |
-| ~~`boost_mode`~~                   | ~~Boost mode~~ |
-| ~~`eco_mode`~~                     | ~~Eco mode~~ |
+| `boost_mode`                   | Boost mode<sup>&sect;<sup> |
+| `eco_mode`                     | Eco mode<sup>&sect;<sup> |
 | `fireplace_mode`               | Fireplace mode |
-| ~~`home_mode`~~                    | ~~Home mode~~ |
+| `home_mode`                    | Home mode<sup>&sect;<sup> |
 | `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
 | `night_mode`                   | Night mode<sup>&dagger;<sup> |
 | `summer_mode`                  | Summer mode |
@@ -94,6 +94,8 @@ Known supported units:
 _\* Some of the entities may not install due to lack of support or installation in the particular unit._
 
 _&dagger; The entity is disabled by default._
+
+_&sect; The entity is only available if the corresponding mode trigger is configured._
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
