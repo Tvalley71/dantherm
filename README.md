@@ -84,6 +84,7 @@ Known supported units:
 | `home_mode`                    | Home mode<sup>&sect;<sup> |
 | `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
 | `night_mode`                   | Night mode<sup>&dagger;<sup> |
+| `sensor_filtering`             | Sensor spike filtering<sup>&dagger;<sup> |
 | `summer_mode`                  | Summer mode |
 
 | **Text Entities**              | **Description** |
