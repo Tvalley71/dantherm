@@ -45,8 +45,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
         description: DanthermCoverEntityDescription,
     ) -> None:
         """Init cover."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermCoverEntityDescription = description
         self._attr_supported_features = 0

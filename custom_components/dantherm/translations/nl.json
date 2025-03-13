@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integratie Configuratie",
+            "data": {
+                "boost_mode_trigger": "Boost-modus Trigger Entiteit",
+                "eco_mode_trigger": "Eco-modus Trigger Entiteit",
+                "home_mode_trigger": "Thuis-modus Trigger Entiteit"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Ongeldige entiteit-ID. Voer een geldige binaire sensor of invoer-boolean in."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Filter Resetten" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Levensduur Filter" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
-      "manual_bypass_duration": { "name": "Duur Manuele Bypass" }
+      "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
+      "boost_mode_timeout": { "name": "Boost-modus Time-out" },
+      "eco_mode_timeout": { "name": "Eco-modus Time-out" },
+      "home_mode_timeout": { "name": "Thuis-modus Time-out" }
     },
     "select": {
       "operation_selection": {
@@ -138,7 +156,10 @@
       "fireplace_mode": { "name": "Open Haardmodus" },
       "manual_bypass_mode": { "name": "Manuele Bypassmodus" },
       "summer_mode": { "name": "Zomermodus" },
-      "sensor_filtering": { "name": "Sensorfiltering" }
+      "sensor_filtering": { "name": "Sensorfiltering" },
+      "boost_mode": { "name": "Boost-modus" },
+      "eco_mode": { "name": "Eco-modus" },
+      "home_mode": { "name": "Thuis-modus" }
     },
     "text": {
       "night_mode_start_time": { "name": "Starttijd van de nachtmodus" },

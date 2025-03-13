@@ -45,8 +45,7 @@ class DanthermTimeText(TextEntity, DanthermEntity):
         description: DanthermTimeTextEntityDescription,
     ) -> None:
         """Init time text."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermTimeTextEntityDescription = description
 

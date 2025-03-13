@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integration Configuration",
+            "data": {
+                "boost_mode_trigger": "Boost-tilstand udløser entitet",
+                "eco_mode_trigger": "Eco-tilstand udløser entitet",
+                "home_mode_trigger": "Hjemmetilstand udløser entitet"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Ugyldigt enheds-ID. Indtast venligst en gyldig binær sensor eller input boolean."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Nulstil filter" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Filter livstid" },
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
-      "manual_bypass_duration": { "name": "Manuel bypass varighed" }
+      "manual_bypass_duration": { "name": "Manuel bypass varighed" },
+      "boost_mode_timeout": { "name": "Boost-tilstand timeout" },
+      "eco_mode_timeout": { "name": "Eco-tilstand timeout" },
+      "home_mode_timeout": { "name": "Hjemmetilstand timeout" }
     },
     "select": {
       "operation_selection": {
@@ -138,7 +156,10 @@
       "fireplace_mode": { "name": "Brændeovnstilstand" },
       "manual_bypass_mode": { "name": "Manuel bypasstilstand" },
       "summer_mode": { "name": "Sommertilstand" },
-      "sensor_filtering": { "name": "Sensorfiltrering" }
+      "sensor_filtering": { "name": "Sensorfiltrering" },
+      "boost_mode": { "name": "Boost-tilstand" },
+      "eco_mode": { "name": "Eco-tilstand" },
+      "home_mode": { "name": "Hjemmetilstand" }
     },
     "text": {
       "night_mode_start_time": { "name": "Nattilstand start tid" },

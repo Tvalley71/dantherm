@@ -5,7 +5,6 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -45,8 +44,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         description: DanthermSwitchEntityDescription,
     ) -> None:
         """Init Number."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermSwitchEntityDescription = description
 

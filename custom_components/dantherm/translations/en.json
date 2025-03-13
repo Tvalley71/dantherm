@@ -38,9 +38,6 @@
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }
     },
-    "calendar": {
-      "calendar": { "name": "Calendar" }
-    },
     "cover": {
       "bypass_damper": { "name": "Bypass Damper" }
     },
@@ -172,6 +169,26 @@
           "13": "Communication Alarm",
           "14": "Fire Termostat Alarm",
           "15": "High Waterlevel Alarm"
+        }
+      },
+      "integration_mode": {
+        "name": "Integration Mode",
+        "state:": {
+          "none": "None",
+          "automatic": "Automatic",
+          "away": "Away Mode",
+          "boost": "Boost Mode",
+          "eco": "Eco Mode",
+          "home": "Home Mode",
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "manuel": "Manual",
+          "night": "Night Mode",
+          "standby": "Standby",
+          "summer": "Summer Mode",
+          "week_program": "Week program"
         }
       },
       "fan_level": { "name": "Fan Level" },
@@ -317,28 +334,12 @@
       "description": "Reset first pending alarm."
     }
   },
-  "event_words": {
-    "away_mode": "Away Mode",
-    "boost_mode": "Boost Mode",
-    "night_mode": "Night Mode",
-    "home_mode": "Home Mode",
-    "eco_mode": "Eco Mode",
-    "standby": "Standby",
-    "level_3": "Level 3",
-    "level_2": "Level 2",
-    "level_1": "Level 1",
-    "automatic": "Automatic",
-    "week_program": "Week Program"
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Invalid time format. Use HH:MM."
     },
     "invalid_filter_lifetime": {
       "message": "Invalid filter lifetime. Use values between 0 to 360 days."
-    },
-    "invalid_event_word": {
-      "message": "Invalid event word in summary."
     }
   }
 }

@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Configuration de l'intégration Dantherm",
+            "data": {
+                "boost_mode_trigger": "Entité de déclenchement du mode Boost",
+                "eco_mode_trigger": "Entité de déclenchement du mode Eco",
+                "home_mode_trigger": "Entité de déclenchement du mode Maison"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Durée de vie filtre" },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
-      "manual_bypass_duration": { "name": "Durée du bypass manuel" }
+      "manual_bypass_duration": { "name": "Durée du bypass manuel" },
+      "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
+      "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
+      "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" }
     },
     "select": {
       "operation_selection": {
@@ -138,7 +156,10 @@
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
       "summer_mode": { "name": "Mode été" },
-      "sensor_filtering": { "name": "Filtrage des capteurs" }
+      "sensor_filtering": { "name": "Filtrage des capteurs" },
+      "boost_mode": { "name": "Mode Boost" },
+      "eco_mode": { "name": "Mode Eco" },
+      "home_mode": { "name": "Mode Maison" }
     },
     "text": {
       "night_mode_start_time": { "name": "Heure de début du mode nuit" },

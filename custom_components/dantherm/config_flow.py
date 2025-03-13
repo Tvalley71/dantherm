@@ -32,6 +32,12 @@ ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
 
 ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
 
+TRIGGER_MODES = [
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
+]
+
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
@@ -116,11 +122,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # Validate the user-inputted entities
             entity_registry = er.async_get(self.hass)
-            for entity_key in [
-                ATTR_BOOST_MODE_TRIGGER,
-                ATTR_ECO_MODE_TRIGGER,
-                ATTR_HOME_MODE_TRIGGER,
-            ]:
+            for entity_key in TRIGGER_MODES:
                 entity_id = user_input.get(entity_key)
                 if entity_id and entity_id not in [
                     entity.entity_id for entity in entity_registry.entities.values()
@@ -139,7 +141,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     .get("device")
                 )
                 if device_instance:
-                    device_instance.update_mode_triggers_event(user_input)
+                    await device_instance.set_up_mode_triggers(user_input)
 
                 return self.async_create_entry(title="", data=user_input)
 

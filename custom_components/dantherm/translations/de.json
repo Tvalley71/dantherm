@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integration Konfiguration",
+            "data": {
+                "boost_mode_trigger": "Boost-Modus Auslöser Entität",
+                "eco_mode_trigger": "Eco-Modus Auslöser Entität",
+                "home_mode_trigger": "Heim-Modus Auslöser Entität"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Filter zurücksetzen" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
-      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" }
+      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
+      "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
+      "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
+      "home_mode_timeout": { "name": "Heim-Modus Timeout" }
     },
     "select": {
       "operation_selection": {
@@ -138,7 +156,10 @@
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
       "summer_mode": { "name": "Sommermodus" },
-      "sensor_filtering": { "name": "Sensorfilterung" }
+      "sensor_filtering": { "name": "Sensorfilterung" },
+      "boost_mode": { "name": "Boost-Modus" },
+      "eco_mode": { "name": "Eco-Modus" },
+      "home_mode": { "name": "Heim-Modus" }
     },
     "text": {
       "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
