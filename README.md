@@ -405,6 +405,46 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
 
+## Sensor Filtering
+
+To improve the stability and reliability of sensor readings, the integration now supports **sensor filtering** for key environmental data collected from the Dantherm unit. This filtering mechanism is applied to the following sensors:
+
+- **Humidity**
+- **Air Quality**
+- **Exhaust Temperature**
+- **Extract Temperature**
+- **Supply Temperature**
+- **Outdoor Temperature**
+- **Room Temperature**
+
+### Control via Home Assistant Switch
+
+The filtering feature can be enabled or disabled via the **"Sensor Filtering"** switch entity. By default, the filtering is **disabled**, ensuring the system behaves as it did previously. When the switch is enabled, the filtering logic described below will be applied.
+
+### How It Works
+
+Each sensor is equipped with a sliding history buffer, storing the last 5 readings. The filter applies two techniques:
+
+1. **Initialization Smoothing**  
+   For the first few readings (up to 5), the filter calculates a simple average. This helps the sensor start off with a stable baseline, preventing a single bad initial reading from influencing the system.
+
+2. **Spike Filtering**  
+   After initialization, every new reading is compared to a rolling average of the last 5 readings.  
+   If the new reading changes more than a defined threshold (`max_change`) compared to the rolling average, the spike is rejected, and the system uses the current rolling average instead.
+
+### Individual Thresholds per Sensor
+
+Each sensor type has a predefined maximum allowed change per reading:
+
+| Sensor      | Max Change |
+|-------------|------------|
+| Humidity    | 5% RH      |
+| Air Quality | 50 PPM     |
+| Temperatures| 2°C        |
+
+This ensures the filtering logic fits the natural dynamics of each sensor type.
+
+
 ## Actions
 
 ### Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
