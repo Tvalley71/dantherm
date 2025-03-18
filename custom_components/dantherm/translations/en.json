@@ -173,7 +173,7 @@
       },
       "integration_mode": {
         "name": "Integration Mode",
-        "state:": {
+        "state": {
           "none": "None",
           "automatic": "Automatic",
           "away": "Away Mode",
