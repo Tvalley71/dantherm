@@ -69,6 +69,7 @@ Known supported units:
 | `filter_remain`                | Remaining filter time |
 | `filter_remain_level`          | Remaining filter time level<sup>&dagger;<sup> |
 | `humidity`                     | Humidity sensor<sup>\*<sup> |
+| `integration_mode`             | Integration mode<sup>&dagger;<sup> |
 | `internal_preheater_dutycycle` | Preheater power dutycycle<sup>\* &dagger;<sup> |
 | `operation_mode`               | Operation mode |
 | `outdoor_temperature`          | Outdoor temperature sensor |
