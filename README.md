@@ -15,6 +15,7 @@ Known supported units:
 - HCV460 P2
 - RCV320 P1/P2
 - HCH5 MKII
+- RCC220 P2
 
 > [!NOTE]
 > The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
