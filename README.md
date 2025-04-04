@@ -5,6 +5,13 @@ Home Assistant integration for Dantherm ventilation units.
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
 
+### ⚠️ Compatibility Notice
+
+This custom integration requires:
+
+- Home Assistant version **2025.1.0** or newer
+
+
 Currently only support for Modbus over TCP/IP.
 
 Known supported units:
