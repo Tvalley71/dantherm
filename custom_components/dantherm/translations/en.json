@@ -340,6 +340,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Invalid filter lifetime. Use values between 0 to 360 days."
+    },
+    "pymodbus_version": {
+      "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
     }
   }
 }

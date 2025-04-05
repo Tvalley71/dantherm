@@ -135,6 +135,26 @@
           "15": "Wasserstandsalarm"
         }
       },
+      "integration_mode": {
+        "name": "Integrationsmodus",
+        "state": {
+          "none": "Keiner",
+          "automatic": "Automatisch",
+          "away": "Abwesenheitsmodus",
+          "boost": "Boost-Modus",
+          "eco": "Eco-Modus",
+          "home": "Heim-Modus",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "level_4": "Stufe 4",
+          "manuel": "Manuell",
+          "night": "Nachtmodus",
+          "standby": "Standby",
+          "summer": "Sommermodus",
+          "week_program": "Wochenprogramm"
+        }
+      },
       "fan_level": { "name": "Lüfterstufe" },
       "fan1_speed": { "name": "Lüftergeschwindigkeit 1" },
       "fan2_speed": { "name": "Lüftergeschwindigkeit 2" },
@@ -284,6 +304,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
+    },
+    "pymodbus_version": {
+      "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
     }
   }
 }

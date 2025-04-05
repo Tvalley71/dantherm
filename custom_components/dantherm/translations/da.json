@@ -133,6 +133,26 @@
           "13": "Kommunikations alarm",
           "14": "Brand Termostat alarm",
           "15": "Høj Vandstand alarm"
+        },
+        "integration_mode": {
+          "name": "Integrationstilstand",
+          "state": {
+            "none": "Ingen",
+            "automatic": "Automatisk",
+            "away": "Ude-tilstand",
+            "boost": "Boost-tilstand",
+            "eco": "Eco-tilstand",
+            "home": "Hjemmetilstand",
+            "level_1": "Niveau 1",
+            "level_2": "Niveau 2",
+            "level_3": "Niveau 3",
+            "level_4": "Niveau 4",
+            "manuel": "Manuel",
+            "night": "Nattetilstand",
+            "standby": "Standby",
+            "summer": "Sommertilstand",
+            "week_program": "Ugeskema"
+          }
         }
       },
       "fan_level": { "name": "Ventilatorniveau" },
@@ -284,6 +304,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ugyldig filter levetid. Brug værdier mellem 0 og 360 dage."
+    },
+    "pymodbus_version": {
+      "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
     }
   }
 }

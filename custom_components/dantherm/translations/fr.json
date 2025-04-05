@@ -135,6 +135,26 @@
           "15": "Alerte niveau d'eau élevé"
         }
       },
+      "integration_mode": {
+        "name": "Mode d'intégration",
+        "state": {
+          "none": "Aucune",
+          "automatic": "Auto",
+          "away": "Mode absent",
+          "boost": "Mode Boost",
+          "eco": "Mode Eco",
+          "home": "Mode Maison",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4",
+          "manuel": "Manuel",
+          "night": "Mode nuit",
+          "standby": "Arrêt",
+          "summer": "Mode été",
+          "week_program": "Programme hebdo"
+        }
+      },
       "fan_level": { "name": "Niveau ventilation" },
       "fan1_speed": { "name": "Vitesse ventilateur 1" },
       "fan2_speed": { "name": "Vitesse ventilateur 2" },
@@ -284,6 +304,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Durée de vie du filtre invalide. Utilisez des valeurs entre 0 et 360 jours."
+    },
+    "pymodbus_version": {
+      "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
     }
   }
 }

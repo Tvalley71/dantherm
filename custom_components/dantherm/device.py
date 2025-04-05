@@ -43,6 +43,7 @@ from .device_map import (
     ATTR_HOME_MODE,
     ATTR_HOME_MODE_TIMEOUT,
     ATTR_HOME_OPERATION_SELECTION,
+    ATTR_INTEGRATION_MODE,
     ATTR_SENSOR_FILTERING,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
@@ -194,7 +195,7 @@ class Device:
         self._alarm = None
         self._sensor_filtering = False
         self._last_current_operation = None
-        self._operation_last_change_time = datetime.min
+        self._operation_change_timeout = datetime.min
         self._entity_store = Store(hass, version=1, key=f"{name}_entities")
         self._events = EventStack()
         self._available = True
@@ -297,8 +298,14 @@ class Device:
         return device_entry.id
 
     async def setup(self):
-        """Modbus setup for Dantherm Device."""
+        """Set up modbus for Dantherm Device."""
+
         _LOGGER.debug("Setup has started")
+
+        # Set up mode triggers
+        await self.set_up_mode_triggers(self._options)
+
+        # Connect and verify modbus connection
         result = await self._modbus_connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
         self._device_installed_components = result & 0xFFFF
@@ -852,7 +859,7 @@ class Device:
 
             if self._current_unit_mode != current_mode:
                 await self.set_active_unit_mode(active_mode)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)
             if fan_level is not None and self._fan_level != fan_level:
                 await self.set_fan_level(fan_level)
 
@@ -1078,52 +1085,24 @@ class Device:
         return new_value
 
     async def set_up_mode_triggers(self, options: dict):
-        """Set up mode triggers."""
-
-        async def set_up_associated_entities(trigger_name, enable: bool):
-            """Set up associated entities."""
-            device_registry = dr.async_get(self._hass)
-            entity_registry = er.async_get(self._hass)
-            mode_data = self._mode_triggers[trigger_name]
-
-            device_id = None
-            for device_entry in device_registry.devices.values():
-                if self._entry_id in device_entry.config_entries:
-                    device_id = device_entry.id
-
-            if device_id is None:
-                return
-
-            # Cache the entities list to avoid fetching multiple times
-            entities = list(entity_registry.entities.values())
-
-            for entity_name in mode_data["associated_entities"]:
-                # match unique ids suffix ending with _# followed by numbers
-                pattern = re.compile(rf"_{entity_name}(_\d+)?$")
-                for entity_entry in entities:
-                    if entity_entry.device_id == device_id and pattern.search(
-                        entity_entry.unique_id
-                    ):
-                        _LOGGER.debug(
-                            "Updating entity: %s, enable: %s",
-                            entity_entry.entity_id,
-                            enable,
-                        )
-                        if enable:
-                            self._set_entity_disabled_by(entity_entry.entity_id, None)
-                        else:
-                            self._set_entity_disabled_by(
-                                entity_entry.entity_id,
-                                RegistryEntryDisabler.INTEGRATION,
-                            )
-                        break
+        """Enable/disable associated entities based on configured mode triggers."""
+        entities = self._get_device_entities()
 
         for trigger in TRIGGER_MODES:
             trigger_entity = options.get(trigger)
-            if trigger_entity:
-                await set_up_associated_entities(trigger, True)
-            else:
-                await set_up_associated_entities(trigger, False)
+            enabled = bool(trigger_entity)
+
+            mode_data = self._mode_triggers.get(trigger)
+            if not mode_data:
+                _LOGGER.debug("No mode data for trigger: %s", trigger)
+                continue
+
+            for entity_name in mode_data["associated_entities"]:
+                self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
+
+        # The integration_mode entity should be disabled if no mode triggers are configured.
+        if not any(options.get(trigger) for trigger in TRIGGER_MODES):
+            self._set_entity_enabled_by_suffix(entities, ATTR_INTEGRATION_MODE, False)
 
     async def set_up_tracking_for_mode_triggers(self, options: dict):
         """Set up tracking for mode triggers."""
@@ -1152,15 +1131,18 @@ class Device:
 
     async def _async_boost_trigger_changed(self, event):
         """Boost trigger state change callback."""
-        await self._async_mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
+        if self.data[ATTR_BOOST_MODE]:
+            await self._async_mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
 
     async def _async_eco_trigger_changed(self, event):
         """Eco trigger state change callback."""
-        await self._async_mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
+        if self.data[ATTR_ECO_MODE]:
+            await self._async_mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
 
     async def _async_home_trigger_changed(self, event):
         """Home trigger state change callback."""
-        await self._async_mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
+        if self.data[ATTR_HOME_MODE]:
+            await self._async_mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
 
     async def _async_mode_trigger_changed(self, trigger: str, event):
         """Mode trigger state change callback."""
@@ -1236,8 +1218,8 @@ class Device:
         mode_data = self._mode_triggers[trigger_name]
         current_time = datetime.now()
 
-        # Check if operation mode has been changed within the last 5 minutes
-        if current_time - self._operation_last_change_time < timedelta(minutes=1):
+        # Check if operation mode change timeout has passed
+        if current_time < self._operation_change_timeout:
             return
 
         current_operation = self.get_current_operation
@@ -1272,10 +1254,14 @@ class Device:
             mode_data["undetected"] = None
 
         # Change the operation mode if different from the current operation
-        if target_operation and target_operation == current_operation:
+        if not target_operation or target_operation == current_operation:
             return
 
-        self._operation_last_change_time = current_time
+        # Set the operation change timeout
+        self._operation_change_timeout = current_time + timedelta(seconds=30)
+
+        _LOGGER.debug("Target operation = %s", target_operation)
+
         await self.set_operation_selection(target_operation)
 
     def _push_event(self, mode_name, operation) -> bool:
@@ -1294,16 +1280,6 @@ class Device:
     def _event_exists(self, mode_name) -> bool:
         """Check if event exists."""
         return self._events.exists(mode_name)
-
-    def _set_entity_disabled_by(self, entity_id, disabled_by: RegistryEntryDisabler):
-        """Set entity disabled by state."""
-
-        entity_registry = er.async_get(self._hass)
-
-        entity_registry.async_update_entity(
-            entity_id,
-            disabled_by=disabled_by,
-        )
 
     async def async_get_entity_state(self, description: DanthermEntityDescription):
         """Get entity value from description."""
@@ -1424,6 +1400,58 @@ class Device:
     def get_device_serial_number(self) -> int:
         """Device serial number."""
         return self._device_serial_number
+
+    def _set_entity_enabled_by_suffix(
+        self, entities: list, name_suffix: str, enable: bool
+    ):
+        """Enable/disable entities that match a name suffix (with optional _#)."""
+        pattern = re.compile(rf"_{name_suffix}(_\d+)?$")
+        for entry in entities:
+            if pattern.search(entry.unique_id):
+                _LOGGER.debug(
+                    "Updating entity: %s, enable: %s", entry.entity_id, enable
+                )
+                if enable:
+                    self._set_entity_disabled_by(entry.entity_id, None)
+                else:
+                    self._set_entity_disabled_by(
+                        entry.entity_id, RegistryEntryDisabler.INTEGRATION
+                    )
+
+    def _set_entity_disabled_by(self, entity_id, disabled_by: RegistryEntryDisabler):
+        """Set entity disabled by state."""
+
+        entity_registry = er.async_get(self._hass)
+
+        entity_registry.async_update_entity(
+            entity_id,
+            disabled_by=disabled_by,
+        )
+
+    def _get_device_entities(self) -> list:
+        """Return all entities that belong to this integration's device."""
+        entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
+
+        # Find device_id der matcher denne config entry
+        device_id = next(
+            (
+                d.id
+                for d in device_registry.devices.values()
+                if self._entry_id in d.config_entries
+            ),
+            None,
+        )
+
+        if not device_id:
+            _LOGGER.warning("No device found for config entry: %s", self._entry_id)
+            return []
+
+        return [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.device_id == device_id
+        ]
 
     async def _modbus_connect_and_verify(self):
         """Connect to Modbus and verify connection with retries."""

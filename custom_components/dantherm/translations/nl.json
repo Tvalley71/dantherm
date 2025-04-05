@@ -135,6 +135,26 @@
           "15": "High Waterlevel Alarm"
         }
       },
+      "integration_mode": {
+        "name": "Integratiemodus",
+        "state": {
+          "none": "Geen",
+          "automatic": "Automatisch",
+          "away": "Afwezigheidsmodus",
+          "boost": "Boost-modus",
+          "eco": "Eco-modus",
+          "home": "Thuis-modus",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4",
+          "manuel": "Manueel",
+          "night": "Nachtmodus",
+          "standby": "Standby",
+          "summer": "Zomermodus",
+          "week_program": "Weekprogramma"
+        }
+      },
       "fan_level": { "name": " Ventilatorniveau" },
       "fan1_speed": { "name": "Snelheid Ventilator 1" },
       "fan2_speed": { "name": "Snelheid Ventilator 2" },
@@ -284,6 +304,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
+    },
+    "pymodbus_version": {
+      "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
     }
   }
 }

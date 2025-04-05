@@ -32,6 +32,8 @@ from .config_flow import (
     ATTR_HOME_MODE_TRIGGER,
 )
 
+REQUIRED_PYMODBUS_VERSION = "3.7.4"
+
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
 SERVICE_FILTER_RESET = "filter_reset"
