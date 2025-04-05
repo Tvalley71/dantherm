@@ -31,81 +31,98 @@ Known supported units:
 
 ### Controls and sensors
 
-| Buttons Entities               | Description |
-| :-                             | :- |
-| `alarm_reset`                  | Reset alarm |
-| `filter_reset`                 | Reset remain filter time |
+#### Buttons Entities
 
-| **Calendar Entity**            | **Description** |
-| :-                             | :- |
-| ~~`calendar`~~                     | ~~Operation Calender~~ |
+| Entity            | Description       |
+|-------------------|-------------------|
+| `alarm_reset`     | Reset alarm       |
+| `filter_reset`    | Reset remain filter time |
 
-| **Cover Entity**               | **Description** |
-| :-                             | :- |
-| `bypass_damper`                | Bypass damper<sup>\*<sup> |
+#### Calendar Entity
 
-| **Number Entities**            | **Description** |
-| :-                             | :- |
-| `boost_mode_timeout`           | Boost mode timeout<sup>&sect;<sup> |
-| `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
-| `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
-| `eco_mode_timeout`             | Eco mode timeout<sup>&sect;<sup> |
-| `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
-| `home_mode_timeout`            | Home mode timeout<sup>&sect;<sup> |
-| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
+| Entity        | Description              |
+|---------------|--------------------------|
+| ~~`calendar`~~ | ~~Operation Calendar~~   |
 
-| **Select Entities**            | **Description** |
-| :-                             | :- |
-| `boost_operation_selection`    | Boost operation selection<sup>&sect;<sup> |
-| ~~`default_operation_selection`~~  | ~~Default operation selection~~ |
-| `eco_operation_selection`      | Eco operation selection<sup>&sect;<sup> |
-| `fan_level_selection`          | Fan level selection |
-| `home_operation_selection`     | Home operation selection<sup>&sect;<sup> |
-| `operation_selection`          | Mode of operation selection |
-| `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
+#### Cover Entity
 
-| **Sensor Entities**            | **Description** |
-| :-                             | :- |
-| `air_quality`                  | Air quality sensor<sup>\*<sup> |
-| `alarm`                        | Alarm sensor |
-| `exhaust_temperature`          | Exhaust temperature sensor |
-| `extract_temperature`          | Extract temperature sensor |
-| `fan_level`                    | Fan level |
-| `fan1_speed`                   | Fan 1 speed<sup>&dagger;<sup> |
-| `fan2_speed`                   | Fan 2 speed<sup>&dagger;<sup> |
-| `filter_remain`                | Remaining filter time |
-| `filter_remain_level`          | Remaining filter time level<sup>&dagger;<sup> |
-| `humidity`                     | Humidity sensor<sup>\*<sup> |
-| `integration_mode`             | Integration mode<sup>&dagger;<sup> |
-| `internal_preheater_dutycycle` | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| `operation_mode`               | Operation mode |
-| `outdoor_temperature`          | Outdoor temperature sensor |
-| `room_temperature`             | Room temperature sensor<sup>\* &dagger;<sup> |
-| `supply_temperature`           | Supply temperature sensor |
-| `work_time`                    | Work time<sup>&dagger;<sup> |
+| Entity           | Description              |
+|------------------|--------------------------|
+| `bypass_damper`  | Bypass damper [1]        |
 
-| **Switch Entities**            | **Description** |
-| :-                             | :- |
-| `away_mode`                    | Away mode |
-| `boost_mode`                   | Boost mode<sup>&sect;<sup> |
-| `eco_mode`                     | Eco mode<sup>&sect;<sup> |
-| `fireplace_mode`               | Fireplace mode |
-| `home_mode`                    | Home mode<sup>&sect;<sup> |
-| `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
-| `night_mode`                   | Night mode<sup>&dagger;<sup> |
-| `sensor_filtering`             | Sensor spike filtering<sup>&dagger;<sup> |
-| `summer_mode`                  | Summer mode |
+#### Number Entities
 
-| **Text Entities**              | **Description** |
-| :-                             | :- |
-| `night_mode_end_time`          | Night mode end time text<sup>&dagger;<sup> |
-| `night_mode_start_time`        | Night mode start time text<sup>&dagger;<sup> |
+| Entity                      | Description                        |
+|-----------------------------|------------------------------------|
+| `boost_mode_timeout`        | Boost mode timeout [3]             |
+| `bypass_minimum_temperature`| Bypass minimum temperature [2]     |
+| `bypass_maximum_temperature`| Bypass maximum temperature [2]     |
+| `eco_mode_timeout`          | Eco mode timeout [3]               |
+| `filter_lifetime`           | Input filter lifetime [2]          |
+| `home_mode_timeout`         | Home mode timeout [3]              |
+| `manual_bypass_duration`    | Manual bypass duration [1][2]      |
 
-_\* Some of the entities may not install due to lack of support or installation in the particular unit._
+#### Select Entities
 
-_&dagger; The entity is disabled by default._
+| Entity                      | Description                        |
+|-----------------------------|------------------------------------|
+| `boost_operation_selection` | Boost operation selection [3]      |
+| ~~`default_operation_selection`~~ | ~~Default operation selection~~ |
+| `eco_operation_selection`   | Eco operation selection [3]        |
+| `fan_level_selection`       | Fan level selection                |
+| `home_operation_selection`  | Home operation selection [3]       |
+| `operation_selection`       | Mode of operation selection        |
+| `week_program_selection`    | Week program selection [2]         |
 
-_&sect; The entity is only available if the corresponding mode trigger is configured._
+#### Sensor Entities
+
+| Entity                        | Description                          |
+|-------------------------------|--------------------------------------|
+| `air_quality`                 | Air quality sensor [1]               |
+| `alarm`                       | Alarm sensor                         |
+| `exhaust_temperature`         | Exhaust temperature sensor           |
+| `extract_temperature`         | Extract temperature sensor           |
+| `fan_level`                   | Fan level                            |
+| `fan1_speed`                  | Fan 1 speed [2]                      |
+| `fan2_speed`                  | Fan 2 speed [2]                      |
+| `filter_remain`               | Remaining filter time                |
+| `filter_remain_level`         | Remaining filter time level [2]      |
+| `humidity`                    | Humidity sensor [1]                  |
+| `integration_mode`            | Integration mode [4]                 |
+| `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
+| `operation_mode`              | Operation mode                       |
+| `outdoor_temperature`         | Outdoor temperature sensor           |
+| `room_temperature`            | Room temperature sensor [1][2]       |
+| `supply_temperature`          | Supply temperature sensor            |
+| `work_time`                   | Work time [2]                        |
+
+#### Switch Entities
+
+| Entity                 | Description                     |
+|------------------------|---------------------------------|
+| `away_mode`            | Away mode                       |
+| `boost_mode`           | Boost mode [3]                  |
+| `eco_mode`             | Eco mode [3]                    |
+| `fireplace_mode`       | Fireplace mode                  |
+| `home_mode`            | Home mode [3]                   |
+| `manual_bypass_mode`   | Manual bypass mode [1]          |
+| `night_mode`           | Night mode [2]                  |
+| `sensor_filtering`     | Sensor spike filtering [2]      |
+| `summer_mode`          | Summer mode                     |
+
+#### Text Entities
+
+| Entity                   | Description                     |
+|--------------------------|---------------------------------|
+| `night_mode_end_time`    | Night mode end time text [2]    |
+| `night_mode_start_time`  | Night mode start time text [2]  |
+
+### Notes
+
+[1] The entity may not install due to lack of support or installation in the particular unit.  
+[2] The entity is disabled by default.  
+[3] The entity will be enabled or disabled depending on whether the corresponding mode trigger is configured.  
+[4] The entity can only be enabled if any of the mode triggers are configured.
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
