@@ -11,8 +11,7 @@ This custom integration requires:
 
 - Home Assistant version **2025.1.0** or newer
 
-
-Currently only support for Modbus over TCP/IP.
+Only support for Modbus over TCP/IP.
 
 Known supported units:
 
