@@ -50,6 +50,12 @@ PLATFORMS = [
     "text",
 ]
 
+DEFAULT_OPTIONS = {
+    ATTR_HOME_MODE_TRIGGER: "",
+    ATTR_BOOST_MODE_TRIGGER: "",
+    ATTR_ECO_MODE_TRIGGER: "",
+}
+
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Dantherm component."""
@@ -77,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # If options are empty, initialize them with defaults
     if not entry.options:
         _LOGGER.warning("No stored options found, initializing defaults")
-        hass.config_entries.async_update_entry(entry, options={})
+        hass.config_entries.async_update_entry(entry, options=DEFAULT_OPTIONS)
 
     _LOGGER.debug("Loading stored options in setup: %s", entry.options)
 
