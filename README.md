@@ -120,8 +120,8 @@ Known supported units:
 
 [1] The entity may not install due to lack of support or installation in the particular unit.  
 [2] The entity is disabled by default.  
-[3] The entity will be enabled or disabled depending on whether the corresponding mode trigger is configured.  
-[4] The entity can only be enabled if any of the mode triggers are configured.
+[3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
+[4] The entity can only be enabled if any of the adaptive triggers are configured.
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
@@ -566,32 +566,33 @@ The available operations in **Eco Operation Selection** are **Standby** and **Le
 > [!IMPORTANT]
 > The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used for longer periods.
 
+### Adaptive Triggers ⚡  
+Home, Boost, and Eco Modes rely on **Adaptive Triggers** — binary sensors or helpers that determine **when a mode should activate**.
 
-### Mode Triggers ⚡  
-Home, Boost, and Eco Modes rely on **Mode Triggers**, which are binary sensors that determine when a mode should activate.  
+An **Adaptive Trigger** can be:
+- A **motion sensor** (e.g., presence detection for Home Mode)  
+- A **humidity sensor** (e.g., high humidity after a shower for Boost Mode)  
+- A **power sensor** (e.g., detecting stove or shower fan usage)  
+- An **outdoor temperature sensor** (e.g., reducing fan speed in cold weather for Eco Mode)  
+- A **custom helper** combining multiple conditions  
 
-A **Mode Trigger** can be:  
-- A **motion sensor** (e.g., presence detection in Home Mode)  
-- A **humidity sensor** (e.g., detecting high humidity after a shower)  
-- A **power sensor** (e.g., detecting when a stove or shower fan is running)  
-- An **external temperature sensor** (e.g., lowering fan speed in cold weather for Eco Mode)  
-- A **custom logic helper** combining multiple conditions  
+Adaptive Triggers are configured manually in the integration options and linked to each mode individually.
 
-Mode Triggers are **manually configured** in the integration settings.
+> ⚠️ **Note:** Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.  
+> Make sure the entity returns an `on` or `off` state.
 
-### Configuring a Mode Trigger
+### Configuring an Adaptive Trigger
 
-#### Steps to configure a Mode Trigger:
+#### Steps to set up an Adaptive Trigger:
 1. **Go to Home Assistant → Integrations → Dantherm.**  
 2. **Select your Dantherm device** and open the integration settings.  
-3. **Enable the desired Mode** (Home, Boost, or Eco Mode).  
-4. **Enter the Mode Trigger entity**:
-   - In the respective Mode field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, **Eco Mode Trigger**), **enter the entity ID** of the binary sensor that will trigger the mode. This can be a motion sensor, humidity sensor, power sensor, or custom binary sensor.
-   - Example entities could be: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
-5. **Save the configuration.**  
-   
-Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. ⚡
+3. **Enable the desired mode** (Home, Boost, or Eco).  
+4. **Enter the trigger entity**:
+   - In the corresponding field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, or **Eco Mode Trigger**), enter the **entity ID** of the binary sensor that should act as the trigger.
+   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
+5. **Save the configuration.**
 
+Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
