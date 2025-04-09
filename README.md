@@ -87,7 +87,7 @@ Known supported units:
 | `filter_remain`               | Remaining filter time                |
 | `filter_remain_level`         | Remaining filter time level [2]      |
 | `humidity`                    | Humidity sensor [1]                  |
-| `integration_mode`            | Integration mode [4]                 |
+| `adaptive_state`              | Adaptive state [4]                 |
 | `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
 | `operation_mode`              | Operation mode                       |
 | `outdoor_temperature`         | Outdoor temperature sensor           |
