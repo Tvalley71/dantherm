@@ -134,8 +134,8 @@
           "14": "Brand Termostat alarm",
           "15": "Høj Vandstand alarm"
         },
-        "integration_mode": {
-          "name": "Integrationstilstand",
+        "adaptive_state": {
+          "name": "Adaptiv tilstand",
           "state": {
             "none": "Ingen",
             "automatic": "Automatisk",

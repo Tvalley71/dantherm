@@ -135,8 +135,8 @@
           "15": "Wasserstandsalarm"
         }
       },
-      "integration_mode": {
-        "name": "Integrationsmodus",
+      "adaptive_state": {
+        "name": "Adaptive Zustand",
         "state": {
           "none": "Keiner",
           "automatic": "Automatisch",

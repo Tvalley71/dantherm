@@ -23,13 +23,14 @@ from homeassistant.helpers.event import (
 )
 
 from .config_flow import (
+    ADAPTIVE_TRIGGERS,
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
-    TRIGGER_MODES,
 )
 from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
 from .device_map import (
+    ATTR_ADAPTIVE_STATE,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
     ATTR_BOOST_OPERATION_SELECTION,
@@ -43,7 +44,6 @@ from .device_map import (
     ATTR_HOME_MODE,
     ATTR_HOME_MODE_TIMEOUT,
     ATTR_HOME_OPERATION_SELECTION,
-    ATTR_INTEGRATION_MODE,
     ATTR_SENSOR_FILTERING,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
@@ -243,7 +243,7 @@ class Device:
             },
         }
 
-        self._mode_triggers = {
+        self._adaptive_triggers = {
             ATTR_BOOST_MODE_TRIGGER: {
                 "associated_entities": [
                     ATTR_BOOST_MODE,
@@ -302,8 +302,8 @@ class Device:
 
         _LOGGER.debug("Setup has started")
 
-        # Set up mode triggers
-        await self.set_up_mode_triggers(self._options)
+        # Set up adaptive triggers
+        await self.set_up_adaptive_triggers(self._options)
 
         # Connect and verify modbus connection
         result = await self._modbus_connect_and_verify()
@@ -325,9 +325,9 @@ class Device:
         )
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
-        # Set up tracking for mode triggers from the config options if any
+        # Set up tracking for adaptive triggers from the config options if any
         if self._options:
-            await self.set_up_tracking_for_mode_triggers(self._options)
+            await self.set_up_tracking_for_adaptive_triggers(self._options)
 
         if (
             self._device_installed_components & ComponentClass.HAC1
@@ -456,7 +456,7 @@ class Device:
         for entity in self._entities:
             await self.async_refresh_entity(entity)
 
-        await self._update_mode_triggers()
+        await self._update_adaptive_triggers()
 
         _LOGGER.debug("<<< LOOP END - %s >>>", datetime.now().strftime("%H:%M:%S.%f"))
 
@@ -1084,33 +1084,33 @@ class Device:
         history.append(new_value)
         return new_value
 
-    async def set_up_mode_triggers(self, options: dict):
-        """Enable/disable associated entities based on configured mode triggers."""
+    async def set_up_adaptive_triggers(self, options: dict):
+        """Enable/disable associated entities based on configured adaptive triggers."""
         entities = self._get_device_entities()
 
-        for trigger in TRIGGER_MODES:
+        for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = options.get(trigger)
             enabled = bool(trigger_entity)
 
-            mode_data = self._mode_triggers.get(trigger)
+            mode_data = self._adaptive_triggers.get(trigger)
             if not mode_data:
-                _LOGGER.debug("No mode data for trigger: %s", trigger)
+                _LOGGER.debug("No data for trigger: %s", trigger)
                 continue
 
             for entity_name in mode_data["associated_entities"]:
                 self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
 
-        # The integration_mode entity should be disabled if no mode triggers are configured.
-        if not any(options.get(trigger) for trigger in TRIGGER_MODES):
-            self._set_entity_enabled_by_suffix(entities, ATTR_INTEGRATION_MODE, False)
+        # The adaptive_state entity should be disabled if no adaptive triggers are configured.
+        if not any(options.get(trigger) for trigger in ADAPTIVE_TRIGGERS):
+            self._set_entity_enabled_by_suffix(entities, ATTR_ADAPTIVE_STATE, False)
 
-    async def set_up_tracking_for_mode_triggers(self, options: dict):
-        """Set up tracking for mode triggers."""
+    async def set_up_tracking_for_adaptive_triggers(self, options: dict):
+        """Set up tracking for adaptive triggers."""
 
-        def _set_up_tracking_for_mode_trigger(trigger_name: str, new_trigger: str):
-            """Set up tracking for a mode trigger."""
+        def _set_up_tracking_for_adaptive_trigger(trigger_name: str, new_trigger: str):
+            """Set up tracking for a adaptive trigger."""
 
-            mode_data = self._mode_triggers[trigger_name]
+            mode_data = self._adaptive_triggers[trigger_name]
             if new_trigger != mode_data["trigger"]:
                 mode_name = trigger_name.split("_")[0]
                 self.data[f"{mode_name}_mode"] = None
@@ -1124,10 +1124,10 @@ class Device:
                         getattr(self, f"_async_{mode_name}_trigger_changed"),
                     )
 
-        for trigger in TRIGGER_MODES:
+        for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = options.get(trigger)
             if trigger_entity:
-                _set_up_tracking_for_mode_trigger(trigger, trigger_entity)
+                _set_up_tracking_for_adaptive_trigger(trigger, trigger_entity)
 
     async def _async_boost_trigger_changed(self, event):
         """Boost trigger state change callback."""
@@ -1158,7 +1158,7 @@ class Device:
             return
 
         # Check if state is detected
-        mode_data = self._mode_triggers[trigger]
+        mode_data = self._adaptive_triggers[trigger]
         if new_state.state == STATE_ON:
             mode_data["detected"] = datetime.now()
             _LOGGER.debug("%s detected!", trigger.capitalize())
@@ -1168,13 +1168,13 @@ class Device:
             mode_data["undetected"] = datetime.now()
             _LOGGER.debug("%s undetected!", trigger.capitalize())
 
-    async def _update_mode_triggers(self):
-        """Update mode triggers."""
+    async def _update_adaptive_triggers(self):
+        """Update adaptive triggers."""
 
-        mode_trigger = None
+        adaptive_trigger = None
         earliest = datetime.max
 
-        for trigger_name, mode_data in self._mode_triggers.items():
+        for trigger_name, mode_data in self._adaptive_triggers.items():
             # Skip if there is no trigger
             if not mode_data.get("trigger"):
                 continue
@@ -1195,27 +1195,27 @@ class Device:
 
                 if detected_time < earliest:
                     earliest = detected_time
-                    mode_trigger = trigger_name
+                    adaptive_trigger = trigger_name
 
             elif undetected_time < earliest:
                 timeout = mode_data["timeout"]
                 if timeout and timeout > datetime.now():
                     continue
                 earliest = undetected_time
-                mode_trigger = trigger_name
+                adaptive_trigger = trigger_name
 
-        if mode_trigger:
-            await self._update_mode_trigger_state(mode_trigger)
+        if adaptive_trigger:
+            await self._update_adaptive_trigger_state(adaptive_trigger)
 
-    async def _update_mode_trigger_state(self, trigger_name: str):
-        """Update mode state."""
+    async def _update_adaptive_trigger_state(self, trigger_name: str):
+        """Update adaptive trigger state."""
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
         # Check if mode is switch on
         if not self.data.get(f"{mode_name}_mode", False):
             return
 
-        mode_data = self._mode_triggers[trigger_name]
+        mode_data = self._adaptive_triggers[trigger_name]
         current_time = datetime.now()
 
         # Check if operation mode change timeout has passed

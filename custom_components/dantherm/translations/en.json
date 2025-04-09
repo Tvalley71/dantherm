@@ -171,8 +171,8 @@
           "15": "High Waterlevel Alarm"
         }
       },
-      "integration_mode": {
-        "name": "Integration Mode",
+      "adaptive_state": {
+        "name": "Adaptive State",
         "state": {
           "none": "None",
           "automatic": "Automatic",

@@ -32,7 +32,7 @@ ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
 
 ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
 
-TRIGGER_MODES = [
+ADAPTIVE_TRIGGERS = [
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
@@ -122,7 +122,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # Validate the user-inputted entities
             entity_registry = er.async_get(self.hass)
-            for entity_key in TRIGGER_MODES:
+            for entity_key in ADAPTIVE_TRIGGERS:
                 entity_id = user_input.get(entity_key)
                 if entity_id and entity_id not in [
                     entity.entity_id for entity in entity_registry.entities.values()

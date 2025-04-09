@@ -135,8 +135,8 @@
           "15": "Alerte niveau d'eau élevé"
         }
       },
-      "integration_mode": {
-        "name": "Mode d'intégration",
+      "adaptive_state": {
+        "name": "État adaptatif",
         "state": {
           "none": "Aucune",
           "automatic": "Auto",

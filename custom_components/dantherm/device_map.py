@@ -141,7 +141,7 @@ ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
 
 ATTR_WORK_TIME: Final = "work_time"
 
-ATTR_INTEGRATION_MODE: Final = "integration_mode"
+ATTR_ADAPTIVE_STATE: Final = "adaptive_state"
 
 ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
@@ -765,7 +765,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
-        key=ATTR_INTEGRATION_MODE,
+        key=ATTR_ADAPTIVE_STATE,
         icon="mdi:information",
         data_getinternal="get_integration_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
