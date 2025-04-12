@@ -141,7 +141,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     .get("device")
                 )
                 if device_instance:
-                    await device_instance.set_up_mode_triggers(user_input)
+                    await device_instance.set_up_adaptive_triggers(user_input)
 
                 return self.async_create_entry(title="", data=user_input)
 
