@@ -475,6 +475,8 @@ Each sensor type has a predefined maximum allowed change per reading:
 
 This ensures the filtering logic fits the natural dynamics of each sensor type.
 
+> This feature was inspired by [issue #68](https://github.com/Tvalley71/dantherm/issues/68), reported by a community user.
+
 
 ## Actions
 
