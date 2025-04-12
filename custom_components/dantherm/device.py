@@ -1045,15 +1045,15 @@ class Device:
         return self._filter_sensor("room", result)
 
     @property
-    def get_integration_mode(self):
-        """Get integration mode."""
+    def get_adaptive_state(self):
+        """Get adaptive state."""
 
         # Get the top event
         top = self._events.top()
         result = "none"
         if top:
             result = self._events.top()["event"]
-        _LOGGER.debug("Integration mode = %s", result)
+        _LOGGER.debug("Adaptive state = %s", result)
         return result
 
     def _filter_sensor(self, sensor: str, new_value: float) -> float:

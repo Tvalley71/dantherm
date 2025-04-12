@@ -767,7 +767,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_ADAPTIVE_STATE,
         icon="mdi:information",
-        data_getinternal="get_integration_mode",
+        data_getinternal="get_adaptive_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
