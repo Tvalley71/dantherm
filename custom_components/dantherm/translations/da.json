@@ -133,26 +133,26 @@
           "13": "Kommunikations alarm",
           "14": "Brand Termostat alarm",
           "15": "Høj Vandstand alarm"
-        },
-        "adaptive_state": {
-          "name": "Adaptiv tilstand",
-          "state": {
-            "none": "Ingen",
-            "automatic": "Automatisk",
-            "away": "Ude-tilstand",
-            "boost": "Boost-tilstand",
-            "eco": "Eco-tilstand",
-            "home": "Hjemmetilstand",
-            "level_1": "Niveau 1",
-            "level_2": "Niveau 2",
-            "level_3": "Niveau 3",
-            "level_4": "Niveau 4",
-            "manuel": "Manuel",
-            "night": "Nattetilstand",
-            "standby": "Standby",
-            "summer": "Sommertilstand",
-            "week_program": "Ugeskema"
-          }
+        }
+      },
+      "adaptive_state": {
+        "name": "Adaptiv tilstand",
+        "state": {
+          "none": "Ingen",
+          "automatic": "Automatisk",
+          "away": "Ude-tilstand",
+          "boost": "Boost-tilstand",
+          "eco": "Eco-tilstand",
+          "home": "Hjemmetilstand",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4",
+          "manuel": "Manuel",
+          "night": "Nattetilstand",
+          "standby": "Standby",
+          "summer": "Sommertilstand",
+          "week_program": "Ugeskema"
         }
       },
       "fan_level": { "name": "Ventilatorniveau" },
