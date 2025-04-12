@@ -1229,8 +1229,8 @@ class Device:
         if mode_data["detected"]:
             # Set the timeout of the trigger
             mode_data["timeout"] = current_time + timedelta(
-                # minutes=self.data.get(f"{mode_name}_mode_timeout", 5)
-                seconds=10 * self.data.get(f"{mode_name}_mode_timeout", 5)
+                minutes=self.data.get(f"{mode_name}_mode_timeout", 5)
+                # seconds=10 * self.data.get(f"{mode_name}_mode_timeout", 5)
             )
 
             # Check if this is not a repeated detection
