@@ -89,6 +89,42 @@
           "9": "Ugeprogram 10",
           "10": "Ugeprogram 11"
         }
+      },
+      "boost_operation_selection": {
+        "name": "Boost-tilstand indstilling",
+        "state": {
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco-tilstand indstilling",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Hjemmetilstand indstilling",
+        "state": {
+          "automatic": "Automatik",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Ugeprogram"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Standardtilstand indstilling",
+        "state": {
+          "automatic": "Automatik",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Ugeprogram"
+        }
       }
     },
     "sensor": {
