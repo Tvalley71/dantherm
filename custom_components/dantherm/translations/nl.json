@@ -65,7 +65,7 @@
         }
       },
       "fan_level_selection": {
-        "name": "Ventilator Selectie",
+        "name": "Ventilator selectie",
         "state": {
           "0": "Niveau 0",
           "1": "Niveau 1",
@@ -88,6 +88,42 @@
           "8": "Weekprogramma 9",
           "9": "Weekprogramma 10",
           "10": "Weekprogramma 11"
+        }
+      },
+      "boost_operation_selection": {
+        "name": "Boost-modus selectie",
+        "state": {
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco-modus selectie",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Thuis-modus selectie",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Weekprogramma"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Standaard modus selectie",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Weekprogramma"
         }
       }
     },
