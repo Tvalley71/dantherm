@@ -89,6 +89,42 @@
           "9": "Wochenprogramm 10",
           "10": "Wochenprogramm 11"
         }
+      },
+      "boost_operation_selection": {
+        "name": "Boost-Modus Auswahl",
+        "state": {
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "level_4": "Stufe 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco-Modus Auswahl",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Heim-Modus Auswahl",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "week_program": "Wochenprogramm"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Standardmodus Auswahl",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "week_program": "Wochenprogramm"
+        }
       }
     },
     "sensor": {
