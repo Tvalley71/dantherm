@@ -43,8 +43,7 @@ class DanthermButton(ButtonEntity, DanthermEntity):
         description: DanthermButtonEntityDescription,
     ) -> None:
         """Init button."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermButtonEntityDescription = description
 

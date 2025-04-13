@@ -43,10 +43,8 @@ class DanthermSensor(SensorEntity, DanthermEntity):
         description: DanthermSensorEntityDescription,
     ) -> None:
         """Init sensor."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
-        self.entity_description: DanthermSensorEntityDescription = description
 
     @property
     def native_value(self):

@@ -4,7 +4,6 @@ import logging
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -44,8 +43,7 @@ class DanthermNumber(NumberEntity, DanthermEntity):
         description: DanthermNumberEntityDescription,
     ) -> None:
         """Init number."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermNumberEntityDescription = description
 

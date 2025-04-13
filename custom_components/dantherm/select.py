@@ -4,7 +4,6 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import DanthermEntity, Device
@@ -44,8 +43,7 @@ class DanthermSelect(SelectEntity, DanthermEntity):
         description: DanthermSelectEntityDescription,
     ) -> None:
         """Init select."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermSelectEntityDescription = description
 
@@ -66,7 +64,7 @@ class DanthermSelect(SelectEntity, DanthermEntity):
                 option
             )
         elif self.entity_description.data_store:
-            await self._device.set_entity_state(self, self.key, option)
+            await self._device.set_entity_state(self.key, option)
         elif option.isdigit():
             await self._device.write_holding_registers(
                 description=self.entity_description, value=int(option)

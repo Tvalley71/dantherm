@@ -21,4 +21,5 @@ DEVICE_TYPES = {
     15: "HCV460 P2",
     21: "RCV320 P2",
     26: "RCV320 P1",
+    27: "RCC220 P2",
 }
