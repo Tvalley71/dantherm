@@ -89,6 +89,42 @@
           "9": "Programme hebdo 10",
           "10": "Programme hebdo 11"
         }
+      },
+      "boost_operation_selection": {
+        "name": "Sélection mode Boost",
+        "state": {
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Sélection mode Eco",
+        "state": {
+          "standby": "Arrêt",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Sélection mode Maison",
+        "state": {
+          "automatic": "Auto",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Programme hebdo"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Sélection mode par défaut",
+        "state": {
+          "automatic": "Auto",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Programme hebdo"
+        }
       }
     },
     "sensor": {
