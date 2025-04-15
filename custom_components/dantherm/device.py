@@ -1258,7 +1258,7 @@ class Device:
             return
 
         # Set the operation change timeout
-        self._operation_change_timeout = current_time + timedelta(seconds=30)
+        self._operation_change_timeout = current_time + timedelta(minutes=2)
 
         _LOGGER.debug("Target operation = %s", target_operation)
 
