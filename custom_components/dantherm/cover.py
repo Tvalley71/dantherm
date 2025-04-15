@@ -16,7 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """."""
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
+    device = device_entry.get("device")
+    if device is None:
+        _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
+        return False
 
     entities = []
     for description in COVERS:
@@ -24,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             cover = DanthermCover(device, description)
             entities.append(cover)
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)  # True
     return True
 
 
@@ -37,8 +45,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
         description: DanthermCoverEntityDescription,
     ) -> None:
         """Init cover."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermCoverEntityDescription = description
         self._attr_supported_features = 0
@@ -115,20 +122,8 @@ class DanthermCover(CoverEntity, DanthermEntity):
     async def async_update(self) -> None:
         """Update the state of the cover."""
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
 
         if result is None:
             self._attr_available = False
@@ -153,3 +148,5 @@ class DanthermCover(CoverEntity, DanthermEntity):
                 self._attr_is_closed = False
                 self._attr_is_closing = False
                 self._attr_is_opening = False
+
+        self._device.data[self.key] = result

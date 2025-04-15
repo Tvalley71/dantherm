@@ -1,4 +1,4 @@
-"""."""
+"""Switch implementation."""
 
 from datetime import datetime
 import logging
@@ -15,7 +15,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """."""
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
+    device = device_entry.get("device")
+    if device is None:
+        _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
+        return False
 
     entities = []
     for description in SWITCHES:
@@ -23,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             switch = DanthermSwitch(device, description)
             entities.append(switch)
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)  # True
     return True
 
 
@@ -36,8 +44,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         description: DanthermSwitchEntityDescription,
     ) -> None:
         """Init Number."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermSwitchEntityDescription = description
 
@@ -59,8 +66,11 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         state = self.entity_description.state_setoff
         if state is None:
             state = self.entity_description.state_off
+
         if self.entity_description.data_setinternal:
             await getattr(self._device, self.entity_description.data_setinternal)(state)
+        elif self.entity_description.data_store:
+            await self._device.set_entity_state(self.key, state)
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description, value=state
@@ -76,8 +86,11 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         state = self.entity_description.state_seton
         if state is None:
             state = self.entity_description.state_on
+
         if self.entity_description.data_setinternal:
             await getattr(self._device, self.entity_description.data_setinternal)(state)
+        elif self.entity_description.data_store:
+            await self._device.set_entity_state(self.key, state)
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description, value=state
@@ -91,28 +104,18 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 _LOGGER.debug("Skipping suspened entity=%s", self.name)
                 return
 
-        if self.entity_description.data_getinternal:
-            if hasattr(
-                self._device, f"async_{self.entity_description.data_getinternal}"
-            ):
-                func = getattr(
-                    self._device, f"async_{self.entity_description.data_getinternal}"
-                )
-                result = await func()
-            else:
-                result = getattr(self._device, self.entity_description.data_getinternal)
-        elif self.entity_description.data_entity:
-            result = self._device.data.get(self.entity_description.data_entity, None)
-        else:
-            result = await self._device.read_holding_registers(
-                description=self.entity_description
-            )
+        # Get the entity state
+        result = await self._device.async_get_entity_state(self.entity_description)
+
+        if result is None and self.entity_description.state_default is not None:
+            result = self.entity_description.state_default
 
         if result is None:
             self._attr_available = False
+            self._device.data[self.key] = None
         else:
             self._attr_available = True
-            if type(result) is bool:
+            if isinstance(result, bool):
                 self._attr_is_on = result
             elif (
                 result & self.entity_description.state_on
@@ -120,3 +123,5 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
+
+            self._device.data[self.key] = self._attr_is_on

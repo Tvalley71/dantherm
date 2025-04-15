@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integration Konfiguration",
+            "data": {
+                "boost_mode_trigger": "Boost-Modus Auslöser Entität",
+                "eco_mode_trigger": "Eco-Modus Auslöser Entität",
+                "home_mode_trigger": "Heim-Modus Auslöser Entität"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Filter zurücksetzen" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
-      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" }
+      "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
+      "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
+      "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
+      "home_mode_timeout": { "name": "Heim-Modus Timeout" }
     },
     "select": {
       "operation_selection": {
@@ -70,6 +88,42 @@
           "8": "Wochenprogramm 9",
           "9": "Wochenprogramm 10",
           "10": "Wochenprogramm 11"
+        }
+      },
+      "boost_operation_selection": {
+        "name": "Boost-Modus Auswahl",
+        "state": {
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "level_4": "Stufe 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco-Modus Auswahl",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Heim-Modus Auswahl",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "week_program": "Wochenprogramm"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Standardmodus Auswahl",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "week_program": "Wochenprogramm"
         }
       }
     },
@@ -117,6 +171,26 @@
           "15": "Wasserstandsalarm"
         }
       },
+      "adaptive_state": {
+        "name": "Adaptive Zustand",
+        "state": {
+          "none": "Keiner",
+          "automatic": "Automatisch",
+          "away": "Abwesenheitsmodus",
+          "boost": "Boost-Modus",
+          "eco": "Eco-Modus",
+          "home": "Heim-Modus",
+          "level_1": "Stufe 1",
+          "level_2": "Stufe 2",
+          "level_3": "Stufe 3",
+          "level_4": "Stufe 4",
+          "manuel": "Manuell",
+          "night": "Nachtmodus",
+          "standby": "Standby",
+          "summer": "Sommermodus",
+          "week_program": "Wochenprogramm"
+        }
+      },
       "fan_level": { "name": "Lüfterstufe" },
       "fan1_speed": { "name": "Lüftergeschwindigkeit 1" },
       "fan2_speed": { "name": "Lüftergeschwindigkeit 2" },
@@ -137,7 +211,11 @@
       "night_mode": { "name": "Nachtmodus" },
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
-      "summer_mode": { "name": "Sommermodus" }
+      "summer_mode": { "name": "Sommermodus" },
+      "sensor_filtering": { "name": "Sensorfilterung" },
+      "boost_mode": { "name": "Boost-Modus" },
+      "eco_mode": { "name": "Eco-Modus" },
+      "home_mode": { "name": "Heim-Modus" }
     },
     "text": {
       "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
@@ -262,6 +340,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
+    },
+    "pymodbus_version": {
+      "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
     }
   }
 }

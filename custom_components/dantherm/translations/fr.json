@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Configuration de l'intégration Dantherm",
+            "data": {
+                "boost_mode_trigger": "Entité de déclenchement du mode Boost",
+                "eco_mode_trigger": "Entité de déclenchement du mode Eco",
+                "home_mode_trigger": "Entité de déclenchement du mode Maison"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Durée de vie filtre" },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
-      "manual_bypass_duration": { "name": "Durée du bypass manuel" }
+      "manual_bypass_duration": { "name": "Durée du bypass manuel" },
+      "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
+      "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
+      "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" }
     },
     "select": {
       "operation_selection": {
@@ -70,6 +88,42 @@
           "8": "Programme hebdo 9",
           "9": "Programme hebdo 10",
           "10": "Programme hebdo 11"
+        }
+      },
+      "boost_operation_selection": {
+        "name": "Sélection mode Boost",
+        "state": {
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Sélection mode Eco",
+        "state": {
+          "standby": "Arrêt",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Sélection mode Maison",
+        "state": {
+          "automatic": "Auto",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Programme hebdo"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Sélection mode par défaut",
+        "state": {
+          "automatic": "Auto",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Programme hebdo"
         }
       }
     },
@@ -117,6 +171,26 @@
           "15": "Alerte niveau d'eau élevé"
         }
       },
+      "adaptive_state": {
+        "name": "État adaptatif",
+        "state": {
+          "none": "Aucune",
+          "automatic": "Auto",
+          "away": "Mode absent",
+          "boost": "Mode Boost",
+          "eco": "Mode Eco",
+          "home": "Mode Maison",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4",
+          "manuel": "Manuel",
+          "night": "Mode nuit",
+          "standby": "Arrêt",
+          "summer": "Mode été",
+          "week_program": "Programme hebdo"
+        }
+      },
       "fan_level": { "name": "Niveau ventilation" },
       "fan1_speed": { "name": "Vitesse ventilateur 1" },
       "fan2_speed": { "name": "Vitesse ventilateur 2" },
@@ -137,7 +211,11 @@
       "night_mode": { "name": "Mode nuit" },
       "fireplace_mode": { "name": "Mode allumage cheminée" },
       "manual_bypass_mode": { "name": "Mode bypass manuel" },
-      "summer_mode": { "name": "Mode été" }
+      "summer_mode": { "name": "Mode été" },
+      "sensor_filtering": { "name": "Filtrage des capteurs" },
+      "boost_mode": { "name": "Mode Boost" },
+      "eco_mode": { "name": "Mode Eco" },
+      "home_mode": { "name": "Mode Maison" }
     },
     "text": {
       "night_mode_start_time": { "name": "Heure de début du mode nuit" },
@@ -262,6 +340,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Durée de vie du filtre invalide. Utilisez des valeurs entre 0 et 360 jours."
+    },
+    "pymodbus_version": {
+      "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
     }
   }
 }

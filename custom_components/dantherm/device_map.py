@@ -24,6 +24,15 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntityDescription
 from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
+from homeassistant.helpers.entity import EntityDescription
+
+from .config_flow import (
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
+)
+
+REQUIRED_PYMODBUS_VERSION = "3.7.4"
 
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
@@ -41,6 +50,9 @@ STATE_AWAY: Final = "away"
 STATE_SUMMER: Final = "summer"
 STATE_FIREPLACE: Final = "fireplace"
 STATE_NIGHT: Final = "night"
+STATE_BOOST: Final = "boost"
+STATE_ECO: Final = "eco"
+STATE_HOME: Final = "home"
 
 ATTR_FAN_LEVEL_SELECTION: Final = "fan_level_selection"
 ATTR_FAN_LEVEL: Final = "fan_level"
@@ -62,6 +74,18 @@ STATE_WEEKPROGRAM_8: Final = "7"
 STATE_WEEKPROGRAM_9: Final = "8"
 STATE_WEEKPROGRAM_10: Final = "9"
 STATE_WEEKPROGRAM_11: Final = "10"
+
+ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
+STATE_LEVEL_3: Final = "level_3"
+STATE_LEVEL_4: Final = "level_4"
+
+ATTR_ECO_OPERATION_SELECTION: Final = "eco_operation_selection"
+
+ATTR_HOME_OPERATION_SELECTION: Final = "home_operation_selection"
+STATE_LEVEL_1: Final = "level_1"
+STATE_LEVEL_2: Final = "level_2"
+
+ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 
 ATTR_OPERATION_MODE: Final = "operation_mode"
 
@@ -88,6 +112,16 @@ ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
 
+ATTR_BOOST_MODE: Final = "boost_mode"
+ATTR_BOOST_MODE_TIMEOUT: Final = "boost_mode_timeout"
+
+ATTR_ECO_MODE: Final = "eco_mode"
+ATTR_ECO_MODE_TIMEOUT: Final = "eco_mode_timeout"
+
+ATTR_HOME_MODE: Final = "home_mode"
+ATTR_HOME_MODE_TIMEOUT: Final = "home_mode_timeout"
+
+
 ATTR_FIREPLACE_MODE: Final = "fireplace_mode"
 
 ATTR_NIGHT_MODE: Final = "night_mode"
@@ -99,11 +133,15 @@ ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
 
+ATTR_SENSOR_FILTERING: Final = "sensor_filtering"
+
 ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
 ATTR_FILTER_REMAIN: Final = "filter_remain"
 ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
 
 ATTR_WORK_TIME: Final = "work_time"
+
+ATTR_ADAPTIVE_STATE: Final = "adaptive_state"
 
 ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
@@ -143,6 +181,76 @@ WEEK_PROGRAM_SELECTIONS = [
     STATE_WEEKPROGRAM_10,
     STATE_WEEKPROGRAM_11,
 ]
+
+BOOST_OPERATION_SELECTIONS = [STATE_LEVEL_2, STATE_LEVEL_3, STATE_LEVEL_4]
+
+ECO_OPERATION_SELECTIONS = [STATE_STANDBY, STATE_LEVEL_1]
+
+HOME_OPERATION_SELECTIONS = [
+    STATE_AUTOMATIC,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_WEEKPROGRAM,
+]
+
+DEFAULT_OPERATION_SELECTIONS = [
+    STATE_AUTOMATIC,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_WEEKPROGRAM,
+]
+
+STATE_PRIORITIES = {
+    STATE_WEEKPROGRAM: 0,
+    STATE_AUTOMATIC: 1,
+    STATE_STANDBY: 2,
+    STATE_LEVEL_1: 3,
+    STATE_LEVEL_2: 4,
+    STATE_LEVEL_3: 5,
+    STATE_LEVEL_4: 6,
+    STATE_ECO: 7,
+    STATE_HOME: 8,
+    STATE_NIGHT: 9,
+    STATE_BOOST: 10,
+    STATE_AWAY: 11,
+}
+
+EVENT_WORDS = STATE_PRIORITIES
+
+# Modbus Register Constants
+MODBUS_REGISTER_ACTIVE_MODE = 168
+MODBUS_REGISTER_AIR_QUALITY = 430
+MODBUS_REGISTER_ALARM = 516
+MODBUS_REGISTER_ALARM_RESET = 514
+MODBUS_REGISTER_BYPASS_DAMPER = 198
+MODBUS_REGISTER_BYPASS_MAX_TEMP = 446
+MODBUS_REGISTER_BYPASS_MIN_TEMP = 444
+MODBUS_REGISTER_CURRENT_MODE = 472
+MODBUS_REGISTER_EXHAUST_TEMP = 138
+MODBUS_REGISTER_EXTRACT_TEMP = 136
+MODBUS_REGISTER_FAN_LEVEL = 324
+MODBUS_REGISTER_FAN1_SPEED = 100
+MODBUS_REGISTER_FAN2_SPEED = 102
+MODBUS_REGISTER_FILTER_LIFETIME = 556
+MODBUS_REGISTER_FILTER_REMAIN = 554
+MODBUS_REGISTER_FILTER_RESET = 558
+MODBUS_REGISTER_FIRMWARE_VERSION = 24
+MODBUS_REGISTER_HUMIDITY = 196
+MODBUS_REGISTER_INTERNAL_PREHEATER_DUTYCYCLE = 160
+MODBUS_REGISTER_MANUAL_BYPASS_DURATION = 264
+MODBUS_REGISTER_NIGHT_MODE_END_HOUR = 336
+MODBUS_REGISTER_NIGHT_MODE_END_MINUTE = 338
+MODBUS_REGISTER_NIGHT_MODE_START_HOUR = 332
+MODBUS_REGISTER_NIGHT_MODE_START_MINUTE = 334
+MODBUS_REGISTER_OUTDOOR_TEMP = 132
+MODBUS_REGISTER_ROOM_TEMP = 140
+MODBUS_REGISTER_SERIAL_NUMBER = 4
+MODBUS_REGISTER_SUPPLY_TEMP = 134
+MODBUS_REGISTER_SYSTEM_ID = 2
+MODBUS_REGISTER_WEEK_PROGRAM_SELECTION = 466
+MODBUS_REGISTER_WORK_TIME = 624
 
 
 class ComponentClass(int):
@@ -233,158 +341,115 @@ class BypassDamperState(int):
 
 
 @dataclass
-class DanthermButtonEntityDescription(ButtonEntityDescription):
-    """Dantherm Button Entity Description."""
+class DanthermEntityDescription(EntityDescription):
+    """Dantherm Base Entity Description."""
 
     data_setaddress: int | None = None
     data_setinternal: str | None = None
     data_setclass: DataClass | None = None
-    state: int = None
-    state_entity: str | None = None
 
     data_address: int | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
+    data_getinternal: str | None = None
+    data_store: bool | None = None
+    data_default: Any | None = None
     data_class: DataClass = DataClass.UInt32
 
-    component_class: ComponentClass = None
+    data_exclude_if: int | float | None = None
+    data_exclude_if_above: int | float | None = None
+    data_exclude_if_below: int | float | None = None
+
+    data_unavailable: str | None = None
+
+    component_class: ComponentClass | None = None
 
 
 @dataclass
-class DanthermCoverEntityDescription(CoverEntityDescription):
+class DanthermButtonEntityDescription(
+    DanthermEntityDescription, ButtonEntityDescription
+):
+    """Dantherm Button Entity Description."""
+
+    state: int | None = None
+
+
+@dataclass
+class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
     supported_features: CoverEntityFeature | None = None
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-    state_open: int = None
-    state_close: int = None
-    state_stop: int = None
 
-    data_address: int | None = None
-    data_getinternal: str | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-    state_opening: int = None
-    state_opened: int = None
-    state_closing: int = None
-    state_closed: int = None
+    state_open: int | None = None
+    state_close: int | None = None
+    state_stop: int | None = None
 
-    component_class: ComponentClass = None
+    state_opening: int | None = None
+    state_opened: int | None = None
+    state_closing: int | None = None
+    state_closed: int | None = None
 
 
 @dataclass
-class DanthermNumberEntityDescription(NumberEntityDescription):
+class DanthermNumberEntityDescription(
+    DanthermEntityDescription, NumberEntityDescription
+):
     """Dantherm Number Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-
-    data_address: int | None = None
-    data_getinternal: str | None = None
     data_precision: float | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: float | None = None
-    data_exclude_if_below: float | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSelectEntityDescription(SelectEntityDescription):
+class DanthermSelectEntityDescription(
+    DanthermEntityDescription, SelectEntityDescription
+):
     """Dantherm Select Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_setclass: DataClass | None = None
-
-    data_address: int | None = None
-    data_getinternal: str | None = None
-    data_entity: str | None = None
     data_bitwise_and: int | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSensorEntityDescription(SensorEntityDescription):
+class DanthermSensorEntityDescription(
+    DanthermEntityDescription, SensorEntityDescription
+):
     """Dantherm Sensor Entity Description."""
 
     icon_zero: str | None = None
-    data_address: int | None = None
-    data_getinternal: str | None = None
     data_precision: int | None = None
-    data_scale: int | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_entity: str | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
 
 
 @dataclass
-class DanthermSwitchEntityDescription(SwitchEntityDescription):
+class DanthermSwitchEntityDescription(
+    DanthermEntityDescription, SwitchEntityDescription
+):
     """Dantherm Switch Entity Description."""
 
-    data_setaddress: int | None = None
-    data_setinternal: str | None = None
-    data_getinternal: str | None = None
-    state_seton: int = None
-    state_setoff: int = None
-    data_setclass: DataClass | None = None
+    state_seton: int | None = None
+    state_setoff: int | None = None
 
     state_suspend_for: int | None = None
-    state_on: int = None
-    icon_on: str = None
-    state_off: int = None
-    icon_off: str = None
-
-    data_address: int | None = None
-    data_entity: str | None = None
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-    data_class: DataClass = DataClass.UInt32
-
-    component_class: ComponentClass = None
+    state_on: int | bool = True
+    icon_on: str | None = None
+    state_off: int | bool = False
+    icon_off: str | None = None
+    state_default: int | bool | None = None
 
 
 @dataclass
-class DanthermTimeTextEntityDescription(TextEntityDescription):
+class DanthermTimeTextEntityDescription(
+    DanthermEntityDescription, TextEntityDescription
+):
     """Dantherm Time Text Entity Description."""
-
-    data_setinternal: str | None = None
-    data_getinternal: str | None = None
-
-    data_exclude_if: Any | None = None
-    data_exclude_if_above: int | None = None
-    data_exclude_if_below: int | None = None
-
-    component_class: ComponentClass = None
 
 
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     DanthermButtonEntityDescription(
         key=ATTR_FILTER_RESET,
+        icon="mdi:restore",
         data_setinternal="filter_reset",
         data_class=DataClass.UInt32,
     ),
     DanthermButtonEntityDescription(
         key=ATTR_ALARM_RESET,
+        icon="mdi:restore-alert",
         data_setinternal="alarm_reset",
         data_class=DataClass.UInt32,
     ),
@@ -459,11 +524,50 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         native_step=15,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="min",
-        mode=NumberMode.SLIDER,
+        mode=NumberMode.BOX,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BOOST_MODE_TIMEOUT,
+        data_unavailable=ATTR_BOOST_MODE_TRIGGER,
+        data_store=True,
+        data_default=5,
+        data_precision=0,
+        native_max_value=30,
+        native_min_value=3,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_ECO_MODE_TIMEOUT,
+        data_unavailable=ATTR_ECO_MODE_TRIGGER,
+        data_store=True,
+        data_default=15,
+        data_precision=0,
+        native_max_value=600,
+        native_min_value=15,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_HOME_MODE_TIMEOUT,
+        data_unavailable=ATTR_HOME_MODE_TRIGGER,
+        data_store=True,
+        data_default=60,
+        data_precision=0,
+        native_max_value=600,
+        native_min_value=30,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -483,7 +587,7 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     ),
     DanthermSelectEntityDescription(
         key=ATTR_WEEK_PROGRAM_SELECTION,
-        icon="mdi:clock-edit-outline",
+        icon="mdi:clock-edit",
         data_setinternal=f"set_{ATTR_WEEK_PROGRAM_SELECTION}",
         data_getinternal=f"get_{ATTR_WEEK_PROGRAM_SELECTION}",
         options=WEEK_PROGRAM_SELECTIONS,
@@ -491,6 +595,33 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_BOOST_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_unavailable=ATTR_BOOST_MODE_TRIGGER,
+        data_store=True,
+        data_default=STATE_LEVEL_3,
+        options=BOOST_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_ECO_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_unavailable=ATTR_ECO_MODE_TRIGGER,
+        data_store=True,
+        data_default=STATE_LEVEL_1,
+        options=ECO_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSelectEntityDescription(
+        key=ATTR_HOME_OPERATION_SELECTION,
+        icon="mdi:state-machine",
+        data_unavailable=ATTR_HOME_MODE_TRIGGER,
+        data_store=True,
+        data_default=STATE_AUTOMATIC,
+        options=HOME_OPERATION_SELECTIONS,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -502,8 +633,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_ALARM,
-        icon="mdi:alert-circle-outline",
-        icon_zero="mdi:alert-circle-check-outline",
+        icon="mdi:alert-circle",
+        icon_zero="mdi:alert-circle-check",
         data_getinternal=f"get_{ATTR_ALARM}",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -516,7 +647,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:fan",
         icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
-        data_address=100,
+        data_address=MODBUS_REGISTER_FAN1_SPEED,
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
@@ -528,7 +659,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:fan",
         icon_zero="mdi:fan-off",
         data_class=DataClass.Float32,
-        data_address=102,
+        data_address=MODBUS_REGISTER_FAN2_SPEED,
         native_unit_of_measurement="rpm",
         data_precision=0,
         state_class=SensorStateClass.MEASUREMENT,
@@ -537,9 +668,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_HUMIDITY,
-        data_address=196,
+        data_getinternal=f"get_{ATTR_HUMIDITY}",
         data_exclude_if=0,
-        data_class=DataClass.UInt32,
         native_unit_of_measurement="%",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -547,9 +677,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
-        data_address=430,
+        data_getinternal=f"get_{ATTR_AIR_QUALITY}",
         data_exclude_if=0,
-        data_class=DataClass.UInt32,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
@@ -557,45 +686,35 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     ),
     DanthermSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=138,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_EXHAUST_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_EXTRACT_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=136,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_EXTRACT_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=134,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_SUPPLY_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_OUTDOOR_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=132,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_OUTDOOR_TEMPERATURE}",
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_ROOM_TEMPERATURE,
-        data_class=DataClass.Float32,
-        data_address=140,
-        data_precision=1,
+        data_getinternal=f"get_{ATTR_ROOM_TEMPERATURE}",
         data_exclude_if_above=70,
         data_exclude_if_below=-40,
         native_unit_of_measurement="°C",
@@ -618,7 +737,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_WORK_TIME,
         icon="mdi:progress-clock",
         data_class=DataClass.UInt32,
-        data_address=624,
+        data_address=MODBUS_REGISTER_WORK_TIME,
         native_unit_of_measurement="h",
         suggested_display_precision=0,
         suggested_unit_of_measurement="h",
@@ -630,7 +749,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_INTERNAL_PREHEATER_DUTYCYCLE,
         icon="mdi:heating-coil",
-        data_address=160,
+        data_address=MODBUS_REGISTER_INTERNAL_PREHEATER_DUTYCYCLE,
         data_class=DataClass.UInt32,
         device_class=NumberDeviceClass.POWER_FACTOR,
         native_unit_of_measurement="%",
@@ -645,6 +764,14 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
+    DanthermSensorEntityDescription(
+        key=ATTR_ADAPTIVE_STATE,
+        icon="mdi:information",
+        data_getinternal="get_adaptive_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
@@ -654,9 +781,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal=f"get_{ATTR_AWAY_MODE}",
         state_suspend_for=30,
         state_on=ActiveUnitMode.StartAway,
-        icon_on="mdi:bag-suitcase-outline",
+        icon_on="mdi:bag-suitcase",
         state_off=ActiveUnitMode.EndAway,
-        icon_off="mdi:bag-suitcase-off-outline",
+        icon_off="mdi:bag-suitcase-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     DanthermSwitchEntityDescription(
@@ -670,8 +797,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         icon_off="mdi:sleep-off",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_FIREPLACE_MODE,
@@ -690,9 +815,9 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         data_getinternal="get_active_unit_mode",
         state_suspend_for=30,
         state_on=ActiveUnitMode.SelectManualBypass,
-        icon_on="mdi:hand-back-right-outline",
+        icon_on="mdi:hand-back-right",
         state_off=ActiveUnitMode.DeselectManualBypass,
-        icon_off="mdi:hand-back-right-off-outline",
+        icon_off="mdi:hand-back-right-off",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -705,6 +830,43 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         icon_on="mdi:weather-sunny",
         state_setoff=ActiveUnitMode.EndSummer,
         icon_off="mdi:weather-sunny-off",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_SENSOR_FILTERING,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:filter",
+        icon_off="mdi:filter-off",
+        state_default=False,
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_BOOST_MODE,
+        data_unavailable=ATTR_BOOST_MODE_TRIGGER,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:rocket-launch",
+        icon_off="mdi:rocket",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_ECO_MODE,
+        data_unavailable=ATTR_ECO_MODE_TRIGGER,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:leaf",
+        icon_off="mdi:leaf-off",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_HOME_MODE,
+        data_unavailable=ATTR_HOME_MODE_TRIGGER,
+        data_store=True,
+        data_default=False,
+        icon_on="mdi:home",
+        icon_off="mdi:home-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )

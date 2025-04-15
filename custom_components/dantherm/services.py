@@ -118,14 +118,6 @@ async def async_setup_services(hass: HomeAssistant):
                     render_template(call.data[ATTR_FAN_LEVEL_SELECTION])
                 )
 
-            if ATTR_OPERATION_SELECTION in call.data:
-                await device.set_operation_selection(
-                    Template(call.data[ATTR_OPERATION_SELECTION], hass).async_render()
-                )
-            if ATTR_FAN_LEVEL_SELECTION in call.data:
-                await device.set_fan_level(
-                    Template(call.data[ATTR_FAN_LEVEL_SELECTION], hass).async_render()
-                )
             if ATTR_AWAY_MODE in call.data:
                 await device.set_active_unit_mode(
                     ActiveUnitMode.StartAway

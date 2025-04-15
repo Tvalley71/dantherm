@@ -18,6 +18,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "options": {
+    "step": {
+        "init": {
+            "title": "Dantherm Integratie Configuratie",
+            "data": {
+                "boost_mode_trigger": "Boost-modus Trigger Entiteit",
+                "eco_mode_trigger": "Eco-modus Trigger Entiteit",
+                "home_mode_trigger": "Thuis-modus Trigger Entiteit"
+            }
+        }
+    },
+    "error": {
+        "invalid_entity": "Ongeldige entiteit-ID. Voer een geldige binaire sensor of invoer-boolean in."
+    }
+  },
   "entity": {
     "button": {
       "filter_reset": { "name": "Filter Resetten" },
@@ -30,7 +45,10 @@
       "filter_lifetime": { "name": "Levensduur Filter" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
-      "manual_bypass_duration": { "name": "Duur Manuele Bypass" }
+      "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
+      "boost_mode_timeout": { "name": "Boost-modus Time-out" },
+      "eco_mode_timeout": { "name": "Eco-modus Time-out" },
+      "home_mode_timeout": { "name": "Thuis-modus Time-out" }
     },
     "select": {
       "operation_selection": {
@@ -47,7 +65,7 @@
         }
       },
       "fan_level_selection": {
-        "name": "Ventilator Selectie",
+        "name": "Ventilator selectie",
         "state": {
           "0": "Niveau 0",
           "1": "Niveau 1",
@@ -70,6 +88,42 @@
           "8": "Weekprogramma 9",
           "9": "Weekprogramma 10",
           "10": "Weekprogramma 11"
+        }
+      },
+      "boost_operation_selection": {
+        "name": "Boost-modus selectie",
+        "state": {
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4"
+        }
+      },
+      "eco_operation_selection": {
+        "name": "Eco-modus selectie",
+        "state": {
+          "standby": "Standby",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2"
+        }
+      },
+      "home_operation_selection": {
+        "name": "Thuis-modus selectie",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Weekprogramma"
+        }
+      },
+      "default_operation_selection": {
+        "name": "Standaard modus selectie",
+        "state": {
+          "automatic": "Automatisch",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "week_program": "Weekprogramma"
         }
       }
     },
@@ -117,6 +171,26 @@
           "15": "High Waterlevel Alarm"
         }
       },
+      "adaptive_state": {
+        "name": "Adaptieve status",
+        "state": {
+          "none": "Geen",
+          "automatic": "Automatisch",
+          "away": "Afwezigheidsmodus",
+          "boost": "Boost-modus",
+          "eco": "Eco-modus",
+          "home": "Thuis-modus",
+          "level_1": "Niveau 1",
+          "level_2": "Niveau 2",
+          "level_3": "Niveau 3",
+          "level_4": "Niveau 4",
+          "manuel": "Manueel",
+          "night": "Nachtmodus",
+          "standby": "Standby",
+          "summer": "Zomermodus",
+          "week_program": "Weekprogramma"
+        }
+      },
       "fan_level": { "name": " Ventilatorniveau" },
       "fan1_speed": { "name": "Snelheid Ventilator 1" },
       "fan2_speed": { "name": "Snelheid Ventilator 2" },
@@ -137,7 +211,11 @@
       "night_mode": { "name": "Nachtmodus" },
       "fireplace_mode": { "name": "Open Haardmodus" },
       "manual_bypass_mode": { "name": "Manuele Bypassmodus" },
-      "summer_mode": { "name": "Zomermodus" }
+      "summer_mode": { "name": "Zomermodus" },
+      "sensor_filtering": { "name": "Sensorfiltering" },
+      "boost_mode": { "name": "Boost-modus" },
+      "eco_mode": { "name": "Eco-modus" },
+      "home_mode": { "name": "Thuis-modus" }
     },
     "text": {
       "night_mode_start_time": { "name": "Starttijd van de nachtmodus" },
@@ -262,6 +340,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
+    },
+    "pymodbus_version": {
+      "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
     }
   }
 }

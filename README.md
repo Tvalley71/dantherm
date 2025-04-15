@@ -1,11 +1,17 @@
 # Dantherm
 
-Home Assistant integration for Dantherm ventilation units
+Home Assistant integration for Dantherm ventilation units.
 
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
 
-Currently only support for Modbus over TCP/IP.
+### ⚠️ Compatibility Notice
+
+This custom integration requires:
+
+- Home Assistant version **2025.1.0** or newer
+
+Only support for Modbus over TCP/IP.
 
 Known supported units:
 
@@ -15,6 +21,7 @@ Known supported units:
 - HCV460 P2
 - RCV320 P1/P2
 - HCH5 MKII
+- RCC220 P2
 
 > [!NOTE]
 > The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
@@ -23,77 +30,98 @@ Known supported units:
 
 ### Controls and sensors
 
-| Buttons Entities               | Description |
-| :-                             | :- |
-| `alarm_reset`                  | Reset alarm |
-| `filter_reset`                 | Reset remain filter time |
+#### Buttons Entities
 
-| **Calendar Entity**            | **Description** |
-| :-                             | :- |
-| ~~`calendar`~~                     | ~~Operation Calender~~ |
+| Entity            | Description       |
+|-------------------|-------------------|
+| `alarm_reset`     | Reset alarm       |
+| `filter_reset`    | Reset remain filter time |
 
-| **Cover Entity**               | **Description** |
-| :-                             | :- |
-| `bypass_damper`                | Bypass damper<sup>\*<sup> |
+#### Calendar Entity
 
-| **Number Entities**            | **Description** |
-| :-                             | :- |
-| ~~`boost_presence_timeout`~~       | ~~Boost presence timeout~~ |
-| `bypass_minimum_temperature`   | Bypass minimum temperature<sup>&dagger;<sup> |
-| `bypass_maximum_temperature`   | Bypass maximum temperature<sup>&dagger;<sup> |
-| ~~`eco_presence_timeout`~~         | ~~Eco presence timeout~~ |
-| `filter_lifetime`              | Input filter lifetime<sup>&dagger;<sup> |
-| `manual_bypass_duration`       | Manual bypass duration<sup>\* &dagger;<sup> |
-| ~~`home_presence_timeout`~~        | ~~Home presence timeout~~ |
+| Entity        | Description              |
+|---------------|--------------------------|
+| ~~`calendar`~~ | ~~Operation Calendar~~   |
 
-| **Select Entities**            | **Description** |
-| :-                             | :- |
-| ~~`boost_operation_selection`~~    | ~~Boost operation selection~~ |
-| ~~`default_operation_selection`~~  | ~~Default operation selection~~ |
-| ~~`eco_operation_selection`~~      | ~~Eco operation selection~~ |
-| `fan_level_selection`          | Fan level selection |
-| ~~`home_operation_selection`~~     | ~~Home operation selection~~ |
-| `operation_selection`          | Mode of operation selection |
-| `week_program_selection`       | Week program selection<sup>&dagger;<sup> |
+#### Cover Entity
 
-| **Sensor Entities**            | **Description** |
-| :-                             | :- |
-| `air_quality`                  | Air quality sensor<sup>\*<sup> |
-| `alarm`                        | Alarm sensor |
-| `exhaust_temperature`          | Exhaust temperature sensor |
-| `extract_temperature`          | Extract temperature sensor |
-| `fan_level`                    | Fan level |
-| `fan1_speed`                   | Fan 1 speed<sup>&dagger;<sup> |
-| `fan2_speed`                   | Fan 2 speed<sup>&dagger;<sup> |
-| `filter_remain`                | Remaining filter time |
-| `filter_remain_level`          | Remaining filter time level<sup>&dagger;<sup> |
-| `humidity`                     | Humidity sensor<sup>\*<sup> |
-| `internal_preheater_dutycycle` | Preheater power dutycycle<sup>\* &dagger;<sup> |
-| `operation_mode`               | Operation mode |
-| `outdoor_temperature`          | Outdoor temperature sensor |
-| `room_temperature`             | Room temperature sensor<sup>\* &dagger;<sup> |
-| `supply_temperature`           | Supply temperature sensor |
-| `work_time`                    | Work time<sup>&dagger;<sup> |
+| Entity           | Description              |
+|------------------|--------------------------|
+| `bypass_damper`  | Bypass damper [1]        |
 
-| **Switch Entities**            | **Description** |
-| :-                             | :- |
-| `away_mode`                    | Away mode |
-| ~~`boost_mode`~~                   | ~~Boost mode~~ |
-| ~~`eco_mode`~~                     | ~~Eco mode~~ |
-| `fireplace_mode`               | Fireplace mode |
-| ~~`home_mode`~~                    | ~~Home mode~~ |
-| `manual_bypass_mode`           | Manual bypass mode<sup>\*<sup> |
-| `night_mode`                   | Night mode<sup>&dagger;<sup> |
-| `summer_mode`                  | Summer mode |
+#### Number Entities
 
-| **Text Entities**              | **Description** |
-| :-                             | :- |
-| `night_mode_end_time`          | Night mode end time text<sup>&dagger;<sup> |
-| `night_mode_start_time`        | Night mode start time text<sup>&dagger;<sup> |
+| Entity                      | Description                        |
+|-----------------------------|------------------------------------|
+| `boost_mode_timeout`        | Boost mode timeout [3]             |
+| `bypass_minimum_temperature`| Bypass minimum temperature [2]     |
+| `bypass_maximum_temperature`| Bypass maximum temperature [2]     |
+| `eco_mode_timeout`          | Eco mode timeout [3]               |
+| `filter_lifetime`           | Input filter lifetime [2]          |
+| `home_mode_timeout`         | Home mode timeout [3]              |
+| `manual_bypass_duration`    | Manual bypass duration [1][2]      |
 
-_\* Some of the entities may not install due to lack of support or installation in the particular unit._
+#### Select Entities
 
-_&dagger; The entity is disabled by default._
+| Entity                      | Description                        |
+|-----------------------------|------------------------------------|
+| `boost_operation_selection` | Boost operation selection [3]      |
+| ~~`default_operation_selection`~~ | ~~Default operation selection~~ |
+| `eco_operation_selection`   | Eco operation selection [3]        |
+| `fan_level_selection`       | Fan level selection                |
+| `home_operation_selection`  | Home operation selection [3]       |
+| `operation_selection`       | Mode of operation selection        |
+| `week_program_selection`    | Week program selection [2]         |
+
+#### Sensor Entities
+
+| Entity                        | Description                          |
+|-------------------------------|--------------------------------------|
+| `air_quality`                 | Air quality sensor [1]               |
+| `alarm`                       | Alarm sensor                         |
+| `exhaust_temperature`         | Exhaust temperature sensor           |
+| `extract_temperature`         | Extract temperature sensor           |
+| `fan_level`                   | Fan level                            |
+| `fan1_speed`                  | Fan 1 speed [2]                      |
+| `fan2_speed`                  | Fan 2 speed [2]                      |
+| `filter_remain`               | Remaining filter time                |
+| `filter_remain_level`         | Remaining filter time level [2]      |
+| `humidity`                    | Humidity sensor [1]                  |
+| `adaptive_state`              | Adaptive state [4]                 |
+| `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
+| `operation_mode`              | Operation mode                       |
+| `outdoor_temperature`         | Outdoor temperature sensor           |
+| `room_temperature`            | Room temperature sensor [1][2]       |
+| `supply_temperature`          | Supply temperature sensor            |
+| `work_time`                   | Work time [2]                        |
+
+#### Switch Entities
+
+| Entity                 | Description                     |
+|------------------------|---------------------------------|
+| `away_mode`            | Away mode                       |
+| `boost_mode`           | Boost mode [3]                  |
+| `eco_mode`             | Eco mode [3]                    |
+| `fireplace_mode`       | Fireplace mode                  |
+| `home_mode`            | Home mode [3]                   |
+| `manual_bypass_mode`   | Manual bypass mode [1]          |
+| `night_mode`           | Night mode [2]                  |
+| `sensor_filtering`     | Sensor spike filtering [2]      |
+| `summer_mode`          | Summer mode                     |
+
+#### Text Entities
+
+| Entity                   | Description                     |
+|--------------------------|---------------------------------|
+| `night_mode_end_time`    | Night mode end time text [2]    |
+| `night_mode_start_time`  | Night mode start time text [2]  |
+
+### Notes
+
+[1] The entity may not install due to lack of support or installation in the particular unit.  
+[2] The entity is disabled by default.  
+[3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
+[4] The entity can only be enabled if any of the adaptive triggers are configured.
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
@@ -145,7 +173,6 @@ Danish, Dutch, English, German and French.
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
----
 
 ## Screenshots
 
@@ -163,13 +190,19 @@ Danish, Dutch, English, German and French.
 > [!NOTE]
 > The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
 
----
 
 ## Examples
 
 #### Picture-elements card
 
-This is a modified version of a dashboard card posted by [@cronner](https://www.github.com/cronner) on Home Assistant Community. This will show alarms, filter remain level and change according to the current bypass state. Kinda like the Dantherm app.
+This picture-elements card provides a dynamic and intuitive interface for monitoring and controlling your Dantherm ventilation unit. Designed to resemble the Dantherm app, it visually adapts based on the unit’s bypass state while displaying key real-time data:
+
+*	Alarms – Stay alerted to system issues.
+*	Filter Remaining Level – Easily check when filter replacement is needed.
+*	Ventilation Temperatures – View four key temperature readings: Supply, Extract, Outdoor, and Exhaust.
+*	Humidity Level – Monitor indoor humidity for optimal air quality.
+
+Clicking on any displayed entity allows you to adjust its state or explore detailed history graphs for deeper insights.
 
 ![Skærmbillede 2024-05-21 182357](https://github.com/Tvalley71/dantherm/assets/83084467/220edf94-71aa-4c29-abd4-c9ed191abd32)
 
@@ -177,14 +210,11 @@ This is a modified version of a dashboard card posted by [@cronner](https://www.
 
 ![Skærmbillede 2024-05-21 182154](https://github.com/Tvalley71/dantherm/assets/83084467/66fc2c18-7db1-403e-ae2b-fc32a4734d6d)
 
-
 <details>
 
-<summary>The details for the above picture-elements card (challenging).</summary>
+<summary>The details for the above picture-elements card 👈 Click to open</summary>
 
 ####
-
-I might consider creating a custom card based on this in the future.
 
 To integrate this into your dashboard, begin by downloading and extracting this [zip file](https://github.com/Tvalley71/dantherm/files/15397672/picture-elements-card.zip). Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
 
@@ -194,141 +224,141 @@ Next, insert the following code into your dashboard. If your Home Assistant setu
 
 ```yaml
 
-  - type: picture-elements
-    image: /local/dantherm1.png
+type: picture-elements
+image: /local/dantherm1.png
+elements:
+  - type: image
+    entity: sensor.dantherm_filter_remain_level
+    state_image:
+      '0': /local/dantherm4.png
+      '1': /local/dantherm5.png
+      '2': /local/dantherm6.png
+      '3': /local/dantherm7.png
+    style:
+      transform: scale(1,1)
+      left: 0%
+      top: 0%
+    tap_action:
+      action: more-info
+  - type: conditional
+    conditions:
+      - entity: switch.dantherm_summer_mode
+        state: 'off'
     elements:
       - type: image
-        entity: sensor.dantherm_filter_remain_level
+        entity: cover.dantherm_bypass_damper
         state_image:
-          '0': /local/dantherm4.png
-          '1': /local/dantherm5.png
-          '2': /local/dantherm6.png
-          '3': /local/dantherm7.png
+          closed: /local/dantherm2.png
+          closing: /local/dantherm2.png
+          open: /local/dantherm3.png
+          opening: /local/dantherm3.png
         style:
-          transform: scale(1,1)
-          left: 0%
-          top: 0%
+          left: 26.6%
+          top: 50%
+          transform: scale(0.693,0.693)
         tap_action:
           action: more-info
       - type: conditional
         conditions:
-          - entity: switch.dantherm_summer_mode
-            state: 'off'
+          - entity: cover.dantherm_bypass_damper
+            state:
+              - closed
+              - closing
         elements:
-          - type: image
-            entity: cover.dantherm_bypass_damper
-            state_image:
-              closed: /local/dantherm2.png
-              closing: /local/dantherm2.png
-              open: /local/dantherm3.png
-              opening: /local/dantherm3.png
+          - type: state-label
+            entity: sensor.dantherm_outdoor_temperature
             style:
-              left: 26.6%
-              top: 50%
-              transform: scale(0.693,0.693)
-            tap_action:
-              action: more-info
-          - type: conditional
-            conditions:
-              - entity: cover.dantherm_bypass_damper
-                state:
-                  - closed
-                  - closing
-            elements:
-              - type: state-label
-                entity: sensor.dantherm_outdoor_temperature
-                style:
-                  top: 64.5%
-                  left: 78%
-              - type: state-label
-                entity: sensor.dantherm_extract_temperature
-                style:
-                  top: 64.5%
-                  left: 49%
-              - type: state-label
-                entity: sensor.dantherm_exhaust_temperature
-                style:
-                  top: 81%
-                  left: 78%
-              - type: state-label
-                entity: sensor.dantherm_supply_temperature
-                style:
-                  top: 81%
-                  left: 49%
-          - type: conditional
-            conditions:
-              - entity: cover.dantherm_bypass_damper
-                state:
-                  - open
-                  - opening
-            elements:
-              - type: state-label
-                entity: sensor.dantherm_extract_temperature
-                style:
-                  top: 64.5%
-                  left: 49%
-              - type: state-label
-                entity: sensor.dantherm_outdoor_temperature
-                style:
-                  top: 81%
-                  left: 78%
-      - type: conditional
-        conditions:
-          - entity: switch.dantherm_summer_mode
-            state: 'on'
-        elements:
-          - type: image
-            image: /local/dantherm8.png
-            style:
-              left: 26.6%
-              top: 50%
-              transform: scale(0.693,0.693)
-            tap_action:
-              action: none
+              top: 64.5%
+              left: 78%
           - type: state-label
             entity: sensor.dantherm_extract_temperature
             style:
               top: 64.5%
               left: 49%
+          - type: state-label
+            entity: sensor.dantherm_exhaust_temperature
+            style:
+              top: 81%
+              left: 78%
+          - type: state-label
+            entity: sensor.dantherm_supply_temperature
+            style:
+              top: 81%
+              left: 49%
       - type: conditional
         conditions:
-          - entity: sensor.dantherm_alarm
-            state_not: '0'
+          - entity: cover.dantherm_bypass_damper
+            state:
+              - open
+              - opening
         elements:
           - type: state-label
-            entity: sensor.dantherm_alarm
+            entity: sensor.dantherm_extract_temperature
             style:
-              top: 15%
-              left: 50%
-              width: 100%
-              font-weight: bold
-              text-align: center
-              color: white
-              background-color: red
-              opacity: 70%
-      - type: state-label
-        entity: select.dantherm_operation_selection
+              top: 64.5%
+              left: 49%
+          - type: state-label
+            entity: sensor.dantherm_outdoor_temperature
+            style:
+              top: 81%
+              left: 78%
+  - type: conditional
+    conditions:
+      - entity: switch.dantherm_summer_mode
+        state: 'on'
+    elements:
+      - type: image
+        image: /local/dantherm8.png
         style:
-          top: 45%
-          left: 36%
+          left: 26.6%
+          top: 50%
+          transform: scale(0.693,0.693)
+        tap_action:
+          action: none
+      - type: state-label
+        entity: sensor.dantherm_extract_temperature
+        style:
+          top: 64.5%
+          left: 49%
+  - type: conditional
+    conditions:
+      - entity: sensor.dantherm_alarm
+        state_not: '0'
+    elements:
+      - type: state-label
+        entity: sensor.dantherm_alarm
+        style:
+          top: 15%
+          left: 50%
+          width: 100%
           font-weight: bold
-          font-style: italic
           text-align: center
-          font-size: 100%
-      - type: state-label
-        entity: sensor.dantherm_humidity
-        style:
-          top: 29%
-          left: 38%
-          font-size: 100%
-      - type: state-label
-        entity: select.dantherm_fan_selection
-        style:
-          top: 29%
-          left: 63%
-          font-weight: bold
-          font-style: italic
-          font-size: 100%
+          color: white
+          background-color: red
+          opacity: 70%
+  - type: state-label
+    entity: select.dantherm_operation_selection
+    style:
+      top: 45%
+      left: 36%
+      font-weight: bold
+      font-style: italic
+      text-align: center
+      font-size: 100%
+  - type: state-label
+    entity: sensor.dantherm_humidity
+    style:
+      top: 29%
+      left: 38%
+      font-size: 100%
+  - type: state-label
+    entity: select.dantherm_fan_selection
+    style:
+      top: 29%
+      left: 63%
+      font-weight: bold
+      font-style: italic
+      font-size: 100%
 
 ```
 </details>
@@ -341,7 +371,7 @@ An example of a Mushroom-chips card showing the current state of operation and f
 
 <details>
 
-<summary>Mushroom-chips card details.</summary>
+<summary>Mushroom-chips card details 👈 Click to open</summary>
 
 ####
 
@@ -351,17 +381,17 @@ The following cards need the _Mushroom_ frontend repository installed under HACS
 
 ```yaml
 
-  - type: custom:mushroom-chips-card
-    chips:
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.dantherm_fan_level
-            state_not: unavailable
-        chip:
-          type: entity
-          entity: sensor.dantherm_fan_level
-          icon_color: blue
+type: custom:mushroom-chips-card
+chips:
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: sensor.dantherm_fan_level
+        state_not: unavailable
+    chip:
+      type: entity
+      entity: sensor.dantherm_fan_level
+      icon_color: blue
 
 ```
 
@@ -371,7 +401,7 @@ Alert chip displaying any current alert along with its descriptions. A hold acti
 
 ```yaml
 
-  - type: custom:mushroom-chips-card
+type: custom:mushroom-chips-card
     chips:
       - type: conditional
         conditions:
@@ -405,9 +435,52 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
----
 
-## Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
+## Sensor Filtering
+
+To improve the stability and reliability of sensor readings, the integration now supports **sensor filtering** for key environmental data collected from the Dantherm unit. This filtering mechanism is applied to the following sensors:
+
+- **Humidity**
+- **Air Quality**
+- **Exhaust Temperature**
+- **Extract Temperature**
+- **Supply Temperature**
+- **Outdoor Temperature**
+- **Room Temperature**
+
+### Control via Home Assistant Switch
+
+The filtering feature can be enabled or disabled via the **"Sensor Filtering"** switch entity. By default, the filtering is **disabled**, ensuring the system behaves as it did previously. When the switch is enabled, the filtering logic described below will be applied.
+
+### How It Works
+
+Each sensor is equipped with a sliding history buffer, storing the last 5 readings. The filter applies two techniques:
+
+1. **Initialization Smoothing**  
+   For the first few readings (up to 5), the filter calculates a simple average. This helps the sensor start off with a stable baseline, preventing a single bad initial reading from influencing the system.
+
+2. **Spike Filtering**  
+   After initialization, every new reading is compared to a rolling average of the last 5 readings.  
+   If the new reading changes more than a defined threshold (`max_change`) compared to the rolling average, the spike is rejected, and the system uses the current rolling average instead.
+
+### Individual Thresholds per Sensor
+
+Each sensor type has a predefined maximum allowed change per reading:
+
+| Sensor      | Max Change |
+|-------------|------------|
+| Humidity    | 5% RH      |
+| Air Quality | 50 PPM     |
+| Temperatures| 2°C        |
+
+This ensures the filtering logic fits the natural dynamics of each sensor type.
+
+> This feature was inspired by [issue #68](https://github.com/Tvalley71/dantherm/issues/68), reported by a community user.
+
+
+## Actions
+
+### Using the "Dantherm: Set State" and "Dantherm: Set configuration" Actions
 
 The **Dantherm: Set state** action allows you to control the state of your Dantherm ventilation unit directly from a Home Assistant automation. This action provides a wide range of options to customize the operation of your unit, making it suitable for various scenarios.
 
@@ -495,33 +568,33 @@ The available operations in **Eco Operation Selection** are **Standby** and **Le
 > [!IMPORTANT]
 > The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used for longer periods.
 
+### Adaptive Triggers ⚡  
+Home, Boost, and Eco Modes rely on **Adaptive Triggers** — binary sensors or helpers that determine **when a mode should activate**.
 
-### Mode Triggers ⚡  
-Home, Boost, and Eco Modes rely on **Mode Triggers**, which are binary sensors that determine when a mode should activate.  
+An **Adaptive Trigger** can be:
+- A **motion sensor** (e.g., presence detection for Home Mode)  
+- A **humidity sensor** (e.g., high humidity after a shower for Boost Mode)  
+- A **power sensor** (e.g., detecting stove or shower fan usage)  
+- An **outdoor temperature sensor** (e.g., reducing fan speed in cold weather for Eco Mode)  
+- A **custom helper** combining multiple conditions  
 
-A **Mode Trigger** can be:  
-- A **motion sensor** (e.g., presence detection in Home Mode)  
-- A **humidity sensor** (e.g., detecting high humidity after a shower)  
-- A **power sensor** (e.g., detecting when a stove or shower fan is running)  
-- An **external temperature sensor** (e.g., lowering fan speed in cold weather for Eco Mode)  
-- A **custom logic helper** combining multiple conditions  
+Adaptive Triggers are configured manually in the integration options and linked to each mode individually.
 
-Mode Triggers are **manually configured** in the integration settings.
+> ⚠️ **Note:** Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.  
+> Make sure the entity returns an `on` or `off` state.
 
-### Configuring a Mode Trigger
+### Configuring an Adaptive Trigger
 
-#### Steps to configure a Mode Trigger:
+#### Steps to set up an Adaptive Trigger:
 1. **Go to Home Assistant → Integrations → Dantherm.**  
 2. **Select your Dantherm device** and open the integration settings.  
-3. **Enable the desired Mode** (Home, Boost, or Eco Mode).  
-4. **Enter the Mode Trigger entity**:
-   - In the respective Mode field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, **Eco Mode Trigger**), **enter the entity ID** of the binary sensor that will trigger the mode. This can be a motion sensor, humidity sensor, power sensor, or custom binary sensor.
-   - Example entities could be: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
-5. **Save the configuration.**  
-   
-Once configured, the ventilation unit will automatically switch to the selected **operation** whenever the **Mode Trigger entity** is activated. ⚡
+3. **Enable the desired mode** (Home, Boost, or Eco).  
+4. **Enter the trigger entity**:
+   - In the corresponding field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, or **Eco Mode Trigger**), enter the **entity ID** of the binary sensor that should act as the trigger.
+   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
+5. **Save the configuration.**
 
----
+Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
