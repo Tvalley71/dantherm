@@ -523,15 +523,13 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
-## >>> The remaining sections are work in progress, planned for version 0.5.0
-
 ## Integration enhancements
 
 The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
 
 ### Home Mode 🏡  
-Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are unexpectedly home.  
+Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are home.  
 
 - **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
 - **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the operation of the unit switches to the **Home Operation Selection**.  
@@ -588,13 +586,18 @@ Adaptive Triggers are configured manually in the integration options and linked 
 #### Steps to set up an Adaptive Trigger:
 1. **Go to Home Assistant → Integrations → Dantherm.**  
 2. **Select your Dantherm device** and open the integration settings.  
-3. **Enable the desired mode** (Home, Boost, or Eco).  
-4. **Enter the trigger entity**:
+3. **Enter the trigger entity**:
    - In the corresponding field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, or **Eco Mode Trigger**), enter the **entity ID** of the binary sensor that should act as the trigger.
    - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
-5. **Save the configuration.**
+4. **Save the configuration.**
+
+After the integration has reloaded, the associated entities will be enabled automatically.
+
+5. **Enable the desired mode** (Home, Boost, or Eco).  
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
+
+## >>> The remaining sections are work in progress, planned for version 0.5.0
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
