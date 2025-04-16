@@ -98,8 +98,8 @@ async def async_setup_services(hass: HomeAssistant):
         for config_entry_id in config_entry_ids:
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
             if config_entry and config_entry.domain == DOMAIN:
-                device = hass.data[DOMAIN].get(config_entry_id)
-                if device:
+                entry_data = hass.data[DOMAIN].get(config_entry_id)
+                if entry_data and (device := entry_data.get("device")):
                     await apply_func(device, call)
                 else:
                     _LOGGER.error("Device %s not found", config_entry_id)
