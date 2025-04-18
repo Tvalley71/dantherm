@@ -862,10 +862,10 @@ class Device:
                 await self.set_active_unit_mode(active_mode)
                 operation_changed = True
 
-            if fan_level is not None and self._fan_level != fan_level:
-                if (
-                    operation_changed
-                ):  # sleep for a second or else the fan level won't change
+            # Always set the fan level even if it's the same as before, as it may change after setting the operation mode.
+            if fan_level is not None:
+                # Sleep for a second or else the fan level won't change.
+                if operation_changed:
                     await asyncio.sleep(1)
 
                 await self.set_fan_level(fan_level)
