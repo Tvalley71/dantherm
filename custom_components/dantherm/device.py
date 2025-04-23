@@ -857,10 +857,17 @@ class Device:
         ):
             """Update the unit operation with a short delay between mode and fan level."""
 
+            operation_changed = False
             if self._current_unit_mode != current_mode:
                 await self.set_active_unit_mode(active_mode)
-            await asyncio.sleep(0.5)
-            if fan_level is not None and self._fan_level != fan_level:
+                operation_changed = True
+
+            # Always set the fan level even if it's the same as before, as it may change after setting the operation mode.
+            if fan_level is not None:
+                # Sleep for a second or else the fan level won't change.
+                if operation_changed:
+                    await asyncio.sleep(1)
+
                 await self.set_fan_level(fan_level)
 
         if value is None:

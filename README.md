@@ -57,7 +57,7 @@ Known supported units:
 | `bypass_minimum_temperature`| Bypass minimum temperature [2]     |
 | `bypass_maximum_temperature`| Bypass maximum temperature [2]     |
 | `eco_mode_timeout`          | Eco mode timeout [3]               |
-| `filter_lifetime`           | Input filter lifetime [2]          |
+| `filter_lifetime`           | Filter lifetime [2]                |
 | `home_mode_timeout`         | Home mode timeout [3]              |
 | `manual_bypass_duration`    | Manual bypass duration [1][2]      |
 
@@ -523,81 +523,104 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
+## ⏳ The following sections are a work in progress  
+These features are planned for version **0.5.0**. The calendar function is currently still under development.
+
 ## Integration enhancements
 
-The integration enhances the control of Dantherm ventilation units by introducing **Home Mode**, **Boost Mode**, **Eco Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
-
-
-### Home Mode 🏡  
-Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are home.  
-
-- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
-- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the operation of the unit switches to the **Home Operation Selection**.  
-- **Home Mode Timeout**: This entity specifies the **timeout duration** for Home Mode. Once triggered, the unit will continue to operate in **Home Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
-- **Fallback Behavior**: When a Home Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
-
-The available operations in **Home Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+The integration enhances the control of Dantherm ventilation units by introducing **Boost Mode**, **Eco Mode**, **Home Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
 
 ### Boost Mode 🚀  
-Boost Mode is similar to Home Mode but is designed for short bursts of increased ventilation, useful after activities like cooking or showering.  
+Boost Mode is designed for short bursts of increased ventilation, useful after activities like cooking or showering.
 
 - **Boost Mode Switch**: This must be **enabled** for Boost Mode to activate.  
-- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the operation of the unit switches to the **Boost Operation Selection**.  
-- **Boost Mode Timeout**: This entity specifies the timeout duration for Boost Mode. Once triggered, the unit will operate in **Boost Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
-- **Fallback Behavior**: When a Boost Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the unit switches to the **Boost Operation Selection**.  
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Boost Mode remains active after the trigger is deactivated.  
+- **Available Operations**: `Level 4`, `Level 3`, or `Level 2`.
 
-The available operations in **Boost Operation Selection** are **Level 4**, **Level 3**, or **Level 2**.
-
-> [!IMPORTANT]
-> The Dantherm unit has a built-in **automatic setback** from **Level 4** to **Level 3** after a fixed time period. This may cause Boost Mode to behave unexpectedly if **Level 4** is used for longer periods.
+> **Important**  
+> The Dantherm unit has a built-in **automatic setback** from `Level 4` to `Level 3` after a fixed time period. This may cause Boost Mode to behave unexpectedly if `Level 4` is used for longer periods.
 
 
 ### Eco Mode 🌱  
-Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.  
+Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.
 
 - **Eco Mode Switch**: This must be **enabled** for Eco Mode to activate.  
-- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the operation of the unit switches to the **Eco Operation Selection**.  
-- **Eco Mode Timeout**: This entity specifies the **timeout duration** for Eco Mode. Once triggered, the unit will operate in **Eco Operation Selection** for the specified timeout. The timeout resets if triggered again during this time.  
-- **Fallback Behavior**: When an Eco Mode session ends, the unit falls back to the operation when the session started, unless overridden by a **calendar schedule**.  
+- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the unit switches to the **Eco Operation Selection**.  
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Eco Mode remains active after the trigger is deactivated.  
+- **Available Operations**: `Standby` and `Level 1`.
 
-The available operations in **Eco Operation Selection** are **Standby** and **Level 1**.  
+> **Important**  
+> The Dantherm unit has a built-in **automatic setback** from `Standby` to `Level 3` after a fixed time period. This may cause Eco Mode to behave unexpectedly if `Standby` is used for longer periods.
 
-> [!IMPORTANT]
-> The Dantherm unit has a built-in **automatic setback** from **Standby** to **Level 3** after a fixed time period. This may cause Eco Mode to behave unexpectedly if **Standby** is used for longer periods.
 
-### Adaptive Triggers ⚡  
-Home, Boost, and Eco Modes rely on **Adaptive Triggers** — binary sensors or helpers that determine **when a mode should activate**.
+### Home Mode 🏡  
+Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are at home.
+
+- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
+- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the unit switches to the **Home Operation Selection**.  
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Home Mode remains active after the trigger is deactivated.  
+- **Available Operations**: `Automatic`, `Level 3`, `Level 2`, `Level 1`, or `Week Program`.
+
+
+### Trigger Timeout ⏱️
+
+Each mode trigger (Boost, Eco, Home) includes a configurable timeout that defines how long the mode remains active after the trigger is deactivated.
+
+- **Timeout Behavior**: After the trigger turns off, the unit continues operating in the triggered mode for the remaining timeout period.  
+- **Reset on Re-trigger**: If the trigger is activated again *within the timeout window*, the countdown restarts.  
+- **Automatic Revert**: When the timeout expires without further trigger activity, the unit reverts to the operation mode that was active before the trigger event—unless this has been overridden by a calendar schedule.
+
+This mechanism ensures that temporary conditions (e.g., presence, humidity, low temperature) cause a short-term mode change without disrupting long-term schedules.
+
+
+### Adaptive Triggers ⚡
+
+Boost, Eco, and Home Modes rely on **Adaptive Triggers** — binary sensors or helpers that determine **when a mode should activate**.
 
 An **Adaptive Trigger** can be:
+
 - A **motion sensor** (e.g., presence detection for Home Mode)  
 - A **humidity sensor** (e.g., high humidity after a shower for Boost Mode)  
 - A **power sensor** (e.g., detecting stove or shower fan usage)  
 - An **outdoor temperature sensor** (e.g., reducing fan speed in cold weather for Eco Mode)  
-- A **custom helper** combining multiple conditions  
+- A **custom helper** combining multiple conditions
 
 Adaptive Triggers are configured manually in the integration options and linked to each mode individually.
 
-> ⚠️ **Note:** Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.  
+> ⚠️ **Note**  
+> Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.  
 > Make sure the entity returns an `on` or `off` state.
+
+
+### Trigger Entity Availability 🛑
+
+Entities related to Boost, Eco, and Home Modes (e.g., mode switch, timeout, operation selection) are **disabled by default** unless a corresponding trigger is configured.
+
+If you manually enable these entities via Home Assistant, they will be **automatically disabled again after a reload** of the integration unless a valid trigger is set in the integration options.
+
 
 ### Configuring an Adaptive Trigger
 
 #### Steps to set up an Adaptive Trigger:
-1. **Go to Home Assistant → Integrations → Dantherm.**  
-2. **Select your Dantherm device** and open the integration settings.  
+
+1. **Go to Home Assistant → Integrations → Dantherm.**
+
+![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
+
+2. **Click the Configure button** for the desired Dantherm integration instance.
+
+![Skærmbillede 23-04-2025 kl  07 15 19 AM](https://github.com/user-attachments/assets/550e7bde-6993-46bd-823f-82db0067ad89)
+
 3. **Enter the trigger entity**:
-   - In the corresponding field (e.g., **Home Mode Trigger**, **Boost Mode Trigger**, or **Eco Mode Trigger**), enter the **entity ID** of the binary sensor that should act as the trigger.
-   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`, etc.
-4. **Save the configuration.**
-
-After the integration has reloaded, the associated entities will be enabled automatically.
-
-5. **Enable the desired mode** (Home, Boost, or Eco).  
+   - Use the appropriate field (e.g., `Boost Mode Trigger`, `Eco Mode Trigger`, `Home Mode Trigger`)
+   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
+4. **Click Submit** to save the configuration.
+5. **Enable the corresponding mode** in the UI.
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
-## >>> The remaining sections are work in progress, planned for version 0.5.0
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
@@ -631,10 +654,7 @@ The available operations in **Default Operation Selection** are **Automatic**, *
 > [!IMPORTANT]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
 
-
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
-
-## <<<
 
 
 ## Disclaimer
