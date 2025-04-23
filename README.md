@@ -526,7 +526,7 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 ## ⏳ The following sections are a work in progress  
 These features are planned for version **0.5.0**. The calendar function is currently still under development.
 
-## Integration Enhancements
+## Integration enhancements
 
 The integration enhances the control of Dantherm ventilation units by introducing **Boost Mode**, **Eco Mode**, **Home Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
