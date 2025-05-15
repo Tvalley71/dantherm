@@ -1,3 +1,5 @@
 config/*
 custom_components/dantherm/__pycache__
+tests/__pycache__
 *.bak
+.DS_Store
