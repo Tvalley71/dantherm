@@ -19,7 +19,7 @@ from .config_flow import (
     ATTR_HOME_MODE_TRIGGER,
 )
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .device import Device
+from .device import DanthermDevice
 from .device_map import REQUIRED_PYMODBUS_VERSION
 from .services import async_setup_services
 
@@ -96,18 +96,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
-    device = Device(hass, name, host, port, 1, scan_interval, entry)
-
-    await device.async_load_entities()  # Load device-specific data
+    device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
 
     try:
-        await device.setup()
+        coordinator = await device.setup()
     except ValueError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
 
     # Store device instance and options
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
+        "coordinator": coordinator,
         ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
         ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
         ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
