@@ -6,8 +6,10 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
+from .coordinator import DanthermCoordinator
+from .device import DanthermDevice
 from .device_map import BUTTONS, DanthermButtonEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,13 +26,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
+    coordinator = device_entry.get("coordinator")
+    if coordinator is None:
+        _LOGGER.error("Coodinator object is missing in entry %s", config_entry.entry_id)
+        return False
+
     entities = []
     for description in BUTTONS:
-        if await device.async_install_entity(description):
-            button = DanthermButton(device, description)
+        if await coordinator.async_install_entity(description):
+            button = DanthermButton(device, coordinator, description)
             entities.append(button)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -39,25 +46,16 @@ class DanthermButton(ButtonEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
+        coordinator: DanthermCoordinator,
         description: DanthermButtonEntityDescription,
     ) -> None:
         """Init button."""
-        super().__init__(device, description)
+        super().__init__(device, coordinator, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermButtonEntityDescription = description
 
     async def async_press(self) -> None:
         """Handle the button press."""
 
-        if self.entity_description.state_entity:
-            value = self._device.data.get(self.key, None)
-        else:
-            value = self.entity_description.state
-
-        if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(value)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description, value=value
-            )
+        await self.coordinator.async_set_entity_state(self, None)

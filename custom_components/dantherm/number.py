@@ -3,11 +3,15 @@
 import logging
 
 from homeassistant.components.number import NumberEntity
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
-from .device_map import NUMBERS, DanthermNumberEntityDescription
+from .coordinator import DanthermCoordinator
+from .device import DanthermDevice
+from .device_map import NUMBERS, RESTORE_NUMBERS, DanthermNumberEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,13 +28,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
+    coordinator = device_entry.get("coordinator")
+    if coordinator is None:
+        _LOGGER.error("Coodinator object is missing in entry %s", config_entry.entry_id)
+        return False
+
     entities = []
     for description in NUMBERS:
-        if await device.async_install_entity(description):
-            cover = DanthermNumber(device, description)
+        if await coordinator.async_install_entity(description):
+            cover = DanthermNumber(device, coordinator, description)
+            entities.append(cover)
+    for description in RESTORE_NUMBERS:
+        if await coordinator.async_install_entity(description):
+            cover = DanthermRestoreNumber(device, coordinator, description)
             entities.append(cover)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -39,54 +52,60 @@ class DanthermNumber(NumberEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
+        coordinator: DanthermCoordinator,
         description: DanthermNumberEntityDescription,
     ) -> None:
         """Init number."""
-        super().__init__(device, description)
+        super().__init__(device, coordinator, description)
         self._attr_has_entity_name = True
+        self._attr_native_value = None
         self.entity_description: DanthermNumberEntityDescription = description
-
-    @property
-    def native_value(self):
-        """Return the state."""
-
-        return self._device.data.get(self.key, None)
 
     async def async_set_native_value(self, value) -> None:
         """Update the current value."""
 
-        if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(value)
-        elif self.entity_description.data_store:
-            await self._device.set_entity_state(self.key, value)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description, value=value
-            )
+        await self.coordinator.async_set_entity_state(self, value)
 
-    async def async_update(self) -> None:
-        """Update the state of the number."""
+    def _coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        # Get extra state attributes
-        self._attr_extra_state_attributes = await self._device.async_get_entity_attrs(
-            self.entity_description
-        )
+        super()._coordinator_update()
 
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
+        if self._attr_changed:
+            new_state = self._attr_new_state
+            if new_state is None:
+                self._attr_native_value = None
+            else:
+                precision = self.entity_description.data_precision
+                if precision is not None:
+                    if precision >= 0:
+                        new_state = round(new_state, precision)
+                    if precision == 0:
+                        new_state = int(new_state)
+                self._attr_native_value = new_state
 
-        if result is None:
-            self._attr_available = False
-            self._device.data[self.key] = None
-        else:
-            self._attr_available = True
 
-            precision = self.entity_description.data_precision
-            if precision is not None:
-                if precision >= 0:
-                    result = round(result, precision)
-                if precision == 0:
-                    result = int(result)
+class DanthermRestoreNumber(DanthermNumber, RestoreEntity):
+    """Dantherm Restore Switch Entity."""
 
-        self._device.data[self.key] = result
+    async def async_added_to_hass(self):
+        """Register entity for refresh interval."""
+
+        await super().async_added_to_hass()
+
+        # Retrieve the last stored state if it exists
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state not in (
+            None,
+            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
+        ):
+            try:
+                # Convert the stored state to a number if possible
+                state = float(last_state.state)
+            except (ValueError, TypeError):
+                # Fallback to the default value in the entity description
+                state = self.entity_description.data_default
+
+            await self.coordinator.async_restore_entity_state(self, state)
