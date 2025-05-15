@@ -1,26 +1,19 @@
 """Device implementation."""
 
-import asyncio
 from collections import deque
 from datetime import datetime, timedelta
 import logging
+import os
 import re
 
-from pymodbus import ModbusException
-
 from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.components.http.auth import Store
-from homeassistant.components.modbus import modbus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import Entity, EntityDescription, cached_property
+from homeassistant.helpers.entity import cached_property
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.helpers.event import (
-    async_track_state_change_event,
-    async_track_time_interval,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .config_flow import (
     ADAPTIVE_TRIGGERS,
@@ -28,13 +21,13 @@ from .config_flow import (
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
 )
-from .const import DEFAULT_NAME, DEVICE_TYPES, DOMAIN
+from .const import DEVICE_TYPES
+from .coordinator import DanthermCoordinator
 from .device_map import (
     ATTR_ADAPTIVE_STATE,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
     ATTR_BOOST_OPERATION_SELECTION,
-    ATTR_BYPASS_DAMPER,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
     ATTR_ECO_OPERATION_SELECTION,
@@ -45,6 +38,26 @@ from .device_map import (
     ATTR_HOME_MODE_TIMEOUT,
     ATTR_HOME_OPERATION_SELECTION,
     ATTR_SENSOR_FILTERING,
+    STATE_AUTOMATIC,
+    STATE_AWAY,
+    STATE_FIREPLACE,
+    STATE_LEVEL_1,
+    STATE_LEVEL_2,
+    STATE_LEVEL_3,
+    STATE_LEVEL_4,
+    STATE_MANUAL,
+    STATE_NIGHT,
+    STATE_PRIORITIES,
+    STATE_STANDBY,
+    STATE_SUMMER,
+    STATE_WEEKPROGRAM,
+    ActiveUnitMode,
+    BypassDamperState,
+    ComponentClass,
+    CurrentUnitMode,
+    HacComponentClass,
+)
+from .modbus import (
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_ALARM,
@@ -72,94 +85,15 @@ from .device_map import (
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
-    STATE_AUTOMATIC,
-    STATE_AWAY,
-    STATE_FIREPLACE,
-    STATE_LEVEL_1,
-    STATE_LEVEL_2,
-    STATE_LEVEL_3,
-    STATE_LEVEL_4,
-    STATE_MANUAL,
-    STATE_NIGHT,
-    STATE_PRIORITIES,
-    STATE_STANDBY,
-    STATE_SUMMER,
-    STATE_WEEKPROGRAM,
-    ActiveUnitMode,
-    BypassDamperState,
-    ComponentClass,
-    CurrentUnitMode,
-    DanthermEntityDescription,
-    DataClass,
-    HacComponentClass,
+    DanthermModbus,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-
-class DanthermEntity(Entity):
-    """Dantherm Entity."""
-
-    def __init__(self, device, description: DanthermEntityDescription) -> None:
-        """Initialize the instance."""
-        self._device = device
-        self.entity_description: DanthermEntityDescription = description
-        self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
-        self._attr_should_poll = False
-        self.attr_suspend_refresh: datetime | None = None
-
-    async def async_added_to_hass(self):
-        """Register entity for refresh interval."""
-        await self._device.async_add_refresh_entity(self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister entity for refresh interval."""
-        await self._device.async_remove_refresh_entity(self)
-
-    def suspend_refresh(self, seconds: int):
-        """Suspend entity refresh for specified number of seconds."""
-        self.attr_suspend_refresh = datetime.now() + timedelta(seconds=seconds)
-
-    @property
-    def key(self) -> str:
-        """Return the key name."""
-        return self.entity_description.key
-
-    # @property
-    # def unique_id(self) -> str | None:
-    #     """Return the unique id."""
-    #     return f"{self._device.get_device_name}_{self.key}"
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key name."""
-        return self.key
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if not self._device.available:
-            return False
-        return self._attr_available
-
-    @property
-    def device_info(self):
-        """Device Info."""
-        unique_id = self._device.get_device_name
-
-        return {
-            "identifiers": {
-                (DOMAIN, unique_id),
-            },
-            "name": self._device.get_device_name,
-            "manufacturer": DEFAULT_NAME,
-            "model": self._device.get_device_type,
-            "sw_version": self._device.get_device_fw_version,
-            "serial_number": self._device.get_device_serial_number,
-        }
+IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
 
-class Device:
+class DanthermDevice(DanthermModbus):
     """Dantherm Device."""
 
     def __init__(
@@ -173,36 +107,34 @@ class Device:
         config_entry: ConfigEntry,
     ) -> None:
         """Init device."""
+        super().__init__(
+            name,
+            host,
+            port,
+            unit_id,
+        )
         self._hass = hass
-        self._device_name = name
         self._entry_id = config_entry.entry_id
         self._options = config_entry.options
+        self._scan_interval = scan_interval
+        self._device_name = name
         self._device_type = 0
-        self._device_installed_components = 0
         self._device_fw_version = 0
         self._device_serial_number = 0
-        self._host = host
-        self._port = port
-        self._unit_id = int(unit_id)
-        self._scan_interval = timedelta(seconds=scan_interval)
-        self._client = modbus.AsyncModbusTcpClient(
-            host=self._host, port=self._port, name=name, timeout=10
-        )
-        self._entity_refresh_method = None
         self._current_unit_mode = None
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
         self._sensor_filtering = False
+        self._bypass_damper = None
+        self._filter_lifetime = None
+        self._filter_remain = None
+        self._filter_remain_level = None
         self._last_current_operation = None
         self._operation_change_timeout = datetime.min
-        self._entity_store = Store(hass, version=1, key=f"{name}_entities")
         self._events = EventStack()
-        self._available = True
-        self._read_errors = 0
-        self._entities = []
-        self.store = {}
-        self.data = {}
+        self.coordinator = None
+        self.installed_components = 0
 
         # Initialize filtered sensors
         self._filtered_sensors = {
@@ -297,21 +229,32 @@ class Device:
 
         return device_entry.id
 
-    async def setup(self):
+    async def setup(self) -> DanthermCoordinator:
         """Set up modbus for Dantherm Device."""
 
         _LOGGER.debug("Setup has started")
+
+        # Remove chached properties
+        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
+        self.__dict__.pop("get_boost_mode_trigger_available", None)
+        self.__dict__.pop("get_eco_mode_trigger_available", None)
+        self.__dict__.pop("get_home_mode_trigger_available", None)
+
+        # Create coordinator
+        self.coordinator = DanthermCoordinator(
+            self._hass, self._device_name, self, self._scan_interval
+        )
 
         # Set up adaptive triggers
         await self.set_up_adaptive_triggers(self._options)
 
         # Connect and verify modbus connection
-        result = await self._modbus_connect_and_verify()
+        result = await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
-        self._device_installed_components = result & 0xFFFF
-        _LOGGER.debug(
-            "Installed components (610) = %s", hex(self._device_installed_components)
-        )
+        self.installed_components = result & 0xFFFF
+        _LOGGER.debug("Installed components (610) = %s", hex(self.installed_components))
 
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
         self._device_type = system_id >> 24
@@ -329,174 +272,22 @@ class Device:
         if self._options:
             await self.set_up_tracking_for_adaptive_triggers(self._options)
 
-        if (
-            self._device_installed_components & ComponentClass.HAC1
-            == ComponentClass.HAC1
-        ):
+        if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
             await self._read_hac_controller()
         else:
             _LOGGER.debug("No HAC controller installed")
 
-    async def async_install_entity(
-        self, description: DanthermEntityDescription
-    ) -> bool:
-        """Test if the component is installed on the device."""
+        await self.coordinator.async_config_entry_first_refresh()
 
-        def exclude_from_component_class(
-            description: DanthermEntityDescription,
-        ) -> bool:
-            """Check if entity must be excluded from component_class."""
-            if description.component_class:
-                return (
-                    self._device_installed_components & description.component_class
-                ) == 0
-            return False
-
-        async def exclude_from_entity_state(
-            description: DanthermEntityDescription,
-        ) -> bool:
-            """Check if entity must be excluded if any of the data_exclude_if conditions are met."""
-
-            if (
-                description.data_exclude_if_above
-                or description.data_exclude_if_below
-                or description.data_exclude_if is not None
-            ):
-                result = await self.async_get_entity_state(description)
-
-                if (
-                    (
-                        description.data_exclude_if is not None
-                        and description.data_exclude_if == result
-                    )
-                    or (
-                        description.data_exclude_if_above is not None
-                        and result >= description.data_exclude_if_above
-                    )
-                    or (
-                        description.data_exclude_if_below is not None
-                        and result <= description.data_exclude_if_below
-                    )
-                ):
-                    return True
-            return False
-
-        install = True
-        if exclude_from_component_class(description) or await exclude_from_entity_state(
-            description
-        ):
-            install = False
-
-        if install:
-            return True
-        _LOGGER.debug("Excluding an entity=%s", description.key)
-        return False
-
-    async def async_add_refresh_entity(self, entity):
-        """Add entity for refresh."""
-
-        # This is the first entity, set up interval.
-        if not self._entities:
-            self._entity_refresh_method = async_track_time_interval(
-                self._hass, self.async_refresh_entities, self._scan_interval
-            )
-
-        _LOGGER.debug("Adding refresh entity=%s", entity.key)
-        self._entities.append(entity)
-
-    async def async_remove_refresh_entity(self, entity):
-        """Remove entity for refresh."""
-
-        if entity.key in self.data:
-            self.data.pop(entity.key)
-        if entity in self._entities:
-            self._entities.remove(entity)
-
-        if not self._entities:
-            # This is the last entity, stop the interval timer
-            self._entity_refresh_method()
-            self._entity_refresh_method = None
-
-            self._client.close()
-            self._client = None
-            # Wait for the client to close
-            await asyncio.sleep(5)
-
-    async def async_refresh_entities(self, _now: int | None = None) -> None:
-        """Time to update entities."""
-
-        # Check if any entities is installed
-        if not self._entities:
-            return
-
-        _LOGGER.debug("<<< LOOP BEGIN - %s >>>", datetime.now().strftime("%H:%M:%S.%f"))
-
-        # Read current unit mode
-        self._current_unit_mode = await self._read_holding_uint32(
-            MODBUS_REGISTER_CURRENT_MODE
-        )
-        _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
-
-        # Read active unit mode
-        self._active_unit_mode = await self._read_holding_uint32(
-            MODBUS_REGISTER_ACTIVE_MODE
-        )
-        _LOGGER.debug("Active unit mode = %s", hex(self._active_unit_mode))
-
-        # Read fan level
-        self._fan_level = await self._read_holding_uint32(MODBUS_REGISTER_FAN_LEVEL)
-        _LOGGER.debug("Fan level = %s", self._fan_level)
-
-        # Read alarm
-        self._alarm = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
-        _LOGGER.debug("Alarm = %s", self._alarm)
-
-        self._sensor_filtering = self.data.get(ATTR_SENSOR_FILTERING, False)
-
-        for entity in self._entities:
-            await self.async_refresh_entity(entity)
-
-        await self._update_adaptive_triggers()
-
-        _LOGGER.debug("<<< LOOP END - %s >>>", datetime.now().strftime("%H:%M:%S.%f"))
-
-    async def async_refresh_entity(self, entity: DanthermEntity) -> None:
-        """Refresh an entity."""
-
-        if entity.attr_suspend_refresh:
-            if entity.attr_suspend_refresh > datetime.now():
-                return
-            entity.attr_suspend_refresh = None
-
-        await entity.async_update_ha_state(True)
-
-    async def async_load_entities(self):
-        """Load device-specific entities."""
-        store = await self._entity_store.async_load()
-        if store is None:
-            store = {"entities": {}}
-        self.store = store
-
-    async def async_save_entities(self):
-        """Save device-specific entities."""
-        await self._entity_store.async_save(self.store)
-
-    async def set_entity_state(self, entity_key, value):
-        """Set entity state for this device instance."""
-        self.store["entities"][entity_key] = value
-        await self.async_save_entities()
-
-    def get_entity_state(self, entity_key, default=None):
-        """Get entity state for this device instance."""
-        return self.store["entities"].get(entity_key, default)
+        return self.coordinator
 
     @property
     def available(self) -> bool:
-        """Indicates whether the device is available."""
+        """Return if device is available."""
 
-        if not self._active_unit_mode:
+        if self._active_unit_mode is None:
             return False
-        return self._available
+        return super().available
 
     @property
     def get_current_unit_mode(self):
@@ -617,7 +408,7 @@ class Device:
         if self._alarm != 0:
             return "mdi:fan-alert"
 
-        mode = self.get_current_unit_mode
+        mode = self._current_unit_mode
         mode_icons = {
             CurrentUnitMode.Standby: "mdi:fan-off",
             CurrentUnitMode.Away: "mdi:bag-suitcase",
@@ -641,6 +432,44 @@ class Device:
 
         return "mdi:fan"
 
+    async def async_get_current_unit_mode(self):
+        """Get current unit mmode."""
+
+        self._current_unit_mode = await self._read_holding_uint32(
+            MODBUS_REGISTER_CURRENT_MODE
+        )
+        _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
+        return self._current_unit_mode
+
+    async def async_get_active_unit_mode(self):
+        """Get active unit mode."""
+
+        self._active_unit_mode = await self._read_holding_uint32(
+            MODBUS_REGISTER_ACTIVE_MODE
+        )
+        _LOGGER.debug("Active unit mode = %s", hex(self._active_unit_mode))
+        return self._active_unit_mode
+
+    async def async_get_fan_level(self):
+        """Get fan level."""
+
+        self._fan_level = await self._read_holding_uint32(MODBUS_REGISTER_FAN_LEVEL)
+        _LOGGER.debug("Fan level = %s", self._fan_level)
+        return self._fan_level
+
+    async def async_get_alarm(self):
+        """Get alarm."""
+
+        self._alarm = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
+        _LOGGER.debug("Alarm = %s", self._alarm)
+        return self._alarm
+
+    async def async_sensor_filtering(self):
+        """Get sensor filtering."""
+
+        self._sensor_filtering = self.data.get(ATTR_SENSOR_FILTERING, False)
+        return self._sensor_filtering
+
     async def async_get_week_program_selection(self):
         """Get week program selection."""
 
@@ -654,28 +483,29 @@ class Device:
 
         return self._alarm
 
-    async def alarm_reset(self, value=None):
+    async def set_alarm_reset(self, value=None):
         """Reset alarm."""
 
         if value is None:
-            value = 0
+            value = self._alarm
         await self._write_holding_uint32(MODBUS_REGISTER_ALARM_RESET, value)
 
     async def async_get_bypass_damper(self):
         """Get bypass damper."""
 
-        result = await self._read_holding_uint32(MODBUS_REGISTER_BYPASS_DAMPER)
-        _LOGGER.debug("Bypass damper = %s", result)
-        return result
+        self._bypass_damper = await self._read_holding_uint32(
+            MODBUS_REGISTER_BYPASS_DAMPER
+        )
+        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        return self._bypass_damper
 
     @property
     def get_bypass_damper_icon(self) -> str:
         """Get bypass damper icon."""
 
-        bypass_damper = self.data.get(ATTR_BYPASS_DAMPER, None)
-        if bypass_damper == BypassDamperState.Closed:
+        if self._bypass_damper == BypassDamperState.Closed:
             return "mdi:valve-closed"
-        if bypass_damper == BypassDamperState.Opened:
+        if self._bypass_damper == BypassDamperState.Opened:
             return "mdi:valve-open"
         return "mdi:valve"
 
@@ -722,66 +552,77 @@ class Device:
             return True
         return False
 
-    async def async_get_filter_lifetime(self):
-        """Get filter lifetime."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_LIFETIME)
-        _LOGGER.debug("Filter lifetime = %s", result)
-
-        return result
-
-    async def async_get_filter_remain(self):
-        """Get filter remain."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
-        _LOGGER.debug("Filter remain = %s", result)
-        return result
-
     @cached_property
     def _get_filter_lifetime_entity_installed(self) -> bool:
         """Check if the filter lifetime entity is installed (cached)."""
-        return any(entity.key == ATTR_FILTER_LIFETIME for entity in self._entities)
+        return self.coordinator.is_entity_installed(ATTR_FILTER_LIFETIME)
 
     @cached_property
     def _get_filter_remain_entity_installed(self) -> bool:
         """Check if the filter remain entity is installed (cached)."""
-        return any(entity.key == ATTR_FILTER_REMAIN for entity in self._entities)
+        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN)
+
+    @cached_property
+    def _get_filter_remain_level_entity_installed(self) -> bool:
+        """Check if the filter remain level entity is installed (cached)."""
+        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN_LEVEL)
+
+    async def async_get_filter_lifetime(self):
+        """Get filter lifetime."""
+
+        self._filter_lifetime = await self._read_holding_uint32(
+            MODBUS_REGISTER_FILTER_LIFETIME
+        )
+        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+
+        return self._filter_lifetime
+
+    async def async_get_filter_remain(self):
+        """Get filter remain."""
+
+        self._filter_remain = await self._read_holding_uint32(
+            MODBUS_REGISTER_FILTER_REMAIN
+        )
+        _LOGGER.debug("Filter remain = %s", self._filter_remain)
+
+        if not self._get_filter_remain_level_entity_installed:
+            await self.async_get_filter_remain_level()
+
+        return self._filter_remain
 
     async def async_get_filter_remain_level(self):
         """Get filter remain level."""
 
         if self._get_filter_lifetime_entity_installed:
-            filter_lifetime = self.data.get(ATTR_FILTER_LIFETIME, None)
+            filter_lifetime = self._filter_lifetime
         else:
-            filter_lifetime = await self.async_get_filter_lifetime()
+            filter_lifetime = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_LIFETIME
+            )
 
         if self._get_filter_remain_entity_installed:
-            filter_remain = self.data.get(ATTR_FILTER_REMAIN, None)
+            filter_remain = self._filter_remain
         else:
-            filter_remain = await self.async_get_filter_remain()
+            filter_remain = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_REMAIN
+            )
 
         if filter_lifetime is None or filter_remain is None:
             return None
 
-        result = 0
+        self._filter_remain_level = 0
         if filter_remain <= filter_lifetime:
-            result = int((filter_lifetime - filter_remain) / (filter_lifetime / 3))
-        _LOGGER.debug("Filter Remain Level = %s", result)
-        return result
+            self._filter_remain_level = int(
+                (filter_lifetime - filter_remain) / (filter_lifetime / 3)
+            )
+        _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
+        return self._filter_remain_level
 
-    @cached_property
-    def _get_filter_remain_level_entity_installed(self) -> bool:
-        """Check if the filter remain level entity is installed (cached)."""
-        return any(entity.key == ATTR_FILTER_REMAIN_LEVEL for entity in self._entities)
-
-    async def async_get_filter_remain_attrs(self):
+    @property
+    def get_filter_remain_attrs(self):
         """Get filter remain attributes."""
 
-        if self._get_filter_remain_level_entity_installed:
-            result = self.data.get(ATTR_FILTER_REMAIN, None)
-        else:
-            result = await self.async_get_filter_remain_level()
-
+        result = self._filter_remain_level
         if result is not None:
             return {"level": result}
         return None
@@ -837,7 +678,7 @@ class Device:
         _LOGGER.debug("Manual bypass duration = %s", result)
         return result
 
-    async def filter_reset(self, value=None):
+    async def set_filter_reset(self, value=None):
         """Reset filter."""
 
         if value is None:
@@ -855,19 +696,13 @@ class Device:
         async def update_operation(
             current_mode, active_mode, fan_level: int | None = None
         ):
-            """Update the unit operation with a short delay between mode and fan level."""
+            """Update the unit operation mode and fan level."""
 
-            operation_changed = False
             if self._current_unit_mode != current_mode:
                 await self.set_active_unit_mode(active_mode)
-                operation_changed = True
 
             # Always set the fan level even if it's the same as before, as it may change after setting the operation mode.
             if fan_level is not None:
-                # Sleep for a second or else the fan level won't change.
-                if operation_changed:
-                    await asyncio.sleep(1)
-
                 await self.set_fan_level(fan_level)
 
         if value is None:
@@ -1091,6 +926,21 @@ class Device:
         history.append(new_value)
         return new_value
 
+    @cached_property
+    def get_boost_mode_trigger_available(self) -> bool:
+        """Get boost mode trigger available."""
+        return self._options.get(ATTR_BOOST_MODE_TRIGGER, False)
+
+    @cached_property
+    def get_eco_mode_trigger_available(self) -> bool:
+        """Get eco mode trigger available."""
+        return self._options.get(ATTR_ECO_MODE_TRIGGER, False)
+
+    @cached_property
+    def get_home_mode_trigger_available(self) -> bool:
+        """Get home mode trigger available."""
+        return self._options.get(ATTR_HOME_MODE_TRIGGER, False)
+
     async def set_up_adaptive_triggers(self, options: dict):
         """Enable/disable associated entities based on configured adaptive triggers."""
         entities = self._get_device_entities()
@@ -1108,7 +958,13 @@ class Device:
                 self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
 
         # The adaptive_state entity should be disabled if no adaptive triggers are configured.
-        if not any(options.get(trigger) for trigger in ADAPTIVE_TRIGGERS):
+        if not any(
+            [
+                self.get_boost_mode_trigger_available,
+                self.get_eco_mode_trigger_available,
+                self.get_home_mode_trigger_available,
+            ]
+        ):
             self._set_entity_enabled_by_suffix(entities, ATTR_ADAPTIVE_STATE, False)
 
     async def set_up_tracking_for_adaptive_triggers(self, options: dict):
@@ -1120,7 +976,7 @@ class Device:
             mode_data = self._adaptive_triggers[trigger_name]
             if new_trigger != mode_data["trigger"]:
                 mode_name = trigger_name.split("_")[0]
-                self.data[f"{mode_name}_mode"] = None
+                self._hass.data[f"{mode_name}_mode"] = None
                 if mode_data["unsub"]:
                     mode_data["unsub"]()  # remove previous listener
                 mode_data["trigger"] = new_trigger
@@ -1138,17 +994,17 @@ class Device:
 
     async def _async_boost_trigger_changed(self, event):
         """Boost trigger state change callback."""
-        if self.data[ATTR_BOOST_MODE]:
+        if self._hass.data[ATTR_BOOST_MODE]:
             await self._async_mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
 
     async def _async_eco_trigger_changed(self, event):
         """Eco trigger state change callback."""
-        if self.data[ATTR_ECO_MODE]:
+        if self._hass.data[ATTR_ECO_MODE]:
             await self._async_mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
 
     async def _async_home_trigger_changed(self, event):
         """Home trigger state change callback."""
-        if self.data[ATTR_HOME_MODE]:
+        if self._hass.data[ATTR_HOME_MODE]:
             await self._async_mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
 
     async def _async_mode_trigger_changed(self, trigger: str, event):
@@ -1175,7 +1031,7 @@ class Device:
             mode_data["undetected"] = datetime.now()
             _LOGGER.debug("%s undetected!", trigger.capitalize())
 
-    async def _update_adaptive_triggers(self):
+    async def async_update_adaptive_triggers(self):
         """Update adaptive triggers."""
 
         adaptive_trigger = None
@@ -1235,9 +1091,10 @@ class Device:
         # Check if the trigger is detected
         if mode_data["detected"]:
             # Set the timeout of the trigger
-            mode_data["timeout"] = current_time + timedelta(
-                minutes=self.data.get(f"{mode_name}_mode_timeout", 5)
-                # seconds=10 * self.data.get(f"{mode_name}_mode_timeout", 5)
+            mode_data["timeout"] = current_time + (
+                timedelta(seconds=30)
+                if IS_DEBUG
+                else timedelta(minutes=self.data.get(f"{mode_name}_mode_timeout", 5))
             )
 
             # Check if this is not a repeated detection
@@ -1248,7 +1105,7 @@ class Device:
                 )
 
                 # Push current operation and set the target operation if it has priority
-                if self._push_event(mode_name, current_operation):
+                if self._push_event(mode_name, current_operation, possible_target):
                     target_operation = possible_target
 
             mode_data["detected"] = None
@@ -1265,18 +1122,19 @@ class Device:
             return
 
         # Set the operation change timeout
-        self._operation_change_timeout = current_time + timedelta(minutes=2)
+        self._operation_change_timeout = (
+            current_time + timedelta(seconds=15) if IS_DEBUG else timedelta(minutes=2)
+        )
 
         _LOGGER.debug("Target operation = %s", target_operation)
 
         await self.set_operation_selection(target_operation)
 
-    def _push_event(self, mode_name, operation) -> bool:
+    def _push_event(self, mode_name, current_operation, new_operation) -> bool:
         """Push event to event stack."""
-        priority = self._events.has_priority(mode_name)
-        self._events.push(mode_name, operation)
+        result = self._events.push(mode_name, current_operation, new_operation)
         _LOGGER.debug(self._events)
-        return priority
+        return result
 
     def _pop_event(self, mode_name):
         """Pop event from event stack."""
@@ -1287,98 +1145,6 @@ class Device:
     def _event_exists(self, mode_name) -> bool:
         """Check if event exists."""
         return self._events.exists(mode_name)
-
-    async def async_get_entity_state(self, description: DanthermEntityDescription):
-        """Get entity value from description."""
-
-        if description.data_unavailable:
-            if self._options.get(description.data_unavailable, None) is None:
-                return None
-
-        if description.data_getinternal:
-            if hasattr(self, f"async_{description.data_getinternal}"):
-                result = await getattr(self, f"async_{description.data_getinternal}")()
-            else:
-                result = getattr(self, description.data_getinternal)
-        elif description.data_store:
-            result = self.get_entity_state(description.key, description.data_default)
-        else:
-            result = await self.read_holding_registers(description=description)
-
-        return result
-
-    async def async_get_entity_attrs(self, description: DanthermEntityDescription):
-        """Get entity attributes from description."""
-
-        result = None
-        if hasattr(self, f"async_get_{description.key}_attrs"):
-            result = await getattr(self, f"async_get_{description.key}_attrs")()
-        elif hasattr(self, f"get_{description.key}_attrs"):
-            result = getattr(self, f"get_{description.key}_attrs")
-        return result
-
-    async def read_holding_registers(
-        self,
-        description: EntityDescription | None = None,
-        address: int | None = None,
-        count=1,
-        precision: int | None = None,
-        scale=1,
-    ):
-        """Read modbus holding registers."""
-
-        result = None
-        if description:
-            if not address:
-                address = description.data_address
-            if description.data_class == DataClass.Int32:
-                result = await self._read_holding_int32(address)
-            elif description.data_class == DataClass.UInt32:
-                result = await self._read_holding_uint32(address)
-            elif description.data_class == DataClass.UInt64:
-                result = await self._read_holding_uint64(address)
-            elif description.data_class == DataClass.Float32:
-                if not precision:
-                    precision = description.data_precision
-                result = await self._read_holding_float32(address, precision)
-        elif address:
-            if count == 1:
-                result = await self._read_holding_uint16(address)
-            elif count == 2:
-                result = await self._read_holding_uint32(address)
-            elif count == 4:
-                result = await self._read_holding_uint64(address)
-        if result is None:
-            _LOGGER.debug("Reading holding register=%s failed", str(address))
-            return None
-        result *= scale
-        _LOGGER.debug("Reading holding register=%s result=%s", str(address), result)
-        return result
-
-    async def write_holding_registers(
-        self,
-        description: EntityDescription | None = None,
-        address: int | None = None,
-        value: int = 0,
-        scale=1,
-    ):
-        """Write modbus holding registers."""
-
-        value *= scale
-        if description:
-            data_class = description.data_setclass
-            if not data_class:
-                data_class = description.data_class
-            if not address:
-                address = description.data_setaddress
-            if not address:
-                address = description.data_address
-            if data_class == DataClass.UInt32:
-                await self._write_holding_uint32(address, value)
-            elif data_class == DataClass.Float32:
-                await self._write_holding_float32(address, value)
-        else:
-            await self._write_holding_registers(address, value)
 
     @property
     def get_device_name(self) -> str:
@@ -1460,124 +1226,6 @@ class Device:
             if entry.device_id == device_id
         ]
 
-    async def _modbus_connect_and_verify(self):
-        """Connect to Modbus and verify connection with retries."""
-        _LOGGER.debug("Attempting Modbus connection for %s", self._host)
-        connection = await self._client.connect()
-        if not connection:
-            _LOGGER.error("Modbus setup was unsuccessful for %s", self._host)
-            raise ValueError("Modbus setup failed")
-
-        _LOGGER.debug("Modbus connection established, verifying connection")
-        for _ in range(5):
-            result = await self._read_holding_uint32(610)
-            if result is not None:
-                _LOGGER.debug("Modbus client is connected!")
-                self._available = True
-                return result
-            await asyncio.sleep(1)
-
-        _LOGGER.error("Modbus client failed to respond for %s", self._host)
-        self._client.close()
-        raise ValueError("Modbus client failed to respond")
-
-    async def _read_holding_registers(self, address, count):
-        """Read holding registers."""
-        try:
-            response = await self._client.read_holding_registers(address, count=count)
-            if response.isError() is False:
-                return response.registers
-            _LOGGER.error("Read holding registers failed: %s", response)
-        except ConnectionError as err:
-            _LOGGER.error("Read holding registers failed: %s", err)
-            self._read_errors += 1
-            if self._read_errors > 5:
-                self._available = False
-        return None
-
-    async def _read_holding_registers_with_retry(
-        self, address, count, retries=3, initial_delay=0.5
-    ):
-        """Read holding registers with retry using exponential backoff."""
-        delay = initial_delay
-        for _attempt in range(retries):
-            result = await self._read_holding_registers(address, count)
-            if result is not None:
-                return result
-            await asyncio.sleep(delay)
-            delay *= 2
-        return None
-
-    async def _write_holding_registers(self, address, values):
-        """Write holding registers."""
-        try:
-            await self._client.write_registers(address, values)
-            _LOGGER.debug("Written %s to register address %d", values, address)
-        except ConnectionError as err:
-            _LOGGER.warning("Write holding registers failed: %s", err)
-            self._available = False
-
-    async def _read_holding_uint16(self, address):
-        result = self._read_holding_uint32(address)
-        return result & 0xFFFF
-
-    async def _read_holding_int32(self, address):
-        result = await self._read_holding_registers_with_retry(address, 2)
-        return self._client.convert_from_registers(
-            result, self._client.DATATYPE.INT32, "little"
-        )
-
-    async def _read_holding_uint32(self, address):
-        try:
-            result = await self._read_holding_registers_with_retry(address, 2)
-            if result is None:
-                _LOGGER.error(
-                    "Failed to read holding registers for address %s", address
-                )
-                return None
-            return self._client.convert_from_registers(
-                result, self._client.DATATYPE.UINT32, "little"
-            )
-        except ModbusException as e:
-            _LOGGER.error(
-                "Exception in _read_holding_uint32 for address %s: %s", address, e
-            )
-            return None
-
-    async def _write_holding_uint32(self, address, value):
-        if value is None:
-            return
-        payload = self._client.convert_to_registers(
-            int(value), self._client.DATATYPE.UINT32, "little"
-        )
-        await self._write_holding_registers(address, payload)
-
-    async def _read_holding_uint64(self, address):
-        result = await self._read_holding_registers_with_retry(address, 4)
-        return self._client.convert_from_registers(
-            result, self._client.DATATYPE.UINT64, "little"
-        )
-
-    async def _read_holding_float32(self, address, precision):
-        result = await self._read_holding_registers_with_retry(address, 2)
-        value = self._client.convert_from_registers(
-            result, self._client.DATATYPE.FLOAT32, "little"
-        )
-        if value:
-            if precision >= 0:
-                value = round(value, precision)
-            if precision == 0:
-                value = int(value)
-        return value
-
-    async def _write_holding_float32(self, address, value: float):
-        if value is None:
-            return
-        payload = self._client.convert_to_registers(
-            float(value), self._client.DATATYPE.FLOAT32
-        )
-        await self._write_holding_registers(address, payload, "little")
-
     async def _read_hac_controller(self):
         _LOGGER.critical(
             "HAC controller found, please reach out for support collaboration"
@@ -1614,85 +1262,93 @@ class Device:
 
 
 class EventStack:
-    """Event Stack."""
+    """Event Stack with priority and operation tracking."""
 
     def __init__(self) -> None:
-        """Initialize event stack using deque for improved performance."""
+        """Initialize an empty event stack."""
         self.stack = deque()
 
-    def push(self, event, operation):
-        """Push an event onto the stack or increase its count if it already exists."""
-        for item in self.stack:
-            if item["event"] == event:
-                item["count"] += 1
-                return False
+    def push(self, event, current_operation, new_operation, event_id=None) -> bool:
+        """Push an event onto the stack based on priority.
 
-        # If event does not exist, push it with count 1
-        self.stack.append({"event": event, "operation": operation, "count": 1})
-        return True
-
-    def pop(self, event):
-        """Remove an event from the stack, handling operation shifts if necessary."""
-        temp = deque()
-        removed_operation = None
-        found = False
-
-        while self.stack:
-            item = self.stack.pop()
-            if not found and item["event"] == event:
-                found = True
-                if item["count"] > 1:
-                    item["count"] -= 1
-                    self.stack.append(item)
-                else:
-                    removed_operation = item["operation"]
-                    if self.stack:
-                        top_item = self.stack.pop()
-                        top_item["operation"] = removed_operation
-                        self.stack.append(top_item)
+        Returns True if the event becomes the top event, otherwise False.
+        """
+        for idx, item in enumerate(self.stack):  # noqa: B007
+            if item["event"] == event and item.get("event_id") == event_id:
+                # Update operation and reposition in stack
+                self.stack.remove(item)
                 break
-            temp.append(item)
 
-        while temp:
-            self.stack.append(temp.pop())
+        insert_at = len(self.stack)
+        for idx, item in enumerate(self.stack):
+            if STATE_PRIORITIES.get(event, 0) > STATE_PRIORITIES.get(item["event"], 0):
+                insert_at = idx
+                break
+            if item["event"] == event and item.get("event_id") != event_id:
+                insert_at = idx
+                break
 
-        if not found:
-            return None
-        return None if self.stack else removed_operation
+        if insert_at == 0:
+            self.stack.appendleft(
+                {"event": event, "event_id": event_id, "operation": current_operation}
+            )
+            return True
 
-    def exists(self, event):
-        """Check if a specific event is present in the stack."""
-        return any(item["event"] == event for item in self.stack)
+        previous_op = self.stack[insert_at - 1]["operation"]
+        self.stack[insert_at - 1]["operation"] = new_operation
+        self.stack.insert(
+            insert_at, {"event": event, "event_id": event_id, "operation": previous_op}
+        )
+        return False
 
-    def lookup(self, event):
-        """Find the latest occurrence of an event in the stack and return its operation."""
+    def pop(self, event, event_id=None):
+        """Remove an event (and optional ID) from the stack and adjust operation if needed.
+
+        Returns the operation of the removed event if it was the top event, otherwise None.
+        """
+        for idx, item in enumerate(self.stack):
+            if item["event"] == event and item.get("event_id") == event_id:
+                removed_item = self.stack[idx]
+                self.stack.remove(removed_item)
+
+                if idx == 0:
+                    return removed_item["operation"]
+
+                self.stack[idx - 1]["operation"] = removed_item["operation"]
+                return None
+
+        return None
+
+    def exists(self, event, event_id=None):
+        """Check if an event with optional ID exists in the stack."""
+        return any(
+            item["event"] == event and item.get("event_id") == event_id
+            for item in self.stack
+        )
+
+    def lookup(self, event, event_id=None):
+        """Look up the operation for a given event and optional ID in the stack."""
         for item in reversed(self.stack):
-            if item["event"] == event:
+            if item["event"] == event and item.get("event_id") == event_id:
                 return item["operation"]
         return None
 
     def top(self):
-        """Return the operation of the top event (last pushed)."""
-        return self.stack[-1] if self.stack else None
+        """Return the top event of the stack."""
+        return self.stack[0] if self.stack else None
 
-    def is_top(self, event):
-        """Check if the given event is currently the top event."""
-        return bool(self.stack) and self.top()["event"] == event
-
-    def has_priority(self, event):
-        """Check if the top event has a lower priority than the event."""
-
-        if not self.stack:
-            return True  # If stack is empty, allow new event
-
-        if len(self.stack) == 1:
-            if self.top()["event"] == event and self.top()["count"] == 1:
-                return True  # If the only event matches and count is 1
-
-        return STATE_PRIORITIES.get(self.top()["event"], 0) < STATE_PRIORITIES.get(
-            event, 0
+    def is_top(self, event, event_id=None):
+        """Check if the given event (and optional ID) is the top event in the stack."""
+        return (
+            bool(self.stack)
+            and self.stack[0]["event"] == event
+            and self.stack[0].get("event_id") == event_id
         )
 
+    def current_operation(self):
+        """Return the operation of the current top event."""
+        return self.stack[0]["operation"] if self.stack else None
+
     def __repr__(self):
-        """Return string representation of the event stack."""
+        """Return a string representation of the event stack."""
         return f"Event stack: {list(self.stack)}"
