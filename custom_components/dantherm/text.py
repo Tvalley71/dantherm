@@ -8,7 +8,6 @@ from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import DanthermCoordinator
 from .device import DanthermDevice
 from .device_map import TIMETEXTS, DanthermTimeTextEntityDescription
 from .entity import DanthermEntity
@@ -28,17 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
-    coordinator = device_entry.get("coordinator")
-    if coordinator is None:
-        _LOGGER.error(
-            "Coordinator object is missing in entry %s", config_entry.entry_id
-        )
-        return False
-
     entities = []
     for description in TIMETEXTS:
-        if await coordinator.async_install_entity(description):
-            text = DanthermTimeText(device, coordinator, description)
+        if await device.async_install_entity(description):
+            text = DanthermTimeText(device, description)
             entities.append(text)
 
     async_add_entities(entities, update_before_add=True)
@@ -51,11 +43,10 @@ class DanthermTimeText(TextEntity, DanthermEntity):
     def __init__(
         self,
         device: DanthermDevice,
-        coordinator: DanthermCoordinator,
         description: DanthermTimeTextEntityDescription,
     ) -> None:
         """Init time text."""
-        super().__init__(device, coordinator, description)
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermTimeTextEntityDescription = description
 

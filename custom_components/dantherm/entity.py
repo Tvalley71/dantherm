@@ -10,11 +10,9 @@ from .device_map import DanthermEntityDescription
 class DanthermEntity(CoordinatorEntity):
     """Dantherm Entity."""
 
-    def __init__(
-        self, device, coordinator, description: DanthermEntityDescription
-    ) -> None:
+    def __init__(self, device, description: DanthermEntityDescription) -> None:
         """Initialize the instance."""
-        super().__init__(coordinator)
+        super().__init__(device.coordinator)
         self._device = device
         self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
         self._attr_should_poll = False

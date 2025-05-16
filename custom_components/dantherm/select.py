@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .coordinator import DanthermCoordinator
 from .device import DanthermDevice
 from .device_map import RESTORE_SELECTS, SELECTS, DanthermSelectEntityDescription
 from .entity import DanthermEntity
@@ -28,19 +27,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
-    coordinator = device_entry.get("coordinator")
-    if coordinator is None:
-        _LOGGER.error("Coodinator object is missing in entry %s", config_entry.entry_id)
-        return False
-
     entities = []
     for description in SELECTS:
-        if await coordinator.async_install_entity(description):
-            select = DanthermSelect(device, coordinator, description)
+        if await device.async_install_entity(description):
+            select = DanthermSelect(device, description)
             entities.append(select)
     for description in RESTORE_SELECTS:
-        if await coordinator.async_install_entity(description):
-            select = DanthermRestoreSelect(device, coordinator, description)
+        if await device.async_install_entity(description):
+            select = DanthermRestoreSelect(device, description)
             entities.append(select)
 
     async_add_entities(entities, update_before_add=True)
@@ -53,11 +47,10 @@ class DanthermSelect(SelectEntity, DanthermEntity):
     def __init__(
         self,
         device: DanthermDevice,
-        coordinator: DanthermCoordinator,
         description: DanthermSelectEntityDescription,
     ) -> None:
         """Init select."""
-        super().__init__(device, coordinator, description)
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self._attr_current_option = None
         self.entity_description: DanthermSelectEntityDescription = description

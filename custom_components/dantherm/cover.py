@@ -8,7 +8,6 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import DanthermCoordinator
 from .device import DanthermDevice
 from .device_map import COVERS, DanthermCoverEntityDescription
 from .entity import DanthermEntity
@@ -28,17 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
-    coordinator = device_entry.get("coordinator")
-    if coordinator is None:
-        _LOGGER.error(
-            "Coordinator object is missing in entry %s", config_entry.entry_id
-        )
-        return False
-
     entities = []
     for description in COVERS:
-        if await coordinator.async_install_entity(description):
-            cover = DanthermCover(device, coordinator, description)
+        if await device.async_install_entity(description):
+            cover = DanthermCover(device, description)
             entities.append(cover)
 
     async_add_entities(entities, update_before_add=True)
@@ -51,11 +43,10 @@ class DanthermCover(CoverEntity, DanthermEntity):
     def __init__(
         self,
         device: DanthermDevice,
-        coordinator: DanthermCoordinator,
         description: DanthermCoverEntityDescription,
     ) -> None:
         """Init cover."""
-        super().__init__(device, coordinator, description)
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self._attr_supported_features = 0
         if description.supported_features:

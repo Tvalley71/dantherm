@@ -6,7 +6,6 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import DanthermCoordinator
 from .device import DanthermDevice
 from .device_map import BUTTONS, DanthermButtonEntityDescription
 from .entity import DanthermEntity
@@ -26,15 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
         return False
 
-    coordinator = device_entry.get("coordinator")
-    if coordinator is None:
-        _LOGGER.error("Coodinator object is missing in entry %s", config_entry.entry_id)
-        return False
-
     entities = []
     for description in BUTTONS:
-        if await coordinator.async_install_entity(description):
-            button = DanthermButton(device, coordinator, description)
+        if await device.async_install_entity(description):
+            button = DanthermButton(device, description)
             entities.append(button)
 
     async_add_entities(entities, update_before_add=True)
@@ -47,11 +41,10 @@ class DanthermButton(ButtonEntity, DanthermEntity):
     def __init__(
         self,
         device: DanthermDevice,
-        coordinator: DanthermCoordinator,
         description: DanthermButtonEntityDescription,
     ) -> None:
         """Init button."""
-        super().__init__(device, coordinator, description)
+        super().__init__(device, description)
         self._attr_has_entity_name = True
         self.entity_description: DanthermButtonEntityDescription = description
 
