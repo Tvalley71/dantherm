@@ -103,8 +103,21 @@ class DanthermModbus:
     async def disconnect_and_close(self):
         """Disconnect from Modbus and close connnection."""
 
-        self._client.close()
+        if self._client is None:
+            _LOGGER.debug("Modbus client is already closed")
+            return
+        _LOGGER.debug("Disconnecting from Modbus client")
+        self._attr_available = False
+        self._read_errors = 0
+        await self._client.close()
+        _LOGGER.debug("Closing Modbus client")
+        if self._client.is_socket_open():
+            _LOGGER.debug("Socket is still open, closing it")
+            self._client.close()
+        else:
+            _LOGGER.debug("Socket is already closed")
         self._client = None
+        _LOGGER.debug("Modbus client closed")
         # Wait for the client to close
         await asyncio.sleep(5)
 
@@ -216,7 +229,7 @@ class DanthermModbus:
             self._attr_available = False
 
     async def _read_holding_uint16(self, address):
-        result = self._read_holding_uint32(address)
+        result = await self._read_holding_uint32(address)
         return result & 0xFFFF
 
     async def _read_holding_int32(self, address):
