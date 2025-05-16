@@ -99,20 +99,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
 
     try:
-        coordinator = await device.setup()
+        await device.async_init_and_connect()
     except ValueError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
 
     # Store device instance and options
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
-        "coordinator": coordinator,
         ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
         ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
         ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    try:
+        await device.async_start()
+    except Exception as ex:
+        _LOGGER.error("Failed to start device: %s", ex)
+        return False
 
     return True
 
