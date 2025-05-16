@@ -287,8 +287,8 @@ class DanthermModbus:
         if value is None:
             return
         payload = self._client.convert_to_registers(
-            float(value), self._client.DATATYPE.FLOAT32
+            float(value), self._client.DATATYPE.FLOAT32, "little"
         )
         self.coordinator.enqueue_backend(
-            self.__write_holding_registers, address, payload, "little"
+            self.__write_holding_registers, address, payload
         )
