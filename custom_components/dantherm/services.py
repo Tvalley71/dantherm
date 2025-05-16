@@ -5,7 +5,6 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import HomeAssistantError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -37,6 +36,7 @@ from .device_map import (
     WEEK_PROGRAM_SELECTIONS,
     ActiveUnitMode,
 )
+from .exceptions import InvalidTimeFormat
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,9 +80,7 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
     def validate_time_format(time_str):
         """Validate HH:MM format."""
         if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", time_str):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_timeformat"
-            )
+            raise InvalidTimeFormat
 
     def render_template(value):
         """Render a value as a template if it's a string, otherwise return it directly."""
