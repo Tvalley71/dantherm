@@ -55,6 +55,7 @@ from .device_map import (
     BypassDamperState,
     ComponentClass,
     CurrentUnitMode,
+    DanthermEntityDescription,
     HacComponentClass,
 )
 from .modbus import (
@@ -177,6 +178,7 @@ class DanthermDevice(DanthermModbus):
 
         self._adaptive_triggers = {
             ATTR_BOOST_MODE_TRIGGER: {
+                "name": "boost",
                 "associated_entities": [
                     ATTR_BOOST_MODE,
                     ATTR_BOOST_MODE_TIMEOUT,
@@ -189,6 +191,7 @@ class DanthermDevice(DanthermModbus):
                 "unsub": None,
             },
             ATTR_ECO_MODE_TRIGGER: {
+                "name": "eco",
                 "associated_entities": [
                     ATTR_ECO_MODE,
                     ATTR_ECO_MODE_TIMEOUT,
@@ -201,6 +204,7 @@ class DanthermDevice(DanthermModbus):
                 "unsub": None,
             },
             ATTR_HOME_MODE_TRIGGER: {
+                "name": "home",
                 "associated_entities": [
                     ATTR_HOME_MODE,
                     ATTR_HOME_MODE_TIMEOUT,
@@ -229,7 +233,7 @@ class DanthermDevice(DanthermModbus):
 
         return device_entry.id
 
-    async def setup(self) -> DanthermCoordinator:
+    async def async_init_and_connect(self) -> DanthermCoordinator:
         """Set up modbus for Dantherm Device."""
 
         _LOGGER.debug("Setup has started")
@@ -246,9 +250,6 @@ class DanthermDevice(DanthermModbus):
         self.coordinator = DanthermCoordinator(
             self._hass, self._device_name, self, self._scan_interval
         )
-
-        # Set up adaptive triggers
-        await self.set_up_adaptive_triggers(self._options)
 
         # Connect and verify modbus connection
         result = await self.connect_and_verify()
@@ -268,18 +269,86 @@ class DanthermDevice(DanthermModbus):
         )
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
-        # Set up tracking for adaptive triggers from the config options if any
-        if self._options:
-            await self.set_up_tracking_for_adaptive_triggers(self._options)
-
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
             await self._read_hac_controller()
         else:
             _LOGGER.debug("No HAC controller installed")
 
+        return self.coordinator
+
+    async def async_start(self):
+        """Start the integration."""
+        # Set up adaptive triggers
+        await self.set_up_adaptive_triggers(self._options)
+
+        # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
 
-        return self.coordinator
+        # Set up tracking for adaptive triggers from the config options if any
+        if self._options:
+            await self.set_up_tracking_for_adaptive_triggers(self._options)
+
+    async def async_install_entity(
+        self, description: DanthermEntityDescription
+    ) -> bool:
+        """Test if the entity should be installed."""
+
+        def exclude_from_component_class(
+            description: DanthermEntityDescription,
+        ) -> bool:
+            """Check if entity must be excluded from component_class."""
+            if description.component_class:
+                return (self.installed_components & description.component_class) == 0
+            return False
+
+        async def exclude_from_entity_state(
+            description: DanthermEntityDescription,
+        ) -> bool:
+            """Check if entity must be excluded if any of the data_exclude_if conditions are met."""
+
+            if (
+                description.data_exclude_if_above
+                or description.data_exclude_if_below
+                or description.data_exclude_if is not None
+            ):
+                entity_data = await self.coordinator.async_get_entity_data(description)
+                if entity_data:
+                    state = entity_data["state"]
+
+                    if (
+                        (
+                            description.data_exclude_if is not None
+                            and description.data_exclude_if == state
+                        )
+                        or (
+                            description.data_exclude_if_above is not None
+                            and state >= description.data_exclude_if_above
+                        )
+                        or (
+                            description.data_exclude_if_below is not None
+                            and state <= description.data_exclude_if_below
+                        )
+                    ):
+                        return True
+            return False
+
+        install = True
+        if exclude_from_component_class(description) or await exclude_from_entity_state(
+            description
+        ):
+            install = False
+
+        if install:
+            return True
+        _LOGGER.debug("Excluding an entity=%s", description.key)
+        return False
+
+    def _get_entity_state_from_coordinator(self, entity: str, default=None):
+        """Get entity state from coordinator."""
+        states = self.coordinator.data.get(entity, None)
+        if states:
+            return states["state"]
+        return default
 
     @property
     def available(self) -> bool:
@@ -467,7 +536,9 @@ class DanthermDevice(DanthermModbus):
     async def async_sensor_filtering(self):
         """Get sensor filtering."""
 
-        self._sensor_filtering = self.data.get(ATTR_SENSOR_FILTERING, False)
+        self._sensor_filtering = self._get_entity_state_from_coordinator(
+            ATTR_SENSOR_FILTERING, False
+        )
         return self._sensor_filtering
 
     async def async_get_week_program_selection(self):
@@ -949,12 +1020,12 @@ class DanthermDevice(DanthermModbus):
             trigger_entity = options.get(trigger)
             enabled = bool(trigger_entity)
 
-            mode_data = self._adaptive_triggers.get(trigger)
-            if not mode_data:
+            trigger_data = self._adaptive_triggers.get(trigger)
+            if not trigger_data:
                 _LOGGER.debug("No data for trigger: %s", trigger)
                 continue
 
-            for entity_name in mode_data["associated_entities"]:
+            for entity_name in trigger_data["associated_entities"]:
                 self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
 
         # The adaptive_state entity should be disabled if no adaptive triggers are configured.
@@ -970,41 +1041,50 @@ class DanthermDevice(DanthermModbus):
     async def set_up_tracking_for_adaptive_triggers(self, options: dict):
         """Set up tracking for adaptive triggers."""
 
-        def _set_up_tracking_for_adaptive_trigger(trigger_name: str, new_trigger: str):
+        def _set_up_tracking_for_adaptive_trigger(trigger_data, new_trigger: str):
             """Set up tracking for a adaptive trigger."""
 
-            mode_data = self._adaptive_triggers[trigger_name]
-            if new_trigger != mode_data["trigger"]:
-                mode_name = trigger_name.split("_")[0]
-                self._hass.data[f"{mode_name}_mode"] = None
-                if mode_data["unsub"]:
-                    mode_data["unsub"]()  # remove previous listener
-                mode_data["trigger"] = new_trigger
-                if mode_data["trigger"]:
-                    mode_data["unsub"] = async_track_state_change_event(
+            if new_trigger != trigger_data["trigger"]:
+                if trigger_data["unsub"]:
+                    trigger_data["unsub"]()  # remove previous listener
+                trigger_data["trigger"] = new_trigger
+                if trigger_data["trigger"]:
+                    trigger_data["unsub"] = async_track_state_change_event(
                         self._hass,
-                        [mode_data["trigger"]],
-                        getattr(self, f"_async_{mode_name}_trigger_changed"),
+                        [trigger_data["trigger"]],
+                        getattr(
+                            self, f"_async_{trigger_data['name']}_mode_trigger_changed"
+                        ),
                     )
 
         for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = options.get(trigger)
             if trigger_entity:
-                _set_up_tracking_for_adaptive_trigger(trigger, trigger_entity)
+                trigger_data = self._adaptive_triggers[trigger]
+                _set_up_tracking_for_adaptive_trigger(trigger_data, trigger_entity)
 
-    async def _async_boost_trigger_changed(self, event):
+                if self._get_entity_state_from_coordinator(
+                    f"{trigger_data['name']}_mode", False
+                ):
+                    state = self._hass.states.get(trigger_entity)
+                    if state is not None and state.state == STATE_ON:
+                        trigger_data["detected"] = datetime.now()
+                    elif state is not None and state.state == STATE_OFF:
+                        trigger_data["undetected"] = datetime.now()
+
+    async def _async_boost_mode_trigger_changed(self, event):
         """Boost trigger state change callback."""
-        if self._hass.data[ATTR_BOOST_MODE]:
+        if self._get_entity_state_from_coordinator(ATTR_BOOST_MODE):
             await self._async_mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
 
-    async def _async_eco_trigger_changed(self, event):
+    async def _async_eco_mode_trigger_changed(self, event):
         """Eco trigger state change callback."""
-        if self._hass.data[ATTR_ECO_MODE]:
+        if self._get_entity_state_from_coordinator(ATTR_ECO_MODE):
             await self._async_mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
 
-    async def _async_home_trigger_changed(self, event):
+    async def _async_home_mode_trigger_changed(self, event):
         """Home trigger state change callback."""
-        if self._hass.data[ATTR_HOME_MODE]:
+        if self._get_entity_state_from_coordinator(ATTR_HOME_MODE):
             await self._async_mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
 
     async def _async_mode_trigger_changed(self, trigger: str, event):
@@ -1075,7 +1155,7 @@ class DanthermDevice(DanthermModbus):
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
         # Check if mode is switch on
-        if not self.data.get(f"{mode_name}_mode", False):
+        if not self._get_entity_state_from_coordinator(f"{mode_name}_mode", False):
             return
 
         mode_data = self._adaptive_triggers[trigger_name]
@@ -1094,13 +1174,17 @@ class DanthermDevice(DanthermModbus):
             mode_data["timeout"] = current_time + (
                 timedelta(seconds=30)
                 if IS_DEBUG
-                else timedelta(minutes=self.data.get(f"{mode_name}_mode_timeout", 5))
+                else timedelta(
+                    minutes=self._get_entity_state_from_coordinator(
+                        f"{mode_name}_mode_timeout", 5
+                    )
+                )
             )
 
             # Check if this is not a repeated detection
             if not self._event_exists(mode_name):
                 # Get the mode target operation
-                possible_target = self.data.get(
+                possible_target = self._get_entity_state_from_coordinator(
                     f"{mode_name}_operation_selection", None
                 )
 
