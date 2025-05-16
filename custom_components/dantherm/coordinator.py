@@ -157,63 +157,6 @@ class DanthermCoordinator(DataUpdateCoordinator):
         self._backend_event.set()
         return fut
 
-    async def async_install_entity(
-        self, description: DanthermEntityDescription
-    ) -> bool:
-        """Test if the entity should be installed."""
-
-        def exclude_from_component_class(
-            description: DanthermEntityDescription,
-        ) -> bool:
-            """Check if entity must be excluded from component_class."""
-            if description.component_class:
-                return (
-                    self.hub.installed_components & description.component_class
-                ) == 0
-            return False
-
-        async def exclude_from_entity_state(
-            description: DanthermEntityDescription,
-        ) -> bool:
-            """Check if entity must be excluded if any of the data_exclude_if conditions are met."""
-
-            if (
-                description.data_exclude_if_above
-                or description.data_exclude_if_below
-                or description.data_exclude_if is not None
-            ):
-                result = await self._async_get_entity_state(description)
-                if result:
-                    value = result["state"]
-
-                    if (
-                        (
-                            description.data_exclude_if is not None
-                            and description.data_exclude_if == value
-                        )
-                        or (
-                            description.data_exclude_if_above is not None
-                            and value >= description.data_exclude_if_above
-                        )
-                        or (
-                            description.data_exclude_if_below is not None
-                            and value <= description.data_exclude_if_below
-                        )
-                    ):
-                        return True
-            return False
-
-        install = True
-        if exclude_from_component_class(description) or await exclude_from_entity_state(
-            description
-        ):
-            install = False
-
-        if install:
-            return True
-        _LOGGER.debug("Excluding an entity=%s", description.key)
-        return False
-
     async def async_add_entity(self, entity):
         """Add entity for update."""
 
@@ -248,9 +191,9 @@ class DanthermCoordinator(DataUpdateCoordinator):
             ):
                 return data
 
-        states = await self._async_get_entity_state(description)
-        if states is not None:
-            data.update({description.key: states})
+        entity_data = await self.async_get_entity_data(description)
+        if entity_data is not None:
+            data.update({description.key: entity_data})
 
         return data
 
@@ -285,10 +228,10 @@ class DanthermCoordinator(DataUpdateCoordinator):
 
         return await fut
 
-    async def _async_get_entity_state(
+    async def async_get_entity_data(
         self, description: DanthermEntityDescription
     ) -> Any:
-        """Get entity state, icon and attributes from description."""
+        """Get entity data from description, state, icon and attributes."""
 
         state = None
         if description.data_getinternal:
