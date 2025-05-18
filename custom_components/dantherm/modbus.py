@@ -111,12 +111,6 @@ class DanthermModbus:
         self._attr_available = False
         self._read_errors = 0
         self._client.close()
-        _LOGGER.debug("Closing Modbus client")
-        if self._client.is_socket_open():
-            _LOGGER.debug("Socket is still open, closing it")
-            self._client.close()
-        else:
-            _LOGGER.debug("Socket is already closed")
         self._client = None
         _LOGGER.debug("Modbus client closed")
         # Wait for the client to close
