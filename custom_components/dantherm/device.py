@@ -1214,8 +1214,8 @@ class DanthermDevice(DanthermModbus):
             return
 
         # Set the operation change timeout
-        self._operation_change_timeout = (
-            current_time + timedelta(seconds=15) if IS_DEBUG else timedelta(minutes=2)
+        self._operation_change_timeout = current_time + (
+            timedelta(seconds=15) if IS_DEBUG else timedelta(minutes=2)
         )
 
         _LOGGER.debug("Target operation = %s", target_operation)
