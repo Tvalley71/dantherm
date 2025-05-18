@@ -148,6 +148,7 @@ ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
 ATTR_WORK_TIME: Final = "work_time"
 
 ATTR_ADAPTIVE_STATE: Final = "adaptive_state"
+STATE_NONE: Final = "none"
 
 ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
@@ -491,9 +492,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
     ),
-)
-
-RESTORE_NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     DanthermNumberEntityDescription(
         key=ATTR_BOOST_MODE_TIMEOUT,
         data_getavailable=ATTR_BOOST_MODE_TRIGGER,
@@ -558,9 +556,6 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
-)
-
-RESTORE_SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
         key=ATTR_BOOST_OPERATION_SELECTION,
         icon="mdi:state-machine",
@@ -790,9 +785,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
     ),
-)
-
-RESTORE_SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     DanthermSwitchEntityDescription(
         key=ATTR_SENSOR_FILTERING,
         data_default=False,

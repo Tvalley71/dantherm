@@ -2,14 +2,12 @@
 
 import logging
 
-from homeassistant.components.switch import STATE_ON, SwitchEntity
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .device import DanthermDevice
-from .device_map import RESTORE_SWITCHES, SWITCHES, DanthermSwitchEntityDescription
+from .device_map import SWITCHES, DanthermSwitchEntityDescription
 from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     for description in SWITCHES:
         if await device.async_install_entity(description):
             switch = DanthermSwitch(device, description)
-            entities.append(switch)
-    for description in RESTORE_SWITCHES:
-        if await device.async_install_entity(description):
-            switch = DanthermRestoreSwitch(device, description)
             entities.append(switch)
 
     async_add_entities(entities, update_before_add=True)
@@ -101,23 +95,3 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
                 self._attr_icon = self.entity_description.icon_on
             else:
                 self._attr_icon = self.entity_description.icon_off
-
-
-class DanthermRestoreSwitch(DanthermSwitch, RestoreEntity):
-    """Dantherm Restore Switch Entity."""
-
-    async def async_added_to_hass(self):
-        """Register entity for refresh interval."""
-
-        await super().async_added_to_hass()
-
-        # Retrieve the last stored state if it exists
-        last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state not in (
-            None,
-            STATE_UNKNOWN,
-            STATE_UNAVAILABLE,
-        ):
-            await self.coordinator.async_restore_entity_state(
-                self, last_state.state == STATE_ON
-            )
