@@ -1,4 +1,4 @@
-"""Button integration."""
+"""Button implementation."""
 
 import logging
 
