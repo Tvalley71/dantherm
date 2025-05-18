@@ -1,5 +1,6 @@
 """Entity implementation."""
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,10 +17,8 @@ class DanthermEntity(CoordinatorEntity):
         self._device = device
         self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
         self._attr_should_poll = False
-        self._attr_add_to_coordinator = True
-        self._attr_available = False
         self._attr_changed = False
-        self._attr_new_state = None
+        self._attr_new_state = STATE_UNAVAILABLE
         self._attr_icon = description.icon
         self._attr_extra_state_attributes = None
         self._added_to_coordinator = False
@@ -45,13 +44,6 @@ class DanthermEntity(CoordinatorEntity):
         return self.key
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if not self._device.available:
-            return False
-        return self._attr_available
-
-    @property
     def device_info(self):
         """Device Info."""
         unique_id = self._device.get_device_name
@@ -67,29 +59,29 @@ class DanthermEntity(CoordinatorEntity):
             "serial_number": self._device.get_device_serial_number,
         }
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if super().available:
+            return True
+        self._attr_new_state = STATE_UNAVAILABLE
+        return False
+
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""
 
-        if self._attr_available != self._device.available:
-            self._attr_available = self._device.available
+        if self._attr_new_state == STATE_UNAVAILABLE:
             self._attr_changed = True
+            self._attr_new_state = None
+        else:
+            self._attr_changed = False
 
         states = self.coordinator.data.get(self.key, None)
         if states:
-            self._attr_changed = False
             new_state = states.get("state", None)
-            if new_state is None:
-                if self._attr_available:
-                    self._attr_changed = True
-                self._attr_available = False
-            else:
-                if not self._attr_available:
-                    self._attr_changed = True
-                self._attr_available = True
-
-                if self._attr_new_state != new_state:
-                    self._attr_changed = True
-                    self._attr_new_state = new_state
+            if new_state is not None and new_state != self._attr_new_state:
+                self._attr_changed = True
+                self._attr_new_state = new_state
 
             new_icon = states.get("icon", None)
             if new_icon is not None and new_icon != self._attr_icon:
