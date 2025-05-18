@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 
 from pymodbus import ModbusException
 from voluptuous import Enum
@@ -79,9 +80,9 @@ class DanthermModbus:
 
     async def connect_and_verify(self):
         """Connect to Modbus and verify connection with retries."""
+
         _LOGGER.debug("Attempting Modbus connection for %s", self._host)
-        connection = await self._client.connect()
-        if not connection:
+        if not await self._client.connect():
             _LOGGER.error("Modbus setup was unsuccessful for %s", self._host)
             raise ValueError("Modbus setup failed")
 
@@ -120,12 +121,6 @@ class DanthermModbus:
         _LOGGER.debug("Modbus client closed")
         # Wait for the client to close
         await asyncio.sleep(5)
-
-    @property
-    def available(self) -> bool:
-        """Return if modbus is available."""
-
-        return self._attr_available
 
     async def read_holding_registers(
         self,
@@ -192,20 +187,6 @@ class DanthermModbus:
                 self.__write_holding_registers, address, value
             )
 
-    async def __read_holding_registers(self, address, count):
-        """Read holding registers."""
-        try:
-            response = await self._client.read_holding_registers(address, count=count)
-            if response.isError() is False:
-                return response.registers
-            _LOGGER.error("Read holding registers failed: %s", response)
-        except ConnectionError as err:
-            _LOGGER.error("Read holding registers failed: %s", err)
-            self._read_errors += 1
-            if self._read_errors > 5:
-                self._attr_available = False
-        return None
-
     async def __read_holding_registers_with_retry(
         self, address, count, retries=3, initial_delay=0.5
     ):
@@ -215,18 +196,45 @@ class DanthermModbus:
             result = await self.__read_holding_registers(address, count)
             if result is not None:
                 return result
+            if (
+                self._attr_available is False
+            ):  # skip further retries until we are available
+                return None
             await asyncio.sleep(delay)
             delay *= 2
+        _LOGGER.error("Failed to read holding registers for address %s", address)
+        return None
+
+    async def __read_holding_registers(self, address, count):
+        """Read holding registers."""
+        try:
+            if not self._client.connected:
+                if self._read_errors > 5:
+                    self._attr_available = False
+                    _LOGGER.debug("Modbus client is not connected, reconnecting")
+                    if not await self._client.connect():
+                        self._read_errors += 1
+                return None
+            response = await self._client.read_holding_registers(address, count=count)
+            if response.isError() is False:
+                self._read_errors = 0
+                return response.registers
+            _LOGGER.error("Read holding registers failed: %s", response)
+        except ModbusException as err:
+            _LOGGER.error("Read holding registers failed: %s", err)
+        self._read_errors += 1
         return None
 
     async def __write_holding_registers(self, address, values):
         """Write holding registers."""
+        if self._attr_available is False:
+            _LOGGER.debug("Modbus client is not available, cannot write")
+            return
         try:
             await self._client.write_registers(address, values)
             _LOGGER.debug("Written %s to register address %d", values, address)
-        except ConnectionError as err:
+        except ModbusException as err:
             _LOGGER.warning("Write holding registers failed: %s", err)
-            self._attr_available = False
 
     async def _read_holding_uint16(self, address):
         result = await self._read_holding_uint32(address)
@@ -234,26 +242,19 @@ class DanthermModbus:
 
     async def _read_holding_int32(self, address):
         result = await self.__read_holding_registers_with_retry(address, 2)
+        if result is None:
+            return None
         return self._client.convert_from_registers(
             result, self._client.DATATYPE.INT32, "little"
         )
 
     async def _read_holding_uint32(self, address):
-        try:
-            result = await self.__read_holding_registers_with_retry(address, 2)
-            if result is None:
-                _LOGGER.error(
-                    "Failed to read holding registers for address %s", address
-                )
-                return None
-            return self._client.convert_from_registers(
-                result, self._client.DATATYPE.UINT32, "little"
-            )
-        except ModbusException as e:
-            _LOGGER.error(
-                "Exception in _read_holding_uint32 for address %s: %s", address, e
-            )
+        result = await self.__read_holding_registers_with_retry(address, 2)
+        if result is None:
             return None
+        return self._client.convert_from_registers(
+            result, self._client.DATATYPE.UINT32, "little"
+        )
 
     async def _write_holding_uint32(self, address, value):
         if value is None:
@@ -267,12 +268,16 @@ class DanthermModbus:
 
     async def _read_holding_uint64(self, address):
         result = await self.__read_holding_registers_with_retry(address, 4)
+        if result is None:
+            return None
         return self._client.convert_from_registers(
             result, self._client.DATATYPE.UINT64, "little"
         )
 
     async def _read_holding_float32(self, address, precision):
         result = await self.__read_holding_registers_with_retry(address, 2)
+        if result is None:
+            return None
         value = self._client.convert_from_registers(
             result, self._client.DATATYPE.FLOAT32, "little"
         )
@@ -292,3 +297,15 @@ class DanthermModbus:
         self.coordinator.enqueue_backend(
             self.__write_holding_registers, address, payload
         )
+
+    def _to_hex(self, value):
+        """Convert value to hex string."""
+        if isinstance(value, int):
+            return hex(value)
+        if isinstance(value, str):
+            # Check if the string is a valid hexadecimal number
+            if re.match(r"^0x[0-9a-fA-F]+$", value):
+                return value
+            # If not, convert it to an integer and then to hex
+            return hex(int(value))
+        return value
