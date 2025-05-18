@@ -47,6 +47,7 @@ from .device_map import (
     STATE_LEVEL_4,
     STATE_MANUAL,
     STATE_NIGHT,
+    STATE_NONE,
     STATE_PRIORITIES,
     STATE_STANDBY,
     STATE_SUMMER,
@@ -246,11 +247,6 @@ class DanthermDevice(DanthermModbus):
         self.__dict__.pop("get_eco_mode_trigger_available", None)
         self.__dict__.pop("get_home_mode_trigger_available", None)
 
-        # Create coordinator
-        self.coordinator = DanthermCoordinator(
-            self._hass, self._device_name, self, self._scan_interval
-        )
-
         # Connect and verify modbus connection
         result = await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
@@ -273,6 +269,14 @@ class DanthermDevice(DanthermModbus):
             await self._read_hac_controller()
         else:
             _LOGGER.debug("No HAC controller installed")
+
+        # Create coordinator
+        self.coordinator = DanthermCoordinator(
+            self._hass, self._device_name, self, self._scan_interval
+        )
+
+        # Load stored entities
+        await self.coordinator.async_load_entities()
 
         return self.coordinator
 
@@ -353,10 +357,7 @@ class DanthermDevice(DanthermModbus):
     @property
     def available(self) -> bool:
         """Return if device is available."""
-
-        if self._active_unit_mode is None:
-            return False
-        return super().available
+        return self._attr_available
 
     @property
     def get_current_unit_mode(self):
@@ -507,7 +508,7 @@ class DanthermDevice(DanthermModbus):
         self._current_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_CURRENT_MODE
         )
-        _LOGGER.debug("Current unit mode = %s", hex(self._current_unit_mode))
+        _LOGGER.debug("Current unit mode = %s", self._to_hex(self._current_unit_mode))
         return self._current_unit_mode
 
     async def async_get_active_unit_mode(self):
@@ -516,7 +517,7 @@ class DanthermDevice(DanthermModbus):
         self._active_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_ACTIVE_MODE
         )
-        _LOGGER.debug("Active unit mode = %s", hex(self._active_unit_mode))
+        _LOGGER.debug("Active unit mode = %s", self._to_hex(self._active_unit_mode))
         return self._active_unit_mode
 
     async def async_get_fan_level(self):
@@ -906,7 +907,11 @@ class DanthermDevice(DanthermModbus):
         """Get exhaust temperature."""
 
         result = await self._read_holding_float32(
-            MODBUS_REGISTER_EXHAUST_TEMP, precision=1
+            MODBUS_REGISTER_EXHAUST_TEMP
+            if self._bypass_damper is BypassDamperState.Closed
+            or BypassDamperState.Closing
+            else MODBUS_REGISTER_OUTDOOR_TEMP,
+            precision=1,
         )
         _LOGGER.debug("Exhaust temperature = %.1f", result)
         if not self._sensor_filtering:
@@ -939,7 +944,11 @@ class DanthermDevice(DanthermModbus):
         """Get outdoor temperature."""
 
         result = await self._read_holding_float32(
-            MODBUS_REGISTER_OUTDOOR_TEMP, precision=1
+            MODBUS_REGISTER_OUTDOOR_TEMP
+            if self._bypass_damper is BypassDamperState.Closed
+            or BypassDamperState.Closing
+            else MODBUS_REGISTER_EXHAUST_TEMP,
+            precision=1,
         )
         _LOGGER.debug("Outdoor temperature = %.1f", result)
         if not self._sensor_filtering:
@@ -957,13 +966,12 @@ class DanthermDevice(DanthermModbus):
             return result
         return self._filter_sensor("room", result)
 
-    @property
-    def get_adaptive_state(self):
+    async def async_get_adaptive_state(self) -> str:
         """Get adaptive state."""
 
         # Get the top event
         top = self._events.top()
-        result = "none"
+        result = STATE_NONE
         if top:
             result = self._events.top()["event"]
         _LOGGER.debug("Adaptive state = %s", result)
