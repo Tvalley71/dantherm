@@ -8,14 +8,15 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .device_map import DanthermEntityDescription
+from .store import DanthermStore
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DanthermCoordinator(DataUpdateCoordinator):
+class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     """Read/write-coordinator."""
 
     def __init__(
@@ -27,14 +28,22 @@ class DanthermCoordinator(DataUpdateCoordinator):
         write_delay: float = 0.3,
     ) -> None:
         """Init coordinator."""
-        super().__init__(
+        DataUpdateCoordinator.__init__(
+            self,
             hass,
             _LOGGER,
             name=f"{name}Coordinator",
             update_method=self._async_update_data,
             update_interval=timedelta(seconds=scan_interval),
         )
+        DanthermStore.__init__(
+            self,
+            hass,
+            name,
+        )
+        self._attr_name = name
         self.hub = hub
+        self._attr_available = True
         self._write_delay = write_delay
         self._entities = []
 
@@ -64,7 +73,15 @@ class DanthermCoordinator(DataUpdateCoordinator):
             )
 
             # Read current unit mode
-            await self.hub.async_get_current_unit_mode()
+            result = await self.hub.async_get_current_unit_mode()
+            if result is None:
+                if self.last_update_success != self._attr_available:
+                    for entity in self._entities:
+                        entity.async_write_ha_state()
+                    self._attr_available = False
+                raise UpdateFailed("Problem reading from modbus device")
+
+            self._attr_available = True
 
             # Read active unit mode
             await self.hub.async_get_active_unit_mode()
@@ -244,12 +261,9 @@ class DanthermCoordinator(DataUpdateCoordinator):
         elif description.data_address:
             state = await self.hub.read_holding_registers(description=description)
         else:
-            states = self.data.get(description.key, None)
-            if states:
-                state = states["state"]
-
-        if state is None:
-            state = description.data_default
+            state = self.get_stored_entity_state(
+                description.key, description.data_default
+            )
 
         icon = None
         if hasattr(self.hub, f"get_{description.key}_icon"):
@@ -279,5 +293,7 @@ class DanthermCoordinator(DataUpdateCoordinator):
             await getattr(self.hub, f"set_{description.data_setinternal}")(state)
         elif description.data_address and description.data_setaddress:
             await self.hub.write_holding_registers(description=description, value=state)
+        else:
+            await self.async_store_entity_state(entity.key, state)
 
         entity.async_write_ha_state()
