@@ -908,8 +908,8 @@ class DanthermDevice(DanthermModbus):
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_EXHAUST_TEMP
-            if self._bypass_damper is BypassDamperState.Closed
-            or BypassDamperState.Closing
+            if self._bypass_damper
+            in [BypassDamperState.Closed, BypassDamperState.Opening]
             else MODBUS_REGISTER_OUTDOOR_TEMP,
             precision=1,
         )
@@ -945,8 +945,8 @@ class DanthermDevice(DanthermModbus):
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_OUTDOOR_TEMP
-            if self._bypass_damper is BypassDamperState.Closed
-            or BypassDamperState.Closing
+            if self._bypass_damper
+            in [BypassDamperState.Closed, BypassDamperState.Opening]
             else MODBUS_REGISTER_EXHAUST_TEMP,
             precision=1,
         )
