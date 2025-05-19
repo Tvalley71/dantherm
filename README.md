@@ -212,7 +212,9 @@ Clicking on any displayed entity allows you to adjust its state or explore detai
 
 <details>
 
-<summary>The details for the above picture-elements card 👈 Click to open</summary>
+<summary>The details for the above picture-elements card 👈 Click to open
+    
+_(Yaml updated for better scaling of images, 2025-5-19)_</summary>
 
 ####
 
@@ -235,11 +237,11 @@ elements:
       '2': /local/dantherm6.png
       '3': /local/dantherm7.png
     style:
-      transform: scale(1,1)
-      left: 0%
-      top: 0%
+      left: 50%
+      top: 50%
+      width: 100%
     tap_action:
-      action: more-info
+      action: none
   - type: conditional
     conditions:
       - entity: switch.dantherm_summer_mode
@@ -253,9 +255,9 @@ elements:
           open: /local/dantherm3.png
           opening: /local/dantherm3.png
         style:
-          left: 26.6%
-          top: 50%
-          transform: scale(0.693,0.693)
+          left: 63.3%
+          top: 75%
+          width: 50.87%
         tap_action:
           action: more-info
       - type: conditional
@@ -310,9 +312,9 @@ elements:
       - type: image
         image: /local/dantherm8.png
         style:
-          left: 26.6%
-          top: 50%
-          transform: scale(0.693,0.693)
+          left: 63.3%
+          top: 75%
+          width: 50.87%
         tap_action:
           action: none
       - type: state-label
@@ -342,8 +344,7 @@ elements:
       top: 45%
       left: 36%
       font-weight: bold
-      font-style: italic
-      text-align: center
+      text-align: center;
       font-size: 100%
   - type: state-label
     entity: sensor.dantherm_humidity
@@ -357,7 +358,6 @@ elements:
       top: 29%
       left: 63%
       font-weight: bold
-      font-style: italic
       font-size: 100%
 
 ```
