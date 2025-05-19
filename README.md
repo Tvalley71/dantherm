@@ -251,9 +251,9 @@ elements:
         entity: cover.dantherm_bypass_damper
         state_image:
           closed: /local/dantherm2.png
-          closing: /local/dantherm2.png
+          closing: /local/dantherm3.png
           open: /local/dantherm3.png
-          opening: /local/dantherm3.png
+          opening: /local/dantherm2.png
         style:
           left: 63.3%
           top: 75%
