@@ -907,11 +907,7 @@ class DanthermDevice(DanthermModbus):
         """Get exhaust temperature."""
 
         result = await self._read_holding_float32(
-            MODBUS_REGISTER_EXHAUST_TEMP
-            if self._bypass_damper
-            in [BypassDamperState.Closed, BypassDamperState.Opening]
-            else MODBUS_REGISTER_OUTDOOR_TEMP,
-            precision=1,
+            MODBUS_REGISTER_EXHAUST_TEMP, precision=1
         )
         _LOGGER.debug("Exhaust temperature = %.1f", result)
         if not self._sensor_filtering:
@@ -944,11 +940,7 @@ class DanthermDevice(DanthermModbus):
         """Get outdoor temperature."""
 
         result = await self._read_holding_float32(
-            MODBUS_REGISTER_OUTDOOR_TEMP
-            if self._bypass_damper
-            in [BypassDamperState.Closed, BypassDamperState.Opening]
-            else MODBUS_REGISTER_EXHAUST_TEMP,
-            precision=1,
+            MODBUS_REGISTER_OUTDOOR_TEMP, precision=1
         )
         _LOGGER.debug("Outdoor temperature = %.1f", result)
         if not self._sensor_filtering:
