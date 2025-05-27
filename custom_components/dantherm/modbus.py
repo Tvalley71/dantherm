@@ -303,3 +303,49 @@ class DanthermModbus:
             # If not, convert it to an integer and then to hex
             return hex(int(value))
         return value
+
+    async def _read_hac_controller(self):
+        """Read HAC controller data."""
+
+        class HacComponentClass(int):
+            """Dantherm HAC components."""
+
+            CO2Sensor = 0x0001
+            PreHeater = 0x0004
+            PreCooler = 0x0008
+            AfterHeater = 0x0010
+            AfterCooler = 0x0020
+            Hygrostat = 0x0040
+
+        _LOGGER.critical(
+            "HAC controller found, please reach out for support collaboration"
+        )
+
+        result = await self._read_holding_uint32(574)
+        _LOGGER.debug("HAC CO2 Level = %s ppm (574)", result)
+        result = await self._read_holding_uint32(568)
+        _LOGGER.debug("Low Threshold of CO2 = %s ppm (568)", result)
+        result = await self._read_holding_uint32(570)
+        _LOGGER.debug("Middle Threshold of CO2 = %s ppm (570)", result)
+        result = await self._read_holding_uint32(572)
+        _LOGGER.debug("High Threshold of CO2 = %s ppm (572)", result)
+        result = await self._read_holding_uint32(244)
+        _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
+        if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
+            _LOGGER.debug("CO2 sensor found")
+        if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
+            _LOGGER.debug("Pre-heater found")
+        if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
+            _LOGGER.debug("Pre-cooler found")
+        if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
+            _LOGGER.debug("After-heater found")
+        if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
+            _LOGGER.debug("After-cooler found")
+        result = await self._read_holding_uint32(300)
+        _LOGGER.debug("Hac active component = %s (300)", hex(result))
+        result = await self._read_holding_int32(344)
+        _LOGGER.debug("Setpoint of the T2 = %s °C (344)", result)
+        result = await self._read_holding_int32(346)
+        _LOGGER.debug("Setpoint of the T3 = %s °C (346)", result)
+        result = await self._read_holding_int32(348)
+        _LOGGER.debug("Setpoint of the T5 = %s °C (348)", result)
