@@ -57,7 +57,6 @@ from .device_map import (
     ComponentClass,
     CurrentUnitMode,
     DanthermEntityDescription,
-    HacComponentClass,
 )
 from .modbus import (
     MODBUS_REGISTER_ACTIVE_MODE,
@@ -134,7 +133,7 @@ class DanthermDevice(DanthermModbus):
         self._filter_remain_level = None
         self._last_current_operation = None
         self._operation_change_timeout = datetime.min
-        self._events = EventStack()
+        self.events = EventStack()
         self.coordinator = None
         self.installed_components = 0
 
@@ -219,21 +218,6 @@ class DanthermDevice(DanthermModbus):
             },
         }
 
-    async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
-        """Find device_id from entity_id."""
-        entity_registry = er.async_get(hass)
-        device_registry = dr.async_get(hass)
-
-        entity = entity_registry.async_get(entity_id)
-        if entity is None or entity.device_id is None:
-            return None
-
-        device_entry = device_registry.async_get(entity.device_id)
-        if device_entry is None:
-            return None
-
-        return device_entry.id
-
     async def async_init_and_connect(self) -> DanthermCoordinator:
         """Set up modbus for Dantherm Device."""
 
@@ -283,14 +267,18 @@ class DanthermDevice(DanthermModbus):
     async def async_start(self):
         """Start the integration."""
         # Set up adaptive triggers
-        await self.set_up_adaptive_triggers(self._options)
+        await self._set_up_adaptive_triggers(self._options)
 
         # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
 
         # Set up tracking for adaptive triggers from the config options if any
         if self._options:
-            await self.set_up_tracking_for_adaptive_triggers(self._options)
+            await self._set_up_tracking_for_adaptive_triggers(self._options)
+
+    async def async_initialize_after_restart(self):
+        """Initialize the device after a restart."""
+        await self._initialize_adaptive_triggers()
 
     async def async_install_entity(
         self, description: DanthermEntityDescription
@@ -962,10 +950,10 @@ class DanthermDevice(DanthermModbus):
         """Get adaptive state."""
 
         # Get the top event
-        top = self._events.top()
+        top = self.events.top()
         result = STATE_NONE
         if top:
-            result = self._events.top()["event"]
+            result = self.events.top()["event"]
         _LOGGER.debug("Adaptive state = %s", result)
         return result
 
@@ -1012,13 +1000,18 @@ class DanthermDevice(DanthermModbus):
         """Get home mode trigger available."""
         return self._options.get(ATTR_HOME_MODE_TRIGGER, False)
 
-    async def set_up_adaptive_triggers(self, options: dict):
+    async def _set_up_adaptive_triggers(self, options: dict):
         """Enable/disable associated entities based on configured adaptive triggers."""
         entities = self._get_device_entities()
 
+        any_trigger_available = False
+
         for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = options.get(trigger)
+
             enabled = bool(trigger_entity)
+            if enabled:
+                any_trigger_available = True
 
             trigger_data = self._adaptive_triggers.get(trigger)
             if not trigger_data:
@@ -1028,17 +1021,12 @@ class DanthermDevice(DanthermModbus):
             for entity_name in trigger_data["associated_entities"]:
                 self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
 
-        # The adaptive_state entity should be disabled if no adaptive triggers are configured.
-        if not any(
-            [
-                self.get_boost_mode_trigger_available,
-                self.get_eco_mode_trigger_available,
-                self.get_home_mode_trigger_available,
-            ]
-        ):
-            self._set_entity_enabled_by_suffix(entities, ATTR_ADAPTIVE_STATE, False)
+        # The adaptive_state entity should be enabled or disabled if any triggers are available.
+        self._set_entity_enabled_by_suffix(
+            entities, ATTR_ADAPTIVE_STATE, any_trigger_available
+        )
 
-    async def set_up_tracking_for_adaptive_triggers(self, options: dict):
+    async def _set_up_tracking_for_adaptive_triggers(self, options: dict):
         """Set up tracking for adaptive triggers."""
 
         def _set_up_tracking_for_adaptive_trigger(trigger_data, new_trigger: str):
@@ -1052,9 +1040,7 @@ class DanthermDevice(DanthermModbus):
                     trigger_data["unsub"] = async_track_state_change_event(
                         self._hass,
                         [trigger_data["trigger"]],
-                        getattr(
-                            self, f"_async_{trigger_data['name']}_mode_trigger_changed"
-                        ),
+                        getattr(self, f"_{trigger_data['name']}_mode_trigger_changed"),
                     )
 
         for trigger in ADAPTIVE_TRIGGERS:
@@ -1072,22 +1058,55 @@ class DanthermDevice(DanthermModbus):
                     elif state is not None and state.state == STATE_OFF:
                         trigger_data["undetected"] = datetime.now()
 
-    async def _async_boost_mode_trigger_changed(self, event):
+    async def _initialize_adaptive_triggers(self) -> None:
+        """Initialize adaptive triggers."""
+
+        for trigger_name, trigger_data in self._adaptive_triggers.items():
+            # Get trigger entity and skip if not available
+            trigger_entity = trigger_data["trigger"]
+            if not trigger_entity:
+                continue
+
+            # Get the trigger entity state
+            state = self._hass.states.get(trigger_entity)
+            if state is None:
+                continue
+
+            # Look up the event for this trigger
+            event = self._lookup_event(trigger_data["name"])
+            if event is None:
+                continue
+
+            if state.state == STATE_ON:
+                trigger_data["detected"] = datetime.fromisoformat(event["timestamp"])
+                trigger_data["undetected"] = None
+            elif state.state == STATE_OFF:
+                trigger_data["undetected"] = datetime.now()
+                trigger_data["detected"] = None
+
+            _LOGGER.debug(
+                "Adaptive trigger '%s' initialized: detected=%s, undetected=%s",
+                trigger_name,
+                trigger_data["detected"],
+                trigger_data["undetected"],
+            )
+
+    async def _boost_mode_trigger_changed(self, event):
         """Boost trigger state change callback."""
         if self._get_entity_state_from_coordinator(ATTR_BOOST_MODE):
-            await self._async_mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
+            await self._mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
 
-    async def _async_eco_mode_trigger_changed(self, event):
+    async def _eco_mode_trigger_changed(self, event):
         """Eco trigger state change callback."""
         if self._get_entity_state_from_coordinator(ATTR_ECO_MODE):
-            await self._async_mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
+            await self._mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
 
-    async def _async_home_mode_trigger_changed(self, event):
+    async def _home_mode_trigger_changed(self, event):
         """Home trigger state change callback."""
         if self._get_entity_state_from_coordinator(ATTR_HOME_MODE):
-            await self._async_mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
+            await self._mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
 
-    async def _async_mode_trigger_changed(self, trigger: str, event):
+    async def _mode_trigger_changed(self, trigger: str, event):
         """Mode trigger state change callback."""
 
         # Skip, if old state is None or Unknown
@@ -1216,19 +1235,25 @@ class DanthermDevice(DanthermModbus):
 
     def _push_event(self, mode_name, current_operation, new_operation) -> bool:
         """Push event to event stack."""
-        result = self._events.push(mode_name, current_operation, new_operation)
-        _LOGGER.debug(self._events)
+        result = self.events.push(mode_name, current_operation, new_operation)
+        _LOGGER.debug(self.events)
         return result
 
     def _pop_event(self, mode_name):
         """Pop event from event stack."""
-        operation = self._events.pop(mode_name)
-        _LOGGER.debug(self._events)
+        operation = self.events.pop(mode_name)
+        _LOGGER.debug(self.events)
         return operation
+
+    def _lookup_event(self, mode_name):
+        """Lookup event in event stack."""
+        event = self.events.lookup(mode_name)
+        _LOGGER.debug(self.events)
+        return event
 
     def _event_exists(self, mode_name) -> bool:
         """Check if event exists."""
-        return self._events.exists(mode_name)
+        return self.events.exists(mode_name)
 
     @property
     def get_device_name(self) -> str:
@@ -1258,6 +1283,46 @@ class DanthermDevice(DanthermModbus):
         """Device serial number."""
         return self._device_serial_number
 
+    async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
+        """Find device_id from entity_id."""
+        entity_registry = er.async_get(hass)
+        device_registry = dr.async_get(hass)
+
+        entity = entity_registry.async_get(entity_id)
+        if entity is None or entity.device_id is None:
+            return None
+
+        device_entry = device_registry.async_get(entity.device_id)
+        if device_entry is None:
+            return None
+
+        return device_entry.id
+
+    def _get_device_entities(self) -> list:
+        """Return all entities that belong to this integration's device."""
+        entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
+
+        # Find device_id der matcher denne config entry
+        device_id = next(
+            (
+                d.id
+                for d in device_registry.devices.values()
+                if self._entry_id in d.config_entries
+            ),
+            None,
+        )
+
+        if not device_id:
+            _LOGGER.warning("No device found for config entry: %s", self._entry_id)
+            return []
+
+        return [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.device_id == device_id
+        ]
+
     def _set_entity_enabled_by_suffix(
         self, entities: list, name_suffix: str, enable: bool
     ):
@@ -1285,104 +1350,38 @@ class DanthermDevice(DanthermModbus):
             disabled_by=disabled_by,
         )
 
-    def _get_device_entities(self) -> list:
-        """Return all entities that belong to this integration's device."""
-        entity_registry = er.async_get(self._hass)
-        device_registry = dr.async_get(self._hass)
 
-        # Find device_id der matcher denne config entry
-        device_id = next(
-            (
-                d.id
-                for d in device_registry.devices.values()
-                if self._entry_id in d.config_entries
-            ),
-            None,
-        )
-
-        if not device_id:
-            _LOGGER.warning("No device found for config entry: %s", self._entry_id)
-            return []
-
-        return [
-            entry
-            for entry in entity_registry.entities.values()
-            if entry.device_id == device_id
-        ]
-
-    async def _read_hac_controller(self):
-        _LOGGER.critical(
-            "HAC controller found, please reach out for support collaboration"
-        )
-
-        result = await self._read_holding_uint32(574)
-        _LOGGER.debug("HAC CO2 Level = %s ppm (574)", result)
-        result = await self._read_holding_uint32(568)
-        _LOGGER.debug("Low Threshold of CO2 = %s ppm (568)", result)
-        result = await self._read_holding_uint32(570)
-        _LOGGER.debug("Middle Threshold of CO2 = %s ppm (570)", result)
-        result = await self._read_holding_uint32(572)
-        _LOGGER.debug("High Threshold of CO2 = %s ppm (572)", result)
-        result = await self._read_holding_uint32(244)
-        _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
-        if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
-            _LOGGER.debug("CO2 sensor found")
-        if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
-            _LOGGER.debug("Pre-heater found")
-        if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
-            _LOGGER.debug("Pre-cooler found")
-        if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
-            _LOGGER.debug("After-heater found")
-        if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
-            _LOGGER.debug("After-cooler found")
-        result = await self._read_holding_uint32(300)
-        _LOGGER.debug("Hac active component = %s (300)", hex(result))
-        result = await self._read_holding_int32(344)
-        _LOGGER.debug("Setpoint of the T2 = %s °C (344)", result)
-        result = await self._read_holding_int32(346)
-        _LOGGER.debug("Setpoint of the T3 = %s °C (346)", result)
-        result = await self._read_holding_int32(348)
-        _LOGGER.debug("Setpoint of the T5 = %s °C (348)", result)
-
-
-class EventStack:
-    """Event Stack with priority and operation tracking."""
-
-    def __init__(self) -> None:
-        """Initialize an empty event stack."""
-        self.stack = deque()
+class EventStack(deque):
+    """Event Stack with priority and previous operation tracking."""
 
     def push(self, event, current_operation, new_operation, event_id=None) -> bool:
         """Push an event onto the stack based on priority.
 
         Returns True if the event becomes the top event, otherwise False.
         """
-        for idx, item in enumerate(self.stack):  # noqa: B007
-            if item["event"] == event and item.get("event_id") == event_id:
+        for idx, item in enumerate(self):
+            if item["event"] == event and item.get("event_id", None) == event_id:
                 # Update operation and reposition in stack
-                self.stack.remove(item)
+                self.remove(item)
                 break
 
-        insert_at = len(self.stack)
-        for idx, item in enumerate(self.stack):
+        insert_at = len(self)
+        for idx, item in enumerate(self):
             if STATE_PRIORITIES.get(event, 0) > STATE_PRIORITIES.get(item["event"], 0):
                 insert_at = idx
                 break
-            if item["event"] == event and item.get("event_id") != event_id:
+            if item["event"] == event and item.get("event_id", None) != event_id:
                 insert_at = idx
                 break
 
+        now = datetime.now()
         if insert_at == 0:
-            self.stack.appendleft(
-                {"event": event, "event_id": event_id, "operation": current_operation}
-            )
+            self.appendleft(self._make_item(event, current_operation, now, event_id))
             return True
 
-        previous_op = self.stack[insert_at - 1]["operation"]
-        self.stack[insert_at - 1]["operation"] = new_operation
-        self.stack.insert(
-            insert_at, {"event": event, "event_id": event_id, "operation": previous_op}
-        )
+        previous_op = self[insert_at - 1]["previous"]
+        self[insert_at - 1]["previous"] = new_operation
+        self.insert(insert_at, self._make_item(event, previous_op, now, event_id))
         return False
 
     def pop(self, event, event_id=None):
@@ -1390,15 +1389,15 @@ class EventStack:
 
         Returns the operation of the removed event if it was the top event, otherwise None.
         """
-        for idx, item in enumerate(self.stack):
-            if item["event"] == event and item.get("event_id") == event_id:
-                removed_item = self.stack[idx]
-                self.stack.remove(removed_item)
+        for idx, item in enumerate(self):
+            if item["event"] == event and item.get("event_id", None) == event_id:
+                removed_item = item
+                self.remove(removed_item)
 
                 if idx == 0:
-                    return removed_item["operation"]
+                    return removed_item["previous"]
 
-                self.stack[idx - 1]["operation"] = removed_item["operation"]
+                self[idx - 1]["previous"] = removed_item["previous"]
                 return None
 
         return None
@@ -1406,33 +1405,49 @@ class EventStack:
     def exists(self, event, event_id=None):
         """Check if an event with optional ID exists in the stack."""
         return any(
-            item["event"] == event and item.get("event_id") == event_id
-            for item in self.stack
+            item["event"] == event and item.get("event_id", None) == event_id
+            for item in self
         )
 
     def lookup(self, event, event_id=None):
         """Look up the operation for a given event and optional ID in the stack."""
-        for item in reversed(self.stack):
-            if item["event"] == event and item.get("event_id") == event_id:
-                return item["operation"]
+        for item in reversed(self):
+            if item["event"] == event and item.get("event_id", None) == event_id:
+                return item
         return None
 
     def top(self):
         """Return the top event of the stack."""
-        return self.stack[0] if self.stack else None
+        return self[0] if self else None
 
     def is_top(self, event, event_id=None):
         """Check if the given event (and optional ID) is the top event in the stack."""
         return (
-            bool(self.stack)
-            and self.stack[0]["event"] == event
-            and self.stack[0].get("event_id") == event_id
+            bool(self)
+            and self[0]["event"] == event
+            and self[0].get("event_id", None) == event_id
         )
 
-    def current_operation(self):
-        """Return the operation of the current top event."""
-        return self.stack[0]["operation"] if self.stack else None
+    def to_list(self):
+        """Convert the event stack to a list of events."""
+        return list(self)
+
+    @classmethod
+    def from_list(cls, items):
+        """Create an EventStack from a list of events."""
+        stack = cls()
+        stack.extend(items)
+        return stack
 
     def __repr__(self):
         """Return a string representation of the event stack."""
-        return f"Event stack: {list(self.stack)}"
+        return f"Event stack: {self.to_list()}"
+
+    def _make_item(self, event, operation, timestamp: datetime, event_id=None):
+        """Create an item for the stack."""
+        item = {"event": event}
+        if event_id is not None:
+            item["event_id"] = event_id
+        item["previous"] = operation
+        item["timestamp"] = timestamp.isoformat()
+        return item

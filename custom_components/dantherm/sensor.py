@@ -4,10 +4,11 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .device import DanthermDevice
-from .device_map import SENSORS, DanthermSensorEntityDescription
+from .device import DanthermDevice, EventStack
+from .device_map import ATTR_ADAPTIVE_STATE, SENSORS, DanthermSensorEntityDescription
 from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     entities = []
     for description in SENSORS:
         if await device.async_install_entity(description):
-            sensor = DanthermSensor(device, description)
+            if description.key == ATTR_ADAPTIVE_STATE:
+                # Create AdaptiveStateSensor for the adaptive state
+                sensor = AdaptiveStateSensor(device, description)
+            else:
+                sensor = DanthermSensor(device, description)
             entities.append(sensor)
 
     async_add_entities(entities, update_before_add=True)
@@ -56,3 +61,44 @@ class DanthermSensor(SensorEntity, DanthermEntity):
 
         if self._attr_changed:
             self._attr_native_value = self._attr_new_state
+
+
+class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
+    """Adaptive State sensor with restore functionality.
+
+    We need to restore the events list from the last state in case Home Assistant
+    was restarted.
+    """
+
+    def __init__(
+        self,
+        device: DanthermDevice,
+        description: DanthermSensorEntityDescription,
+    ) -> None:
+        """Init sensor."""
+        super().__init__(device, description)
+        self.device = device
+
+    @property
+    def _events(self):
+        """Return the events from the device."""
+        return self.device.events
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        base_attrs = super().extra_state_attributes or {}
+        attrs = dict(base_attrs)
+        attrs["events"] = self._events.to_list()
+        return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last state."""
+        await super().async_added_to_hass()
+
+        state = await self.async_get_last_state()
+        if state is not None:
+            events_list = state.attributes.get("events", [])
+            self.device.events = EventStack.from_list(events_list)
+            self._attr_extra_state_attributes = state.attributes
+            self._attr_changed = True

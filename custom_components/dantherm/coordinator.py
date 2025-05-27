@@ -202,12 +202,6 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         description: DanthermEntityDescription = entity.entity_description
 
-        if description.data_getavailable:
-            if not getattr(
-                self.hub, f"get_{description.data_getavailable}_available", True
-            ):
-                return data
-
         entity_data = await self.async_get_entity_data(description)
         if entity_data is not None:
             data.update({description.key: entity_data})

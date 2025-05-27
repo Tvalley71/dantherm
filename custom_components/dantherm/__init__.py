@@ -7,8 +7,14 @@ import pymodbus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
@@ -118,6 +124,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except Exception as ex:
         _LOGGER.error("Failed to start device: %s", ex)
         return False
+
+    async def _init_after_start(event=None) -> None:
+        """Initialize the device after Home Assistant has started."""
+        hass.async_create_task(device.async_initialize_after_restart())
+
+    # If Home Assistant is already running, we can run the routine immediately
+    if hass.state != CoreState.running:
+        await _init_after_start()
+    else:
+        # Listen for the Home Assistant started event to run the routine
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _init_after_start)
 
     return True
 
