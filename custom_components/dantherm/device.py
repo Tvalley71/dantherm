@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import cached_property
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_datetime
 
 from .config_flow import (
     ADAPTIVE_TRIGGERS,
@@ -93,6 +94,12 @@ _LOGGER = logging.getLogger(__name__)
 
 IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
+# This is used to represent the minimum datetime value in the system.
+min_dt = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
+
+# This is used to represent the maximum datetime value in the system.
+max_dt = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
+
 
 class DanthermDevice(DanthermModbus):
     """Dantherm Device."""
@@ -132,7 +139,7 @@ class DanthermDevice(DanthermModbus):
         self._filter_remain = None
         self._filter_remain_level = None
         self._last_current_operation = None
-        self._operation_change_timeout = datetime.min
+        self._operation_change_timeout = min_dt
         self.events = EventStack()
         self.coordinator = None
         self.installed_components = 0
@@ -186,7 +193,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": datetime.min,
+                "timeout": min_dt,
                 "trigger": None,
                 "unsub": None,
             },
@@ -199,7 +206,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": datetime.min,
+                "timeout": min_dt,
                 "trigger": None,
                 "unsub": None,
             },
@@ -212,7 +219,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": datetime.min,
+                "timeout": min_dt,
                 "trigger": None,
                 "unsub": None,
             },
@@ -957,6 +964,13 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Adaptive state = %s", result)
         return result
 
+    @property
+    def get_adaptive_state_attrs(self):
+        """Get adaptive state attributes."""
+        if self.events:
+            return {"events": self.events.to_list()}
+        return None
+
     def _filter_sensor(self, sensor: str, new_value: float) -> float:
         """Filter a given sensor, ensuring smooth initialization and spike reduction."""
 
@@ -1054,9 +1068,9 @@ class DanthermDevice(DanthermModbus):
                 ):
                     state = self._hass.states.get(trigger_entity)
                     if state is not None and state.state == STATE_ON:
-                        trigger_data["detected"] = datetime.now()
+                        trigger_data["detected"] = ha_now()
                     elif state is not None and state.state == STATE_OFF:
-                        trigger_data["undetected"] = datetime.now()
+                        trigger_data["undetected"] = ha_now()
 
     async def _initialize_adaptive_triggers(self) -> None:
         """Initialize adaptive triggers."""
@@ -1077,19 +1091,28 @@ class DanthermDevice(DanthermModbus):
             if event is None:
                 continue
 
+            trigger_data["timeout"] = parse_datetime(event["timeout"])
             if state.state == STATE_ON:
-                trigger_data["detected"] = datetime.fromisoformat(event["timestamp"])
+                trigger_data["detected"] = ha_now()
                 trigger_data["undetected"] = None
+
+                _LOGGER.debug(
+                    "Adaptive trigger '%s': detected=%s, timeout=%s",
+                    trigger_name,
+                    trigger_data["detected"],
+                    trigger_data["timeout"],
+                )
+
             elif state.state == STATE_OFF:
-                trigger_data["undetected"] = datetime.now()
+                trigger_data["undetected"] = ha_now()
                 trigger_data["detected"] = None
 
-            _LOGGER.debug(
-                "Adaptive trigger '%s' initialized: detected=%s, undetected=%s",
-                trigger_name,
-                trigger_data["detected"],
-                trigger_data["undetected"],
-            )
+                _LOGGER.debug(
+                    "Adaptive trigger '%s': undetected=%s, timeout=%s",
+                    trigger_name,
+                    trigger_data["undetected"],
+                    trigger_data["timeout"],
+                )
 
     async def _boost_mode_trigger_changed(self, event):
         """Boost trigger state change callback."""
@@ -1122,19 +1145,19 @@ class DanthermDevice(DanthermModbus):
         # Check if state is detected
         mode_data = self._adaptive_triggers[trigger]
         if new_state.state == STATE_ON:
-            mode_data["detected"] = datetime.now()
+            mode_data["detected"] = ha_now()
             _LOGGER.debug("%s detected!", trigger.capitalize())
 
         # Check if state is undetected
         elif new_state.state == STATE_OFF:
-            mode_data["undetected"] = datetime.now()
+            mode_data["undetected"] = ha_now()
             _LOGGER.debug("%s undetected!", trigger.capitalize())
 
     async def async_update_adaptive_triggers(self):
         """Update adaptive triggers."""
 
         adaptive_trigger = None
-        earliest = datetime.max
+        earliest = max_dt
 
         for trigger_name, mode_data in self._adaptive_triggers.items():
             # Skip if there is no trigger
@@ -1161,7 +1184,7 @@ class DanthermDevice(DanthermModbus):
 
             elif undetected_time < earliest:
                 timeout = mode_data["timeout"]
-                if timeout and timeout > datetime.now():
+                if timeout and timeout > ha_now():
                     continue
                 earliest = undetected_time
                 adaptive_trigger = trigger_name
@@ -1176,9 +1199,8 @@ class DanthermDevice(DanthermModbus):
         # Check if mode is switch on
         if not self._get_entity_state_from_coordinator(f"{mode_name}_mode", False):
             return
-
         mode_data = self._adaptive_triggers[trigger_name]
-        current_time = datetime.now()
+        current_time = ha_now()
 
         # Check if operation mode change timeout has passed
         if current_time < self._operation_change_timeout:
@@ -1208,8 +1230,16 @@ class DanthermDevice(DanthermModbus):
                 )
 
                 # Push current operation and set the target operation if it has priority
-                if self._push_event(mode_name, current_operation, possible_target):
+                if self._push_event(
+                    mode_name,
+                    current_operation,
+                    possible_target,
+                    timeout=mode_data["timeout"],
+                ):
                     target_operation = possible_target
+            else:
+                # Update the event with the new timeout
+                self._update_event(mode_name, timeout=mode_data["timeout"])
 
             mode_data["detected"] = None
 
@@ -1233,22 +1263,32 @@ class DanthermDevice(DanthermModbus):
 
         await self.set_operation_selection(target_operation)
 
-    def _push_event(self, mode_name, current_operation, new_operation) -> bool:
+    def _push_event(
+        self, mode_name, current_operation, new_operation, timeout=None
+    ) -> bool:
         """Push event to event stack."""
-        result = self.events.push(mode_name, current_operation, new_operation)
-        _LOGGER.debug(self.events)
+        result = self.events.push(
+            mode_name, current_operation, new_operation, timeout=timeout
+        )
+        _LOGGER.debug("Push events: %s", self.events)
+        return result
+
+    def _update_event(self, mode_name, timeout=None):
+        """Update event in event stack."""
+        result = self.events.update(mode_name, timeout=timeout)
+        _LOGGER.debug("Update events: %s", self.events)
         return result
 
     def _pop_event(self, mode_name):
         """Pop event from event stack."""
         operation = self.events.pop(mode_name)
-        _LOGGER.debug(self.events)
+        _LOGGER.debug("Pop events: %s = %s", mode_name, operation)
         return operation
 
     def _lookup_event(self, mode_name):
         """Lookup event in event stack."""
         event = self.events.lookup(mode_name)
-        _LOGGER.debug(self.events)
+        _LOGGER.debug("Lookup events: %s = %s", mode_name, event)
         return event
 
     def _event_exists(self, mode_name) -> bool:
@@ -1354,12 +1394,14 @@ class DanthermDevice(DanthermModbus):
 class EventStack(deque):
     """Event Stack with priority and previous operation tracking."""
 
-    def push(self, event, current_operation, new_operation, event_id=None) -> bool:
+    def push(
+        self, event, current_operation, new_operation, event_id=None, timeout=None
+    ) -> bool:
         """Push an event onto the stack based on priority.
 
         Returns True if the event becomes the top event, otherwise False.
         """
-        for idx, item in enumerate(self):
+        for item in self:
             if item["event"] == event and item.get("event_id", None) == event_id:
                 # Update operation and reposition in stack
                 self.remove(item)
@@ -1374,7 +1416,7 @@ class EventStack(deque):
                 insert_at = idx
                 break
 
-        now = datetime.now()
+        now = timeout if timeout is not None else ha_now()
         if insert_at == 0:
             self.appendleft(self._make_item(event, current_operation, now, event_id))
             return True
@@ -1382,6 +1424,15 @@ class EventStack(deque):
         previous_op = self[insert_at - 1]["previous"]
         self[insert_at - 1]["previous"] = new_operation
         self.insert(insert_at, self._make_item(event, previous_op, now, event_id))
+        return False
+
+    def update(self, event, event_id=None, timeout=None):
+        """Update the timeout for an existing event to given timeout or now."""
+        now = timeout.isoformat() if timeout is not None else ha_now().isoformat()
+        for item in self:
+            if item["event"] == event and item.get("event_id") == event_id:
+                item["timeout"] = now
+                return True
         return False
 
     def pop(self, event, event_id=None):
@@ -1441,13 +1492,13 @@ class EventStack(deque):
 
     def __repr__(self):
         """Return a string representation of the event stack."""
-        return f"Event stack: {self.to_list()}"
+        return f"{self.to_list()}"
 
-    def _make_item(self, event, operation, timestamp: datetime, event_id=None):
+    def _make_item(self, event, operation, timeout: datetime, event_id=None):
         """Create an item for the stack."""
         item = {"event": event}
         if event_id is not None:
             item["event_id"] = event_id
         item["previous"] = operation
-        item["timestamp"] = timestamp.isoformat()
+        item["timeout"] = timeout.isoformat()
         return item

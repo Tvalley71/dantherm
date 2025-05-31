@@ -2,13 +2,14 @@
 
 import asyncio
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import now as ha_now
 
 from .device_map import DanthermEntityDescription
 from .store import DanthermStore
@@ -68,9 +69,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             return {}
 
         async with self._rw_lock:
-            _LOGGER.debug(
-                "<<< UPDATE BEGIN - %s >>>", datetime.now().strftime("%H:%M:%S.%f")
-            )
+            _LOGGER.debug("<<< UPDATE BEGIN - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
             # Read current unit mode
             result = await self.hub.async_get_current_unit_mode()
@@ -92,15 +91,14 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read alarm
             await self.hub.async_get_alarm()
 
+            # Update adaptive triggers
+            await self.hub.async_update_adaptive_triggers()
+
             data = {}
             for entity in self._entities:
                 await self.async_update_entity(entity, data)
 
-            await self.hub.async_update_adaptive_triggers()
-
-            _LOGGER.debug(
-                "<<< UPDATE END - %s >>>", datetime.now().strftime("%H:%M:%S.%f")
-            )
+            _LOGGER.debug("<<< UPDATE END - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
         return data
 

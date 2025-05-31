@@ -84,14 +84,6 @@ class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
         """Return the events from the device."""
         return self.device.events
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        base_attrs = super().extra_state_attributes or {}
-        attrs = dict(base_attrs)
-        attrs["events"] = self._events.to_list()
-        return attrs
-
     async def async_added_to_hass(self) -> None:
         """Restore the last state."""
         await super().async_added_to_hass()

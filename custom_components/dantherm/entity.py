@@ -1,5 +1,6 @@
 """Entity implementation."""
 
+import copy
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -70,28 +71,33 @@ class DanthermEntity(CoordinatorEntity):
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""
 
-        if self._attr_new_state == STATE_UNAVAILABLE:
-            self._attr_changed = True
-            self._attr_new_state = None
-        else:
-            self._attr_changed = False
-
         states = self.coordinator.data.get(self.key, None)
+        changed = False
+
+        if self._attr_new_state == STATE_UNAVAILABLE:
+            changed = True
+            self._attr_new_state = None
+
         if states:
             new_state = states.get("state", None)
-            if new_state is not None and new_state != self._attr_new_state:
-                self._attr_changed = True
+            if new_state != self._attr_new_state:
+                changed = True
                 self._attr_new_state = new_state
 
             new_icon = states.get("icon", None)
-            if new_icon is not None and new_icon != self._attr_icon:
-                self._attr_changed = True
+            if new_icon != self._attr_icon:
+                changed = True
                 self._attr_icon = new_icon
 
             new_attrs = states.get("attrs", None)
-            if new_attrs is not None and new_attrs != self._attr_extra_state_attributes:
-                self._attr_changed = True
-                self._attr_extra_state_attributes = new_attrs
+            if new_attrs != self._attr_extra_state_attributes:
+                changed = True
+                # Making a copy to avoid reference issues
+                self._attr_extra_state_attributes = (
+                    copy.deepcopy(new_attrs) if new_attrs is not None else None
+                )
+
+        self._attr_changed = changed
 
     @callback
     def _handle_coordinator_update(self) -> None:
