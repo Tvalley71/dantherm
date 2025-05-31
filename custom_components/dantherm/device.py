@@ -1092,27 +1092,12 @@ class DanthermDevice(DanthermModbus):
                 continue
 
             trigger_data["timeout"] = parse_datetime(event["timeout"])
-            if state.state == STATE_ON:
-                trigger_data["detected"] = ha_now()
-                trigger_data["undetected"] = None
 
-                _LOGGER.debug(
-                    "Adaptive trigger '%s': detected=%s, timeout=%s",
-                    trigger_name,
-                    trigger_data["detected"],
-                    trigger_data["timeout"],
-                )
-
-            elif state.state == STATE_OFF:
-                trigger_data["undetected"] = ha_now()
-                trigger_data["detected"] = None
-
-                _LOGGER.debug(
-                    "Adaptive trigger '%s': undetected=%s, timeout=%s",
-                    trigger_name,
-                    trigger_data["undetected"],
-                    trigger_data["timeout"],
-                )
+            _LOGGER.debug(
+                "Adaptive trigger '%s': timeout=%s",
+                trigger_name,
+                trigger_data["timeout"],
+            )
 
     async def _boost_mode_trigger_changed(self, event):
         """Boost trigger state change callback."""

@@ -93,4 +93,3 @@ class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
             events_list = state.attributes.get("events", [])
             self.device.events = EventStack.from_list(events_list)
             self._attr_extra_state_attributes = state.attributes
-            self._attr_changed = True

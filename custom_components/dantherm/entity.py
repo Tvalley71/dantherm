@@ -1,6 +1,7 @@
 """Entity implementation."""
 
 import copy
+
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -92,7 +93,7 @@ class DanthermEntity(CoordinatorEntity):
             new_attrs = states.get("attrs", None)
             if new_attrs != self._attr_extra_state_attributes:
                 changed = True
-                # Making a copy to avoid reference issues
+                # Making a deep-copy to avoid reference issues
                 self._attr_extra_state_attributes = (
                     copy.deepcopy(new_attrs) if new_attrs is not None else None
                 )
