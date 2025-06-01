@@ -95,10 +95,10 @@ _LOGGER = logging.getLogger(__name__)
 IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
 # This is used to represent the minimum datetime value in the system.
-min_dt = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
+MIN_DT = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
 
 # This is used to represent the maximum datetime value in the system.
-max_dt = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
+MAX_DT = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
 
 
 class DanthermDevice(DanthermModbus):
@@ -139,7 +139,7 @@ class DanthermDevice(DanthermModbus):
         self._filter_remain = None
         self._filter_remain_level = None
         self._last_current_operation = None
-        self._operation_change_timeout = min_dt
+        self._operation_change_timeout = MIN_DT
         self.events = EventStack()
         self.coordinator = None
         self.installed_components = 0
@@ -193,7 +193,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": min_dt,
+                "timeout": None,
                 "trigger": None,
                 "unsub": None,
             },
@@ -206,7 +206,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": min_dt,
+                "timeout": None,
                 "trigger": None,
                 "unsub": None,
             },
@@ -219,7 +219,7 @@ class DanthermDevice(DanthermModbus):
                 ],
                 "detected": None,
                 "undetected": None,
-                "timeout": min_dt,
+                "timeout": None,
                 "trigger": None,
                 "unsub": None,
             },
@@ -1043,34 +1043,23 @@ class DanthermDevice(DanthermModbus):
     async def _set_up_tracking_for_adaptive_triggers(self, options: dict):
         """Set up tracking for adaptive triggers."""
 
-        def _set_up_tracking_for_adaptive_trigger(trigger_data, new_trigger: str):
-            """Set up tracking for a adaptive trigger."""
-
-            if new_trigger != trigger_data["trigger"]:
-                if trigger_data["unsub"]:
-                    trigger_data["unsub"]()  # remove previous listener
-                trigger_data["trigger"] = new_trigger
-                if trigger_data["trigger"]:
-                    trigger_data["unsub"] = async_track_state_change_event(
-                        self._hass,
-                        [trigger_data["trigger"]],
-                        getattr(self, f"_{trigger_data['name']}_mode_trigger_changed"),
-                    )
-
         for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = options.get(trigger)
             if trigger_entity:
                 trigger_data = self._adaptive_triggers[trigger]
-                _set_up_tracking_for_adaptive_trigger(trigger_data, trigger_entity)
 
-                if self._get_entity_state_from_coordinator(
-                    f"{trigger_data['name']}_mode", False
-                ):
-                    state = self._hass.states.get(trigger_entity)
-                    if state is not None and state.state == STATE_ON:
-                        trigger_data["detected"] = ha_now()
-                    elif state is not None and state.state == STATE_OFF:
-                        trigger_data["undetected"] = ha_now()
+                if trigger_entity != trigger_data["trigger"]:
+                    if trigger_data["unsub"]:
+                        trigger_data["unsub"]()  # remove previous listener
+                    trigger_data["trigger"] = trigger_entity
+                    if trigger_data["trigger"]:
+                        trigger_data["unsub"] = async_track_state_change_event(
+                            self._hass,
+                            [trigger_data["trigger"]],
+                            getattr(
+                                self, f"_{trigger_data['name']}_mode_trigger_changed"
+                            ),
+                        )
 
     async def _initialize_adaptive_triggers(self) -> None:
         """Initialize adaptive triggers."""
@@ -1091,7 +1080,7 @@ class DanthermDevice(DanthermModbus):
             if event is None:
                 continue
 
-            trigger_data["timeout"] = parse_datetime(event["timeout"])
+            trigger_data["timeout"] = event["timeout"]
 
             _LOGGER.debug(
                 "Adaptive trigger '%s': timeout=%s",
@@ -1142,7 +1131,7 @@ class DanthermDevice(DanthermModbus):
         """Update adaptive triggers."""
 
         adaptive_trigger = None
-        earliest = max_dt
+        earliest = MAX_DT
 
         for trigger_name, mode_data in self._adaptive_triggers.items():
             # Skip if there is no trigger
@@ -1151,10 +1140,7 @@ class DanthermDevice(DanthermModbus):
 
             detected_time = mode_data["detected"]
             undetected_time = mode_data["undetected"]
-
-            # Skip if both is None
-            if detected_time is None and undetected_time is None:
-                continue
+            timeout_time = mode_data["timeout"]
 
             if detected_time:
                 if undetected_time:
@@ -1167,12 +1153,15 @@ class DanthermDevice(DanthermModbus):
                     earliest = detected_time
                     adaptive_trigger = trigger_name
 
-            elif undetected_time < earliest:
-                timeout = mode_data["timeout"]
-                if timeout and timeout > ha_now():
-                    continue
-                earliest = undetected_time
-                adaptive_trigger = trigger_name
+            elif undetected_time:
+                if undetected_time < earliest:
+                    earliest = undetected_time
+                    adaptive_trigger = trigger_name
+
+            elif timeout_time and timeout_time < ha_now():
+                if timeout_time < earliest:
+                    earliest = timeout_time
+                    adaptive_trigger = trigger_name
 
         if adaptive_trigger:
             await self._update_adaptive_trigger_state(adaptive_trigger)
@@ -1184,6 +1173,7 @@ class DanthermDevice(DanthermModbus):
         # Check if mode is switch on
         if not self._get_entity_state_from_coordinator(f"{mode_name}_mode", False):
             return
+
         mode_data = self._adaptive_triggers[trigger_name]
         current_time = ha_now()
 
@@ -1194,27 +1184,28 @@ class DanthermDevice(DanthermModbus):
         current_operation = self.get_current_operation
         target_operation = None
 
-        # Check if the trigger is detected
-        if mode_data["detected"]:
-            # Set the timeout of the trigger
-            mode_data["timeout"] = current_time + (
-                timedelta(seconds=30)
+        def get_trigger_timeout():  # Get the trigger timeout from it's number entity
+            minutes = (
+                3
                 if IS_DEBUG
-                else timedelta(
-                    minutes=self._get_entity_state_from_coordinator(
-                        f"{mode_name}_mode_timeout", 5
-                    )
+                else self._get_entity_state_from_coordinator(
+                    f"{mode_name}_mode_timeout", 5
                 )
             )
+            return current_time + timedelta(minutes=minutes)
+
+        if mode_data["detected"]:  # Check if the trigger is detected
+            # Set new trigger timeout
+            mode_data["timeout"] = get_trigger_timeout()
 
             # Check if this is not a repeated detection
             if not self._event_exists(mode_name):
-                # Get the mode target operation
+                # Get the trigger target operation from it's selection entity
                 possible_target = self._get_entity_state_from_coordinator(
                     f"{mode_name}_operation_selection", None
                 )
 
-                # Push current operation and set the target operation if it has priority
+                # Push the new event to the stack
                 if self._push_event(
                     mode_name,
                     current_operation,
@@ -1228,20 +1219,43 @@ class DanthermDevice(DanthermModbus):
 
             mode_data["detected"] = None
 
-        # Check if the trigger is undetected
-        elif mode_data["undetected"]:
-            # Remove event if undetected
-            target_operation = self._pop_event(mode_name)
+        elif mode_data["undetected"]:  # Check if the trigger is undetected
+            # Set new trigger timeout
+            mode_data["timeout"] = get_trigger_timeout()
+
+            # Update the event with the new timeout
+            self._update_event(mode_name, timeout=mode_data["timeout"])
 
             mode_data["undetected"] = None
 
-        # Change the operation mode if different from the current operation
+        # Check if the trigger has timed out
+        elif mode_data["timeout"] and mode_data["timeout"] < current_time:
+            # If the trigger is still on extend the timeout
+            state = self._hass.states.get(mode_data["trigger"])
+            if state is not None and state.state == STATE_ON:
+                # Set new trigger timeout
+                mode_data["timeout"] = get_trigger_timeout()
+
+                # Update the event with the new timeout
+                self._update_event(mode_name, timeout=mode_data["timeout"])
+
+                _LOGGER.debug("%s timeout extended!", trigger_name.capitalize())
+                return
+
+            # Remove event from stack
+            target_operation = self._pop_event(mode_name)
+
+            mode_data["timeout"] = None
+
+        # Change the operation mode if any and different from the current operation
         if not target_operation or target_operation == current_operation:
             return
 
         # Set the operation change timeout
         self._operation_change_timeout = current_time + (
-            timedelta(seconds=15) if IS_DEBUG else timedelta(minutes=2)
+            timedelta(seconds=30)  # Default timeout for debug mode
+            if IS_DEBUG
+            else timedelta(minutes=2)  # Default timeout
         )
 
         _LOGGER.debug("Target operation = %s", target_operation)
@@ -1465,14 +1479,19 @@ class EventStack(deque):
         )
 
     def to_list(self):
-        """Convert the event stack to a list of events."""
+        """Convert the event stack to a list of items."""
         return list(self)
 
     @classmethod
     def from_list(cls, items):
-        """Create an EventStack from a list of events."""
+        """Create an event stack from a list of items."""
         stack = cls()
-        stack.extend(items)
+        for item in items:
+            d = dict(item)
+            if "timeout" in d and isinstance(d["timeout"], str):
+                dt = parse_datetime(d["timeout"])
+                d["timeout"] = dt if dt is not None else d["timeout"]
+            stack.append(d)
         return stack
 
     def __repr__(self):
