@@ -4,10 +4,12 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
-from .device_map import SENSORS, DanthermSensorEntityDescription
+from .device import DanthermDevice, EventStack
+from .device_map import ATTR_ADAPTIVE_STATE, SENSORS, DanthermSensorEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +29,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     entities = []
     for description in SENSORS:
         if await device.async_install_entity(description):
-            sensor = DanthermSensor(device, description)
+            if description.key == ATTR_ADAPTIVE_STATE:
+                # Create AdaptiveStateSensor for the adaptive state
+                sensor = AdaptiveStateSensor(device, description)
+            else:
+                sensor = DanthermSensor(device, description)
             entities.append(sensor)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -39,44 +45,51 @@ class DanthermSensor(SensorEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
         description: DanthermSensorEntityDescription,
     ) -> None:
         """Init sensor."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
+        self._attr_icon = description.icon_zero or description.icon
+        self.entity_description: DanthermSensorEntityDescription = description
+
+    def _coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        super()._coordinator_update()
+
+        if self._attr_changed:
+            self._attr_native_value = self._attr_new_state
+
+
+class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
+    """Adaptive State sensor with restore functionality.
+
+    We need to restore the events list from the last state in case Home Assistant
+    was restarted.
+    """
+
+    def __init__(
+        self,
+        device: DanthermDevice,
+        description: DanthermSensorEntityDescription,
+    ) -> None:
+        """Init sensor."""
+        super().__init__(device, description)
+        self.device = device
 
     @property
-    def native_value(self):
-        """Return the state."""
+    def _events(self):
+        """Return the events from the device."""
+        return self.device.events
 
-        return self._device.data.get(self.key, None)
+    async def async_added_to_hass(self) -> None:
+        """Restore the last state."""
+        await super().async_added_to_hass()
 
-    @property
-    def icon(self) -> str | None:
-        """Return an icon."""
-
-        result = super().icon
-        if hasattr(self._device, f"get_{self.key}_icon"):
-            result = getattr(self._device, f"get_{self.key}_icon")
-        elif self.entity_description.icon_zero and not self.native_value:
-            result = self.entity_description.icon_zero
-
-        return result
-
-    async def async_update(self) -> None:
-        """Update the state of the sensor."""
-
-        # Get extra state attributes
-        self._attr_extra_state_attributes = await self._device.async_get_entity_attrs(
-            self.entity_description
-        )
-
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
-
-        if result is None:
-            self._attr_available = False
-        else:
-            self._attr_available = True
-            self._device.data[self.key] = result
+        state = await self.async_get_last_state()
+        if state is not None:
+            events_list = state.attributes.get("events", [])
+            self.device.events = EventStack.from_list(events_list)
+            self._attr_extra_state_attributes = state.attributes

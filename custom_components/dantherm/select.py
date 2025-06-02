@@ -6,8 +6,9 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
+from .device import DanthermDevice
 from .device_map import SELECTS, DanthermSelectEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             select = DanthermSelect(device, description)
             entities.append(select)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -39,51 +40,31 @@ class DanthermSelect(SelectEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
         description: DanthermSelectEntityDescription,
     ) -> None:
         """Init select."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
+        self._attr_current_option = None
         self.entity_description: DanthermSelectEntityDescription = description
-
-    @property
-    def icon(self) -> str | None:
-        """Return an icon."""
-
-        result = super().icon
-        if hasattr(self._device, f"get_{self.key}_icon"):
-            result = getattr(self._device, f"get_{self.key}_icon")
-        return result
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
-        if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                option
-            )
-        elif self.entity_description.data_store:
-            await self._device.set_entity_state(self.key, option)
-        elif option.isdigit():
-            await self._device.write_holding_registers(
-                description=self.entity_description, value=int(option)
-            )
+        await self.coordinator.async_set_entity_state(self, option)
 
-    async def async_update(self) -> None:
-        """Update state of the select."""
+    def _coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
+        super()._coordinator_update()
 
-        if result is None:
-            self._attr_available = False
-            self._attr_current_option = None
-        else:
-            self._attr_available = True
-            if self.entity_description.data_bitwise_and:
-                result &= self.entity_description.data_bitwise_and
+        if self._attr_changed:
+            new_state = self._attr_new_state
+            if new_state is None:
+                self._attr_current_option = None
+            else:
+                if self.entity_description.data_bitwise_and:
+                    new_state &= self.entity_description.data_bitwise_and
 
-            self._attr_current_option = str(result)
-
-        self._device.data[self.key] = result
+                self._attr_current_option = str(new_state)

@@ -1,14 +1,14 @@
 """Switch implementation."""
 
-from datetime import datetime
 import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
+from .device import DanthermDevice
 from .device_map import SWITCHES, DanthermSwitchEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             switch = DanthermSwitch(device, description)
             entities.append(switch)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -40,88 +40,58 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
         description: DanthermSwitchEntityDescription,
     ) -> None:
-        """Init Number."""
+        """Init switch."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
+        self._attr_is_on = False
+        self._attr_icon = description.icon_off or description.icon
         self.entity_description: DanthermSwitchEntityDescription = description
 
-    @property
-    def icon(self) -> str | None:
-        """Switch icon."""
+    async def _async_turn_state(self, state):
+        """Turn the entity state on or off."""
+        desc = self.entity_description
 
-        if self._attr_is_on:
-            return self.entity_description.icon_on
-        return self.entity_description.icon_off
+        self._attr_is_on = state
+        self._attr_icon = desc.icon_on if state else desc.icon_off
+
+        value = None
+        if state:
+            value = desc.state_seton or desc.state_on
+        else:
+            value = desc.state_setoff or desc.state_off
+
+        await self.coordinator.async_set_entity_state(self, value)
+
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-
-        if self.entity_description.state_suspend_for:
-            self.suspend_refresh(self.entity_description.state_suspend_for)
-
-        self._attr_is_on = False
-        state = self.entity_description.state_setoff
-        if state is None:
-            state = self.entity_description.state_off
-
-        if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(state)
-        elif self.entity_description.data_store:
-            await self._device.set_entity_state(self.key, state)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description, value=state
-            )
+        await self._async_turn_state(False)
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
+        await self._async_turn_state(True)
 
-        if self.entity_description.state_suspend_for:
-            self.suspend_refresh(self.entity_description.state_suspend_for)
+    def _coordinator_update(self) -> None:
+        """Update data from the coordinator."""
 
-        self._attr_is_on = True
-        state = self.entity_description.state_seton
-        if state is None:
-            state = self.entity_description.state_on
+        super()._coordinator_update()
 
-        if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(state)
-        elif self.entity_description.data_store:
-            await self._device.set_entity_state(self.key, state)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description, value=state
-            )
-
-    async def async_update(self) -> None:
-        """Update the state of the switch."""
-
-        if self.attr_suspend_refresh:
-            if self.attr_suspend_refresh > datetime.now():
-                _LOGGER.debug("Skipping suspened entity=%s", self.name)
-                return
-
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
-
-        if result is None and self.entity_description.state_default is not None:
-            result = self.entity_description.state_default
-
-        if result is None:
-            self._attr_available = False
-            self._device.data[self.key] = None
-        else:
-            self._attr_available = True
-            if isinstance(result, bool):
-                self._attr_is_on = result
+        if self._attr_changed:
+            new_state = self._attr_new_state
+            if isinstance(new_state, bool):
+                self._attr_is_on = new_state
             elif (
-                result & self.entity_description.state_on
+                new_state is not None and new_state & self.entity_description.state_on
             ) == self.entity_description.state_on:
                 self._attr_is_on = True
             else:
                 self._attr_is_on = False
 
-            self._device.data[self.key] = self._attr_is_on
+            if self._attr_is_on:
+                self._attr_icon = self.entity_description.icon_on
+            else:
+                self._attr_icon = self.entity_description.icon_off

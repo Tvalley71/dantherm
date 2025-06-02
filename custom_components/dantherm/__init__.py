@@ -7,8 +7,14 @@ import pymodbus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
@@ -19,7 +25,7 @@ from .config_flow import (
     ATTR_HOME_MODE_TRIGGER,
 )
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .device import Device
+from .device import DanthermDevice
 from .device_map import REQUIRED_PYMODBUS_VERSION
 from .services import async_setup_services
 
@@ -96,12 +102,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
-    device = Device(hass, name, host, port, 1, scan_interval, entry)
-
-    await device.async_load_entities()  # Load device-specific data
+    device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
 
     try:
-        await device.setup()
+        await device.async_init_and_connect()
     except ValueError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
 
@@ -114,6 +118,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    try:
+        await device.async_start()
+    except Exception as ex:
+        _LOGGER.error("Failed to start device: %s", ex)
+        return False
+
+    async def _init_after_start(event=None) -> None:
+        """Initialize the device after Home Assistant has started."""
+        hass.async_create_task(device.async_initialize_after_restart())
+
+    # If Home Assistant is already running, we can run the routine immediately
+    if hass.state != CoreState.running:
+        await _init_after_start()
+    else:
+        # Listen for the Home Assistant started event to run the routine
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _init_after_start)
 
     return True
 

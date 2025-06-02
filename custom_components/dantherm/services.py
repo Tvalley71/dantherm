@@ -5,7 +5,6 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import HomeAssistantError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -37,6 +36,7 @@ from .device_map import (
     WEEK_PROGRAM_SELECTIONS,
     ActiveUnitMode,
 )
+from .exceptions import InvalidTimeFormat
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,15 +74,13 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
 )
 
 
-async def async_setup_services(hass: HomeAssistant):
+async def async_setup_services(hass: HomeAssistant):  # noqa: C901
     """Set up all services."""
 
     def validate_time_format(time_str):
         """Validate HH:MM format."""
         if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", time_str):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_timeformat"
-            )
+            raise InvalidTimeFormat
 
     def render_template(value):
         """Render a value as a template if it's a string, otherwise return it directly."""
@@ -108,39 +106,58 @@ async def async_setup_services(hass: HomeAssistant):
         """Set state for Dantherm devices."""
 
         async def apply_state(device, call):
-            if ATTR_OPERATION_SELECTION in call.data:
-                await device.set_operation_selection(
-                    render_template(call.data[ATTR_OPERATION_SELECTION])
-                )
-
-            if ATTR_FAN_LEVEL_SELECTION in call.data:
-                await device.set_fan_level(
-                    render_template(call.data[ATTR_FAN_LEVEL_SELECTION])
-                )
+            """Apply state."""
 
             if ATTR_AWAY_MODE in call.data:
-                await device.set_active_unit_mode(
+                away_mode = (
                     ActiveUnitMode.StartAway
                     if bool(render_template(call.data[ATTR_AWAY_MODE]))
                     else ActiveUnitMode.EndAway
                 )
+                device.coordinator.enqueue_frontend(
+                    device.set_active_unit_mode, away_mode
+                )
+
             if ATTR_SUMMER_MODE in call.data:
-                await device.set_active_unit_mode(
+                summer_mode = (
                     ActiveUnitMode.StartSummer
                     if bool(render_template(call.data[ATTR_SUMMER_MODE]))
                     else ActiveUnitMode.EndSummer
                 )
+                device.coordinator.enqueue_frontend(
+                    device.set_active_unit_mode, summer_mode
+                )
+
+            if ATTR_OPERATION_SELECTION in call.data:
+                operation_selection = render_template(
+                    call.data[ATTR_OPERATION_SELECTION]
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_operation_selection, operation_selection
+                )
+
+            if ATTR_FAN_LEVEL_SELECTION in call.data:
+                fan_level = render_template(call.data[ATTR_FAN_LEVEL_SELECTION])
+                device.coordinator.enqueue_frontend(device.set_fan_level, fan_level)
+
             if ATTR_FIREPLACE_MODE in call.data:
-                await device.set_active_unit_mode(
+                fireplace_mode = (
                     ActiveUnitMode.StartFireplace
                     if bool(render_template(call.data[ATTR_FIREPLACE_MODE]))
                     else ActiveUnitMode.EndFireplace
                 )
+                device.coordinator.enqueue_frontend(
+                    device.set_active_unit_mode, fireplace_mode
+                )
+
             if ATTR_MANUAL_BYPASS_MODE in call.data:
-                await device.set_active_unit_mode(
+                bypass_mode = (
                     ActiveUnitMode.SelectManualBypass
                     if bool(render_template(call.data[ATTR_MANUAL_BYPASS_MODE]))
                     else ActiveUnitMode.DeselectManualBypass
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_active_unit_mode, bypass_mode
                 )
 
         await async_apply_device_function(call, apply_state)
@@ -150,45 +167,65 @@ async def async_setup_services(hass: HomeAssistant):
 
         async def apply_config(device, call):
             if ATTR_BYPASS_MINIMUM_TEMPERATURE in call.data:
-                await device.set_bypass_minimum_temperature(
-                    float(render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE]))
+                bypass_minimum_temperature = float(
+                    render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_minimum_temperature, bypass_minimum_temperature
                 )
 
             if ATTR_BYPASS_MAXIMUM_TEMPERATURE in call.data:
-                await device.set_bypass_maximum_temperature(
-                    float(render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE]))
+                bypass_maximum_temperature = float(
+                    render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_maximum_temperature, bypass_maximum_temperature
                 )
 
             if ATTR_FILTER_LIFETIME in call.data:
-                await device.set_filter_lifetime(
-                    int(render_template(call.data[ATTR_FILTER_LIFETIME]))
+                filter_lifetime = int(render_template(call.data[ATTR_FILTER_LIFETIME]))
+                device.coordinator.enqueue_frontend(
+                    device.set_filter_lifetime, filter_lifetime
                 )
 
             if ATTR_MANUAL_BYPASS_DURATION in call.data:
-                await device.set_manual_bypass_duration(
-                    int(render_template(call.data[ATTR_MANUAL_BYPASS_DURATION]))
+                bypass_duration = int(
+                    render_template(call.data[ATTR_MANUAL_BYPASS_DURATION])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_manual_bypass_duration, bypass_duration
                 )
 
             if ATTR_NIGHT_MODE in call.data:
-                await device.set_active_unit_mode(
+                night_mode = (
                     ActiveUnitMode.NightEnable
                     if bool(render_template(call.data[ATTR_NIGHT_MODE]))
                     else ActiveUnitMode.NightDisable
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_active_unit_mode, night_mode
                 )
 
             if ATTR_NIGHT_MODE_START_TIME in call.data:
                 start_time = render_template(call.data[ATTR_NIGHT_MODE_START_TIME])
                 validate_time_format(start_time)
-                await device.set_night_mode_start_time(start_time)
+                device.coordinator.enqueue_frontend(
+                    device.set_night_mode_start_time, start_time
+                )
 
             if ATTR_NIGHT_MODE_END_TIME in call.data:
                 end_time = render_template(call.data[ATTR_NIGHT_MODE_END_TIME])
                 validate_time_format(end_time)
-                await device.set_night_mode_end_time(end_time)
+                device.coordinator.enqueue_frontend(
+                    device.set_night_mode_end_time, end_time
+                )
 
             if ATTR_WEEK_PROGRAM_SELECTION in call.data:
-                await device.set_week_program_selection(
-                    render_template(call.data[ATTR_WEEK_PROGRAM_SELECTION])
+                week_program_selection = render_template(
+                    call.data[ATTR_WEEK_PROGRAM_SELECTION]
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_week_program_selection, week_program_selection
                 )
 
         await async_apply_device_function(call, apply_config)
@@ -197,7 +234,7 @@ async def async_setup_services(hass: HomeAssistant):
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
         async def apply_reset(device, call):
-            await device.filter_reset()
+            device.coordinator.write(device.filter_reset)
 
         await async_apply_device_function(call, apply_reset)
 
@@ -205,7 +242,7 @@ async def async_setup_services(hass: HomeAssistant):
         """Alarm reset, reset first pending alarm."""
 
         async def apply_reset(device, call):
-            await device.alarm_reset()
+            device.coordinator.write(device.alarm_reset)
 
         await async_apply_device_function(call, apply_reset)
 

@@ -8,8 +8,9 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
+from .device import DanthermDevice
 from .device_map import COVERS, DanthermCoverEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             cover = DanthermCover(device, description)
             entities.append(cover)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -41,13 +42,12 @@ class DanthermCover(CoverEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
         description: DanthermCoverEntityDescription,
     ) -> None:
         """Init cover."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
-        self.entity_description: DanthermCoverEntityDescription = description
         self._attr_supported_features = 0
         if description.supported_features:
             self._attr_supported_features = description.supported_features
@@ -65,22 +65,15 @@ class DanthermCover(CoverEntity, DanthermEntity):
         self._attr_is_closing = False
         self._attr_is_opening = False
 
-    @property
-    def icon(self) -> str | None:
-        """Return an icon."""
-
-        result = super().icon
-        if hasattr(self._device, f"get_{self.key}_icon"):
-            result = getattr(self._device, f"get_{self.key}_icon")
-        return result
+        self.entity_description: DanthermCoverEntityDescription = description
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
 
         if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                CoverEntityFeature.OPEN
-            )
+            await getattr(
+                self._device, f"set_{self.entity_description.data_setinternal}"
+            )(CoverEntityFeature.OPEN)
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description,
@@ -91,9 +84,9 @@ class DanthermCover(CoverEntity, DanthermEntity):
         """Close cover."""
 
         if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                CoverEntityFeature.CLOSE
-            )
+            await getattr(
+                self._device, f"set_{self.entity_description.data_setinternal}"
+            )(CoverEntityFeature.CLOSE)
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description,
@@ -104,49 +97,37 @@ class DanthermCover(CoverEntity, DanthermEntity):
         """Stop cover."""
 
         if self.entity_description.data_setinternal:
-            await getattr(self._device, self.entity_description.data_setinternal)(
-                CoverEntityFeature.STOP
-            )
+            await getattr(
+                self._device, f"set_{self.entity_description.data_setinternal}"
+            )(CoverEntityFeature.STOP)
         else:
             await self._device.write_holding_registers(
                 description=self.entity_description,
                 value=self.entity_description.state_stop,
             )
 
-    @property
-    def native_value(self):
-        """Return the state."""
+    def _coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        return self._device.data.get(self.key, None)
+        super()._coordinator_update()
 
-    async def async_update(self) -> None:
-        """Update the state of the cover."""
-
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
-
-        if result is None:
-            self._attr_available = False
-        else:
-            self._attr_available = True
-
-            if result == self.entity_description.state_closed:
+        if self._attr_changed:
+            new_state = self._attr_new_state
+            if new_state == self.entity_description.state_closed:
                 self._attr_state = STATE_CLOSED
                 self._attr_is_closed = True
                 self._attr_is_closing = False
                 self._attr_is_opening = False
-            elif result == self.entity_description.state_closing:
+            elif new_state == self.entity_description.state_closing:
                 self._attr_state = STATE_CLOSING
                 self._attr_is_closing = True
                 self._attr_is_opening = False
-            elif result == self.entity_description.state_opening:
+            elif new_state == self.entity_description.state_opening:
                 self._attr_state = STATE_OPENING
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            elif result == self.entity_description.state_opened:
+            elif new_state == self.entity_description.state_opened:
                 self._attr_state = STATE_OPEN
                 self._attr_is_closed = False
                 self._attr_is_closing = False
                 self._attr_is_opening = False
-
-        self._device.data[self.key] = result

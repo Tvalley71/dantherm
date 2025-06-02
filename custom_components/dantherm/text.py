@@ -8,8 +8,9 @@ from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import DanthermEntity, Device
+from .device import DanthermDevice
 from .device_map import TIMETEXTS, DanthermTimeTextEntityDescription
+from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
             text = DanthermTimeText(device, description)
             entities.append(text)
 
-    async_add_entities(entities, update_before_add=False)  # True
+    async_add_entities(entities, update_before_add=True)
     return True
 
 
@@ -41,41 +42,33 @@ class DanthermTimeText(TextEntity, DanthermEntity):
 
     def __init__(
         self,
-        device: Device,
+        device: DanthermDevice,
         description: DanthermTimeTextEntityDescription,
     ) -> None:
         """Init time text."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
+        self._attr_native_value = None
         self.entity_description: DanthermTimeTextEntityDescription = description
-
-    @property
-    def native_value(self):
-        """Return the state."""
-
-        return self._device.data.get(self.key, None)
-
-    async def async_update(self) -> None:
-        """Update the state of the sensor."""
-
-        # Get the entity state
-        result = await self._device.async_get_entity_state(self.entity_description)
-
-        if result is None:
-            self._attr_available = False
-        else:
-            self._attr_available = True
-        self._device.data[self.key] = result
 
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
 
         if re.match(r"^(?:[01]\d|2[0-3]):[0-5]\d$", value):  # Validates HH:MM format
             if self.entity_description.data_setinternal:
-                await getattr(self._device, self.entity_description.data_setinternal)(
-                    value
-                )
+                await getattr(
+                    self._device,
+                    f"set_{self.entity_description.data_setinternal}",
+                )(value)
         else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="invalid_timeformat"
             )
+
+    def _coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        super()._coordinator_update()
+
+        if self._attr_changed:
+            self._attr_native_value = self._attr_new_state
