@@ -25,11 +25,6 @@ from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 
-from .config_flow import (
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
-)
 from .modbus import (
     MODBUS_REGISTER_FAN1_SPEED,
     MODBUS_REGISTER_FAN2_SPEED,
@@ -138,6 +133,8 @@ ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
 ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
+ATTR_DISABLE_BYPASS: Final = "disable_bypass"
+ATTR_BYPASS_AVAILABLE: Final = "bypass_available"
 
 ATTR_SENSOR_FILTERING: Final = "sensor_filtering"
 
@@ -410,6 +407,7 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
         key=ATTR_BYPASS_DAMPER,
         icon="mdi:valve",
         supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_DAMPER,
         data_getinternal=ATTR_BYPASS_DAMPER,
         state_opening=BypassDamperState.Opening,
@@ -438,6 +436,8 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_BYPASS_MINIMUM_TEMPERATURE,
+        icon="mdi:thermometer-minus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         native_max_value=15,
@@ -453,6 +453,8 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+        icon="mdi:thermometer-plus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
         native_max_value=27,
@@ -468,6 +470,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_MANUAL_BYPASS_DURATION,
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_MANUAL_BYPASS_DURATION,
         data_getinternal=ATTR_MANUAL_BYPASS_DURATION,
         native_max_value=480,
@@ -483,7 +486,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_BOOST_MODE_TIMEOUT,
-        data_getavailable=ATTR_BOOST_MODE_TRIGGER,
         data_default=5,
         data_precision=0,
         native_max_value=30,
@@ -495,7 +497,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_ECO_MODE_TIMEOUT,
-        data_getavailable=ATTR_ECO_MODE_TRIGGER,
         data_default=15,
         data_precision=0,
         native_max_value=600,
@@ -507,7 +508,6 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
     ),
     DanthermNumberEntityDescription(
         key=ATTR_HOME_MODE_TIMEOUT,
-        data_getavailable=ATTR_HOME_MODE_TRIGGER,
         data_default=60,
         data_precision=0,
         native_max_value=600,
@@ -548,7 +548,6 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
         key=ATTR_BOOST_OPERATION_SELECTION,
         icon="mdi:state-machine",
-        data_getavailable=ATTR_BOOST_MODE_TRIGGER,
         data_default=STATE_LEVEL_3,
         options=BOOST_OPERATION_SELECTIONS,
         entity_category=EntityCategory.CONFIG,
@@ -556,7 +555,6 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
         key=ATTR_ECO_OPERATION_SELECTION,
         icon="mdi:state-machine",
-        data_getavailable=ATTR_ECO_MODE_TRIGGER,
         data_default=STATE_LEVEL_1,
         options=ECO_OPERATION_SELECTIONS,
         entity_category=EntityCategory.CONFIG,
@@ -564,7 +562,6 @@ SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
     DanthermSelectEntityDescription(
         key=ATTR_HOME_OPERATION_SELECTION,
         icon="mdi:state-machine",
-        data_getavailable=ATTR_HOME_MODE_TRIGGER,
         data_default=STATE_AUTOMATIC,
         options=HOME_OPERATION_SELECTIONS,
         entity_category=EntityCategory.CONFIG,
@@ -755,6 +752,7 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_MANUAL_BYPASS_MODE,
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal="active_unit_mode",
         data_getinternal="active_unit_mode",
         state_on=ActiveUnitMode.SelectManualBypass,
@@ -784,7 +782,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_BOOST_MODE,
-        data_getavailable=ATTR_BOOST_MODE_TRIGGER,
         data_default=False,
         icon_on="mdi:rocket-launch",
         icon_off="mdi:rocket",
@@ -792,7 +789,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_ECO_MODE,
-        data_getavailable=ATTR_ECO_MODE_TRIGGER,
         data_default=False,
         icon_on="mdi:leaf",
         icon_off="mdi:leaf-off",
@@ -800,11 +796,22 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_HOME_MODE,
-        data_getavailable=ATTR_HOME_MODE_TRIGGER,
         data_default=False,
         icon_on="mdi:home",
         icon_off="mdi:home-off",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    DanthermSwitchEntityDescription(
+        key=ATTR_DISABLE_BYPASS,
+        data_setinternal=ATTR_DISABLE_BYPASS,
+        data_getinternal=ATTR_DISABLE_BYPASS,
+        data_default=False,
+        icon_on="mdi:autorenew-off",
+        icon_off="mdi:autorenew",
+        component_class=ComponentClass.Bypass,
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
     ),
 )
 

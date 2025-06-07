@@ -184,7 +184,7 @@
           "level_2": "Level 2",
           "level_3": "Level 3",
           "level_4": "Level 4",
-          "manuel": "Manual",
+          "manual": "Manual",
           "night": "Night Mode",
           "standby": "Standby",
           "summer": "Summer Mode",
@@ -215,7 +215,8 @@
       "sensor_filtering": { "name": "Sensor Filtering" },
       "boost_mode": { "name": "Boost Mode" },
       "eco_mode": { "name": "Eco Mode" },
-      "home_mode": { "name": "Home Mode" }
+      "home_mode": { "name": "Home Mode" },
+      "disable_bypass": { "name": "Disable Bypass" }
     },
     "text": {
       "night_mode_start_time": { "name": "Night Mode Start Time" },

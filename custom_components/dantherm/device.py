@@ -135,6 +135,7 @@ class DanthermDevice(DanthermModbus):
         self._alarm = None
         self._sensor_filtering = False
         self._bypass_damper = None
+        self._bypass_maximum_temperature = None
         self._filter_lifetime = None
         self._filter_remain = None
         self._filter_remain_level = None
@@ -724,6 +725,11 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Night mode end = %s", result)
         return result
 
+    @property
+    def get_bypass_available(self) -> bool:
+        """Get bypass available."""
+        return self._bypass_maximum_temperature != 0.0
+
     async def async_get_bypass_minimum_temperature(self):
         """Get bypass minimum temperature."""
 
@@ -734,9 +740,13 @@ class DanthermDevice(DanthermModbus):
     async def async_get_bypass_maximum_temperature(self):
         """Get bypass maximum temperature."""
 
-        result = await self._read_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP, 1)
-        _LOGGER.debug("Bypass maximum temperature = %.1f", result)
-        return result
+        self._bypass_maximum_temperature = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MAX_TEMP, 1
+        )
+        _LOGGER.debug(
+            "Bypass maximum temperature = %.1f", self._bypass_maximum_temperature
+        )
+        return self._bypass_maximum_temperature
 
     async def async_get_manual_bypass_duration(self):
         """Get manual bypass duration."""
@@ -744,6 +754,11 @@ class DanthermDevice(DanthermModbus):
         result = await self._read_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION)
         _LOGGER.debug("Manual bypass duration = %s", result)
         return result
+
+    @property
+    def get_disable_bypass(self) -> bool:
+        """Get disable bypass."""
+        return self._bypass_maximum_temperature == 0.0
 
     async def set_filter_reset(self, value=None):
         """Reset filter."""
@@ -879,6 +894,16 @@ class DanthermDevice(DanthermModbus):
 
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
+
+    async def set_disable_bypass(self, value: bool):
+        """Set automatic bypass."""
+
+        # If value is True, set the maximum temperature to 0.0 to disable automatic bypass
+        if value:
+            await self.set_bypass_maximum_temperature(0.0)
+        else:
+            # If value is False, set the maximum temperature to a non-zero value (e.g., 24.0)
+            await self.set_bypass_maximum_temperature(24.0)
 
     async def async_get_humidity(self):
         """Get humidity."""
