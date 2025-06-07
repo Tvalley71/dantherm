@@ -1,4 +1,4 @@
-"""Damtherm Integration."""
+"""Dantherm Integration."""
 
 import logging
 
@@ -121,8 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await device.async_start()
-    except Exception as ex:
-        _LOGGER.error("Failed to start device: %s", ex)
+    except:  # noqa: E722
+        _LOGGER.exception("Failed to start device")
         return False
 
     async def _init_after_start(event=None) -> None:
