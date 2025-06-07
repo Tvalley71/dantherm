@@ -2,7 +2,6 @@
 
 import copy
 
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,7 +19,8 @@ class DanthermEntity(CoordinatorEntity):
         self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
         self._attr_should_poll = False
         self._attr_changed = False
-        self._attr_new_state = STATE_UNAVAILABLE
+        self._attr_available = True
+        self._attr_new_state = None
         self._attr_icon = description.icon
         self._attr_extra_state_attributes = None
         self._added_to_coordinator = False
@@ -64,10 +64,10 @@ class DanthermEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if super().available:
-            return True
-        self._attr_new_state = STATE_UNAVAILABLE
-        return False
+
+        if self._attr_available is False:
+            return False
+        return self.coordinator.last_update_success
 
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""
@@ -75,11 +75,11 @@ class DanthermEntity(CoordinatorEntity):
         states = self.coordinator.data.get(self.key, None)
         changed = False
 
-        if self._attr_new_state == STATE_UNAVAILABLE:
-            changed = True
-            self._attr_new_state = None
-
         if states:
+            if self._attr_available is False:
+                changed = True
+                self._attr_new_state = None
+                self._attr_available = True
             new_state = states.get("state", None)
             if new_state != self._attr_new_state:
                 changed = True
@@ -97,6 +97,9 @@ class DanthermEntity(CoordinatorEntity):
                 self._attr_extra_state_attributes = (
                     copy.deepcopy(new_attrs) if new_attrs is not None else None
                 )
+        elif self._attr_available:
+            changed = True
+            self._attr_available = False
 
         self._attr_changed = changed
 
