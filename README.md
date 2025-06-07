@@ -28,6 +28,12 @@ Known supported units:
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
+If you find it useful, consider supporting my work!
+
+<a href="https://www.buymeacoffee.com/tvalley71" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 45px;" >
+</a>
+
 ### Controls and sensors
 
 #### Buttons Entities
@@ -101,6 +107,7 @@ Known supported units:
 |------------------------|---------------------------------|
 | `away_mode`            | Away mode                       |
 | `boost_mode`           | Boost mode [3]                  |
+| `disable_bypass`       | Disable bypass [2]              |
 | `eco_mode`             | Eco mode [3]                    |
 | `fireplace_mode`       | Fireplace mode                  |
 | `home_mode`            | Home mode [3]                   |
