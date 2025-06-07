@@ -19,7 +19,7 @@ class DanthermEntity(CoordinatorEntity):
         self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
         self._attr_should_poll = False
         self._attr_changed = False
-        self._attr_available = True
+        self._attr_disabled = False
         self._attr_new_state = None
         self._attr_icon = description.icon
         self._attr_extra_state_attributes = None
@@ -65,7 +65,7 @@ class DanthermEntity(CoordinatorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
 
-        if self._attr_available is False:
+        if self._attr_disabled:
             return False
         return self.coordinator.last_update_success
 
@@ -76,17 +76,18 @@ class DanthermEntity(CoordinatorEntity):
         changed = False
 
         if states:
-            if self._attr_available is False:
-                changed = True
+            if self._attr_disabled:
                 self._attr_new_state = None
-                self._attr_available = True
+
             new_state = states.get("state", None)
             if new_state != self._attr_new_state:
                 changed = True
+                if self.coordinator.last_update_success:
+                    self._attr_disabled = False
                 self._attr_new_state = new_state
 
             new_icon = states.get("icon", None)
-            if new_icon != self._attr_icon:
+            if new_icon and new_icon != self._attr_icon:
                 changed = True
                 self._attr_icon = new_icon
 
@@ -97,9 +98,9 @@ class DanthermEntity(CoordinatorEntity):
                 self._attr_extra_state_attributes = (
                     copy.deepcopy(new_attrs) if new_attrs is not None else None
                 )
-        elif self._attr_available:
+        elif not self._attr_disabled:
             changed = True
-            self._attr_available = False
+            self._attr_disabled = True
 
         self._attr_changed = changed
 
