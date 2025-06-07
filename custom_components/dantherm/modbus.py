@@ -62,12 +62,12 @@ class DanthermModbus:
 
     def __init__(
         self,
-        name,
-        host,
-        port,
-        unit_id,
+        name: str,
+        host: str,
+        port: int,
+        unit_id: int,
     ) -> None:
-        """Init modbus."""
+        """Initialize Modbus client."""
         self._host = host
         self._port = port
         self._unit_id = int(unit_id)
@@ -77,6 +77,21 @@ class DanthermModbus:
         self._attr_available = False
         self._read_errors = 0
         self.coordinator = None
+
+    async def ensure_connected(self) -> bool:
+        """Ensure Modbus client is connected."""
+        if self._client is None:
+            self._client = modbus.AsyncModbusTcpClient(
+                host=self._host, port=self._port, name="dantherm-reconnect", timeout=10
+            )
+        if not self._client.connected:
+            _LOGGER.debug("Modbus client not connected, attempting reconnect")
+            if not await self._client.connect():
+                self._attr_available = False
+                _LOGGER.warning("Modbus client reconnect failed")
+                return False
+        self._attr_available = True
+        return True
 
     async def connect_and_verify(self):
         """Connect to Modbus and verify connection with retries."""
@@ -102,7 +117,7 @@ class DanthermModbus:
         raise ValueError("Modbus client failed to respond")
 
     async def disconnect_and_close(self):
-        """Disconnect from Modbus and close connnection."""
+        """Disconnect from Modbus and close connection."""
 
         if self._client is None:
             _LOGGER.debug("Modbus client is already closed")
@@ -120,33 +135,38 @@ class DanthermModbus:
         self,
         description: EntityDescription | None = None,
         address: int | None = None,
-        count=1,
+        count: int = 1,
         precision: int | None = None,
-        scale=1,
+        scale: int = 1,
     ):
         """Read modbus holding registers."""
+        if not await self.ensure_connected():
+            _LOGGER.debug("Cannot read, Modbus client unavailable")
+            return None
 
         result = None
         if description:
             if address is None:
                 address = description.data_address
-            if description.data_class == DataClass.Int32:
-                result = await self._read_holding_int32(address)
-            elif description.data_class == DataClass.UInt32:
-                result = await self._read_holding_uint32(address)
-            elif description.data_class == DataClass.UInt64:
-                result = await self._read_holding_uint64(address)
-            elif description.data_class == DataClass.Float32:
-                if not precision:
-                    precision = description.data_precision
-                result = await self._read_holding_float32(address, precision)
+            match description.data_class:
+                case DataClass.Int32:
+                    result = await self._read_holding_int32(address)
+                case DataClass.UInt32:
+                    result = await self._read_holding_uint32(address)
+                case DataClass.UInt64:
+                    result = await self._read_holding_uint64(address)
+                case DataClass.Float32:
+                    if precision is None:
+                        precision = description.data_precision
+                    result = await self._read_holding_float32(address, precision)
         elif address:
-            if count == 1:
-                result = await self._read_holding_uint16(address)
-            elif count == 2:
-                result = await self._read_holding_uint32(address)
-            elif count == 4:
-                result = await self._read_holding_uint64(address)
+            match count:
+                case 1:
+                    result = await self._read_holding_uint16(address)
+                case 2:
+                    result = await self._read_holding_uint32(address)
+                case 4:
+                    result = await self._read_holding_uint64(address)
         if result is None:
             _LOGGER.debug("Reading holding register=%s failed", str(address))
             return None
@@ -159,58 +179,47 @@ class DanthermModbus:
         description: EntityDescription | None = None,
         address: int | None = None,
         value: int = 0,
-        scale=1,
+        scale: int = 1,
     ):
         """Write modbus holding registers."""
-
         value *= scale
         if description:
             if not address:
-                address = description.data_setaddress
-            if not address:
-                address = description.data_address
-            data_class = description.data_setclass
-            if not data_class:
-                data_class = description.data_class
-            if data_class == DataClass.UInt32:
-                await self._write_holding_uint32(address, value)
-            elif data_class == DataClass.Float32:
-                await self._write_holding_float32(address, value)
+                address = description.data_setaddress or description.data_address
+            data_class = description.data_setclass or description.data_class
+            match data_class:
+                case DataClass.UInt32:
+                    await self._write_holding_uint32(address, value)
+                case DataClass.Float32:
+                    await self._write_holding_float32(address, value)
         else:
             self.coordinator.enqueue_backend(
                 self.__write_holding_registers, address, value
             )
 
     async def __read_holding_registers_with_retry(
-        self, address, count, retries=3, initial_delay=0.5
+        self, address: int, count: int, retries: int = 3, initial_delay: float = 0.5
     ):
         """Read holding registers with retry using exponential backoff."""
         delay = initial_delay
-        for _attempt in range(retries):
+        for _ in range(retries):
             result = await self.__read_holding_registers(address, count)
             if result is not None:
                 return result
-            if (
-                self._attr_available is False
-            ):  # skip further retries until we are available
+            if self._attr_available is False:
                 return None
             await asyncio.sleep(delay)
             delay *= 2
         _LOGGER.error("Failed to read holding registers for address %s", address)
         return None
 
-    async def __read_holding_registers(self, address, count):
+    async def __read_holding_registers(self, address: int, count: int):
         """Read holding registers."""
+        if not await self.ensure_connected():
+            return None
         try:
-            if not self._client.connected:
-                if self._read_errors > 5:
-                    self._attr_available = False
-                    _LOGGER.debug("Modbus client is not connected, reconnecting")
-                    if not await self._client.connect():
-                        self._read_errors += 1
-                return None
             response = await self._client.read_holding_registers(address, count=count)
-            if response.isError() is False:
+            if not response.isError():
                 self._read_errors = 0
                 return response.registers
             _LOGGER.error("Read holding registers failed: %s", response)
@@ -219,9 +228,9 @@ class DanthermModbus:
         self._read_errors += 1
         return None
 
-    async def __write_holding_registers(self, address, values):
+    async def __write_holding_registers(self, address: int, values):
         """Write holding registers."""
-        if self._attr_available is False:
+        if not await self.ensure_connected():
             _LOGGER.debug("Modbus client is not available, cannot write")
             return
         try:
@@ -229,6 +238,7 @@ class DanthermModbus:
             _LOGGER.debug("Written %s to register address %d", values, address)
         except ModbusException as err:
             _LOGGER.warning("Write holding registers failed: %s", err)
+            self._attr_available = False
 
     async def _read_holding_uint16(self, address):
         result = await self._read_holding_uint32(address)
