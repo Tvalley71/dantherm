@@ -244,8 +244,8 @@ elements:
       action: none
   - type: conditional
     conditions:
-      - entity: switch.dantherm_summer_mode
-        state: 'off'
+      - entity: sensor.dantherm_operation_mode
+        state_not: 6
     elements:
       - type: image
         entity: cover.dantherm_bypass_damper
@@ -306,8 +306,8 @@ elements:
               left: 78%
   - type: conditional
     conditions:
-      - entity: switch.dantherm_summer_mode
-        state: 'on'
+      - entity: sensor.dantherm_operation_mode
+        state: 6
     elements:
       - type: image
         image: /local/dantherm8.png
