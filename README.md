@@ -214,7 +214,7 @@ Clicking on any displayed entity allows you to adjust its state or explore detai
 
 <summary>The details for the above picture-elements card 👈 Click to open
     
-_(Yaml updated for better scaling of images, 2025-5-19)_</summary>
+_(YAML updated for better image scaling on 2025-5-19, adjusted state image behavior on 2025-6-9)_</summary>
 
 ####
 
@@ -251,9 +251,9 @@ elements:
         entity: cover.dantherm_bypass_damper
         state_image:
           closed: /local/dantherm2.png
-          closing: /local/dantherm3.png
+          closing: /local/dantherm2.png
           open: /local/dantherm3.png
-          opening: /local/dantherm2.png
+          opening: /local/dantherm3.png
         style:
           left: 63.3%
           top: 75%
