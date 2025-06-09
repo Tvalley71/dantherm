@@ -291,6 +291,13 @@ class BypassDamperState(int):
     Closed = 0
 
 
+class ABSwitchPosition(int):
+    """Dantherm A/B switch position class."""
+
+    A = 4294967296
+    B = 1
+
+
 @dataclass
 class DanthermEntityDescription(EntityDescription):
     """Dantherm Base Entity Description."""

@@ -53,6 +53,7 @@ from .device_map import (
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    ABSwitchPosition,
     ActiveUnitMode,
     BypassDamperState,
     ComponentClass,
@@ -60,6 +61,7 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
+    MODBUS_REGISTER_AB_SWITCH_POSITION,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_ALARM,
@@ -129,6 +131,7 @@ class DanthermDevice(DanthermModbus):
         self._device_type = 0
         self._device_fw_version = 0
         self._device_serial_number = 0
+        self._device_ab_switch_position = None
         self._current_unit_mode = None
         self._active_unit_mode = None
         self._fan_level = None
@@ -256,6 +259,19 @@ class DanthermDevice(DanthermModbus):
             MODBUS_REGISTER_SERIAL_NUMBER
         )
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
+
+        self._device_ab_switch_position = await self._read_holding_uint64(
+            MODBUS_REGISTER_AB_SWITCH_POSITION
+        )
+        _LOGGER.debug(
+            "A/B switch position = %a (%s)",
+            self._device_ab_switch_position,
+            "A"
+            if self._device_ab_switch_position == ABSwitchPosition.A
+            else "B"
+            if self._device_ab_switch_position == ABSwitchPosition.B
+            else "Unknown",
+        )
 
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
             await self._read_hac_controller()
@@ -1329,10 +1345,17 @@ class DanthermDevice(DanthermModbus):
     def get_device_type(self) -> str:
         """Device type."""
 
-        result = DEVICE_TYPES.get(self._device_type, None)
-        if result is None:
-            result = f"UNKNOWN {self._device_type}"
-        return result
+        device_type = DEVICE_TYPES.get(self._device_type, None)
+        if device_type is None:
+            device_type = f"UNKNOWN {self._device_type}"
+        device_mode = None
+        if self._device_ab_switch_position == ABSwitchPosition.A:
+            device_mode = "Mode A"
+        elif self._device_ab_switch_position == ABSwitchPosition.B:
+            device_mode = "Mode B"
+        if device_mode is None:
+            return device_type
+        return f"{device_type} ({device_mode})"
 
     @property
     def get_device_fw_version(self) -> str:

@@ -11,6 +11,7 @@ from homeassistant.components.modbus import modbus
 from homeassistant.helpers.entity import EntityDescription
 
 # Modbus Register Constants
+MODBUS_REGISTER_AB_SWITCH_POSITION = 84
 MODBUS_REGISTER_ACTIVE_MODE = 168
 MODBUS_REGISTER_AIR_QUALITY = 430
 MODBUS_REGISTER_ALARM = 516
