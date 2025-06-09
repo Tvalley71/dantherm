@@ -251,7 +251,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         ):
             return None
 
-        if description.data_getinternal:
+        if description.data_getnotapplicable and getattr(
+            self.hub, f"get_{description.data_getnotapplicable}_not_applicable", False
+        ):
+            state = None
+        elif description.data_getinternal:
             if hasattr(self.hub, f"async_get_{description.data_getinternal}"):
                 state = await getattr(
                     self.hub, f"async_get_{description.data_getinternal}"
@@ -280,9 +284,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         elif hasattr(self.hub, f"async_get_{description.key}_attrs"):
             attrs = getattr(self.hub, f"async_get_{description.key}_attrs")
 
-        if state is not None:
-            return {"state": state, "icon": icon, "attrs": attrs}
-        return None
+        return {"state": state, "icon": icon, "attrs": attrs}
 
     async def _async_set_entity_state(self, entity: Entity, state):
         """Set entity state."""

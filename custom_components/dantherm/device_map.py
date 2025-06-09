@@ -318,6 +318,7 @@ class DanthermEntityDescription(EntityDescription):
     data_exclude_if_below: int | float | None = None
 
     data_getavailable: str | None = None
+    data_getnotapplicable: str | None = None
 
     component_class: ComponentClass | None = None
 
@@ -638,6 +639,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
         data_getinternal=ATTR_EXHAUST_TEMPERATURE,
+        data_getnotapplicable=ATTR_EXHAUST_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -652,6 +654,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
         data_getinternal=ATTR_SUPPLY_TEMPERATURE,
+        data_getnotapplicable=ATTR_SUPPLY_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
