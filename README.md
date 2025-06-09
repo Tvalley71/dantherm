@@ -18,7 +18,7 @@ Known supported units:
 - HCV300 ALU
 - HCV700 ALU
 - HCV400 P2
-- HCV460 P2
+- HCV460 P2/E1
 - RCV320 P1/P2
 - HCH5 MKII
 - RCC220 P2
@@ -27,8 +27,6 @@ Known supported units:
 > The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
-
-If you find it useful, consider supporting my work!
 
 <a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
