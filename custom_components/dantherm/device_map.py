@@ -662,6 +662,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_OUTDOOR_TEMPERATURE,
         data_getinternal=ATTR_OUTDOOR_TEMPERATURE,
+        data_getnotapplicable=ATTR_OUTDOOR_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

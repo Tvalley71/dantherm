@@ -943,8 +943,9 @@ class DanthermDevice(DanthermModbus):
     def get_exhaust_temperature_not_applicable(self) -> bool:
         """Check if exhaust temperature is not applicable."""
         return (
-            self._bypass_damper in (BypassDamperState.Opening, BypassDamperState.Opened)
-        ) and self._device_ab_switch_position == ABSwitchPosition.A
+            self._bypass_damper != BypassDamperState.Closed
+            and self._device_ab_switch_position == ABSwitchPosition.A
+        )
 
     async def async_get_exhaust_temperature(self):
         """Get exhaust temperature."""
@@ -972,8 +973,9 @@ class DanthermDevice(DanthermModbus):
     def get_supply_temperature_not_applicable(self) -> bool:
         """Check if supply temperature is not applicable."""
         return (
-            self._bypass_damper in (BypassDamperState.Opening, BypassDamperState.Opened)
-        ) and self._device_ab_switch_position == ABSwitchPosition.B
+            self._bypass_damper != BypassDamperState.Closed
+            and self._device_ab_switch_position == ABSwitchPosition.B
+        ) or self._current_unit_mode == CurrentUnitMode.Summer
 
     async def async_get_supply_temperature(self):
         """Get supply temperature."""
@@ -985,6 +987,11 @@ class DanthermDevice(DanthermModbus):
         if not self._sensor_filtering:
             return result
         return self._filter_sensor("supply", result)
+
+    @property
+    def get_outdoor_temperature_not_applicable(self) -> bool:
+        """Check if outdoor temperature is not applicable."""
+        return self._current_unit_mode == CurrentUnitMode.Summer
 
     async def async_get_outdoor_temperature(self):
         """Get outdoor temperature."""
