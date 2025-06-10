@@ -61,7 +61,12 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
-    MODBUS_REGISTER_AB_SWITCH_POSITION,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_1,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_2,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_3,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_4,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_ALARM,
@@ -260,18 +265,7 @@ class DanthermDevice(DanthermModbus):
         )
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
-        self._device_ab_switch_position = await self._read_holding_uint64(
-            MODBUS_REGISTER_AB_SWITCH_POSITION
-        )
-        _LOGGER.debug(
-            "A/B switch position = %a (%s)",
-            self._device_ab_switch_position,
-            "A"
-            if self._device_ab_switch_position == ABSwitchPosition.A
-            else "B"
-            if self._device_ab_switch_position == ABSwitchPosition.B
-            else "Unknown",
-        )
+        self._device_ab_switch_position = await self.get_device_ab_switch_position()
 
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
             await self._read_hac_controller()
@@ -1390,6 +1384,55 @@ class DanthermDevice(DanthermModbus):
     def get_device_serial_number(self) -> int:
         """Device serial number."""
         return self._device_serial_number
+
+    async def get_device_ab_switch_position(self) -> ABSwitchPosition | None:
+        """Get device A/B switch position."""
+
+        HALLeft = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
+        )
+        _LOGGER.debug("HALLeft = %s", HALLeft)
+        HALLeftLow = await self._read_holding_uint16(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_1
+        )
+        _LOGGER.debug("HALLeftLow = %s", HALLeftLow)
+        HALLeftHigh = await self._read_holding_uint16(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_2
+        )
+        _LOGGER.debug("HALLeftHigh = %s", HALLeftHigh)
+        HALRight = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
+        )
+        _LOGGER.debug("HALRight = %s", HALRight)
+        HALRightLow = await self._read_holding_uint16(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_3
+        )
+        _LOGGER.debug("HALRightLow = %s", HALRightLow)
+        HALRightHigh = await self._read_holding_uint16(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_4
+        )
+        _LOGGER.debug("HALRightHigh = %s", HALRightHigh)
+
+        if (
+            HALRightLow == 1
+            and HALRightHigh == 0
+            and HALLeftLow == 0
+            and HALLeftHigh == 0
+        ):
+            self._device_ab_switch_position = ABSwitchPosition.A
+        elif (
+            HALRightLow == 1
+            and HALRightHigh == 0
+            and HALLeftLow == 0
+            and HALLeftHigh == 0
+        ):
+            self._device_ab_switch_position = ABSwitchPosition.B
+        else:
+            self._device_ab_switch_position = ABSwitchPosition.Unknown
+        _LOGGER.debug(
+            "Device A/B switch position = %s", self._device_ab_switch_position.name
+        )
+        return self._device_ab_switch_position
 
     async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
         """Find device_id from entity_id."""

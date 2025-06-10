@@ -1,6 +1,7 @@
 """The device mapping."""
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
@@ -291,11 +292,12 @@ class BypassDamperState(int):
     Closed = 0
 
 
-class ABSwitchPosition(int):
+class ABSwitchPosition(Enum):
     """Dantherm A/B switch position class."""
 
-    A = 4294967296
-    B = 1
+    Unknown = 0
+    A = 1
+    B = 2
 
 
 @dataclass
