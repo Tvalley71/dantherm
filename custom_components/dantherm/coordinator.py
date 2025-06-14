@@ -246,13 +246,17 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         """Get entity data from description, state, icon and attributes."""
 
         state = None
-        if description.data_getavailable and not getattr(
-            self.hub, f"get_{description.data_getavailable}", True
-        ):
-            return None
+        if description.data_getavailable:
+            if not getattr(self.hub, f"get_{description.data_getavailable}", True):
+                return None
+            if not getattr(
+                self.hub, f"get_{description.data_getavailable}_available", True
+            ):
+                return None
 
-        if description.data_getnotapplicable and getattr(
-            self.hub, f"get_{description.data_getnotapplicable}_not_applicable", False
+        if description.data_getunknown and (
+            getattr(self.hub, f"get_{description.data_getunknown}", False)
+            or getattr(self.hub, f"get_{description.data_getunknown}_unknown", False)
         ):
             state = None
         elif description.data_getinternal:
