@@ -264,11 +264,11 @@
       "fields": {
         "operation_selection": {
           "name": "Operation Selection",
-          "description": "Select the desired operation mode."
+          "description": "Select the desired operation mode. Standby will be set back to manual level 3 after about 4 hours."
         },
         "fan_level_selection": {
           "name": "Fan Selection",
-          "description": "Select the desired fan level."
+          "description": "Select the desired fan level. Fan level 0 and 4 will be set back to level 3 after about 4 hours."
         },
         "away_mode": {
           "name": "Away Mode",
@@ -282,9 +282,13 @@
           "name": "Fireplace Mode",
           "description": "Turn fireplace mode on or off. The fireplace mode will be on for a limited time period."
         },
+        "disable_bypass": {
+          "name": "Disable Bypass",
+          "description": "Disable the bypass damper."
+        },
         "manual_bypass_mode": {
           "name": "Manual Bypass Mode",
-          "description": "Turn manual bypass mode on or off."
+          "description": "Turn manual bypass mode on or off. Manual bypass mode will be limited to the manual bypass duration."
         }
       }
     },
