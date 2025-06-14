@@ -319,6 +319,8 @@ class DanthermEntityDescription(EntityDescription):
     data_exclude_if_above: int | float | None = None
     data_exclude_if_below: int | float | None = None
 
+    firmware_exclude_if_below: float | None = None
+
     data_getavailable: str | None = None
     data_getunknown: str | None = None
 
@@ -450,6 +452,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
+        firmware_exclude_if_below=2.70,
         native_max_value=15,
         native_min_value=12,
         native_step=0.1,
@@ -467,6 +470,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+        firmware_exclude_if_below=2.70,
         native_max_value=27,
         native_min_value=21,
         native_step=0.1,
@@ -483,6 +487,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_MANUAL_BYPASS_DURATION,
         data_getinternal=ATTR_MANUAL_BYPASS_DURATION,
+        firmware_exclude_if_below=2.70,
         native_max_value=480,
         native_min_value=60,
         native_step=15,

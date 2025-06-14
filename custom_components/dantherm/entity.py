@@ -57,7 +57,7 @@ class DanthermEntity(CoordinatorEntity):
             "name": self._device.get_device_name,
             "manufacturer": DEFAULT_NAME,
             "model": self._device.get_device_type,
-            "sw_version": self._device.get_device_fw_version,
+            "sw_version": f"({self._device.get_device_fw_version})",
             "serial_number": self._device.get_device_serial_number,
         }
 

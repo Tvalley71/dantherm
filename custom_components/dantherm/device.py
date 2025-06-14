@@ -338,9 +338,20 @@ class DanthermDevice(DanthermModbus):
                         return True
             return False
 
+        async def exclude_from_firmware_version(
+            description: DanthermEntityDescription,
+        ) -> bool:
+            """Check if entity must be excluded based on firmware version."""
+            if description.firmware_exclude_if_below is not None:
+                if self.get_device_fw_version < description.firmware_exclude_if_below:
+                    return True
+            return False
+
         install = True
-        if exclude_from_component_class(description) or await exclude_from_entity_state(
-            description
+        if (
+            exclude_from_component_class(description)
+            or await exclude_from_entity_state(description)
+            or await exclude_from_firmware_version(description)
         ):
             install = False
 
@@ -1389,7 +1400,7 @@ class DanthermDevice(DanthermModbus):
 
         major = (self._device_fw_version >> 8) & 0xFF
         minor = self._device_fw_version & 0xFF
-        return f"({major}.{minor:02})"
+        return float(f"{major}.{minor:02}")
 
     @property
     def get_device_serial_number(self) -> int:
