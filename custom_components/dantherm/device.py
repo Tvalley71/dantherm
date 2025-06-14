@@ -855,10 +855,30 @@ class DanthermDevice(DanthermModbus):
     async def set_bypass_damper(self, feature: CoverEntityFeature = None):
         """Set bypass damper."""
 
-        if self.get_active_unit_mode & 0x80 == 0x80:
-            await self.set_active_unit_mode(0x8080)
-        else:
-            await self.set_active_unit_mode(0x80)
+        async def toggle_bypass_damper():
+            """Toggle the bypass damper state."""
+            if (
+                self.get_active_unit_mode & ActiveUnitMode.ManualBypass
+                == ActiveUnitMode.ManualBypass
+            ):
+                await self.set_active_unit_mode(ActiveUnitMode.DeselectManualBypass)
+            else:
+                await self.set_active_unit_mode(ActiveUnitMode.SelectManualBypass)
+
+        if feature is CoverEntityFeature.OPEN:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Opened,
+                BypassDamperState.Opening,
+            ):
+                await toggle_bypass_damper()
+        elif feature is CoverEntityFeature.CLOSE:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Closed,
+                BypassDamperState.Closing,
+            ):
+                await toggle_bypass_damper()
 
     async def set_night_mode_start_time(self, value):
         """Set night mode start time."""
@@ -944,7 +964,7 @@ class DanthermDevice(DanthermModbus):
     def get_exhaust_temperature_unknown(self) -> bool:
         """Check if exhaust temperature is not applicable."""
 
-        if self._bypass_damper in (
+        if self.get_bypass_available and self._bypass_damper in (
             BypassDamperState.InProgress,
             BypassDamperState.Opening,
             BypassDamperState.Opened,
@@ -981,7 +1001,7 @@ class DanthermDevice(DanthermModbus):
 
         if self._current_unit_mode == CurrentUnitMode.Summer:
             return True
-        if self._bypass_damper in (
+        if self.get_bypass_available and self._bypass_damper in (
             BypassDamperState.InProgress,
             BypassDamperState.Opening,
             BypassDamperState.Opened,
