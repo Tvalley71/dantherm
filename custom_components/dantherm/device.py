@@ -61,10 +61,6 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
-    MODBUS_REGISTER_AB_SWITCH_POSITION_1,
-    MODBUS_REGISTER_AB_SWITCH_POSITION_2,
-    MODBUS_REGISTER_AB_SWITCH_POSITION_3,
-    MODBUS_REGISTER_AB_SWITCH_POSITION_4,
     MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT,
     MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT,
     MODBUS_REGISTER_ACTIVE_MODE,
@@ -934,12 +930,17 @@ class DanthermDevice(DanthermModbus):
         return self._filter_sensor("air_quality", result)
 
     @property
-    def get_exhaust_temperature_not_applicable(self) -> bool:
+    def get_exhaust_temperature_unknown(self) -> bool:
         """Check if exhaust temperature is not applicable."""
-        return (
-            self._bypass_damper != BypassDamperState.Closed
-            and self._device_ab_switch_position == ABSwitchPosition.A
-        )
+
+        if self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
 
     async def async_get_exhaust_temperature(self):
         """Get exhaust temperature."""
@@ -964,12 +965,19 @@ class DanthermDevice(DanthermModbus):
         return self._filter_sensor("extract", result)
 
     @property
-    def get_supply_temperature_not_applicable(self) -> bool:
+    def get_supply_temperature_unknown(self) -> bool:
         """Check if supply temperature is not applicable."""
-        return (
-            self._bypass_damper != BypassDamperState.Closed
-            and self._device_ab_switch_position == ABSwitchPosition.B
-        ) or self._current_unit_mode == CurrentUnitMode.Summer
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+        if self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
 
     async def async_get_supply_temperature(self):
         """Get supply temperature."""
@@ -983,9 +991,12 @@ class DanthermDevice(DanthermModbus):
         return self._filter_sensor("supply", result)
 
     @property
-    def get_outdoor_temperature_not_applicable(self) -> bool:
+    def get_outdoor_temperature_unknown(self) -> bool:
         """Check if outdoor temperature is not applicable."""
-        return self._current_unit_mode == CurrentUnitMode.Summer
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+        return False
 
     async def async_get_outdoor_temperature(self):
         """Get outdoor temperature."""
@@ -1392,40 +1403,15 @@ class DanthermDevice(DanthermModbus):
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
         )
         _LOGGER.debug("HALLeft = %s", HALLeft)
-        HALLeftLow = await self._read_holding_uint16(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_1
-        )
-        _LOGGER.debug("HALLeftLow = %s", HALLeftLow)
-        HALLeftHigh = await self._read_holding_uint16(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_2
-        )
-        _LOGGER.debug("HALLeftHigh = %s", HALLeftHigh)
+
         HALRight = await self._read_holding_uint32(
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
         )
         _LOGGER.debug("HALRight = %s", HALRight)
-        HALRightLow = await self._read_holding_uint16(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_3
-        )
-        _LOGGER.debug("HALRightLow = %s", HALRightLow)
-        HALRightHigh = await self._read_holding_uint16(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_4
-        )
-        _LOGGER.debug("HALRightHigh = %s", HALRightHigh)
 
-        if (
-            HALRightLow == 1
-            and HALRightHigh == 0
-            and HALLeftLow == 0
-            and HALLeftHigh == 0
-        ):
+        if HALRight == 1 and HALLeft == 0:
             self._device_ab_switch_position = ABSwitchPosition.A
-        elif (
-            HALRightLow == 1
-            and HALRightHigh == 0
-            and HALLeftLow == 0
-            and HALLeftHigh == 0
-        ):
+        elif HALRight == 0 and HALLeft == 1:
             self._device_ab_switch_position = ABSwitchPosition.B
         else:
             self._device_ab_switch_position = ABSwitchPosition.Unknown
