@@ -138,8 +138,8 @@
           "4": "Servoflow",
           "5": "Afwezig",
           "6": "Zomer",
-          "7": "DI override",
-          "8": "Hygrostat override",
+          "7": "DI-overschrijving",
+          "8": "Hygrostaat-overschrijving",
           "9": "Open Haard",
           "10": "Installer",
           "11": "Fail Safe 1",
@@ -264,11 +264,11 @@
       "fields": {
         "operation_selection": {
           "name": "Bedieningsselectie",
-          "description": "Selecteer de gewenste bedieningsmodus."
+          "description": "Selecteer de gewenste bedieningsmodus. De modus Standby wordt na ongeveer 4 uur teruggezet naar het handmatige niveau 3."
         },
         "fan_level_selection": {
-          "name": "Ventilator Selectie",
-          "description": "Selecteer het gewenste ventilatorniveau."
+          "name": "Ventilator selectie",
+          "description": "Selecteer het gewenste ventilatorniveau. Ventilatieniveau 0 en ventilatieniveau 4 worden na ongeveer 4 uur teruggezet naar niveau 3."
         },
         "away_mode": {
           "name": "Afwezigheidsmodus",
@@ -282,9 +282,13 @@
           "name": "Open Haardmodus",
           "description": "Schakel de open haardmodus in of uit. De open haardmodus is voor een beperkte tijd ingeschakeld."
         },
+        "disable_bypass": {
+          "name": "Bypass uitschakelen",
+          "description": "Schakel de bypass-klep uit."
+        },
         "manual_bypass_mode": {
           "name": "Manuele Bypassmodus",
-          "description": "Manuele bypassmodus in- of uitschakelen."
+          "description": "Manuele bypassmodus in- of uitschakelen. De manuele bypassmodus is beperkt tot de ingestelde handmatige bypassduur."
         }
       }
     },
@@ -314,11 +318,11 @@
         },
         "night_mode_start_time": {
           "name": "Starttijd nachtmodus",
-          "description": "Stel de starttijd voor de nachtmodus in (UU:MM)."
+          "description": "Stel de starttijd voor de nachtmodus in (HH:MM)."
         },
         "night_mode_end_time": {
           "name": "Eindtijd nachtmodus",
-          "description": "Stel de eindtijd voor de nachtmodus in (UU:MM)."
+          "description": "Stel de eindtijd voor de nachtmodus in (HH:MM)."
         },
         "week_program_selection": {
           "name": "Weekprogramma selectie",
@@ -337,7 +341,7 @@
   },
   "exceptions": {
     "invalid_timeformat": {
-      "message": "Ongeldig tijdformaat. Gebruik UU:MM."
+      "message": "Ongeldig tijdformaat. Gebruik HH:MM."
     },
     "invalid_filter_lifetime": {
       "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
