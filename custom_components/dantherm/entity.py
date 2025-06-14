@@ -72,41 +72,46 @@ class DanthermEntity(CoordinatorEntity):
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""
 
+        self._attr_changed = False
         if not self.coordinator.last_update_success:
-            # Make sure entity is not available if last update failed
+            # Make sure thr entity is not available if last update failed
             self._attr_available = False
+        elif self.platform.domain == "button":
+            # If the platform is button, we always want to make it available
+            # when the coordinator updates, when the last update was a success.
+            if not self._attr_available:
+                self._attr_changed = True
+                self._attr_available = True
+                return
 
         states = self.coordinator.data.get(self.key, None)
-        changed = False
-
         if states:
             if not self._attr_available:
                 self._attr_new_state = None
+                if self.coordinator.last_update_success:
+                    self._attr_changed = True
+                    self._attr_available = True
 
             new_state = states.get("state", None)
             if new_state != self._attr_new_state:
-                changed = True
-                if self.coordinator.last_update_success:
-                    self._attr_available = True
+                self._attr_changed = True
                 self._attr_new_state = new_state
 
             new_icon = states.get("icon", None)
             if new_icon and new_icon != self._attr_icon:
-                changed = True
+                self._attr_changed = True
                 self._attr_icon = new_icon
 
             new_attrs = states.get("attrs", None)
             if new_attrs != self._attr_extra_state_attributes:
-                changed = True
+                self._attr_changed = True
                 # Making a deep-copy to avoid reference issues
                 self._attr_extra_state_attributes = (
                     copy.deepcopy(new_attrs) if new_attrs is not None else None
                 )
-        elif not self._attr_available:
-            changed = True
+        elif self._attr_available:
+            self._attr_changed = True
             self._attr_available = False
-
-        self._attr_changed = changed
 
     @callback
     def _handle_coordinator_update(self) -> None:
