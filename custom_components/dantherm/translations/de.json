@@ -264,11 +264,11 @@
       "fields": {
         "operation_selection": {
           "name": "Betriebsauswahl",
-          "description": "Wählen Sie den gewünschten Betriebsmodus aus."
+          "description": "Wählen Sie den gewünschten Betriebsmodus aus. Standby wird nach ca. 4 Stunden Zeitspanne auf den manuellen Modus Stufe 3 zurückgesetzt."
         },
         "fan_level_selection": {
           "name": "Lüfterauswahl",
-          "description": "Wählen Sie die gewünschte Lüfterstufe aus."
+          "description": "Wählen Sie die gewünschte Lüfterstufe aus. Lüfterstufe 0 und Lüfterstufe 4 werden nach ca. 4 Stunden auf Stufe 3 zurückgesetzt."
         },
         "away_mode": {
           "name": "Abwesenheitsmodus",
@@ -282,9 +282,13 @@
           "name": "Kaminmodus",
           "description": "Schalten Sie den Kaminmodus ein oder aus. Der Kaminmodus bleibt für einen begrenzten Zeitraum aktiviert."
         },
+        "disable_bypass": {
+          "name": "Bypass deaktivieren",
+          "description": "Deaktiviere die Bypass-Klappe."
+        },
         "manual_bypass_mode": {
           "name": "Manueller Bypass-Modus",
-          "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus."
+          "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus. Der manuelle Bypass wird auf die manuelle Bypass-Dauer begrenzt."
         }
       }
     },
@@ -337,7 +341,7 @@
   },
   "exceptions": {
     "invalid_timeformat": {
-      "message": "Ungültiges Zeitformat. Verwenden Sie SS:MM."
+      "message": "Ungültiges Zeitformat. Verwenden Sie HH:MM."
     },
     "invalid_filter_lifetime": {
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
