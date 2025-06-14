@@ -42,7 +42,7 @@
       "bypass_damper": { "name": "Bypass spjæld"}
     },
     "number": {
-      "filter_lifetime": { "name": "Filter livstid" },
+      "filter_lifetime": { "name": "Filterlevetid" },
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
       "manual_bypass_duration": { "name": "Manuel bypass varighed" },
@@ -58,7 +58,7 @@
           "automatic": "Automatik",
           "manual": "Manuel",
           "week_program": "Ugeprogram",
-          "away": "Rejse",
+          "away": "Rejsetilstand",
           "summer": "Sommer",
           "fireplace": "Brændeovn",
           "night": "Nat"
@@ -175,8 +175,8 @@
         "name": "Adaptiv tilstand",
         "state": {
           "none": "Ingen",
-          "automatic": "Automatisk",
-          "away": "Ude-tilstand",
+          "automatic": "Automatik",
+          "away": "Rejsetilstand",
           "boost": "Boost-tilstand",
           "eco": "Eco-tilstand",
           "home": "Hjemmetilstand",
@@ -185,10 +185,10 @@
           "level_3": "Niveau 3",
           "level_4": "Niveau 4",
           "manual": "Manuel",
-          "night": "Nattetilstand",
+          "night": "Nattilstand",
           "standby": "Standby",
           "summer": "Sommertilstand",
-          "week_program": "Ugeskema"
+          "week_program": "Ugeprogram"
         }
       },
       "fan_level": { "name": "Ventilatorniveau" },
@@ -219,8 +219,8 @@
       "disable_bypass": { "name": "Deaktiver bypass" }
     },
     "text": {
-      "night_mode_start_time": { "name": "Nattilstand start tid" },
-      "night_mode_end_time": { "name": "Nattilstand slut tid" }
+      "night_mode_start_time": { "name": "Starttidspunkt for nattilstand" },
+      "night_mode_end_time": { "name": "Sluttidspunkt for nattilstand" }
     }
   },
   "selector": {
@@ -264,11 +264,11 @@
       "fields": {
         "operation_selection": {
           "name": "Driftindstilling",
-          "description": "Vælg den ønskede drifttilstand."
+          "description": "Vælg den ønskede drifttilstand. Standby vil blive sat tilbage til niveau 3 i manuel tilstand efter cirka 4 timer."
           },
         "fan_level_selection": {
           "name": "Ventilatorindstilling",
-          "description": "Vælg det ønskede ventilatorniveau."
+          "description": "Vælg det ønskede ventilatorniveau. Ventilatorniveau 0 og 4 vil blive sat tilbage til niveau 3 efter cirka 4 timer."
         },
         "away_mode": {
           "name": "Rejsetilstand",
@@ -282,9 +282,13 @@
           "name": "Brændeovnstilstand",
           "description": "Slå brændeovnstilstand til eller fra. Brændeovnstilstand vil være til i en begrænset tidsperiode."
         },
+        "disable_bypass": {
+          "name": "Deaktiver bypass",
+          "description": "Deaktiver bypass spjældet."
+        },
         "manual_bypass_mode": {
           "name": "Manuel bypasstilstand",
-          "description": "Slå manuel bypasstilstand til eller fra."
+          "description": "Slå manuel bypasstilstand til eller fra. Manuel bypasstilstand vil være begrænset til den manuelle bypass-varighed."
         }
       }
     },
@@ -301,7 +305,7 @@
           "description": "Indstil den maksimale temperatur for bypass-drift."
         },
         "filter_lifetime": {
-          "name": "Filter levetid",
+          "name": "Filterlevetid",
           "description": "Indstil filterets levetid i dage."
         },
         "manual_bypass_duration": {
@@ -314,11 +318,11 @@
         },
         "night_mode_start_time": {
           "name": "Nattilstand starttid",
-          "description": "Indstil starttidspunktet for nattilstand (TT:MM)."
+          "description": "Indstil starttidspunktet for nattilstand (HH:MM)."
         },
         "night_mode_end_time": {
           "name": "Nattilstand sluttid",
-          "description": "Indstil sluttidspunktet for nattilstand (TT:MM)."
+          "description": "Indstil sluttidspunktet for nattilstand (HH:MM)."
         },
         "week_program_selection": {
           "name": "Ugeprogram",
@@ -337,10 +341,10 @@
   },
   "exceptions": {
     "invalid_timeformat": {
-      "message": "Ugyldigt tidsformat. Brug TT:MM."
+      "message": "Ugyldigt tidsformat. Brug HH:MM."
     },
     "invalid_filter_lifetime": {
-      "message": "Ugyldig filter levetid. Brug værdier mellem 0 og 360 dage."
+      "message": "Ugyldig filterlevetid. Brug værdier mellem 0 og 360 dage."
     },
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
