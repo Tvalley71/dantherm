@@ -320,7 +320,7 @@ class DanthermEntityDescription(EntityDescription):
     data_exclude_if_below: int | float | None = None
 
     data_getavailable: str | None = None
-    data_getnotapplicable: str | None = None
+    data_getunknown: str | None = None
 
     component_class: ComponentClass | None = None
 
@@ -641,7 +641,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
         data_getinternal=ATTR_EXHAUST_TEMPERATURE,
-        data_getnotapplicable=ATTR_EXHAUST_TEMPERATURE,
+        data_getunknown=ATTR_EXHAUST_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -656,7 +656,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
         data_getinternal=ATTR_SUPPLY_TEMPERATURE,
-        data_getnotapplicable=ATTR_SUPPLY_TEMPERATURE,
+        data_getunknown=ATTR_SUPPLY_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -664,7 +664,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_OUTDOOR_TEMPERATURE,
         data_getinternal=ATTR_OUTDOOR_TEMPERATURE,
-        data_getnotapplicable=ATTR_OUTDOOR_TEMPERATURE,
+        data_getunknown=ATTR_OUTDOOR_TEMPERATURE,
         native_unit_of_measurement="°C",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -818,8 +818,8 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         key=ATTR_DISABLE_BYPASS,
         data_setinternal=ATTR_DISABLE_BYPASS,
         data_getinternal=ATTR_DISABLE_BYPASS,
-        icon_on="mdi:lock",
-        icon_off="mdi:lock-off",
+        icon_on="mdi:repeat-off",
+        icon_off="mdi:repeat",
         component_class=ComponentClass.Bypass,
         entity_category=EntityCategory.CONFIG,
         device_class=SwitchDeviceClass.SWITCH,
