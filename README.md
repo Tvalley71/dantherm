@@ -37,7 +37,7 @@ Known supported units:
 | Entity            | Description       |
 |-------------------|-------------------|
 | `alarm_reset`     | Reset alarm       |
-| `filter_reset`    | Reset remain filter time |
+| `filter_reset`    | Reset filter      |
 
 #### Calendar Entity
 
@@ -86,10 +86,10 @@ Known supported units:
 | `fan_level`                   | Fan level                            |
 | `fan1_speed`                  | Fan 1 speed [2]                      |
 | `fan2_speed`                  | Fan 2 speed [2]                      |
-| `filter_remain`               | Remaining filter time                |
-| `filter_remain_level`         | Remaining filter time level [2]      |
+| `filter_remain`               | Filter remain                        |
+| `filter_remain_level`         | Filter remain level [2]              |
 | `humidity`                    | Humidity sensor [1]                  |
-| `adaptive_state`              | Adaptive state [4]                 |
+| `adaptive_state`              | Adaptive state [4]                   |
 | `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
 | `operation_mode`              | Operation mode                       |
 | `outdoor_temperature`         | Outdoor temperature sensor           |
@@ -109,7 +109,7 @@ Known supported units:
 | `home_mode`            | Home mode [3]                   |
 | `manual_bypass_mode`   | Manual bypass mode [1]          |
 | `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor spike filtering [2]      |
+| `sensor_filtering`     | Sensor filtering [2]      |
 | `summer_mode`          | Summer mode                     |
 
 #### Text Entities
