@@ -184,7 +184,7 @@
           "level_2": "Niveau 2",
           "level_3": "Niveau 3",
           "level_4": "Niveau 4",
-          "manuel": "Manuel",
+          "manual": "Manuel",
           "night": "Mode nuit",
           "standby": "Arrêt",
           "summer": "Mode été",
@@ -215,7 +215,8 @@
       "sensor_filtering": { "name": "Filtrage des capteurs" },
       "boost_mode": { "name": "Mode Boost" },
       "eco_mode": { "name": "Mode Eco" },
-      "home_mode": { "name": "Mode Maison" }
+      "home_mode": { "name": "Mode Maison" },
+      "disable_bypass": { "name": "Désactiver le bypass" }
     },
     "text": {
       "night_mode_start_time": { "name": "Heure de début du mode nuit" },
@@ -263,11 +264,11 @@
       "fields": {
         "operation_selection": {
           "name": "Sélection mode",
-          "description": "Sélectionnez le mode d'opération souhaité."
+          "description": "Sélectionnez le mode d'opération souhaité. Le mode Arrêt sera réinitialisé au niveau manuel 3 après environ 4 heures."
         },
         "fan_level_selection": {
           "name": "Vitesse ventilation",
-          "description": "Sélectionnez le niveau de ventilation souhaité."
+          "description": "Sélectionnez le niveau de ventilation souhaité. Les niveaux de ventilation 0 et 4 seront rétablis au niveau 3 après environ 4 heures."
         },
         "away_mode": {
           "name": "Mode absent",
@@ -281,9 +282,13 @@
           "name": "Mode cheminée",
           "description": "Activez ou désactivez le mode cheminée. Le mode cheminée restera activé pendant une période limitée."
         },
+        "disable_bypass": {
+          "name": "Désactiver le bypass",
+          "description": "Désactivez le clapet de bypass."
+        },
         "manual_bypass_mode": {
           "name": "Mode bypass manuel",
-          "description": "Activez ou désactivez le mode de contournement manuel."
+          "description": "Activez ou désactivez le mode de contournement manuel. Le contournement manuel sera limité à la durée de contournement manuelle."
         }
       }
     },

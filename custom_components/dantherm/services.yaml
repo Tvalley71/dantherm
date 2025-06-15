@@ -40,6 +40,10 @@ set_state:
       example: true
       selector:
         boolean:
+    disable_bypass:
+      example: true
+      selector:
+        boolean:
 set_configuration:
   target:
     device:

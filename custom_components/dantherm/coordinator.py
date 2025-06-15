@@ -91,6 +91,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read alarm
             await self.hub.async_get_alarm()
 
+            # Read bypass maximum temperature
+            await self.hub.async_get_bypass_maximum_temperature()
+
             # Update adaptive triggers
             await self.hub.async_update_adaptive_triggers()
 
@@ -243,13 +246,26 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         """Get entity data from description, state, icon and attributes."""
 
         state = None
-        if description.data_getinternal:
-            if hasattr(self.hub, f"get_{description.data_getinternal}"):
-                state = getattr(self.hub, f"get_{description.data_getinternal}")
-            else:
+        if description.data_getavailable:
+            if not getattr(self.hub, f"get_{description.data_getavailable}", True):
+                return None
+            if not getattr(
+                self.hub, f"get_{description.data_getavailable}_available", True
+            ):
+                return None
+
+        if description.data_getunknown and (
+            getattr(self.hub, f"get_{description.data_getunknown}", False)
+            or getattr(self.hub, f"get_{description.data_getunknown}_unknown", False)
+        ):
+            state = None
+        elif description.data_getinternal:
+            if hasattr(self.hub, f"async_get_{description.data_getinternal}"):
                 state = await getattr(
                     self.hub, f"async_get_{description.data_getinternal}"
                 )()
+            else:
+                state = getattr(self.hub, f"get_{description.data_getinternal}")
         elif description.data_address:
             state = await self.hub.read_holding_registers(description=description)
         else:
@@ -272,9 +288,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         elif hasattr(self.hub, f"async_get_{description.key}_attrs"):
             attrs = getattr(self.hub, f"async_get_{description.key}_attrs")
 
-        if state is not None:
-            return {"state": state, "icon": icon, "attrs": attrs}
-        return None
+        return {"state": state, "icon": icon, "attrs": attrs}
 
     async def _async_set_entity_state(self, entity: Entity, state):
         """Set entity state."""

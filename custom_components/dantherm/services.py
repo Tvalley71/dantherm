@@ -16,6 +16,7 @@ from .device_map import (
     ATTR_AWAY_MODE,
     ATTR_BYPASS_MAXIMUM_TEMPERATURE,
     ATTR_BYPASS_MINIMUM_TEMPERATURE,
+    ATTR_DISABLE_BYPASS,
     ATTR_FAN_LEVEL_SELECTION,
     ATTR_FILTER_LIFETIME,
     ATTR_FIREPLACE_MODE,
@@ -49,6 +50,7 @@ DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
         vol.Optional(ATTR_SUMMER_MODE): cv.boolean,
         vol.Optional(ATTR_FIREPLACE_MODE): cv.boolean,
         vol.Optional(ATTR_MANUAL_BYPASS_MODE): cv.boolean,
+        vol.Optional(ATTR_DISABLE_BYPASS): cv.boolean,
     }
 )
 
@@ -108,6 +110,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         async def apply_state(device, call):
             """Apply state."""
 
+            # Apply away mode, summer mode, operation selectio, fan level selection,
+            # fireplace mode, disable bypass and manual bypass mode
             if ATTR_AWAY_MODE in call.data:
                 away_mode = (
                     ActiveUnitMode.StartAway
@@ -150,6 +154,12 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
                     device.set_active_unit_mode, fireplace_mode
                 )
 
+            if ATTR_DISABLE_BYPASS in call.data:
+                disable_bypass = bool(render_template(call.data[ATTR_DISABLE_BYPASS]))
+                device.coordinator.enqueue_frontend(
+                    device.set_disable_bypass, disable_bypass
+                )
+
             if ATTR_MANUAL_BYPASS_MODE in call.data:
                 bypass_mode = (
                     ActiveUnitMode.SelectManualBypass
@@ -166,6 +176,11 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Set configuration for Dantherm devices."""
 
         async def apply_config(device, call):
+            """Apply configuration."""
+
+            # Apply bypass minimum and maximum temperature, filter lifetime,
+            # manual bypass duration, night mode, night mode start and end time,
+            # and week program selection
             if ATTR_BYPASS_MINIMUM_TEMPERATURE in call.data:
                 bypass_minimum_temperature = float(
                     render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE])

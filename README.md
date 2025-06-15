@@ -18,7 +18,7 @@ Known supported units:
 - HCV300 ALU
 - HCV700 ALU
 - HCV400 P2
-- HCV460 P2
+- HCV460 P2/E1
 - RCV320 P1/P2
 - HCH5 MKII
 - RCC220 P2
@@ -28,6 +28,8 @@ Known supported units:
 > ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
+<a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ### Controls and sensors
 
 #### Buttons Entities
@@ -35,7 +37,7 @@ Known supported units:
 | Entity            | Description       |
 |-------------------|-------------------|
 | `alarm_reset`     | Reset alarm       |
-| `filter_reset`    | Reset remain filter time |
+| `filter_reset`    | Reset filter      |
 
 #### Calendar Entity
 
@@ -84,10 +86,10 @@ Known supported units:
 | `fan_level`                   | Fan level                            |
 | `fan1_speed`                  | Fan 1 speed [2]                      |
 | `fan2_speed`                  | Fan 2 speed [2]                      |
-| `filter_remain`               | Remaining filter time                |
-| `filter_remain_level`         | Remaining filter time level [2]      |
+| `filter_remain`               | Filter remain                        |
+| `filter_remain_level`         | Filter remain level [2]              |
 | `humidity`                    | Humidity sensor [1]                  |
-| `adaptive_state`              | Adaptive state [4]                 |
+| `adaptive_state`              | Adaptive state [4]                   |
 | `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
 | `operation_mode`              | Operation mode                       |
 | `outdoor_temperature`         | Outdoor temperature sensor           |
@@ -101,12 +103,13 @@ Known supported units:
 |------------------------|---------------------------------|
 | `away_mode`            | Away mode                       |
 | `boost_mode`           | Boost mode [3]                  |
+| `disable_bypass`       | Disable bypass [2]              |
 | `eco_mode`             | Eco mode [3]                    |
 | `fireplace_mode`       | Fireplace mode                  |
 | `home_mode`            | Home mode [3]                   |
 | `manual_bypass_mode`   | Manual bypass mode [1]          |
 | `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor spike filtering [2]      |
+| `sensor_filtering`     | Sensor filtering [2]      |
 | `summer_mode`          | Summer mode                     |
 
 #### Text Entities

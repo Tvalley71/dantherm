@@ -53,6 +53,7 @@ from .device_map import (
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    ABSwitchPosition,
     ActiveUnitMode,
     BypassDamperState,
     ComponentClass,
@@ -60,6 +61,8 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
+    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT,
+    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_ALARM,
@@ -129,12 +132,14 @@ class DanthermDevice(DanthermModbus):
         self._device_type = 0
         self._device_fw_version = 0
         self._device_serial_number = 0
+        self._device_ab_switch_position = None
         self._current_unit_mode = None
         self._active_unit_mode = None
         self._fan_level = None
         self._alarm = None
         self._sensor_filtering = False
         self._bypass_damper = None
+        self._bypass_maximum_temperature = None
         self._filter_lifetime = None
         self._filter_remain = None
         self._filter_remain_level = None
@@ -256,6 +261,8 @@ class DanthermDevice(DanthermModbus):
         )
         _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
+        self._device_ab_switch_position = await self.get_device_ab_switch_position()
+
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
             await self._read_hac_controller()
         else:
@@ -331,9 +338,20 @@ class DanthermDevice(DanthermModbus):
                         return True
             return False
 
+        async def exclude_from_firmware_version(
+            description: DanthermEntityDescription,
+        ) -> bool:
+            """Check if entity must be excluded based on firmware version."""
+            if description.firmware_exclude_if_below is not None:
+                if self.get_device_fw_version < description.firmware_exclude_if_below:
+                    return True
+            return False
+
         install = True
-        if exclude_from_component_class(description) or await exclude_from_entity_state(
-            description
+        if (
+            exclude_from_component_class(description)
+            or await exclude_from_entity_state(description)
+            or await exclude_from_firmware_version(description)
         ):
             install = False
 
@@ -724,6 +742,11 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Night mode end = %s", result)
         return result
 
+    @property
+    def get_bypass_available(self) -> bool:
+        """Get bypass available."""
+        return self._bypass_maximum_temperature != 0.0
+
     async def async_get_bypass_minimum_temperature(self):
         """Get bypass minimum temperature."""
 
@@ -734,9 +757,13 @@ class DanthermDevice(DanthermModbus):
     async def async_get_bypass_maximum_temperature(self):
         """Get bypass maximum temperature."""
 
-        result = await self._read_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP, 1)
-        _LOGGER.debug("Bypass maximum temperature = %.1f", result)
-        return result
+        self._bypass_maximum_temperature = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MAX_TEMP, 1
+        )
+        _LOGGER.debug(
+            "Bypass maximum temperature = %.1f", self._bypass_maximum_temperature
+        )
+        return self._bypass_maximum_temperature
 
     async def async_get_manual_bypass_duration(self):
         """Get manual bypass duration."""
@@ -744,6 +771,11 @@ class DanthermDevice(DanthermModbus):
         result = await self._read_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION)
         _LOGGER.debug("Manual bypass duration = %s", result)
         return result
+
+    @property
+    def get_disable_bypass(self) -> bool:
+        """Get disable bypass."""
+        return self._bypass_maximum_temperature == 0.0
 
     async def set_filter_reset(self, value=None):
         """Reset filter."""
@@ -823,10 +855,30 @@ class DanthermDevice(DanthermModbus):
     async def set_bypass_damper(self, feature: CoverEntityFeature = None):
         """Set bypass damper."""
 
-        if self.get_active_unit_mode & 0x80 == 0x80:
-            await self.set_active_unit_mode(0x8080)
-        else:
-            await self.set_active_unit_mode(0x80)
+        async def toggle_bypass_damper():
+            """Toggle the bypass damper state."""
+            if (
+                self.get_active_unit_mode & ActiveUnitMode.ManualBypass
+                == ActiveUnitMode.ManualBypass
+            ):
+                await self.set_active_unit_mode(ActiveUnitMode.DeselectManualBypass)
+            else:
+                await self.set_active_unit_mode(ActiveUnitMode.SelectManualBypass)
+
+        if feature is CoverEntityFeature.OPEN:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Opened,
+                BypassDamperState.Opening,
+            ):
+                await toggle_bypass_damper()
+        elif feature is CoverEntityFeature.CLOSE:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Closed,
+                BypassDamperState.Closing,
+            ):
+                await toggle_bypass_damper()
 
     async def set_night_mode_start_time(self, value):
         """Set night mode start time."""
@@ -880,6 +932,16 @@ class DanthermDevice(DanthermModbus):
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
 
+    async def set_disable_bypass(self, value: bool):
+        """Set automatic bypass."""
+
+        # If value is True, set the maximum temperature to 0.0 to disable automatic bypass
+        if value:
+            await self.set_bypass_maximum_temperature(0.0)
+        else:
+            # If value is False, set the maximum temperature to a non-zero value (e.g., 24.0)
+            await self.set_bypass_maximum_temperature(24.0)
+
     async def async_get_humidity(self):
         """Get humidity."""
 
@@ -897,6 +959,19 @@ class DanthermDevice(DanthermModbus):
         if not self._sensor_filtering:
             return result
         return self._filter_sensor("air_quality", result)
+
+    @property
+    def get_exhaust_temperature_unknown(self) -> bool:
+        """Check if exhaust temperature is not applicable."""
+
+        if self.get_bypass_available and self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
 
     async def async_get_exhaust_temperature(self):
         """Get exhaust temperature."""
@@ -920,6 +995,21 @@ class DanthermDevice(DanthermModbus):
             return result
         return self._filter_sensor("extract", result)
 
+    @property
+    def get_supply_temperature_unknown(self) -> bool:
+        """Check if supply temperature is not applicable."""
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+        if self.get_bypass_available and self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
+
     async def async_get_supply_temperature(self):
         """Get supply temperature."""
 
@@ -930,6 +1020,14 @@ class DanthermDevice(DanthermModbus):
         if not self._sensor_filtering:
             return result
         return self._filter_sensor("supply", result)
+
+    @property
+    def get_outdoor_temperature_unknown(self) -> bool:
+        """Check if outdoor temperature is not applicable."""
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+        return False
 
     async def async_get_outdoor_temperature(self):
         """Get outdoor temperature."""
@@ -1304,10 +1402,17 @@ class DanthermDevice(DanthermModbus):
     def get_device_type(self) -> str:
         """Device type."""
 
-        result = DEVICE_TYPES.get(self._device_type, None)
-        if result is None:
-            result = f"UNKNOWN {self._device_type}"
-        return result
+        device_type = DEVICE_TYPES.get(self._device_type, None)
+        if device_type is None:
+            device_type = f"UNKNOWN {self._device_type}"
+        device_mode = None
+        if self._device_ab_switch_position == ABSwitchPosition.A:
+            device_mode = "Mode A"
+        elif self._device_ab_switch_position == ABSwitchPosition.B:
+            device_mode = "Mode B"
+        if device_mode is None:
+            return device_type
+        return f"{device_type} ({device_mode})"
 
     @property
     def get_device_fw_version(self) -> str:
@@ -1315,12 +1420,36 @@ class DanthermDevice(DanthermModbus):
 
         major = (self._device_fw_version >> 8) & 0xFF
         minor = self._device_fw_version & 0xFF
-        return f"({major}.{minor:02})"
+        return float(f"{major}.{minor:02}")
 
     @property
     def get_device_serial_number(self) -> int:
         """Device serial number."""
         return self._device_serial_number
+
+    async def get_device_ab_switch_position(self) -> ABSwitchPosition | None:
+        """Get device A/B switch position."""
+
+        HALLeft = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
+        )
+        _LOGGER.debug("HALLeft = %s", HALLeft)
+
+        HALRight = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
+        )
+        _LOGGER.debug("HALRight = %s", HALRight)
+
+        if HALRight == 1 and HALLeft == 0:
+            self._device_ab_switch_position = ABSwitchPosition.A
+        elif HALRight == 0 and HALLeft == 1:
+            self._device_ab_switch_position = ABSwitchPosition.B
+        else:
+            self._device_ab_switch_position = ABSwitchPosition.Unknown
+        _LOGGER.debug(
+            "Device A/B switch position = %s", self._device_ab_switch_position.name
+        )
+        return self._device_ab_switch_position
 
     async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
         """Find device_id from entity_id."""

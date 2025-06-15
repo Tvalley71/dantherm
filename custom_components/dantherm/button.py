@@ -52,3 +52,9 @@ class DanthermButton(ButtonEntity, DanthermEntity):
         """Handle the button press."""
 
         await self.coordinator.async_set_entity_state(self, None)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+
+        return self.coordinator.last_update_success
