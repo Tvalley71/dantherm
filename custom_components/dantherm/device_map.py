@@ -826,7 +826,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         icon_on="mdi:repeat-off",
         icon_off="mdi:repeat",
         component_class=ComponentClass.Bypass,
-        entity_category=EntityCategory.CONFIG,
         device_class=SwitchDeviceClass.SWITCH,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
