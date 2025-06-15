@@ -58,10 +58,10 @@
           "automatic": "Automatic",
           "manual": "Manual",
           "week_program": "Week Program",
-          "away": "Away",
-          "summer": "Summer",
-          "fireplace": "Fireplace",
-          "night": "Night"
+          "away": "Away Mode",
+          "summer": "Summer Mode",
+          "fireplace": "Fireplace Mode",
+          "night": "Night Mode"
         }
       },
       "fan_level_selection": {
@@ -136,39 +136,40 @@
           "2": "Automatic",
           "3": "Week program",
           "4": "Servoflow",
-          "5": "Away",
-          "6": "Summer",
+          "5": "Away Mode",
+          "6": "Summer Mode",
           "7": "DI override",
           "8": "Hygrostat override",
-          "9": "Fireplace",
-          "10": "Installer",
+          "9": "Fireplace Mode",
+          "10": "Installer Mode",
           "11": "Fail Safe 1",
           "12": "Fail Safe 2",
           "13": "Fail Off",
           "14": "Defrost Off",
           "15": "Defrost",
-          "16": "Night"
+          "16": "Night Mode"
         }
       },
       "alarm": {
         "name": "Alarm",
         "state": {
           "0": "None",
-          "1": "Exhaust FAN Alarm",
-          "2": "Supply FAN Alarm",
-          "3": "Bypass Alarm",
-          "4": "T1 Alarm",
-          "5": "T2 Alarm",
-          "6": "T3 Alarm",
-          "7": "T4 Alarm",
-          "8": "T5 Alarm",
-          "9": "RH Alarm",
-          "10": "Outdoor Alarm",
-          "11": "Supply Alarm",
-          "12": "Fire Alarm",
-          "13": "Communication Alarm",
-          "14": "Fire Termostat Alarm",
-          "15": "High Waterlevel Alarm"
+          "1": "Exhaust air fan alarm",
+          "2": "Supply air fan alarm",
+          "3": "Bypass damper alarm",
+          "4": "Outdoor air alarm (T1)",
+          "5": "Supply air alarm (T2)",
+          "6": "Extrack air alarm (T3)",
+          "7": "Exhaust air alarm (T4)",
+          "8": "Room air alarm (T5)",
+          "9": "RH alarm",
+          "10": "Outdoor temperature alarm",
+          "11": "Supply temperature alarm",
+          "12": "Overtemperature alarm",
+          "13": "Communication error",
+          "14": "Fire alarm",
+          "15": "High waterlevel alarm",
+          "16": "Fire protection alarm"
         }
       },
       "adaptive_state": {
@@ -216,11 +217,11 @@
       "boost_mode": { "name": "Boost Mode" },
       "eco_mode": { "name": "Eco Mode" },
       "home_mode": { "name": "Home Mode" },
-      "disable_bypass": { "name": "Disable Bypass" }
+      "disable_bypass": { "name": "Disable Bypass Damper" }
     },
     "text": {
-      "night_mode_start_time": { "name": "Night Mode Start Time" },
-      "night_mode_end_time": { "name": "Night Mode End Time" }
+      "night_mode_start_time": { "name": "Start Time for Night Mode" },
+      "night_mode_end_time": { "name": "End Time for Night Mode" }
     }
   },
   "selector": {
@@ -264,11 +265,11 @@
       "fields": {
         "operation_selection": {
           "name": "Operation Selection",
-          "description": "Select the desired operation mode. Standby will be set back to manual level 3 after about 4 hours."
+          "description": "Select the desired operation mode. Note: standby will be set back to manual level 3 after about 4 hours."
         },
         "fan_level_selection": {
           "name": "Fan Selection",
-          "description": "Select the desired fan level. Fan level 0 and 4 will be set back to level 3 after about 4 hours."
+          "description": "Select the desired fan level. Note: Fan level 0 and 4 will be set back to level 3 after about 4 hours."
         },
         "away_mode": {
           "name": "Away Mode",
@@ -280,15 +281,15 @@
         },
         "fireplace_mode": {
           "name": "Fireplace Mode",
-          "description": "Turn fireplace mode on or off. The fireplace mode will be on for a limited time period."
+          "description": "Turn fireplace mode on or off. Note: The fireplace mode will be on for a limited time period."
         },
         "disable_bypass": {
-          "name": "Disable Bypass",
+          "name": "Disable Bypass Damper",
           "description": "Disable the bypass damper."
         },
         "manual_bypass_mode": {
           "name": "Manual Bypass Mode",
-          "description": "Turn manual bypass mode on or off. Manual bypass mode will be limited to the manual bypass duration."
+          "description": "Turn manual bypass mode on or off. Note: Manual bypass mode will be limited by the specified manual bypass duration."
         }
       }
     },
@@ -317,11 +318,11 @@
           "description": "Enable or disable night mode."
         },
         "night_mode_start_time": {
-          "name": "Night Mode Start Time",
+          "name": "Start Time for Night Mode",
           "description": "Set the start time for night mode (HH:MM)."
         },
         "night_mode_end_time": {
-          "name": "Night Mode End Time",
+          "name": "End Time for Night Mode",
           "description": "Set the end time for night mode (HH:MM)."
         },
         "week_program_selection": {
