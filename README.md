@@ -375,7 +375,7 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 #### Apex-chart
 
-![Skærmbillede 2025-06-23 092509](https://github.com/user-attachments/assets/d0674e55-669b-4c01-add7-896087bc712a)
+![Skærmbillede 2025-06-23 092901](https://github.com/user-attachments/assets/29cabc96-54d5-42db-bedc-ae381c8f5c94)
 
 <details>
 
