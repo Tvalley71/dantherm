@@ -366,72 +366,6 @@ elements:
 ```
 </details>
 
-#### Mushroom-chips card
-
-An example of a Mushroom-chips card showing the current state of operation and fan level in a single display. This can also be achieved with many of the other entities.
-
-![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
-
-<details>
-
-<summary>Mushroom-chips card details 👈 Click to open</summary>
-
-####
-
-The following cards need the _Mushroom_ frontend repository installed under HACS.
-
-#### Mode of operation and fan level chips card (shown above)
-
-```yaml
-
-type: custom:mushroom-chips-card
-chips:
-  - type: conditional
-    conditions:
-      - condition: state
-        entity: sensor.dantherm_fan_level
-        state_not: unavailable
-    chip:
-      type: entity
-      entity: sensor.dantherm_fan_level
-      icon_color: blue
-
-```
-
-#### Alert chips card
-
-Alert chip displaying any current alert along with its descriptions. A hold action is available to attempt resetting the alarm.
-
-```yaml
-
-type: custom:mushroom-chips-card
-    chips:
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.dantherm_alarm
-            state_not: unavailable
-          - condition: state
-            entity: sensor.dantherm_alarm
-            state_not: '0'
-        chip:
-          type: entity
-          entity: sensor.dantherm_alarm
-          icon_color: red
-          hold_action:
-            action: call-service
-            service: button.press
-            data: {}
-            target:
-              entity_id: button.dantherm_reset_alarm
-
-```
-
-</details>
-
-> [!NOTE]
-> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve same results as the Mushroom chips card.
-
 #### Dashboard Badges
 
 Here are some examples of badges added to the dashboard. The pop-up that appears when clicking on a badge will vary depending on the selected entities, either displaying information or enabling manipulation of the Dantherm unit.
@@ -450,7 +384,7 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 ```yaml
 
 type: custom:apexcharts-card
-update_interval: 1min
+update_interval: 5min
 apex_config:
   stroke:
     width: 2
@@ -489,6 +423,7 @@ series:
 ```
     
 </details>
+
 
 ## Sensor Filtering
 
