@@ -439,6 +439,57 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
 
 
+#### Apex-chart
+
+![Skærmbillede 2025-06-23 085112](https://github.com/user-attachments/assets/40b53494-2ba4-404c-9306-a34ba7ed7ce3)
+
+<details>
+
+<summary>The details for the above Apex-chart card (Can be found on HACS) 👈 Click to open</summary>
+
+```yaml
+
+type: custom:apexcharts-card
+update_interval: 1min
+apex_config:
+  stroke:
+    width: 2
+    curve: smooth
+graph_span: 24h
+series:
+  - entity: sensor.dantherm_extract_temperature
+    name: Extract Temperature
+    extend_to: false
+    show:
+      extremas: true
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_outdoor_temperature
+    name: Outdoor Temperature
+    extend_to: false
+    show:
+      extremas: true
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_exhaust_temperature
+    name: Exhaust Temperature
+    extend_to: false
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_supply_temperature
+    name: Supply Temperature
+    extend_to: false
+    group_by:
+      duration: 5min
+      func: avg
+
+```
+    
+</details>
+
 ## Sensor Filtering
 
 To improve the stability and reliability of sensor readings, the integration now supports **sensor filtering** for key environmental data collected from the Dantherm unit. This filtering mechanism is applied to the following sensors:
