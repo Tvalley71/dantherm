@@ -375,7 +375,7 @@ Here are some examples of badges added to the dashboard. The pop-up that appears
 
 #### Apex-chart
 
-![Skærmbillede 2025-06-23 085112](https://github.com/user-attachments/assets/40b53494-2ba4-404c-9306-a34ba7ed7ce3)
+![Skærmbillede 2025-06-23 092509](https://github.com/user-attachments/assets/d0674e55-669b-4c01-add7-896087bc712a)
 
 <details>
 
@@ -396,6 +396,7 @@ series:
     extend_to: false
     show:
       extremas: true
+      legend_value: false
     group_by:
       duration: 5min
       func: avg
@@ -404,18 +405,23 @@ series:
     extend_to: false
     show:
       extremas: true
+      legend_value: false
     group_by:
       duration: 5min
       func: avg
   - entity: sensor.dantherm_exhaust_temperature
     name: Exhaust Temperature
     extend_to: false
+    show:
+      legend_value: false
     group_by:
       duration: 5min
       func: avg
   - entity: sensor.dantherm_supply_temperature
     name: Supply Temperature
     extend_to: false
+    show:
+      legend_value: false
     group_by:
       duration: 5min
       func: avg
