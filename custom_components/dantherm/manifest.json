@@ -3,7 +3,6 @@
   "name": "Dantherm",
   "codeowners": ["@Tvalley71"],
   "config_flow": true,
-  "options": true,
   "dependencies": ["modbus", "http"],
   "documentation": "https://github.com/Tvalley71/dantherm",
   "iot_class": "local_polling",
