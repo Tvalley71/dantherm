@@ -341,11 +341,6 @@
       "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
     }
   },
-  "messages": {
-    "alarm_notification": {
-      "message": "Alarmbenachrichtigung kann in den Integrationsoptionen deaktiviert werden."
-    }
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Ungültiges Zeitformat. Verwenden Sie HH:MM."
@@ -355,6 +350,9 @@
     },
     "pymodbus_version": {
       "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
+    },
+    "alarm_notification": {
+      "message": "Alarmbenachrichtigung kann in den Integrationsoptionen deaktiviert werden."
     }
   }
 }

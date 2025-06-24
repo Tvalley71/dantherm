@@ -342,11 +342,6 @@
       "description": "Nulstil første ventende alarm."
     }
   },
-  "messages": {
-    "alarm_notification": {
-      "message": "Alarmnotifikation kan slås fra i integrationsindstillingerne."
-    }
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Ugyldigt tidsformat. Brug HH:MM."
@@ -356,6 +351,9 @@
     },
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
+    },
+    "alarm_notification": {
+      "message": "Alarmnotifikation kan slås fra i integrationsindstillingerne."
     }
   }
 }

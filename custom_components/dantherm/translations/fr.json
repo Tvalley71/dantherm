@@ -341,11 +341,6 @@
       "description": "Réinitialisez la première alarme en attente."
     }
   },
-  "messages": {
-    "alarm_notification": {
-      "message": "Notification d'alarme peut être désactivée dans les options de l'intégration."
-    }
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Format de l'heure invalide. Utilisez HH:MM."
@@ -355,6 +350,9 @@
     },
     "pymodbus_version": {
       "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
+    },
+    "alarm_notification": {
+      "message": "Notification d'alarme peut être désactivée dans les options de l'intégration."
     }
   }
 }

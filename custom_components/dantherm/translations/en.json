@@ -342,11 +342,6 @@
       "description": "Reset first pending alarm."
     }
   },
-  "messages": {
-    "alarm_notification": {
-      "message": "Alarm notification can be turned off in the integration options."
-    }
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Invalid time format. Use HH:MM."
@@ -356,6 +351,9 @@
     },
     "pymodbus_version": {
       "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
+    },
+    "alarm_notification": {
+      "message": "Alarm notification can be turned off in the integration options."
     }
   }
 }

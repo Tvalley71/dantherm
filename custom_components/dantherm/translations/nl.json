@@ -341,11 +341,6 @@
       "description": "Reset de eerste in behandeling zijnde foutmelding."
     }
   },
-  "messages": {
-    "alarm_notification": {
-      "message": "Alarmmeldingen kunnen worden uitgeschakeld in de integratie-opties."
-    }
-  },
   "exceptions": {
     "invalid_timeformat": {
       "message": "Ongeldig tijdformaat. Gebruik HH:MM."
@@ -355,6 +350,9 @@
     },
     "pymodbus_version": {
       "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
+    },
+    "alarm_notification": {
+      "message": "Alarmmeldingen kunnen worden uitgeschakeld in de integratie-opties."
     }
   }
 }

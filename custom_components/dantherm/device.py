@@ -151,9 +151,6 @@ class DanthermDevice(DanthermModbus):
         self.coordinator = None
         self.installed_components = 0
 
-        self._alarm_notify_test1: datetime = datetime.now() + timedelta(seconds=20)
-        self._alarm_notify_test2: datetime = datetime.now() + timedelta(seconds=90)
-
         # Initialize filtered sensors
         self._filtered_sensors = {
             "humidity": {
@@ -556,12 +553,6 @@ class DanthermDevice(DanthermModbus):
 
     async def async_get_alarm(self):
         """Get alarm."""
-
-        if (
-            self._alarm_notify_test1 < datetime.now()
-            and self._alarm_notify_test2 > datetime.now()
-        ):
-            return 4
 
         self._alarm = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
         _LOGGER.debug("Alarm = %s", self._alarm)
@@ -1412,9 +1403,7 @@ class DanthermDevice(DanthermModbus):
             new_state.state not in [STATE_UNKNOWN, "0"]
             and new_state.state != old_state.state
         ):
-            message = await self.get_translated_message_text(
-                "alarm_notification", "message"
-            )
+            message = await self.get_translated_exception_text("alarm_notification")
             state = await self.get_translated_state_text(
                 "sensor", ATTR_ALARM, new_state.state
             )
@@ -1523,7 +1512,6 @@ class DanthermDevice(DanthermModbus):
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
         )
         _LOGGER.debug("HALLeft = %s", HALLeft)
-
         HALRight = await self._read_holding_uint32(
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
         )
@@ -1609,13 +1597,13 @@ class DanthermDevice(DanthermModbus):
             disabled_by=disabled_by,
         )
 
-    async def get_translated_message_text(self, key: str, message="message") -> str:
-        """Return a translated message."""
+    async def get_translated_exception_text(self, key: str, message="message") -> str:
+        """Return a translated exception message."""
         lang = self._hass.config.language
         translations = await async_get_translations(
-            self._hass, language=lang, category="messages", integrations=[DOMAIN]
+            self._hass, language=lang, category="exceptions", integrations=[DOMAIN]
         )
-        full_key = f"component.{DOMAIN}.messages.{key}.{message}"
+        full_key = f"component.{DOMAIN}.exceptions.{key}.{message}"
 
         return translations.get(full_key, message)
 
