@@ -3,14 +3,13 @@
 import ipaddress
 import logging
 import re
-from typing import Final
 
 import voluptuous as vol
 
+from config.custom_components.dantherm.options_flow import DanthermOptionsFlowHandler
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.entity_registry as er
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -25,18 +24,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
     }
 )
-
-ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
-
-ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
-
-ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
-
-ADAPTIVE_TRIGGERS = [
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
-]
 
 
 def host_valid(host):
@@ -97,62 +84,4 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ):
         """Create the options flow."""
-        return OptionsFlowHandler()
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Options flow handler."""
-
-    def __init__(self) -> None:
-        """Initialize options flow."""
-        self._conf_app_id: str | None = None
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        errors = {}
-
-        STEP_INIT_SCHEMA = vol.Schema(
-            {
-                vol.Optional(ATTR_BOOST_MODE_TRIGGER): str,
-                vol.Optional(ATTR_ECO_MODE_TRIGGER): str,
-                vol.Optional(ATTR_HOME_MODE_TRIGGER): str,
-            }
-        )
-
-        if user_input is not None:
-            # Validate the user-inputted entities
-            entity_registry = er.async_get(self.hass)
-            for entity_key in ADAPTIVE_TRIGGERS:
-                entity_id = user_input.get(entity_key)
-                if entity_id and entity_id not in [
-                    entity.entity_id for entity in entity_registry.entities.values()
-                ]:
-                    errors[entity_key] = "invalid_entity"
-
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, options=user_input
-                )
-
-                # Get the device instance and update the triggers
-                device_instance = (
-                    self.hass.data.get(DOMAIN, {})
-                    .get(self.config_entry.entry_id, {})
-                    .get("device")
-                )
-                if device_instance:
-                    await device_instance.set_up_adaptive_triggers(user_input)
-
-                return self.async_create_entry(title="", data=user_input)
-
-            return self.async_show_form(
-                step_id="init", data_schema=STEP_INIT_SCHEMA, errors=errors
-            )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_INIT_SCHEMA,
-                self.config_entry.options,
-            ),
-        )
+        return DanthermOptionsFlowHandler()

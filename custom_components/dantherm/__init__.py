@@ -19,14 +19,16 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
 
-from .config_flow import (
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .device import DanthermDevice
+from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
+    ATTR_TURN_OFF_ALARM_NOTIFICATION,
+    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
+    REQUIRED_PYMODBUS_VERSION,
 )
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .device import DanthermDevice
-from .device_map import REQUIRED_PYMODBUS_VERSION
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +62,8 @@ DEFAULT_OPTIONS = {
     ATTR_HOME_MODE_TRIGGER: "",
     ATTR_BOOST_MODE_TRIGGER: "",
     ATTR_ECO_MODE_TRIGGER: "",
+    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN: False,
+    ATTR_TURN_OFF_ALARM_NOTIFICATION: False,
 }
 
 
@@ -102,19 +106,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
+    # Create the device instance
     device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
 
     try:
-        await device.async_init_and_connect()
+        coordinator = await device.async_init_and_connect()
     except ValueError as ex:
         raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
 
     # Store device instance and options
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
+        "coordinator": coordinator,
         ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
         ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
         ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
+        ATTR_TURN_OFF_TEMPERATURE_UNKNOWN: entry.options.get(
+            ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False
+        ),
+        ATTR_TURN_OFF_ALARM_NOTIFICATION: entry.options.get(
+            ATTR_TURN_OFF_ALARM_NOTIFICATION, False
+        ),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

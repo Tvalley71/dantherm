@@ -23,9 +23,11 @@
         "init": {
             "title": "Dantherm Integration Options",
             "data": {
-                "boost_mode_trigger": "Boost Mode Trigger Entity",
-                "eco_mode_trigger": "Eco Mode Trigger Entity",
-                "home_mode_trigger": "Home Mode Trigger Entity"
+                "boost_mode_trigger": "Boost mode trigger entity",
+                "eco_mode_trigger": "Eco mode trigger entity",
+                "home_mode_trigger": "Home mode trigger entity",
+                "turn_off_temperature_unknown": "Turn off setting temperature sensors to unknown in bypass/summer modes.",
+                "turn_off_alarm_notification": "Turn off alarm notification."
             }
         }
     },
@@ -338,6 +340,11 @@
     "alarm_reset": {
       "name": "Alarm reset",
       "description": "Reset first pending alarm."
+    }
+  },
+  "messages": {
+    "alarm_notification": {
+      "message": "Alarm notification can be turned off in the integration options."
     }
   },
   "exceptions": {

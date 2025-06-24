@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Entité de déclenchement du mode Boost",
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
-                "home_mode_trigger": "Entité de déclenchement du mode Maison"
+                "home_mode_trigger": "Entité de déclenchement du mode Maison",
+                "turn_off_temperature_unknown": "Désactiver la mise à Inconnu des capteurs de température en modes bypass/été",
+                "turn_off_alarm_notification": "Activer les notifications d'alarme"
             }
         }
     },
@@ -337,6 +339,11 @@
     "alarm_reset": {
       "name": "Réinitialisation de l'alarme",
       "description": "Réinitialisez la première alarme en attente."
+    }
+  },
+  "messages": {
+    "alarm_notification": {
+      "message": "Notification d'alarme peut être désactivée dans les options de l'intégration."
     }
   },
   "exceptions": {

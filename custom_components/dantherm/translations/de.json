@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Boost-Modus Auslöser Entität",
                 "eco_mode_trigger": "Eco-Modus Auslöser Entität",
-                "home_mode_trigger": "Heim-Modus Auslöser Entität"
+                "home_mode_trigger": "Heim-Modus Auslöser Entität",
+                "turn_off_temperature_unknown": "Deaktivieren, dass Temperatursensoren in Bypass- und Sommer-Modi auf Unbekannt gesetzt werden",
+                "turn_off_alarm_notification": "Alarm Benachrichtigungen deaktivieren"
             }
         }
     },
@@ -337,6 +339,11 @@
     "alarm_reset": {
       "name": "Alarm zurücksetzen",
       "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
+    }
+  },
+  "messages": {
+    "alarm_notification": {
+      "message": "Alarmbenachrichtigung kann in den Integrationsoptionen deaktiviert werden."
     }
   },
   "exceptions": {

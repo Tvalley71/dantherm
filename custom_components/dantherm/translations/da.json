@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Boost-tilstand udløser entitet",
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
-                "home_mode_trigger": "Hjemmetilstand udløser entitet"
+                "home_mode_trigger": "Hjemmetilstand udløser entitet",
+                "turn_off_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommer-tilstande",
+                "turn_off_alarm_notification": "Slå alarmnotifikationer fra"
             }
         }
     },
@@ -338,6 +340,11 @@
     "alarm_reset": {
       "name": "Nulstil alarm",
       "description": "Nulstil første ventende alarm."
+    }
+  },
+  "messages": {
+    "alarm_notification": {
+      "message": "Alarmnotifikation kan slås fra i integrationsindstillingerne."
     }
   },
   "exceptions": {

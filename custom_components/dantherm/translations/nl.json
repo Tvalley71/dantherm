@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Boost-modus Trigger Entiteit",
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
-                "home_mode_trigger": "Thuis-modus Trigger Entiteit"
+                "home_mode_trigger": "Thuis-modus Trigger Entiteit",
+                "turn_off_temperature_unknown": "Uitschakelen dat temperatuursensoren in bypass-/zomermodi op Onbekend worden gezet",
+                "turn_off_alarm_notification": "Schakel Alarmmeldingen uit"
             }
         }
     },
@@ -337,6 +339,11 @@
     "alarm_reset": {
       "name": "Foutmelding Resetten",
       "description": "Reset de eerste in behandeling zijnde foutmelding."
+    }
+  },
+  "messages": {
+    "alarm_notification": {
+      "message": "Alarmmeldingen kunnen worden uitgeschakeld in de integratie-opties."
     }
   },
   "exceptions": {
