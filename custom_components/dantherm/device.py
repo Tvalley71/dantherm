@@ -6,7 +6,6 @@ import logging
 import os
 import re
 
-from config.custom_components.dantherm.coordinator import DanthermCoordinator
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -19,6 +18,7 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_datetime
 
 from .const import DEVICE_TYPES, DOMAIN
+from .coordinator import DanthermCoordinator
 from .device_map import (
     ADAPTIVE_TRIGGERS,
     ATTR_ADAPTIVE_STATE,
