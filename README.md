@@ -7,6 +7,8 @@ Home Assistant integration for Dantherm ventilation units.
 
 <!-- START:shared-section -->
 
+<a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ### ⚠️ Compatibility Notice
 
 This custom integration requires:
@@ -31,13 +33,14 @@ Known supported units:
 
 <!-- START:no-dantherm-replace -->
 
-> [!NOTE]
-> The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ or Pluggit iFlow app ought to work with the integration.
-> If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
+The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
+
+> [!NOTE]  
+> If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
+> The number can be found in the **Device Info** section on the integration page; if the unit is not recognized, it will be listed as "Unknown" followed by the number.
+
 
 <!-- END:no-dantherm-replace -->
-
-<a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 ### Controls and sensors
 
