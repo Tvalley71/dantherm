@@ -27,12 +27,15 @@ Known supported units:
 - HCH5 MKII
 - RCC220 P2
 
+<!-- START:shared-section -->
+
+<!-- START:no-dantherm-replace -->
+
 > [!NOTE]
-> The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
-> ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
+> The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ or Pluggit iFlow app ought to work with the integration.
 > If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
 
-<!-- START:shared-section -->
+<!-- END:no-dantherm-replace -->
 
 <a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
@@ -49,7 +52,7 @@ Known supported units:
 
 | Entity        | Description              |
 |---------------|--------------------------|
-| ~~`calendar`~~ | ~~Operation Calendar~~   |
+| ~~`calendar`~~ | ~~Operation Calendar~~  |
 
 #### Cover Entity
 
@@ -115,7 +118,7 @@ Known supported units:
 | `home_mode`            | Home mode [3]                   |
 | `manual_bypass_mode`   | Manual bypass mode [1]          |
 | `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor filtering [2]      |
+| `sensor_filtering`     | Sensor filtering [2]            |
 | `summer_mode`          | Summer mode                     |
 
 #### Text Entities
