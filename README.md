@@ -31,9 +31,9 @@ Known supported units:
 
 <!-- START:shared-section -->
 
-<!-- START:no-dantherm-replace -->
+<!-- START:no-replace-section -->
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
-<!-- END:no-dantherm-replace -->
+<!-- END:no-replace-section -->
 
 > [!NOTE]  
 > If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
@@ -140,6 +140,8 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
 ### Installation
 
+<!-- START:replace-section -->
+
 #### Installation via HACS (Home Assistant Community Store)
 
 1. Ensure you have HACS installed and configured in your Home Assistant instance.
@@ -158,6 +160,8 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 3. Inside the **'custom_components'** folder, create a new folder named **'dantherm'**.
 4. Download the latest release of the Dantherm integration from the [releases page](https://github.com/Tvalley71/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
 5. Once the files are in place, restart your Home Assistant instance.
+
+<!-- END:replace-section -->
 
 ### Configuration
 
@@ -570,7 +574,7 @@ Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ens
 - **Available Operations**: `Automatic`, `Level 3`, `Level 2`, `Level 1`, or `Week Program`.
 
 
-### Trigger Timeout ⏱️
+<h3 id="trigger-timeout">Trigger Timeout ⏱️</h3>
 
 Each mode trigger (Boost, Eco, Home) includes a configurable timeout that defines how long the mode remains active after the trigger is deactivated.
 
