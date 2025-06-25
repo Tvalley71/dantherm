@@ -32,15 +32,13 @@ Known supported units:
 <!-- START:shared-section -->
 
 <!-- START:no-dantherm-replace -->
-
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
+<!-- END:no-dantherm-replace -->
 
 > [!NOTE]  
 > If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
 > The number can be found in the **Device Info** section on the integration page; if the unit is not recognized, it will be listed as "Unknown" followed by the number.
 
-
-<!-- END:no-dantherm-replace -->
 
 ### Controls and sensors
 
@@ -187,12 +185,9 @@ Currently supported languages:
 
 Danish, Dutch, English, German and French.
 
-<!-- START:no-dantherm-replace -->
-
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
-<!-- END:no-dantherm-replace -->
 
 ## Screenshots
 
@@ -487,9 +482,7 @@ Each sensor type has a predefined maximum allowed change per reading:
 
 This ensures the filtering logic fits the natural dynamics of each sensor type.
 
-<!-- START:no-dantherm-replace -->
 > This feature was inspired by [issue #68](https://github.com/Tvalley71/dantherm/issues/68), reported by a community user.
-<!-- END:no-dantherm-replace -->
 
 ## Actions
 
