@@ -5,6 +5,8 @@ Home Assistant integration for Dantherm ventilation units.
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
 
+<!-- START:shared-section -->
+
 ### ⚠️ Compatibility Notice
 
 This custom integration requires:
@@ -12,6 +14,8 @@ This custom integration requires:
 - Home Assistant version **2025.1.0** or newer
 
 Only support for Modbus over TCP/IP.
+
+<!-- END:shared-section -->
 
 Known supported units:
 
@@ -31,10 +35,6 @@ Known supported units:
 <!-- START:shared-section -->
 
 <a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-
-<!-- END:shared-section -->
-
-<!-- START:shared-section -->
 
 ### Controls and sensors
 
@@ -167,11 +167,13 @@ After installation, add the Dantherm integration to your Home Assistant configur
 ![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
 ![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
 
+<!-- END:shared-section -->
 
 ### Support
 
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
+<!-- START:shared-section -->
 
 ### Languages
 
@@ -179,9 +181,12 @@ Currently supported languages:
 
 Danish, Dutch, English, German and French.
 
+<!-- START:no-dantherm-replace -->
+
 > [!NOTE]
 > Want to help translate? Grab a language file on GitHub [here](./custom_components/dantherm/translations) and post it [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). You are also welcome to submit a PR.
 
+<!-- END:no-dantherm-replace -->
 
 ## Screenshots
 
