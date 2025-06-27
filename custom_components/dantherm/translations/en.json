@@ -198,14 +198,40 @@
       "fan1_speed": { "name": "Fan Speed 1" },
       "fan2_speed": { "name": "Fan Speed 2" },
       "humidity": { "name": "Humidity" },
+      "humidity_level": {
+        "name": "Humidity Level",
+        "state": {
+          "0": "Very Dry",
+          "1": "Dry",
+          "2": "Normal",
+          "3": "Humid"
+        }
+      },
       "air_quality": { "name": "Air Quality" },
+      "air_quality_level": {
+        "name": "Air Quality Level",
+        "state": {
+          "0": "Clean",
+          "1": "Acceptable",
+          "2": "Slightly Polluted",
+          "3": "Polluted"
+        }
+      },
       "exhaust_temperature": { "name": "Exhaust Temperature" },
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
-      "filter_remain_level": { "name": "Filter Remain Level" },
+      "filter_remain_level": {
+        "name": "Filter Remain Level",
+        "state": {
+          "0": "Excellent",
+          "1": "Good",
+          "2": "Worn",
+          "3": "Replace"
+        }
+      },
       "work_time": { "name": "Work Time" },
       "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
     },
@@ -353,7 +379,7 @@
       "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
     },
     "alarm_notification": {
-      "message": "Alarm notification can be turned off in the integration options."
+      "message": "Alarm notifications can be turned off in the integration options."
     }
   }
 }

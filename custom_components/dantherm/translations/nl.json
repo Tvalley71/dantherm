@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
                 "home_mode_trigger": "Thuis-modus Trigger Entiteit",
                 "turn_off_temperature_unknown": "Uitschakelen dat temperatuursensoren in bypass-/zomermodi op Onbekend worden gezet",
-                "turn_off_alarm_notification": "Schakel Alarmmeldingen uit"
+                "turn_off_alarm_notification": "Schakel alarmmeldingen uit"
             }
         }
     },
@@ -197,14 +197,40 @@
       "fan1_speed": { "name": "Snelheid Ventilator 1" },
       "fan2_speed": { "name": "Snelheid Ventilator 2" },
       "humidity": { "name": "Vochtigheid" },
+      "humidity_level": {
+        "name": "Vochtigheidsniveau",
+        "state": {
+          "0": "Zeer droog",
+          "1": "Droog",
+          "2": "Normaal",
+          "3": "Vochtig"
+        }
+      },
       "air_quality": { "name": "Luchtkwaliteit" },
+      "air_quality_level": {
+        "name": "Luchtkwaliteitsniveau",
+        "state": {
+          "0": "Schoon",
+          "1": "Acceptabel",
+          "2": "Licht vervuild",
+          "3": "Vervuild"
+        }
+      },
       "exhaust_temperature": { "name": "Uitlaattemperatuur" },
       "extract_temperature": { "name": "Afzuigtemperatuur" },
       "supply_temperature": { "name": "Aanvoertemperatuur" },
       "outdoor_temperature": { "name": "Buitentemperatuur" },
       "room_temperature": { "name": "Kamertemperatuur" },
       "filter_remain": { "name": "Levenduur Filter" },
-      "filter_remain_level": { "name": "Levensduur Filter Niveau" },
+      "filter_remain_level": {
+        "name": "Levensduur Filter Niveau",
+        "state": {
+          "0": "Uitstekend",
+          "1": "Goed",
+          "2": "Versleten",
+          "3": "Vervangen"
+        }
+      },
       "work_time": { "name": "Inschakelduur" },
       "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"}
     },

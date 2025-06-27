@@ -198,14 +198,40 @@
       "fan1_speed": { "name": "Ventilatorhastighed 1" },
       "fan2_speed": { "name": "Ventilatorhastighed 2" },
       "humidity": { "name": "Luftfugtighed" },
+      "humidity_level": {
+        "name": "Luftfugtighedsniveau",
+        "state": {
+          "0": "Meget tør",
+          "1": "Tør",
+          "2": "Normal",
+          "3": "Fugtig"
+        }
+      },
       "air_quality": { "name": "Luftkvalitet" },
+      "air_quality_level": {
+        "name": "Luftkvalitetsniveau",
+        "state": {
+          "0": "Ren",
+          "1": "Tilstrækkelig",
+          "2": "Let forurenet",
+          "3": "Forurenet"
+        }
+      },
       "exhaust_temperature": { "name": "Udblæsningstemperatur" },
       "extract_temperature": { "name": "Udsugningstemperatur" },
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filterstatus" },
-      "filter_remain_level": { "name": "Filterstatus niveau" },
+      "filter_remain_level": {
+        "name": "Filterstatus niveau",
+        "state": {
+          "0": "Udmærket",
+          "1": "Godt",
+          "2": "Slidt",
+          "3": "Udskift"
+        }
+      },
       "work_time": { "name": "Drifttid" },
       "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
     },
@@ -353,7 +379,7 @@
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
     },
     "alarm_notification": {
-      "message": "Alarmnotifikation kan slås fra i integrationsindstillingerne."
+      "message": "Alarmnotifikationer kan slås fra i integrationsindstillingerne."
     }
   }
 }

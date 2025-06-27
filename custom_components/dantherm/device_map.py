@@ -98,8 +98,10 @@ ATTR_FAN1_SPEED: Final = "fan1_speed"
 ATTR_FAN2_SPEED: Final = "fan2_speed"
 
 ATTR_HUMIDITY = "humidity"
+ATTR_HUMIDITY_LEVEL = "humidity_level"
 
 ATTR_AIR_QUALITY: Final = "air_quality"
+ATTR_AIR_QUALITY_LEVEL: Final = "air_quality_level"
 
 ATTR_EXHAUST_TEMPERATURE: Final = "exhaust_temperature"
 
@@ -646,12 +648,31 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.RH_Senser,
     ),
     DanthermSensorEntityDescription(
+        key=ATTR_HUMIDITY_LEVEL,
+        data_getinternal=ATTR_HUMIDITY_LEVEL,
+        icon="mdi:water-percent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
         data_getinternal=ATTR_AIR_QUALITY,
+        icon="mdi:molecule-co2",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.VOC_sensor,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_AIR_QUALITY_LEVEL,
+        data_getinternal=ATTR_AIR_QUALITY_LEVEL,
+        icon="mdi:molecule-co2",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
         component_class=ComponentClass.VOC_sensor,
     ),
     DanthermSensorEntityDescription(
@@ -707,6 +728,14 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
     ),
     DanthermSensorEntityDescription(
+        key=ATTR_FILTER_REMAIN_LEVEL,
+        icon="mdi:air-filter",
+        data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
         key=ATTR_WORK_TIME,
         icon="mdi:progress-clock",
         data_class=DataClass.UInt32,
@@ -729,13 +758,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.Internal_preheater,
-    ),
-    DanthermSensorEntityDescription(
-        key=ATTR_FILTER_REMAIN_LEVEL,
-        icon="mdi:air-filter",
-        data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_ADAPTIVE_STATE,

@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",
                 "turn_off_temperature_unknown": "Désactiver la mise à Inconnu des capteurs de température en modes bypass/été",
-                "turn_off_alarm_notification": "Activer les notifications d'alarme"
+                "turn_off_alarm_notification": "Ne pas envoyer de notifications d'alarme"
             }
         }
     },
@@ -197,14 +197,40 @@
       "fan1_speed": { "name": "Vitesse ventilateur 1" },
       "fan2_speed": { "name": "Vitesse ventilateur 2" },
       "humidity": { "name": "Humidité" },
+      "humidity_level": {
+        "name": "Niveau d'humidité",
+        "state": {
+          "0": "Très sec",
+          "1": "Sec",
+          "2": "Normal",
+          "3": "Humide"
+        }
+      },
       "air_quality": { "name": "Qualité de l'air" },
+      "air_quality_level": {
+        "name": "Niveau de qualité de l'air",
+        "state": {
+          "0": "Propre",
+          "1": "Acceptable",
+          "2": "Légèrement pollué",
+          "3": "Pollué"
+        }
+      },
       "exhaust_temperature": { "name": "Température expulsion" },
       "extract_temperature": { "name": "Température extraction" },
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
-      "filter_remain_level": { "name": "Filtre de remplacement dans le niveau" },
+      "filter_remain_level": {
+        "name": "Filtre de remplacement dans le niveau",
+        "state": {
+          "0": "Excellent",
+          "1": "Bon",
+          "2": "Usé",
+          "3": "Remplacer"
+        }
+      },
       "work_time": { "name": "Temps de fonctionnement" },
       "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
     },
@@ -352,7 +378,7 @@
       "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
     },
     "alarm_notification": {
-      "message": "Notification d'alarme peut être désactivée dans les options de l'intégration."
+      "message": "Les notifications d'alarme peuvent être désactivées dans les options de l'intégration."
     }
   }
 }

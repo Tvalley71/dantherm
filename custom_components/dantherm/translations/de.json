@@ -197,14 +197,40 @@
       "fan1_speed": { "name": "Lüftergeschwindigkeit 1" },
       "fan2_speed": { "name": "Lüftergeschwindigkeit 2" },
       "humidity": { "name": "Luftfeuchtigkeit" },
+      "humidity_level": {
+        "name": "Luftfeuchtigkeitsniveau",
+        "state": {
+          "0": "Sehr trocken",
+          "1": "Trocken",
+          "2": "Normal",
+          "3": "Feucht"
+        }
+      },
       "air_quality": { "name": "Luftqualität" },
+      "air_quality_level": {
+        "name": "Luftqualitätsniveau",
+        "state": {
+          "0": "Sauber",
+          "1": "Akzeptabel",
+          "2": "Leicht verschmutzt",
+          "3": "Verschmutzt"
+        }
+      },
       "exhaust_temperature": { "name": "Fortlufttemperatur" },
       "extract_temperature": { "name": "Ablufttemperatur" },
       "supply_temperature": { "name": "Zulufttemperatur" },
       "outdoor_temperature": { "name": "Außenlufttemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
       "filter_remain": { "name": "Filter verbleibend" },
-      "filter_remain_level": { "name": "Filter verbleiben niveau" },
+      "filter_remain_level": {
+        "name": "Filter verbleiben niveau",
+        "state": {
+          "0": "Hervorragend",
+          "1": "Gut",
+          "2": "Abgenutzt",
+          "3": "Ersetzen"
+        }
+      },
       "work_time": { "name": "Laufzeit" },
       "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" }
     },
@@ -352,7 +378,7 @@
       "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
     },
     "alarm_notification": {
-      "message": "Alarmbenachrichtigung kann in den Integrationsoptionen deaktiviert werden."
+      "message": "Alarmbenachrichtigungen können in den Integrationsoptionen deaktiviert werden."
     }
   }
 }

@@ -22,6 +22,7 @@ from .coordinator import DanthermCoordinator
 from .device_map import (
     ADAPTIVE_TRIGGERS,
     ATTR_ADAPTIVE_STATE,
+    ATTR_AIR_QUALITY,
     ATTR_ALARM,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
@@ -38,6 +39,7 @@ from .device_map import (
     ATTR_HOME_MODE_TIMEOUT,
     ATTR_HOME_MODE_TRIGGER,
     ATTR_HOME_OPERATION_SELECTION,
+    ATTR_HUMIDITY,
     ATTR_SENSOR_FILTERING,
     ATTR_TURN_OFF_ALARM_NOTIFICATION,
     ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
@@ -237,14 +239,6 @@ class DanthermDevice(DanthermModbus):
 
         _LOGGER.debug("Setup has started")
 
-        # Remove chached properties
-        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
-        self.__dict__.pop("get_boost_mode_trigger_available", None)
-        self.__dict__.pop("get_eco_mode_trigger_available", None)
-        self.__dict__.pop("get_home_mode_trigger_available", None)
-
         # Connect and verify modbus connection
         result = await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
@@ -300,6 +294,16 @@ class DanthermDevice(DanthermModbus):
         # Set up event listener for alarm notification if not disabled
         if not self._options.get(ATTR_TURN_OFF_ALARM_NOTIFICATION, False):
             await self._set_up_alarm_notification()
+
+        # Remove chached properties
+        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
+        self.__dict__.pop("_get_humidity_entity_installed", None)
+        self.__dict__.pop("_get_air_quality_entity_installed", None)
+        self.__dict__.pop("get_boost_mode_trigger_available", None)
+        self.__dict__.pop("get_eco_mode_trigger_available", None)
+        self.__dict__.pop("get_home_mode_trigger_available", None)
 
     async def async_initialize_after_restart(self):
         """Initialize the device after a restart."""
@@ -663,6 +667,16 @@ class DanthermDevice(DanthermModbus):
         """Check if the filter remain level entity is installed (cached)."""
         return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN_LEVEL)
 
+    @cached_property
+    def _get_humidity_entity_installed(self) -> bool:
+        """Check if the humidity entity is installed (cached)."""
+        return self.coordinator.is_entity_installed(ATTR_HUMIDITY)
+
+    @cached_property
+    def _get_air_quality_entity_installed(self) -> bool:
+        """Check if the air quality entity is installed (cached)."""
+        return self.coordinator.is_entity_installed(ATTR_AIR_QUALITY)
+
     async def async_get_filter_lifetime(self):
         """Get filter lifetime."""
 
@@ -962,6 +976,29 @@ class DanthermDevice(DanthermModbus):
             return result
         return self._filter_sensor("humidity", result)
 
+    async def async_get_humidity_level(self):
+        """Get humidity level."""
+
+        if self._get_humidity_entity_installed:
+            humidity = self._get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
+        else:
+            humidity = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
+
+        if humidity is None:
+            _LOGGER.debug("Humidity Level is not available")
+            return None
+        if humidity <= 30:
+            humidity_level = 0
+        elif humidity <= 40:
+            humidity_level = 1
+        elif humidity <= 60:
+            humidity_level = 2
+        else:
+            humidity_level = 3
+
+        _LOGGER.debug("Humidity Level = %s", humidity_level)
+        return humidity_level
+
     async def async_get_air_quality(self):
         """Get air quality."""
 
@@ -970,6 +1007,31 @@ class DanthermDevice(DanthermModbus):
         if not self._sensor_filtering:
             return result
         return self._filter_sensor("air_quality", result)
+
+    async def async_get_air_quality_level(self):
+        """Get air quality level."""
+
+        if self._get_air_quality_entity_installed:
+            air_quality = self._get_entity_state_from_coordinator(
+                ATTR_AIR_QUALITY, None
+            )
+        else:
+            air_quality = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
+
+        if air_quality is None:
+            _LOGGER.debug("Air Quality Level is not available")
+            return None
+        if air_quality <= 600:
+            air_quality_level = 0
+        elif air_quality <= 1000:
+            air_quality_level = 1
+        elif air_quality <= 1400:
+            air_quality_level = 2
+        else:
+            air_quality_level = 3
+
+        _LOGGER.debug("Air Quality Level = %s", air_quality_level)
+        return air_quality_level
 
     @property
     def get_exhaust_temperature_unknown(self) -> bool:
