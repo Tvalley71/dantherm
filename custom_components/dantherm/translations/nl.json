@@ -26,8 +26,8 @@
                 "boost_mode_trigger": "Boost-modus Trigger Entiteit",
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
                 "home_mode_trigger": "Thuis-modus Trigger Entiteit",
-                "turn_off_temperature_unknown": "Uitschakelen dat temperatuursensoren in bypass-/zomermodi op Onbekend worden gezet",
-                "turn_off_alarm_notification": "Schakel alarmmeldingen uit"
+                "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
+                "disable_alarm_notifications": "Alarmmelding uitschakelen."
             }
         }
     },

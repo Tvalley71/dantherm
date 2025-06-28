@@ -26,8 +26,8 @@
                 "boost_mode_trigger": "Entité de déclenchement du mode Boost",
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",
-                "turn_off_temperature_unknown": "Désactiver la mise à Inconnu des capteurs de température en modes bypass/été",
-                "turn_off_alarm_notification": "Ne pas envoyer de notifications d'alarme"
+                "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
+                "disable_alarm_notifications": "Désactiver la notification d'alarme."
             }
         }
     },

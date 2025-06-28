@@ -26,8 +26,8 @@
                 "boost_mode_trigger": "Boost-Modus Auslöser Entität",
                 "eco_mode_trigger": "Eco-Modus Auslöser Entität",
                 "home_mode_trigger": "Heim-Modus Auslöser Entität",
-                "turn_off_temperature_unknown": "Deaktivieren, dass Temperatursensoren in Bypass- und Sommer-Modi auf Unbekannt gesetzt werden",
-                "turn_off_alarm_notification": "Alarm Benachrichtigungen deaktivieren"
+                "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus.",
+                "disable_alarm_notifications": "Alarmbenachrichtigung deaktivieren."
             }
         }
     },

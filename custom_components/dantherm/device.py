@@ -29,6 +29,8 @@ from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
     ATTR_BYPASS_DAMPER,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
     ATTR_ECO_MODE_TRIGGER,
@@ -43,8 +45,6 @@ from .device_map import (
     ATTR_HUMIDITY,
     ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
-    ATTR_TURN_OFF_ALARM_NOTIFICATION,
-    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -296,7 +296,7 @@ class DanthermDevice(DanthermModbus):
             await self._set_up_tracking_for_adaptive_triggers(self._options)
 
         # Set up event listener for alarm notification if not disabled
-        if not self._options.get(ATTR_TURN_OFF_ALARM_NOTIFICATION, False):
+        if not self._options.get(ATTR_DISABLE_ALARM_NOTIFICATIONS, False):
             await self._set_up_alarm_notification()
 
         # Remove chached properties
@@ -1041,7 +1041,7 @@ class DanthermDevice(DanthermModbus):
     def get_exhaust_temperature_unknown(self) -> bool:
         """Check if exhaust temperature is not applicable."""
 
-        if self._options.get(ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self.get_bypass_available and self._bypass_damper in (
@@ -1079,7 +1079,7 @@ class DanthermDevice(DanthermModbus):
     def get_supply_temperature_unknown(self) -> bool:
         """Check if supply temperature is not applicable."""
 
-        if self._options.get(ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self._current_unit_mode == CurrentUnitMode.Summer:
@@ -1109,7 +1109,7 @@ class DanthermDevice(DanthermModbus):
     def get_outdoor_temperature_unknown(self) -> bool:
         """Check if outdoor temperature is not applicable."""
 
-        if self._options.get(ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self._current_unit_mode == CurrentUnitMode.Summer:

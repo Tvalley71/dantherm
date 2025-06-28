@@ -23,10 +23,10 @@ from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
-    ATTR_TURN_OFF_ALARM_NOTIFICATION,
-    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
     REQUIRED_PYMODBUS_VERSION,
 )
 from .services import async_setup_services
@@ -62,8 +62,8 @@ DEFAULT_OPTIONS = {
     ATTR_HOME_MODE_TRIGGER: "",
     ATTR_BOOST_MODE_TRIGGER: "",
     ATTR_ECO_MODE_TRIGGER: "",
-    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN: False,
-    ATTR_TURN_OFF_ALARM_NOTIFICATION: False,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN: False,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS: False,
 }
 
 
@@ -121,11 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
         ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
         ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
-        ATTR_TURN_OFF_TEMPERATURE_UNKNOWN: entry.options.get(
-            ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False
+        ATTR_DISABLE_TEMPERATURE_UNKNOWN: entry.options.get(
+            ATTR_DISABLE_TEMPERATURE_UNKNOWN, False
         ),
-        ATTR_TURN_OFF_ALARM_NOTIFICATION: entry.options.get(
-            ATTR_TURN_OFF_ALARM_NOTIFICATION, False
+        ATTR_DISABLE_ALARM_NOTIFICATIONS: entry.options.get(
+            ATTR_DISABLE_ALARM_NOTIFICATIONS, False
         ),
     }
 

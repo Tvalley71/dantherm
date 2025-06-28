@@ -16,8 +16,8 @@ from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
-    ATTR_TURN_OFF_ALARM_NOTIFICATION,
-    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -104,15 +104,15 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(ATTR_ECO_MODE_TRIGGER): str,
                 vol.Optional(ATTR_HOME_MODE_TRIGGER): str,
                 vol.Optional(
-                    ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
+                    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
                     default=self.config_entry.options.get(
-                        ATTR_TURN_OFF_TEMPERATURE_UNKNOWN, False
+                        ATTR_DISABLE_TEMPERATURE_UNKNOWN, False
                     ),
                 ): bool,
                 vol.Optional(
-                    ATTR_TURN_OFF_ALARM_NOTIFICATION,
+                    ATTR_DISABLE_ALARM_NOTIFICATIONS,
                     default=self.config_entry.options.get(
-                        ATTR_TURN_OFF_ALARM_NOTIFICATION, False
+                        ATTR_DISABLE_ALARM_NOTIFICATIONS, False
                     ),
                 ): bool,
             }

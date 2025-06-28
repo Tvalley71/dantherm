@@ -92,7 +92,7 @@ ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 ATTR_OPERATION_MODE: Final = "operation_mode"
 
 ATTR_ALARM: Final = "alarm"
-ATTR_TURN_OFF_ALARM_NOTIFICATION = "turn_off_alarm_notification"
+ATTR_DISABLE_ALARM_NOTIFICATIONS = "disable_alarm_notifications"
 
 ATTR_FAN1_SPEED: Final = "fan1_speed"
 ATTR_FAN2_SPEED: Final = "fan2_speed"
@@ -113,7 +113,7 @@ ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
 
 ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
 
-ATTR_TURN_OFF_TEMPERATURE_UNKNOWN: Final = "turn_off_temperature_unknown"
+ATTR_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
 
 ATTR_AWAY_MODE: Final = "away_mode"
 
