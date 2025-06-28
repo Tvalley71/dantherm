@@ -233,7 +233,8 @@
         }
       },
       "work_time": { "name": "Work Time" },
-      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
+      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Away Mode" },

@@ -224,7 +224,7 @@
       "room_temperature": { "name": "Rumtemperatur" },
       "filter_remain": { "name": "Filterstatus" },
       "filter_remain_level": {
-        "name": "Filterstatus niveau",
+        "name": "Filterniveau",
         "state": {
           "0": "Udmærket",
           "1": "Godt",
@@ -233,7 +233,8 @@
         }
       },
       "work_time": { "name": "Drifttid" },
-      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
+      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },

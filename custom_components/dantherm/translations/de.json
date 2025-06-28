@@ -232,7 +232,8 @@
         }
       },
       "work_time": { "name": "Laufzeit" },
-      "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" }
+      "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" },
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Abwesenheitsmodus" },

@@ -28,6 +28,7 @@ from .device_map import (
     ATTR_BOOST_MODE_TIMEOUT,
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
+    ATTR_BYPASS_DAMPER,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
     ATTR_ECO_MODE_TRIGGER,
@@ -40,6 +41,7 @@ from .device_map import (
     ATTR_HOME_MODE_TRIGGER,
     ATTR_HOME_OPERATION_SELECTION,
     ATTR_HUMIDITY,
+    ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
     ATTR_TURN_OFF_ALARM_NOTIFICATION,
     ATTR_TURN_OFF_TEMPERATURE_UNKNOWN,
@@ -248,6 +250,8 @@ class DanthermDevice(DanthermModbus):
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
         self._device_type = system_id >> 24
         _LOGGER.debug("Device type = %s", self.get_device_type)
+        _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
+
         self._device_fw_version = await self._read_holding_uint32(
             MODBUS_REGISTER_FIRMWARE_VERSION
         )
@@ -1151,6 +1155,52 @@ class DanthermDevice(DanthermModbus):
         if self.events:
             return {"events": self.events.to_list()}
         return None
+
+    async def async_get_features(self) -> str:
+        """Get features."""
+
+        return self.installed_components
+
+    @property
+    def get_features_attrs(self):
+        """Get feattures attributes."""
+
+        return {
+            "fp1": (self.installed_components & ComponentClass.FP1)
+            == ComponentClass.FP1,
+            "week": (self.installed_components & ComponentClass.Week)
+            == ComponentClass.Week,
+            ATTR_BYPASS_DAMPER: (self.installed_components & ComponentClass.Bypass)
+            == ComponentClass.Bypass,
+            "lrswitch": (self.installed_components & ComponentClass.LRSwitch)
+            == ComponentClass.LRSwitch,
+            ATTR_INTERNAL_PREHEATER: (
+                self.installed_components & ComponentClass.Internal_preheater
+            )
+            == ComponentClass.Internal_preheater,
+            "servo_flow": (self.installed_components & ComponentClass.Servo_flow)
+            == ComponentClass.Servo_flow,
+            ATTR_HUMIDITY: (self.installed_components & ComponentClass.RH_Senser)
+            == ComponentClass.RH_Senser,
+            ATTR_AIR_QUALITY: (self.installed_components & ComponentClass.VOC_sensor)
+            == ComponentClass.VOC_sensor,
+            "ext_override": (self.installed_components & ComponentClass.Ext_Override)
+            == ComponentClass.Ext_Override,
+            "hac1": (self.installed_components & ComponentClass.HAC1)
+            == ComponentClass.HAC1,
+            "hrc2": (self.installed_components & ComponentClass.HRC2)
+            == ComponentClass.HRC2,
+            "pc_tool": (self.installed_components & ComponentClass.PC_Tool)
+            == ComponentClass.PC_Tool,
+            "apps": (self.installed_components & ComponentClass.Apps)
+            == ComponentClass.Apps,
+            "zeegbee": (self.installed_components & ComponentClass.ZeegBee)
+            == ComponentClass.ZeegBee,
+            "di1_override": (self.installed_components & ComponentClass.DI1_Override)
+            == ComponentClass.DI1_Override,
+            "di2_override": (self.installed_components & ComponentClass.DI2_Override)
+            == ComponentClass.DI2_Override,
+        }
 
     def _filter_sensor(self, sensor: str, new_value: float) -> float:
         """Filter a given sensor, ensuring smooth initialization and spike reduction."""

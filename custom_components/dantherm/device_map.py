@@ -155,11 +155,14 @@ ATTR_WORK_TIME: Final = "work_time"
 ATTR_ADAPTIVE_STATE: Final = "adaptive_state"
 STATE_NONE: Final = "none"
 
+ATTR_INTERNAL_PREHEATER: Final = "internal_preheater"
 ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
 ATTR_FILTER_RESET: Final = "filter_reset"
 
 ATTR_ALARM_RESET: Final = "alarm_reset"
+
+ATTR_FEATURES: Final = "features"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,
@@ -766,6 +769,12 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_FEATURES,
+        icon="mdi:function",
+        data_getinternal=ATTR_FEATURES,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

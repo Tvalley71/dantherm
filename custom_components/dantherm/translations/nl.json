@@ -232,7 +232,8 @@
         }
       },
       "work_time": { "name": "Inschakelduur" },
-      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"}
+      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Afwezigheidsmodus" },

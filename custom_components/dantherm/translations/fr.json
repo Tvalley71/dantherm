@@ -232,7 +232,8 @@
         }
       },
       "work_time": { "name": "Temps de fonctionnement" },
-      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
+      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },
