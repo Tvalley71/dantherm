@@ -770,12 +770,12 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
-    DanthermSensorEntityDescription(
-        key=ATTR_FEATURES,
-        icon="mdi:function",
-        data_getinternal=ATTR_FEATURES,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    # DanthermSensorEntityDescription(
+    #    key=ATTR_FEATURES,
+    #    icon="mdi:function",
+    #    data_getinternal=ATTR_FEATURES,
+    #    entity_category=EntityCategory.DIAGNOSTIC,
+    # ),
 )
 
 SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
