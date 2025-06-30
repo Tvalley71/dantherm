@@ -80,6 +80,7 @@ Known supported units:
 | Entity                        | Description                          |
 |-------------------------------|--------------------------------------|
 | `air_quality`                 | Air quality sensor [1]               |
+| `air_quality_level`           | Air quality level sensor [2]         |
 | `alarm`                       | Alarm sensor                         |
 | `exhaust_temperature`         | Exhaust temperature sensor           |
 | `extract_temperature`         | Extract temperature sensor           |
@@ -89,6 +90,7 @@ Known supported units:
 | `filter_remain`               | Filter remain                        |
 | `filter_remain_level`         | Filter remain level [2]              |
 | `humidity`                    | Humidity sensor [1]                  |
+| `humidity_level`              | Humidity sensor level [2]            |
 | `adaptive_state`              | Adaptive state [4]                   |
 | `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
 | `operation_mode`              | Operation mode                       |
@@ -109,7 +111,7 @@ Known supported units:
 | `home_mode`            | Home mode [3]                   |
 | `manual_bypass_mode`   | Manual bypass mode [1]          |
 | `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor filtering [2]      |
+| `sensor_filtering`     | Sensor filtering [2]            |
 | `summer_mode`          | Summer mode                     |
 
 #### Text Entities
