@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 import re
+from types import SimpleNamespace
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -291,8 +292,12 @@ class DanthermDevice(DanthermModbus):
         # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
 
-        # Set up tracking for adaptive triggers from the config options if any
-        if self._options:
+        # Set up tracking for adaptive triggers if any
+        if (
+            self.get_boost_mode_trigger_available
+            or self.get_eco_mode_trigger_available
+            or self.get_home_mode_trigger_available
+        ):
             await self._set_up_tracking_for_adaptive_triggers(self._options)
 
         # Set up event listener for alarm notification if not disabled
@@ -1537,9 +1542,11 @@ class DanthermDevice(DanthermModbus):
         entities = self._get_device_entities()
 
         # Find the alarm entity
-        alarm_entity = next(
-            (e for e in entities if e.translation_key == ATTR_ALARM), None
-        )
+        entity = None
+        for entity in entities:
+            if entity.translation_key == ATTR_ALARM:
+                alarm_entity = entity
+                break
 
         if not alarm_entity:
             _LOGGER.warning("Alarm entity not found for device %s", self._device_name)
@@ -1549,6 +1556,19 @@ class DanthermDevice(DanthermModbus):
         async_track_state_change_event(
             self._hass, alarm_entity.entity_id, self._alarm_state_changed
         )
+
+        # Get current alarm state and fire notification if alarm is already active
+        state = self._hass.states.get(alarm_entity.entity_id)
+        if state is not None:
+            # Fake old and new state objects
+            old_state = SimpleNamespace(state="0")
+            new_state = SimpleNamespace(state=state.state)
+
+            # Fake event object
+            event = SimpleNamespace(
+                data={"old_state": old_state, "new_state": new_state}
+            )
+            await self._alarm_state_changed(event)
 
     def _push_event(
         self, mode_name, current_operation, new_operation, timeout=None
