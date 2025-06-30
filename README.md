@@ -211,7 +211,7 @@ This picture-elements card provides a dynamic and intuitive interface for monito
   
 Clicking on any displayed entity allows you to adjust its state or explore detailed history graphs for deeper insights.
 
-![Skærmbillede 29-06-2025 kl  07 50 14 AM](https://github.com/user-attachments/assets/dae70fcd-3260-45ad-a99f-cecfb0c8c434)
+![Skærmbillede 2025-06-30 kl  05 39 01](https://github.com/user-attachments/assets/a6adac2d-c003-4bd4-a98a-44e03d808007)
 ![Skærmbillede 29-06-2025 kl  07 42 02 AM](https://github.com/user-attachments/assets/67f88f90-7bf5-402c-9158-340c4eaaf1a7)
 ![Skærmbillede 29-06-2025 kl  07 45 12 AM](https://github.com/user-attachments/assets/aa2a6860-7741-41e9-b9a0-f6f7816a8120)
 ![Skærmbillede 29-06-2025 kl  08 52 02 AM](https://github.com/user-attachments/assets/6c503ccf-38ca-435d-8819-ae4d40129dc3)
