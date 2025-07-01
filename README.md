@@ -31,9 +31,9 @@ Known supported units:
 
 <!-- START:shared-section -->
 
-<!-- START:no-replace-section -->
+<!-- START:shared-section no-replace -->
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
-<!-- END:no-replace-section -->
+<!-- END:shared-section -->
 
 > [!NOTE]  
 > If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
@@ -140,7 +140,7 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
 ### Installation
 
-<!-- START:replace-section -->
+<!-- START:shared-section replace-all -->
 
 #### Installation via HACS (Home Assistant Community Store)
 
@@ -161,7 +161,7 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 4. Download the latest release of the Dantherm integration from the [releases page](https://github.com/Tvalley71/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
 5. Once the files are in place, restart your Home Assistant instance.
 
-<!-- END:replace-section -->
+<!-- END:shared-section -->
 
 ### Configuration
 
