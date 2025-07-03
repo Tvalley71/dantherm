@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,7 +26,8 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         hass: HomeAssistant,
         name,
         hub,
-        scan_interval: int = 30,
+        scan_interval,
+        config_entry: ConfigEntry,
         write_delay: float = 0.3,
     ) -> None:
         """Init coordinator."""
@@ -44,9 +46,13 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         )
         self._attr_name = name
         self.hub = hub
-        self._attr_available = True
+        self._config_entry = config_entry
         self._write_delay = write_delay
+        self._attr_available = True
         self._entities = []
+
+        # Flag to reload the integration on next update
+        self._reload_on_update = False
 
         # High-level queue "frontend" actions
         self._frontend_queue: asyncio.Queue = asyncio.Queue()
@@ -60,6 +66,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         # Start processors
         hass.loop.create_task(self._process_frontend())
         hass.loop.create_task(self._process_backend())
+
+    def schedule_reload(self):
+        """Flag the integration to reload on the next update."""
+        self._reload_on_update = True
 
     async def _async_update_data(self) -> dict:
         """Read all entities."""
@@ -100,6 +110,20 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             data = {}
             for entity in self._entities:
                 await self.async_update_entity(entity, data)
+
+            config_entry_id = self._config_entry.entry_id
+            # If flagged, reload the integration after fetching new data
+            if self._reload_on_update:
+                _LOGGER.debug(
+                    "Reloading integration for config entry ID: %s",
+                    config_entry_id,
+                )
+
+                # Schedule the reload of the config entry
+                self.hass.config_entries.async_schedule_reload(config_entry_id)
+
+                # Reset the flag
+                self._reload_on_update = False
 
             _LOGGER.debug("<<< UPDATE END - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 

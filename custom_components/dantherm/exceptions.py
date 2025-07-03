@@ -2,6 +2,8 @@
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 
 class InvalidTimeFormat(HomeAssistantError):
     """Raised when a time format is invalid."""
@@ -9,7 +11,7 @@ class InvalidTimeFormat(HomeAssistantError):
     def __init__(self) -> None:
         """Init HA error."""
         super().__init__(
-            translation_domain="dantherm", translation_key="invalid_timeformat"
+            translation_domain=DOMAIN, translation_key="invalid_timeformat"
         )
 
 
@@ -19,7 +21,7 @@ class InvalidFilterLifetime(HomeAssistantError):
     def __init__(self) -> None:
         """Init HA error."""
         super().__init__(
-            translation_domain="dantherm", translation_key="invalid_filter_lifetime"
+            translation_domain=DOMAIN, translation_key="invalid_filter_lifetime"
         )
 
 
@@ -28,6 +30,4 @@ class InvalidEntity(HomeAssistantError):
 
     def __init__(self) -> None:
         """Init HA error."""
-        super().__init__(
-            translation_domain="dantherm", translation_key="invalid_entity"
-        )
+        super().__init__(translation_domain=DOMAIN, translation_key="invalid_entity")

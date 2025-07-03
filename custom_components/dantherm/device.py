@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 import re
+from types import SimpleNamespace
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -14,30 +15,36 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import cached_property
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_datetime
 
-from .config_flow import (
-    ADAPTIVE_TRIGGERS,
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
-)
-from .const import DEVICE_TYPES
+from .const import DEVICE_TYPES, DOMAIN
 from .coordinator import DanthermCoordinator
 from .device_map import (
+    ADAPTIVE_TRIGGERS,
     ATTR_ADAPTIVE_STATE,
+    ATTR_AIR_QUALITY,
+    ATTR_ALARM,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
+    ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
+    ATTR_BYPASS_DAMPER,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
+    ATTR_ECO_MODE_TRIGGER,
     ATTR_ECO_OPERATION_SELECTION,
     ATTR_FILTER_LIFETIME,
     ATTR_FILTER_REMAIN,
     ATTR_FILTER_REMAIN_LEVEL,
     ATTR_HOME_MODE,
     ATTR_HOME_MODE_TIMEOUT,
+    ATTR_HOME_MODE_TRIGGER,
     ATTR_HOME_OPERATION_SELECTION,
+    ATTR_HUMIDITY,
+    ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
     STATE_AUTOMATIC,
     STATE_AWAY,
@@ -125,7 +132,7 @@ class DanthermDevice(DanthermModbus):
             unit_id,
         )
         self._hass = hass
-        self._entry_id = config_entry.entry_id
+        self._config_entry = config_entry
         self._options = config_entry.options
         self._scan_interval = scan_interval
         self._device_name = name
@@ -235,14 +242,6 @@ class DanthermDevice(DanthermModbus):
 
         _LOGGER.debug("Setup has started")
 
-        # Remove chached properties
-        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
-        self.__dict__.pop("get_boost_mode_trigger_available", None)
-        self.__dict__.pop("get_eco_mode_trigger_available", None)
-        self.__dict__.pop("get_home_mode_trigger_available", None)
-
         # Connect and verify modbus connection
         result = await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
@@ -252,6 +251,8 @@ class DanthermDevice(DanthermModbus):
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
         self._device_type = system_id >> 24
         _LOGGER.debug("Device type = %s", self.get_device_type)
+        _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
+
         self._device_fw_version = await self._read_holding_uint32(
             MODBUS_REGISTER_FIRMWARE_VERSION
         )
@@ -270,7 +271,11 @@ class DanthermDevice(DanthermModbus):
 
         # Create coordinator
         self.coordinator = DanthermCoordinator(
-            self._hass, self._device_name, self, self._scan_interval
+            self._hass,
+            self._device_name,
+            self,
+            self._scan_interval,
+            self._config_entry,
         )
 
         # Load stored entities
@@ -280,15 +285,34 @@ class DanthermDevice(DanthermModbus):
 
     async def async_start(self):
         """Start the integration."""
+
         # Set up adaptive triggers
         await self.set_up_adaptive_triggers(self._options)
 
         # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
 
-        # Set up tracking for adaptive triggers from the config options if any
-        if self._options:
+        # Set up tracking for adaptive triggers if any
+        if (
+            self.get_boost_mode_trigger_available
+            or self.get_eco_mode_trigger_available
+            or self.get_home_mode_trigger_available
+        ):
             await self._set_up_tracking_for_adaptive_triggers(self._options)
+
+        # Set up event listener for alarm notification if not disabled
+        if not self._options.get(ATTR_DISABLE_ALARM_NOTIFICATIONS, False):
+            await self._set_up_alarm_notification()
+
+        # Remove chached properties
+        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_entity_installed", None)
+        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
+        self.__dict__.pop("_get_humidity_entity_installed", None)
+        self.__dict__.pop("_get_air_quality_entity_installed", None)
+        self.__dict__.pop("get_boost_mode_trigger_available", None)
+        self.__dict__.pop("get_eco_mode_trigger_available", None)
+        self.__dict__.pop("get_home_mode_trigger_available", None)
 
     async def async_initialize_after_restart(self):
         """Initialize the device after a restart."""
@@ -652,6 +676,16 @@ class DanthermDevice(DanthermModbus):
         """Check if the filter remain level entity is installed (cached)."""
         return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN_LEVEL)
 
+    @cached_property
+    def _get_humidity_entity_installed(self) -> bool:
+        """Check if the humidity entity is installed (cached)."""
+        return self.coordinator.is_entity_installed(ATTR_HUMIDITY)
+
+    @cached_property
+    def _get_air_quality_entity_installed(self) -> bool:
+        """Check if the air quality entity is installed (cached)."""
+        return self.coordinator.is_entity_installed(ATTR_AIR_QUALITY)
+
     async def async_get_filter_lifetime(self):
         """Get filter lifetime."""
 
@@ -951,6 +985,29 @@ class DanthermDevice(DanthermModbus):
             return result
         return self._filter_sensor("humidity", result)
 
+    async def async_get_humidity_level(self):
+        """Get humidity level."""
+
+        if self._get_humidity_entity_installed:
+            humidity = self._get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
+        else:
+            humidity = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
+
+        if humidity is None:
+            _LOGGER.debug("Humidity Level is not available")
+            return None
+        if humidity <= 30:
+            humidity_level = 0
+        elif humidity <= 40:
+            humidity_level = 1
+        elif humidity <= 60:
+            humidity_level = 2
+        else:
+            humidity_level = 3
+
+        _LOGGER.debug("Humidity Level = %s", humidity_level)
+        return humidity_level
+
     async def async_get_air_quality(self):
         """Get air quality."""
 
@@ -960,9 +1017,37 @@ class DanthermDevice(DanthermModbus):
             return result
         return self._filter_sensor("air_quality", result)
 
+    async def async_get_air_quality_level(self):
+        """Get air quality level."""
+
+        if self._get_air_quality_entity_installed:
+            air_quality = self._get_entity_state_from_coordinator(
+                ATTR_AIR_QUALITY, None
+            )
+        else:
+            air_quality = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
+
+        if air_quality is None:
+            _LOGGER.debug("Air Quality Level is not available")
+            return None
+        if air_quality <= 600:
+            air_quality_level = 0
+        elif air_quality <= 1000:
+            air_quality_level = 1
+        elif air_quality <= 1400:
+            air_quality_level = 2
+        else:
+            air_quality_level = 3
+
+        _LOGGER.debug("Air Quality Level = %s", air_quality_level)
+        return air_quality_level
+
     @property
     def get_exhaust_temperature_unknown(self) -> bool:
         """Check if exhaust temperature is not applicable."""
+
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
 
         if self.get_bypass_available and self._bypass_damper in (
             BypassDamperState.InProgress,
@@ -999,8 +1084,12 @@ class DanthermDevice(DanthermModbus):
     def get_supply_temperature_unknown(self) -> bool:
         """Check if supply temperature is not applicable."""
 
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
+
         if self._current_unit_mode == CurrentUnitMode.Summer:
             return True
+
         if self.get_bypass_available and self._bypass_damper in (
             BypassDamperState.InProgress,
             BypassDamperState.Opening,
@@ -1024,6 +1113,9 @@ class DanthermDevice(DanthermModbus):
     @property
     def get_outdoor_temperature_unknown(self) -> bool:
         """Check if outdoor temperature is not applicable."""
+
+        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
 
         if self._current_unit_mode == CurrentUnitMode.Summer:
             return True
@@ -1068,6 +1160,52 @@ class DanthermDevice(DanthermModbus):
         if self.events:
             return {"events": self.events.to_list()}
         return None
+
+    async def async_get_features(self) -> str:
+        """Get features."""
+
+        return self.installed_components
+
+    @property
+    def get_features_attrs(self):
+        """Get feattures attributes."""
+
+        return {
+            "fp1": (self.installed_components & ComponentClass.FP1)
+            == ComponentClass.FP1,
+            "week": (self.installed_components & ComponentClass.Week)
+            == ComponentClass.Week,
+            ATTR_BYPASS_DAMPER: (self.installed_components & ComponentClass.Bypass)
+            == ComponentClass.Bypass,
+            "lrswitch": (self.installed_components & ComponentClass.LRSwitch)
+            == ComponentClass.LRSwitch,
+            ATTR_INTERNAL_PREHEATER: (
+                self.installed_components & ComponentClass.Internal_preheater
+            )
+            == ComponentClass.Internal_preheater,
+            "servo_flow": (self.installed_components & ComponentClass.Servo_flow)
+            == ComponentClass.Servo_flow,
+            ATTR_HUMIDITY: (self.installed_components & ComponentClass.RH_Senser)
+            == ComponentClass.RH_Senser,
+            ATTR_AIR_QUALITY: (self.installed_components & ComponentClass.VOC_sensor)
+            == ComponentClass.VOC_sensor,
+            "ext_override": (self.installed_components & ComponentClass.Ext_Override)
+            == ComponentClass.Ext_Override,
+            "hac1": (self.installed_components & ComponentClass.HAC1)
+            == ComponentClass.HAC1,
+            "hrc2": (self.installed_components & ComponentClass.HRC2)
+            == ComponentClass.HRC2,
+            "pc_tool": (self.installed_components & ComponentClass.PC_Tool)
+            == ComponentClass.PC_Tool,
+            "apps": (self.installed_components & ComponentClass.Apps)
+            == ComponentClass.Apps,
+            "zeegbee": (self.installed_components & ComponentClass.ZeegBee)
+            == ComponentClass.ZeegBee,
+            "di1_override": (self.installed_components & ComponentClass.DI1_Override)
+            == ComponentClass.DI1_Override,
+            "di2_override": (self.installed_components & ComponentClass.DI2_Override)
+            == ComponentClass.DI2_Override,
+        }
 
     def _filter_sensor(self, sensor: str, new_value: float) -> float:
         """Filter a given sensor, ensuring smooth initialization and spike reduction."""
@@ -1360,6 +1498,78 @@ class DanthermDevice(DanthermModbus):
 
         await self.set_operation_selection(target_operation)
 
+    async def _alarm_state_changed(self, event):
+        """Handle alarm state changes by creating a persistent notification in Home Assistant."""
+
+        # Skip, if the device is not available
+        if self._attr_available is False:
+            return
+
+        # Skip, if old state is None or Unknown
+        old_state = event.data.get("old_state")
+        if old_state is None or old_state.state == STATE_UNKNOWN:
+            return
+
+        # Skip, if new state is None
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
+
+        # Only proceed if we have an old state, and it was 'None', and the new state is not 'None'
+        if (
+            new_state.state not in [STATE_UNKNOWN, "0"]
+            and new_state.state != old_state.state
+        ):
+            message = await self.get_translated_exception_text("alarm_notification")
+            state = await self.get_translated_state_text(
+                "sensor", ATTR_ALARM, new_state.state
+            )
+            # Create a persistent notification in Home Assistant
+            self._hass.async_create_task(
+                self._hass.services.async_call(
+                    "persistent_notification",
+                    "create",
+                    {
+                        "title": f"{self._device_name}: {state}",
+                        "message": f"{message}",
+                    },
+                )
+            )
+
+    async def _set_up_alarm_notification(self):
+        """Set up alarm notification for the device."""
+
+        entities = self._get_device_entities()
+
+        # Find the alarm entity
+        entity = None
+        for entity in entities:
+            if entity.translation_key == ATTR_ALARM:
+                alarm_entity = entity
+                break
+
+        if not alarm_entity:
+            _LOGGER.warning("Alarm entity not found for device %s", self._device_name)
+            return
+
+        # Register a listener for state changes on the alarm entity
+        async_track_state_change_event(
+            self._hass, alarm_entity.entity_id, self._alarm_state_changed
+        )
+
+        # Get current alarm state and fire notification if alarm is already active
+        state = self._hass.states.get(alarm_entity.entity_id)
+        if state is not None:
+            # Fake old and new state objects
+            old_state = SimpleNamespace(state="0")
+            new_state = SimpleNamespace(state=state.state)
+
+            # Fake event object
+            event = SimpleNamespace(
+                data={"old_state": old_state, "new_state": new_state}
+            )
+            await self._alarm_state_changed(event)
+
     def _push_event(
         self, mode_name, current_operation, new_operation, timeout=None
     ) -> bool:
@@ -1434,7 +1644,6 @@ class DanthermDevice(DanthermModbus):
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
         )
         _LOGGER.debug("HALLeft = %s", HALLeft)
-
         HALRight = await self._read_holding_uint32(
             MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
         )
@@ -1476,13 +1685,15 @@ class DanthermDevice(DanthermModbus):
             (
                 d.id
                 for d in device_registry.devices.values()
-                if self._entry_id in d.config_entries
+                if self._config_entry.entry_id in d.config_entries
             ),
             None,
         )
 
         if not device_id:
-            _LOGGER.warning("No device found for config entry: %s", self._entry_id)
+            _LOGGER.warning(
+                "No device found for config entry: %s", self._config_entry_id
+            )
             return []
 
         return [
@@ -1517,6 +1728,26 @@ class DanthermDevice(DanthermModbus):
             entity_id,
             disabled_by=disabled_by,
         )
+
+    async def get_translated_exception_text(self, key: str, message="message") -> str:
+        """Return a translated exception message."""
+        lang = self._hass.config.language
+        translations = await async_get_translations(
+            self._hass, language=lang, category="exceptions", integrations=[DOMAIN]
+        )
+        full_key = f"component.{DOMAIN}.exceptions.{key}.{message}"
+
+        return translations.get(full_key, message)
+
+    async def get_translated_state_text(self, platform: str, key: str, state) -> str:
+        """Return a translated state text for the current language."""
+        lang = self._hass.config.language
+        translations = await async_get_translations(
+            self._hass, language=lang, category="entity", integrations=[DOMAIN]
+        )
+        full_key = f"component.{DOMAIN}.entity.{platform}.{key}.state.{state}"
+
+        return translations.get(full_key, state)
 
 
 class EventStack(deque):

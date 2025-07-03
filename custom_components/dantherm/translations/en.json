@@ -23,9 +23,11 @@
         "init": {
             "title": "Dantherm Integration Options",
             "data": {
-                "boost_mode_trigger": "Boost Mode Trigger Entity",
-                "eco_mode_trigger": "Eco Mode Trigger Entity",
-                "home_mode_trigger": "Home Mode Trigger Entity"
+                "boost_mode_trigger": "Boost mode trigger entity",
+                "eco_mode_trigger": "Eco mode trigger entity",
+                "home_mode_trigger": "Home mode trigger entity",
+                "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
+                "disable_alarm_notifications": "Disable alarm notification."
             }
         }
     },
@@ -196,16 +198,43 @@
       "fan1_speed": { "name": "Fan Speed 1" },
       "fan2_speed": { "name": "Fan Speed 2" },
       "humidity": { "name": "Humidity" },
+      "humidity_level": {
+        "name": "Humidity Level",
+        "state": {
+          "0": "Very Dry",
+          "1": "Dry",
+          "2": "Normal",
+          "3": "High"
+        }
+      },
       "air_quality": { "name": "Air Quality" },
+      "air_quality_level": {
+        "name": "Air Quality Level",
+        "state": {
+          "0": "Excellent",
+          "1": "Acceptable",
+          "2": "Medium",
+          "3": "Poor"
+        }
+      },
       "exhaust_temperature": { "name": "Exhaust Temperature" },
       "extract_temperature": { "name": "Extract Temperature" },
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
       "filter_remain": { "name": "Filter Remain" },
-      "filter_remain_level": { "name": "Filter Remain Level" },
+      "filter_remain_level": {
+        "name": "Filter Remain Level",
+        "state": {
+          "0": "Excellent",
+          "1": "Good",
+          "2": "Poor",
+          "3": "Replace Now"
+        }
+      },
       "work_time": { "name": "Work Time" },
-      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"}
+      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Away Mode" },
@@ -349,6 +378,9 @@
     },
     "pymodbus_version": {
       "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
+    },
+    "alarm_notification": {
+      "message": "Alarm notifications can be disabled in the integration options."
     }
   }
 }

@@ -1,9 +1,7 @@
 """Config Flow implamentation."""
 
 import ipaddress
-import logging
 import re
-from typing import Final
 
 import voluptuous as vol
 
@@ -13,9 +11,14 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.entity_registry as er
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
+from .device_map import (
+    ADAPTIVE_TRIGGERS,
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
+    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -25,18 +28,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
     }
 )
-
-ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
-
-ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
-
-ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
-
-ADAPTIVE_TRIGGERS = [
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
-]
 
 
 def host_valid(host):
@@ -97,15 +88,11 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ):
         """Create the options flow."""
-        return OptionsFlowHandler()
+        return DanthermOptionsFlowHandler()
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow handler."""
-
-    def __init__(self) -> None:
-        """Initialize options flow."""
-        self._conf_app_id: str | None = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -116,6 +103,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(ATTR_BOOST_MODE_TRIGGER): str,
                 vol.Optional(ATTR_ECO_MODE_TRIGGER): str,
                 vol.Optional(ATTR_HOME_MODE_TRIGGER): str,
+                vol.Optional(
+                    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
+                    default=self.config_entry.options.get(
+                        ATTR_DISABLE_TEMPERATURE_UNKNOWN, False
+                    ),
+                ): bool,
+                vol.Optional(
+                    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+                    default=self.config_entry.options.get(
+                        ATTR_DISABLE_ALARM_NOTIFICATIONS, False
+                    ),
+                ): bool,
             }
         )
 
@@ -130,18 +129,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     errors[entity_key] = "invalid_entity"
 
             if not errors:
+                # current_opts = self.config_entry.options or {}
+                # if user_input != current_opts:
+                # Persist the new options
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, options=user_input
                 )
 
-                # Get the device instance and update the triggers
-                device_instance = (
-                    self.hass.data.get(DOMAIN, {})
-                    .get(self.config_entry.entry_id, {})
-                    .get("device")
-                )
-                if device_instance:
-                    await device_instance.set_up_adaptive_triggers(user_input)
+                # Schedule integration reload on next data update
+                hass_data = self.hass.data[DOMAIN].get(self.config_entry.entry_id)
+                if hass_data and "coordinator" in hass_data:
+                    hass_data["coordinator"].schedule_reload()
 
                 return self.async_create_entry(title="", data=user_input)
 

@@ -92,13 +92,16 @@ ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 ATTR_OPERATION_MODE: Final = "operation_mode"
 
 ATTR_ALARM: Final = "alarm"
+ATTR_DISABLE_ALARM_NOTIFICATIONS = "disable_alarm_notifications"
 
 ATTR_FAN1_SPEED: Final = "fan1_speed"
 ATTR_FAN2_SPEED: Final = "fan2_speed"
 
 ATTR_HUMIDITY = "humidity"
+ATTR_HUMIDITY_LEVEL = "humidity_level"
 
 ATTR_AIR_QUALITY: Final = "air_quality"
+ATTR_AIR_QUALITY_LEVEL: Final = "air_quality_level"
 
 ATTR_EXHAUST_TEMPERATURE: Final = "exhaust_temperature"
 
@@ -110,19 +113,23 @@ ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
 
 ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
 
+ATTR_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
+
 ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
 
+ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
 ATTR_BOOST_MODE: Final = "boost_mode"
 ATTR_BOOST_MODE_TIMEOUT: Final = "boost_mode_timeout"
 
+ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
 ATTR_ECO_MODE: Final = "eco_mode"
 ATTR_ECO_MODE_TIMEOUT: Final = "eco_mode_timeout"
 
+ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
 ATTR_HOME_MODE: Final = "home_mode"
 ATTR_HOME_MODE_TIMEOUT: Final = "home_mode_timeout"
-
 
 ATTR_FIREPLACE_MODE: Final = "fireplace_mode"
 
@@ -148,11 +155,14 @@ ATTR_WORK_TIME: Final = "work_time"
 ATTR_ADAPTIVE_STATE: Final = "adaptive_state"
 STATE_NONE: Final = "none"
 
+ATTR_INTERNAL_PREHEATER: Final = "internal_preheater"
 ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 
 ATTR_FILTER_RESET: Final = "filter_reset"
 
 ATTR_ALARM_RESET: Final = "alarm_reset"
+
+ATTR_FEATURES: Final = "features"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,
@@ -185,6 +195,12 @@ WEEK_PROGRAM_SELECTIONS = [
     STATE_WEEKPROGRAM_9,
     STATE_WEEKPROGRAM_10,
     STATE_WEEKPROGRAM_11,
+]
+
+ADAPTIVE_TRIGGERS = [
+    ATTR_BOOST_MODE_TRIGGER,
+    ATTR_ECO_MODE_TRIGGER,
+    ATTR_HOME_MODE_TRIGGER,
 ]
 
 BOOST_OPERATION_SELECTIONS = [STATE_LEVEL_2, STATE_LEVEL_3, STATE_LEVEL_4]
@@ -635,12 +651,31 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.RH_Senser,
     ),
     DanthermSensorEntityDescription(
+        key=ATTR_HUMIDITY_LEVEL,
+        data_getinternal=ATTR_HUMIDITY_LEVEL,
+        icon="mdi:water-percent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
         data_getinternal=ATTR_AIR_QUALITY,
+        icon="mdi:molecule-co2",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.VOC_sensor,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_AIR_QUALITY_LEVEL,
+        data_getinternal=ATTR_AIR_QUALITY_LEVEL,
+        icon="mdi:molecule-co2",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
         component_class=ComponentClass.VOC_sensor,
     ),
     DanthermSensorEntityDescription(
@@ -696,6 +731,14 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
     ),
     DanthermSensorEntityDescription(
+        key=ATTR_FILTER_REMAIN_LEVEL,
+        icon="mdi:air-filter",
+        data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+    ),
+    DanthermSensorEntityDescription(
         key=ATTR_WORK_TIME,
         icon="mdi:progress-clock",
         data_class=DataClass.UInt32,
@@ -720,13 +763,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         component_class=ComponentClass.Internal_preheater,
     ),
     DanthermSensorEntityDescription(
-        key=ATTR_FILTER_REMAIN_LEVEL,
-        icon="mdi:air-filter",
-        data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
-    ),
-    DanthermSensorEntityDescription(
         key=ATTR_ADAPTIVE_STATE,
         icon="mdi:information",
         data_getinternal=ATTR_ADAPTIVE_STATE,
@@ -734,6 +770,12 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
+    # DanthermSensorEntityDescription(
+    #    key=ATTR_FEATURES,
+    #    icon="mdi:function",
+    #    data_getinternal=ATTR_FEATURES,
+    #    entity_category=EntityCategory.DIAGNOSTIC,
+    # ),
 )
 
 SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (

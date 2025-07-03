@@ -90,6 +90,7 @@ The listed units are known to work with this integration. Basically, all units c
 | Entity                        | Description                          |
 |-------------------------------|--------------------------------------|
 | `air_quality`                 | Air quality sensor [1]               |
+| `air_quality_level`           | Air quality level sensor [2]         |
 | `alarm`                       | Alarm sensor                         |
 | `exhaust_temperature`         | Exhaust temperature sensor           |
 | `extract_temperature`         | Extract temperature sensor           |
@@ -99,6 +100,7 @@ The listed units are known to work with this integration. Basically, all units c
 | `filter_remain`               | Filter remain                        |
 | `filter_remain_level`         | Filter remain level [2]              |
 | `humidity`                    | Humidity sensor [1]                  |
+| `humidity_level`              | Humidity sensor level [2]            |
 | `adaptive_state`              | Adaptive state [4]                   |
 | `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
 | `operation_mode`              | Operation mode                       |
@@ -214,32 +216,33 @@ Danish, Dutch, English, German and French.
 
 #### Picture-elements card
 
+![new](https://github.com/user-attachments/assets/1b21d1a8-e2a1-4589-87b0-eccf9697678c)
+The picture elements card has been updated with fresh images and options to include humidity and air quality sensors with changing level icons _(2025-6-29)_.
+
 This picture-elements card provides a dynamic and intuitive interface for monitoring and controlling your Dantherm ventilation unit. Designed to resemble the Dantherm app, it visually adapts based on the unit’s bypass state while displaying key real-time data:
 
 *	Alarms – Stay alerted to system issues.
 *	Filter Remaining Level – Easily check when filter replacement is needed.
 *	Ventilation Temperatures – View four key temperature readings: Supply, Extract, Outdoor, and Exhaust.
 *	Humidity Level – Monitor indoor humidity for optimal air quality.
-
+*	Air Quality – Monitor indoor air quality.
+  
 Clicking on any displayed entity allows you to adjust its state or explore detailed history graphs for deeper insights.
 
-![Skærmbillede 2024-05-21 182357](https://github.com/Tvalley71/dantherm/assets/83084467/220edf94-71aa-4c29-abd4-c9ed191abd32)
-
-![Skærmbillede 2024-05-21 182443](https://github.com/Tvalley71/dantherm/assets/83084467/91ab4cf7-d7cb-4df9-a602-0d8955203b70)
-
-![Skærmbillede 2024-05-21 182154](https://github.com/Tvalley71/dantherm/assets/83084467/66fc2c18-7db1-403e-ae2b-fc32a4734d6d)
+![Skærmbillede 2025-06-30 kl  05 39 01](https://github.com/user-attachments/assets/a6adac2d-c003-4bd4-a98a-44e03d808007)
+![Skærmbillede 29-06-2025 kl  07 42 02 AM](https://github.com/user-attachments/assets/67f88f90-7bf5-402c-9158-340c4eaaf1a7)
+![Skærmbillede 29-06-2025 kl  07 45 12 AM](https://github.com/user-attachments/assets/aa2a6860-7741-41e9-b9a0-f6f7816a8120)
+![Skærmbillede 29-06-2025 kl  08 52 02 AM](https://github.com/user-attachments/assets/6c503ccf-38ca-435d-8819-ae4d40129dc3)
 
 <details>
 
-<summary>The details for the above picture-elements card 👈 Click to open
-    
-_(YAML updated for better image scaling on 2025-5-19, adjusted state image behavior on 2025-6-9)_</summary>
+<summary>The details for the above picture-elements card 👈 Click to open</summary>
 
 ####
 
 To integrate this into your dashboard, begin by downloading and extracting this <!-- END:shared-section -->[zip file](https://github.com/Tvalley71/dantherm/files/15397672/picture-elements-card.zip)<!-- START:shared-section -->. Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
 
-Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to enable the filter_remain_level sensor.
+Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to enable the `filter_remain_level`, `humidity_level` and `air_quality_level` sensors if these options are included.
 
 #### The code
 
@@ -251,20 +254,20 @@ elements:
   - type: image
     entity: sensor.dantherm_filter_remain_level
     state_image:
-      '0': /local/dantherm4.png
-      '1': /local/dantherm5.png
-      '2': /local/dantherm6.png
-      '3': /local/dantherm7.png
+      "0": /local/dantherm4.png
+      "1": /local/dantherm5.png
+      "2": /local/dantherm6.png
+      "3": /local/dantherm7.png
     style:
-      left: 50%
+      left: 59.5%
       top: 50%
-      width: 100%
+      width: 20.04%
     tap_action:
       action: none
   - type: conditional
     conditions:
       - entity: sensor.dantherm_operation_mode
-        state_not: '6'
+        state_not: "6"
     elements:
       - type: image
         entity: cover.dantherm_bypass_damper
@@ -274,9 +277,9 @@ elements:
           open: /local/dantherm3.png
           opening: /local/dantherm3.png
         style:
-          left: 63.3%
-          top: 75%
-          width: 50.87%
+          left: 59.4%
+          top: 74.35%
+          width: 79.66%
         tap_action:
           action: more-info
       - type: conditional
@@ -289,23 +292,23 @@ elements:
           - type: state-label
             entity: sensor.dantherm_outdoor_temperature
             style:
-              top: 64.5%
-              left: 78%
+              top: 66%
+              left: 83%
           - type: state-label
             entity: sensor.dantherm_extract_temperature
             style:
-              top: 64.5%
-              left: 49%
+              top: 66%
+              left: 35%
           - type: state-label
             entity: sensor.dantherm_exhaust_temperature
             style:
-              top: 81%
-              left: 78%
+              top: 83%
+              left: 83%
           - type: state-label
             entity: sensor.dantherm_supply_temperature
             style:
-              top: 81%
-              left: 49%
+              top: 83%
+              left: 35%
       - type: conditional
         conditions:
           - entity: cover.dantherm_bypass_damper
@@ -316,35 +319,35 @@ elements:
           - type: state-label
             entity: sensor.dantherm_extract_temperature
             style:
-              top: 64.5%
-              left: 49%
+              top: 66%
+              left: 35%
           - type: state-label
             entity: sensor.dantherm_outdoor_temperature
             style:
-              top: 81%
-              left: 78%
+              top: 83%
+              left: 83%
   - type: conditional
     conditions:
       - entity: sensor.dantherm_operation_mode
-        state: '6'
+        state: "6"
     elements:
       - type: image
         image: /local/dantherm8.png
         style:
-          left: 63.3%
-          top: 75%
-          width: 50.87%
+          left: 59.4%
+          top: 74.35%
+          width: 79.66%
         tap_action:
           action: none
       - type: state-label
         entity: sensor.dantherm_extract_temperature
         style:
-          top: 64.5%
-          left: 49%
+          top: 65.5%
+          left: 35%
   - type: conditional
     conditions:
       - entity: sensor.dantherm_alarm
-        state_not: '0'
+        state_not: "0"
     elements:
       - type: state-label
         entity: sensor.dantherm_alarm
@@ -360,24 +363,56 @@ elements:
   - type: state-label
     entity: select.dantherm_operation_selection
     style:
-      top: 45%
-      left: 36%
-      font-weight: bold
-      text-align: center;
-      font-size: 100%
-  - type: state-label
-    entity: sensor.dantherm_humidity
-    style:
-      top: 29%
-      left: 38%
-      font-size: 100%
+      top: 47%
+      left: 25.5%
+      # font-size: 125%
   - type: state-label
     entity: select.dantherm_fan_selection
     style:
       top: 29%
-      left: 63%
-      font-weight: bold
-      font-size: 100%
+      left: 60%
+      # font-size: 125%
+      transform: translate(0%,-50%)
+#  - type: image
+#    entity: sensor.dantherm_humidity_level
+#    state_image:
+#      "0": /local/dantherm9.png
+#      "1": /local/dantherm10.png
+#      "2": /local/dantherm11.png
+#      "3": /local/dantherm12.png
+#    style:
+#      top: 29%
+#      left: 16%
+#      width: 3.76%
+#    tap_action:
+#      action: none
+#  - type: state-label
+#    entity: sensor.dantherm_humidity
+#    style:
+#      top: 29%
+#      left: 18%
+#      # font-size: 125%
+#      transform: translate(0%,-50%)
+#  - type: image
+#    entity: sensor.dantherm_air_quality_level
+#    state_image:
+#      "0": /local/dantherm13.png
+#      "1": /local/dantherm14.png
+#      "2": /local/dantherm15.png
+#      "3": /local/dantherm16.png
+#    style:
+#      top: 29%
+#      left: 36%
+#      width: 5.45%
+#    tap_action:
+#      action: none
+#  - type: state-label
+#    entity: sensor.dantherm_air_quality
+#    style:
+#      top: 29%
+#      left: 39%
+#      # font-size: 125%
+#      transform: translate(0%,-50%)
 
 ```
 </details>

@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Boost-tilstand udløser entitet",
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
-                "home_mode_trigger": "Hjemmetilstand udløser entitet"
+                "home_mode_trigger": "Hjemmetilstand udløser entitet",
+                "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
+                "disable_alarm_notifications": "Deaktiver alarmnotifikationer."
             }
         }
     },
@@ -196,16 +198,43 @@
       "fan1_speed": { "name": "Ventilatorhastighed 1" },
       "fan2_speed": { "name": "Ventilatorhastighed 2" },
       "humidity": { "name": "Luftfugtighed" },
+      "humidity_level": {
+        "name": "Luftfugtighedsniveau",
+        "state": {
+          "0": "Meget tør",
+          "1": "Tør",
+          "2": "Normal",
+          "3": "Høj"
+        }
+      },
       "air_quality": { "name": "Luftkvalitet" },
+      "air_quality_level": {
+        "name": "Luftkvalitetsniveau",
+        "state": {
+          "0": "Fremragende",
+          "1": "Acceptabel",
+          "2": "Middel",
+          "3": "Dårlig"
+        }
+      },
       "exhaust_temperature": { "name": "Udblæsningstemperatur" },
       "extract_temperature": { "name": "Udsugningstemperatur" },
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
-      "filter_remain": { "name": "Filterstatus" },
-      "filter_remain_level": { "name": "Filterstatus niveau" },
+      "filter_remain": { "name": "Filterrestlevetid" },
+      "filter_remain_level": {
+        "name": "Filterrestlevetidsniveau",
+        "state": {
+          "0": "Fremragende",
+          "1": "God",
+          "2": "Dårlig",
+          "3": "Skift nu"
+        }
+      },
       "work_time": { "name": "Drifttid" },
-      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"}
+      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Rejsetilstand" },
@@ -349,6 +378,9 @@
     },
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
+    },
+    "alarm_notification": {
+      "message": "Alarmnotifikationer kan slås fra i integrationsindstillingerne."
     }
   }
 }

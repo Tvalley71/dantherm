@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Entité de déclenchement du mode Boost",
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
-                "home_mode_trigger": "Entité de déclenchement du mode Maison"
+                "home_mode_trigger": "Entité de déclenchement du mode Maison",
+                "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
+                "disable_alarm_notifications": "Désactiver la notification d'alarme."
             }
         }
     },
@@ -195,16 +197,43 @@
       "fan1_speed": { "name": "Vitesse ventilateur 1" },
       "fan2_speed": { "name": "Vitesse ventilateur 2" },
       "humidity": { "name": "Humidité" },
+      "humidity_level": {
+        "name": "Niveau d'humidité",
+        "state": {
+          "0": "Très sec",
+          "1": "Sec", 
+          "2": "Normal",
+          "3": "Élevé"
+        }
+      },
       "air_quality": { "name": "Qualité de l'air" },
+      "air_quality_level": {
+        "name": "Niveau de qualité de l'air",
+        "state": {
+          "0": "Excellent",
+          "1": "Acceptable",
+          "2": "Moyen",
+          "3": "Mauvais"
+        }
+      },
       "exhaust_temperature": { "name": "Température expulsion" },
       "extract_temperature": { "name": "Température extraction" },
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
-      "filter_remain_level": { "name": "Filtre de remplacement dans le niveau" },
+      "filter_remain_level": {
+        "name": "Niveau de durée de vie restante du filtre",
+        "state": {
+          "0": "Excellent",
+          "1": "Bon",
+          "2": "Mauvais",
+          "3": "Remplacer maintenant"
+        }
+      },
       "work_time": { "name": "Temps de fonctionnement" },
-      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"}
+      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Mode absent" },
@@ -348,6 +377,9 @@
     },
     "pymodbus_version": {
       "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
+    },
+    "alarm_notification": {
+      "message": "Les notifications d'alarme peuvent être désactivées dans les options de l'intégration."
     }
   }
 }

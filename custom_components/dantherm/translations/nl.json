@@ -25,7 +25,9 @@
             "data": {
                 "boost_mode_trigger": "Boost-modus Trigger Entiteit",
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
-                "home_mode_trigger": "Thuis-modus Trigger Entiteit"
+                "home_mode_trigger": "Thuis-modus Trigger Entiteit",
+                "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
+                "disable_alarm_notifications": "Alarmmelding uitschakelen."
             }
         }
     },
@@ -195,16 +197,43 @@
       "fan1_speed": { "name": "Snelheid Ventilator 1" },
       "fan2_speed": { "name": "Snelheid Ventilator 2" },
       "humidity": { "name": "Vochtigheid" },
+      "humidity_level": {
+        "name": "Vochtigheidsniveau",
+        "state": {
+          "0": "Zeer droog",
+          "1": "Droog",
+          "2": "Normaal",
+          "3": "Hoog"
+        }
+      },
       "air_quality": { "name": "Luchtkwaliteit" },
+      "air_quality_level": {
+        "name": "Luchtkwaliteitsniveau",
+        "state": {
+          "0": "Uitstekend",
+          "1": "Acceptabel",
+          "2": "Gemiddeld",
+          "3": "Slecht"
+        }
+      },
       "exhaust_temperature": { "name": "Uitlaattemperatuur" },
       "extract_temperature": { "name": "Afzuigtemperatuur" },
       "supply_temperature": { "name": "Aanvoertemperatuur" },
       "outdoor_temperature": { "name": "Buitentemperatuur" },
       "room_temperature": { "name": "Kamertemperatuur" },
       "filter_remain": { "name": "Levenduur Filter" },
-      "filter_remain_level": { "name": "Levensduur Filter Niveau" },
+      "filter_remain_level": {
+        "name": "Filterrestlevensduur niveau",
+        "state": {
+          "0": "Uitstekend",
+          "1": "Goed",
+          "2": "Slecht",
+          "3": "Nu vervangen"
+        }
+      },
       "work_time": { "name": "Inschakelduur" },
-      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"}
+      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"},
+      "features": { "name": "Features" }
     },
     "switch": {
       "away_mode": { "name": "Afwezigheidsmodus" },
@@ -348,6 +377,9 @@
     },
     "pymodbus_version": {
       "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
+    },
+    "alarm_notification": {
+      "message": "Alarmmeldingen kunnen worden uitgeschakeld in de integratie-opties."
     }
   }
 }
