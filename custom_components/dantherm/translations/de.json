@@ -202,18 +202,18 @@
         "state": {
           "0": "Sehr trocken",
           "1": "Trocken",
-          "2": "Normal",
-          "3": "Feucht"
+          "2": "Normal", 
+          "3": "Hoch"
         }
       },
       "air_quality": { "name": "Luftqualität" },
       "air_quality_level": {
         "name": "Luftqualitätsniveau",
         "state": {
-          "0": "Sauber",
+          "0": "Ausgezeichnet",
           "1": "Akzeptabel",
-          "2": "Leicht verschmutzt",
-          "3": "Verschmutzt"
+          "2": "Mittel",
+          "3": "Schlecht"
         }
       },
       "exhaust_temperature": { "name": "Fortlufttemperatur" },
@@ -223,12 +223,12 @@
       "room_temperature": { "name": "Raumtemperatur" },
       "filter_remain": { "name": "Filter verbleibend" },
       "filter_remain_level": {
-        "name": "Filter verbleiben niveau",
+        "name": "Filterrestlaufzeit-Niveau",
         "state": {
-          "0": "Hervorragend",
+          "0": "Ausgezeichnet",
           "1": "Gut",
-          "2": "Abgenutzt",
-          "3": "Ersetzen"
+          "2": "Schlecht",
+          "3": "Jetzt ersetzen"
         }
       },
       "work_time": { "name": "Laufzeit" },

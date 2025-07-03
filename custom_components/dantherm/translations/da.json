@@ -204,17 +204,17 @@
           "0": "Meget tør",
           "1": "Tør",
           "2": "Normal",
-          "3": "Fugtig"
+          "3": "Høj"
         }
       },
       "air_quality": { "name": "Luftkvalitet" },
       "air_quality_level": {
         "name": "Luftkvalitetsniveau",
         "state": {
-          "0": "Ren",
-          "1": "Tilstrækkelig",
-          "2": "Let forurenet",
-          "3": "Forurenet"
+          "0": "Fremragende",
+          "1": "Acceptabel",
+          "2": "Middel",
+          "3": "Dårlig"
         }
       },
       "exhaust_temperature": { "name": "Udblæsningstemperatur" },
@@ -222,14 +222,14 @@
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
-      "filter_remain": { "name": "Filterstatus" },
+      "filter_remain": { "name": "Filterrestlevetid" },
       "filter_remain_level": {
-        "name": "Filterniveau",
+        "name": "Filterrestlevetidsniveau",
         "state": {
-          "0": "Udmærket",
-          "1": "Godt",
-          "2": "Slidt",
-          "3": "Udskift"
+          "0": "Fremragende",
+          "1": "God",
+          "2": "Dårlig",
+          "3": "Skift nu"
         }
       },
       "work_time": { "name": "Drifttid" },

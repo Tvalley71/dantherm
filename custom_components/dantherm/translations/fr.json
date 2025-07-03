@@ -201,19 +201,19 @@
         "name": "Niveau d'humidité",
         "state": {
           "0": "Très sec",
-          "1": "Sec",
+          "1": "Sec", 
           "2": "Normal",
-          "3": "Humide"
+          "3": "Élevé"
         }
       },
       "air_quality": { "name": "Qualité de l'air" },
       "air_quality_level": {
         "name": "Niveau de qualité de l'air",
         "state": {
-          "0": "Propre",
+          "0": "Excellent",
           "1": "Acceptable",
-          "2": "Légèrement pollué",
-          "3": "Pollué"
+          "2": "Moyen",
+          "3": "Mauvais"
         }
       },
       "exhaust_temperature": { "name": "Température expulsion" },
@@ -223,12 +223,12 @@
       "room_temperature": { "name": "Température ambiante" },
       "filter_remain": { "name": "Remplacement filtre dans" },
       "filter_remain_level": {
-        "name": "Filtre de remplacement dans le niveau",
+        "name": "Niveau de durée de vie restante du filtre",
         "state": {
           "0": "Excellent",
           "1": "Bon",
-          "2": "Usé",
-          "3": "Remplacer"
+          "2": "Mauvais",
+          "3": "Remplacer maintenant"
         }
       },
       "work_time": { "name": "Temps de fonctionnement" },

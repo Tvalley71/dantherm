@@ -203,17 +203,17 @@
           "0": "Zeer droog",
           "1": "Droog",
           "2": "Normaal",
-          "3": "Vochtig"
+          "3": "Hoog"
         }
       },
       "air_quality": { "name": "Luchtkwaliteit" },
       "air_quality_level": {
         "name": "Luchtkwaliteitsniveau",
         "state": {
-          "0": "Schoon",
+          "0": "Uitstekend",
           "1": "Acceptabel",
-          "2": "Licht vervuild",
-          "3": "Vervuild"
+          "2": "Gemiddeld",
+          "3": "Slecht"
         }
       },
       "exhaust_temperature": { "name": "Uitlaattemperatuur" },
@@ -223,12 +223,12 @@
       "room_temperature": { "name": "Kamertemperatuur" },
       "filter_remain": { "name": "Levenduur Filter" },
       "filter_remain_level": {
-        "name": "Levensduur Filter Niveau",
+        "name": "Filterrestlevensduur niveau",
         "state": {
           "0": "Uitstekend",
           "1": "Goed",
-          "2": "Versleten",
-          "3": "Vervangen"
+          "2": "Slecht",
+          "3": "Nu vervangen"
         }
       },
       "work_time": { "name": "Inschakelduur" },
