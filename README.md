@@ -5,6 +5,10 @@ Home Assistant integration for Dantherm ventilation units.
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
 
+<!-- START:shared-section -->
+
+<a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ### ⚠️ Compatibility Notice
 
 This custom integration requires:
@@ -12,6 +16,8 @@ This custom integration requires:
 - Home Assistant version **2025.1.0** or newer
 
 Only support for Modbus over TCP/IP.
+
+<!-- END:shared-section -->
 
 Known supported units:
 
@@ -23,12 +29,16 @@ Known supported units:
 - HCH5 MKII
 - RCC220 P2
 
-> [!NOTE]
-> The listed units are known to have been used with this integration. Basicly all units that can be used with the _Dantherm Residential_ app ought to work with the integration
-> ([Google Play](https://play.google.com/store/apps/details?id=com.dantherm.ventilation) or [Apple Store](https://apps.apple.com/dk/app/dantherm-residential/id1368468353)).
-> If you know of any not included in the list, please feel free to contact me [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general).
+<!-- START:shared-section -->
 
-<a href="https://www.buymeacoffee.com/tvalley71" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+<!-- START:shared-section no-replace -->
+The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
+<!-- END:shared-section -->
+
+> [!NOTE]  
+> If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
+> The number can be found in the **Device Info** section on the integration page; if the unit is not recognized, it will be listed as "Unknown" followed by the number.
+
 
 ### Controls and sensors
 
@@ -43,7 +53,7 @@ Known supported units:
 
 | Entity        | Description              |
 |---------------|--------------------------|
-| ~~`calendar`~~ | ~~Operation Calendar~~   |
+| ~~`calendar`~~ | ~~Operation Calendar~~  |
 
 #### Cover Entity
 
@@ -132,6 +142,8 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
 ### Installation
 
+<!-- START:shared-section replace-all -->
+
 #### Installation via HACS (Home Assistant Community Store)
 
 1. Ensure you have HACS installed and configured in your Home Assistant instance.
@@ -151,6 +163,8 @@ _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 4. Download the latest release of the Dantherm integration from the [releases page](https://github.com/Tvalley71/dantherm/releases/latest) into the **'custom_components/dantherm'** directory:
 5. Once the files are in place, restart your Home Assistant instance.
 
+<!-- END:shared-section -->
+
 ### Configuration
 
 After installation, add the Dantherm integration to your Home Assistant configuration.
@@ -163,11 +177,13 @@ After installation, add the Dantherm integration to your Home Assistant configur
 ![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
 ![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
 
+<!-- END:shared-section -->
 
 ### Support
 
 If you encounter any issues or have questions regarding the Dantherm integration for Home Assistant, feel free to [open an issue](https://github.com/Tvalley71/dantherm/issues/new) or [start a discussion](https://github.com/Tvalley71/dantherm/discussions) on this repository. I welcome any contributions or feedback.
 
+<!-- START:shared-section -->
 
 ### Languages
 
@@ -224,7 +240,7 @@ Clicking on any displayed entity allows you to adjust its state or explore detai
 
 ####
 
-To integrate this into your dashboard, begin by downloading and extracting this <!-- END:shared-section -->[zip file](https://github.com/user-attachments/files/20966201/picture-elements-card.zip)<!-- START:shared-section -->. Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
+To integrate this into your dashboard, begin by downloading and extracting this <!-- END:shared-section -->[zip file](https://github.com/Tvalley71/dantherm/files/15397672/picture-elements-card.zip)<!-- START:shared-section -->. Copy the contained files into the "www" folder within your configuration directory on Home Assistant. You can use the _Samba share_ add-on, the upload feature in the _Studio Code Server_ add-on, or other preferred methods.
 
 Next, insert the following code into your dashboard. If your Home Assistant setup uses a language other than English, make sure to modify the entity names in the code accordingly. You also need to enable the `filter_remain_level`, `humidity_level` and `air_quality_level` sensors if these options are included.
 
@@ -401,77 +417,69 @@ elements:
 ```
 </details>
 
-#### Mushroom-chips card
-
-An example of a Mushroom-chips card showing the current state of operation and fan level in a single display. This can also be achieved with many of the other entities.
-
-![Skærmbillede 2024-05-21 104804](https://github.com/user-attachments/assets/2e35c5f9-46cf-4a77-a13c-56992ecccf3e)
-
-<details>
-
-<summary>Mushroom-chips card details 👈 Click to open</summary>
-
-####
-
-The following cards need the _Mushroom_ frontend repository installed under HACS.
-
-#### Mode of operation and fan level chips card (shown above)
-
-```yaml
-
-type: custom:mushroom-chips-card
-chips:
-  - type: conditional
-    conditions:
-      - condition: state
-        entity: sensor.dantherm_fan_level
-        state_not: unavailable
-    chip:
-      type: entity
-      entity: sensor.dantherm_fan_level
-      icon_color: blue
-
-```
-
-#### Alert chips card
-
-Alert chip displaying any current alert along with its descriptions. A hold action is available to attempt resetting the alarm.
-
-```yaml
-
-type: custom:mushroom-chips-card
-    chips:
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.dantherm_alarm
-            state_not: unavailable
-          - condition: state
-            entity: sensor.dantherm_alarm
-            state_not: '0'
-        chip:
-          type: entity
-          entity: sensor.dantherm_alarm
-          icon_color: red
-          hold_action:
-            action: call-service
-            service: button.press
-            data: {}
-            target:
-              entity_id: button.dantherm_reset_alarm
-
-```
-
-</details>
-
-> [!NOTE]
-> Starting from version 2024.8 of Home Assistant, the new badges can be used to achieve same results as the Mushroom chips card.
-
 #### Dashboard Badges
 
 Here are some examples of badges added to the dashboard. The pop-up that appears when clicking on a badge will vary depending on the selected entities, either displaying information or enabling manipulation of the Dantherm unit.
 
 ![Skærmbillede badge example](https://github.com/user-attachments/assets/bbaac388-0e40-48cf-a0d1-7b42fb5a4234)
+
+
+#### Apex-chart
+
+![Skærmbillede 2025-06-23 092901](https://github.com/user-attachments/assets/29cabc96-54d5-42db-bedc-ae381c8f5c94)
+
+<details>
+
+<summary>The details for the above Apex-chart card (Can be found on HACS) 👈 Click to open</summary>
+
+```yaml
+
+type: custom:apexcharts-card
+update_interval: 5min
+apex_config:
+  stroke:
+    width: 2
+    curve: smooth
+graph_span: 24h
+series:
+  - entity: sensor.dantherm_extract_temperature
+    name: Extract Temperature
+    extend_to: false
+    show:
+      extremas: true
+      legend_value: false
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_outdoor_temperature
+    name: Outdoor Temperature
+    extend_to: false
+    show:
+      extremas: true
+      legend_value: false
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_exhaust_temperature
+    name: Exhaust Temperature
+    extend_to: false
+    show:
+      legend_value: false
+    group_by:
+      duration: 5min
+      func: avg
+  - entity: sensor.dantherm_supply_temperature
+    name: Supply Temperature
+    extend_to: false
+    show:
+      legend_value: false
+    group_by:
+      duration: 5min
+      func: avg
+
+```
+    
+</details>
 
 
 ## Sensor Filtering
@@ -514,7 +522,6 @@ Each sensor type has a predefined maximum allowed change per reading:
 This ensures the filtering logic fits the natural dynamics of each sensor type.
 
 > This feature was inspired by [issue #68](https://github.com/Tvalley71/dantherm/issues/68), reported by a community user.
-
 
 ## Actions
 
@@ -602,7 +609,7 @@ Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ens
 - **Available Operations**: `Automatic`, `Level 3`, `Level 2`, `Level 1`, or `Week Program`.
 
 
-### Trigger Timeout ⏱️
+<h3 id="trigger-timeout">Trigger Timeout ⏱️</h3>
 
 Each mode trigger (Boost, Eco, Home) includes a configurable timeout that defines how long the mode remains active after the trigger is deactivated.
 
@@ -694,6 +701,7 @@ The available operations in **Default Operation Selection** are **Automatic**, *
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
 
+<!-- END:shared-section -->
 
 ## Disclaimer
 
