@@ -287,7 +287,7 @@ class DanthermDevice(DanthermModbus):
         """Start the integration."""
 
         # Set up adaptive triggers
-        await self._set_up_adaptive_triggers(self._options)
+        await self.set_up_adaptive_triggers(self._options)
 
         # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
@@ -1250,7 +1250,7 @@ class DanthermDevice(DanthermModbus):
         """Get home mode trigger available."""
         return self._options.get(ATTR_HOME_MODE_TRIGGER, False)
 
-    async def _set_up_adaptive_triggers(self, options: dict):
+    async def set_up_adaptive_triggers(self, options: dict):
         """Enable/disable associated entities based on configured adaptive triggers."""
         entities = self._get_device_entities()
 
