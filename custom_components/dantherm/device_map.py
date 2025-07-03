@@ -92,7 +92,7 @@ ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 ATTR_OPERATION_MODE: Final = "operation_mode"
 
 ATTR_ALARM: Final = "alarm"
-ATTR_DISABLE_ALARM_NOTIFICATIONS = "disable_alarm_notifications"
+ATTR_DISABLE_ALARM_NOTIFICATIONS: Final = "disable_alarm_notifications"
 
 ATTR_FAN1_SPEED: Final = "fan1_speed"
 ATTR_FAN2_SPEED: Final = "fan2_speed"
