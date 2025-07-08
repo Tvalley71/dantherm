@@ -61,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [
     "button",
+    "calendar",
     "cover",
     "number",
     "select",

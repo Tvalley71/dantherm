@@ -218,6 +218,14 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         ):  # disconnect and close modbus connection if no more entities
             await self.hub.disconnect_and_close()
 
+    def get_entity(self, key: str) -> Entity | None:
+        """Get entity by key."""
+
+        for entity in self._entities:
+            if entity.key == key:
+                return entity
+        return None
+
     def is_entity_installed(self, key: str) -> bool:
         """Check if the entity with the key is installed."""
         return any(entity.key == key for entity in self._entities)

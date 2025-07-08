@@ -46,6 +46,9 @@
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
       "alarm_reset": { "name": "Réinitialiser alerte active" }
     },
+    "calendar": {
+      "calendar": { "name": "Calendrier" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass" }
     },
