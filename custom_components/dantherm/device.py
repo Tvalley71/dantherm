@@ -7,6 +7,9 @@ import os
 import re
 from types import SimpleNamespace
 
+from voluptuous import Any
+
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -14,7 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import cached_property
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_datetime
 
@@ -30,6 +36,7 @@ from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
     ATTR_BYPASS_DAMPER,
+    ATTR_CALENDAR,
     ATTR_DISABLE_ALARM_NOTIFICATIONS,
     ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE,
@@ -152,6 +159,8 @@ class DanthermDevice(DanthermModbus):
         self._filter_remain_level = None
         self._last_current_operation = None
         self._operation_change_timeout = MIN_DT
+        self._calendar_events: list[CalendarEvent] = []
+        self._current_calendar_event = None
         self.events = EventStack()
         self.coordinator = None
         self.installed_components = 0
@@ -304,6 +313,9 @@ class DanthermDevice(DanthermModbus):
         if not self._options.get(ATTR_DISABLE_ALARM_NOTIFICATIONS, False):
             await self._set_up_alarm_notification()
 
+        # Set up calendar automation
+        await self._set_up_calendar_automation()
+
         # Remove chached properties
         self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
         self.__dict__.pop("_get_filter_remain_entity_installed", None)
@@ -390,6 +402,10 @@ class DanthermDevice(DanthermModbus):
         if states:
             return states["state"]
         return default
+
+    def _get_entity_from_coordinator(self, entity: str):
+        """Get entity from coordinator."""
+        return self.coordinator.get_entity(entity)
 
     @property
     def available(self) -> bool:
@@ -1569,6 +1585,40 @@ class DanthermDevice(DanthermModbus):
                 data={"old_state": old_state, "new_state": new_state}
             )
             await self._alarm_state_changed(event)
+
+    async def _set_up_calendar_automation(self) -> None:
+        """Set up calendar-based automation."""
+
+        # Check for active events every minute
+        async_track_time_interval(
+            self._hass, self._check_calendar_events, timedelta(minutes=1)
+        )
+
+    async def _check_calendar_events(self, now: datetime) -> None:
+        """Check and apply active calendar events."""
+
+        calendar_state = self._get_entity_from_coordinator(ATTR_CALENDAR)
+
+        if not calendar_state:
+            return
+
+        # Get current event from calendar
+        current_event = calendar_state.attributes.get("event")
+        if not current_event:
+            return
+
+        # Apply event actions if it's a new event
+        if self._current_calendar_event != current_event:
+            await self._apply_calendar_event(current_event)
+            self._current_calendar_event = current_event
+
+    async def _apply_calendar_event(self, event: dict[str, Any]) -> None:
+        """Apply settings from a calendar event."""
+        description = event.get("description", "")
+        actions = self._parse_event_actions(description)
+
+        for action in actions:
+            await self._execute_calendar_action(action)
 
     def _push_event(
         self, mode_name, current_operation, new_operation, timeout=None

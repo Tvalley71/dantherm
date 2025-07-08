@@ -40,6 +40,9 @@
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }
     },
+    "calendar": {
+      "calendar": { "name": "Calendar" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass Damper" }
     },

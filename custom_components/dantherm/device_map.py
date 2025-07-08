@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.components.calendar import CalendarEntityDescription
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityDescription,
@@ -42,6 +43,8 @@ SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
 
 ATTR_BYPASS_DAMPER: Final = "bypass_damper"
+
+ATTR_CALENDAR: Final = "calendar"
 
 ATTR_OPERATION_SELECTION: Final = "operation_selection"
 STATE_STANDBY: Final = "standby"
@@ -351,6 +354,13 @@ class DanthermButtonEntityDescription(
 
 
 @dataclass
+class DanthermCalendarEntityDescription(
+    DanthermEntityDescription, CalendarEntityDescription
+):
+    """Dantherm Calendar Entity Description."""
+
+
+@dataclass
 class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
@@ -427,6 +437,13 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
         icon="mdi:restore-alert",
         data_setinternal="alarm_reset",
         data_class=DataClass.UInt32,
+    ),
+)
+
+CALENDAR: tuple[DanthermCalendarEntityDescription, ...] = (
+    DanthermCalendarEntityDescription(
+        key=ATTR_CALENDAR,
+        icon="mdi:calendar",
     ),
 )
 

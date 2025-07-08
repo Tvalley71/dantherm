@@ -40,6 +40,9 @@
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
       "alarm_reset": { "name": "Réinitialiser alerte active" }
     },
+    "calendar": {
+      "calendar": { "name": "Calendrier" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass" }
     },
@@ -201,7 +204,7 @@
         "name": "Niveau d'humidité",
         "state": {
           "0": "Très sec",
-          "1": "Sec", 
+          "1": "Sec",
           "2": "Normal",
           "3": "Élevé"
         }
