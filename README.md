@@ -131,7 +131,7 @@ The listed units are known to work with this integration. Basically, all units c
 | `night_mode_end_time`    | Night mode end time text [[2]](#entity-notes) |
 | `night_mode_start_time`  | Night mode start time text [[2]](#entity-notes) |
 
-<h3 id="entity-notes">Notes</h3>
+<h4 id="entity-notes">Notes</h4>
 
 [1] The entity may not install due to lack of support or installation in the particular unit.  
 [2] The entity is disabled by default.  
