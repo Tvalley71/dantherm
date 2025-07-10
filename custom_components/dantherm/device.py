@@ -829,12 +829,30 @@ class DanthermDevice(DanthermModbus):
         async def update_operation(
             current_mode, active_mode, fan_level: int | None = None
         ):
-            """Update the unit operation mode and fan level."""
+            """Update the operation mode and fan level."""
 
-            if self._current_unit_mode != current_mode:
-                await self.set_active_unit_mode(active_mode)
+            current_operation = self.get_operation_selection
 
-            # Always set the fan level even if it's the same as before, as it may change after setting the operation mode.
+            if current_operation == STATE_AWAY and current_mode != CurrentUnitMode.Away:
+                await update_operation(CurrentUnitMode.Away, ActiveUnitMode.EndAway)
+            elif (
+                current_operation == STATE_FIREPLACE
+                and current_mode != CurrentUnitMode.Fireplace
+            ):
+                await update_operation(
+                    CurrentUnitMode.Fireplace, ActiveUnitMode.EndFireplace
+                )
+            elif (
+                current_operation == STATE_SUMMER
+                and current_mode != CurrentUnitMode.Summer
+            ):
+                await update_operation(CurrentUnitMode.Summer, ActiveUnitMode.EndSummer)
+
+            # Update the current unit mode
+            await self.set_active_unit_mode(active_mode)
+
+            # Always set the fan level even if it's the same as before, as it may
+            # change after setting the operation mode.
             if fan_level is not None:
                 await self.set_fan_level(fan_level)
 
@@ -844,8 +862,21 @@ class DanthermDevice(DanthermModbus):
         if value == STATE_AUTOMATIC:
             await update_operation(CurrentUnitMode.Automatic, ActiveUnitMode.Automatic)
         elif value == STATE_AWAY:
-            # For away mode, update the mode accordingly
-            await update_operation(CurrentUnitMode.Away, ActiveUnitMode.StartAway)
+            # For away mode, check if the last operation was not away before updating
+            if self._last_current_operation != STATE_AWAY:
+                await update_operation(CurrentUnitMode.Away, ActiveUnitMode.StartAway)
+        elif value == STATE_FIREPLACE:
+            # For fireplace mode, check if the last operation was not fireplace before updating
+            if self._last_current_operation != STATE_FIREPLACE:
+                await update_operation(
+                    CurrentUnitMode.Fireplace, ActiveUnitMode.StartFireplace
+                )
+        elif value == STATE_SUMMER:
+            # For summer mode, check if the last operation was not summer before updating
+            if self._last_current_operation != STATE_SUMMER:
+                await update_operation(
+                    CurrentUnitMode.Summer, ActiveUnitMode.StartSummer
+                )
         elif value == STATE_LEVEL_1:
             await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 1)
         elif value == STATE_LEVEL_2:
