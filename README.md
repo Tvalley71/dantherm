@@ -136,7 +136,7 @@ The listed units are known to work with this integration. Basically, all units c
 [1] The entity may not install due to lack of support or installation in the particular unit.  
 [2] The entity is disabled by default.  
 [3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
-[4] The entity can only be enabled if any of the adaptive triggers are configured.
+[4] The entity can only be enabled if any of the adaptive triggers are configured.  
 [5] The entity may not install due to firmware limitation.
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
