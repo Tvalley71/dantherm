@@ -59,19 +59,19 @@ The listed units are known to work with this integration. Basically, all units c
 
 | Entity           | Description              |
 |------------------|--------------------------|
-| `bypass_damper`  | Bypass damper [1]        |
+| `bypass_damper`  | Bypass damper [[1]](#entity-notes) |
 
 #### Number Entities
 
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
 | `boost_mode_timeout`        | Boost mode timeout [3]             |
-| `bypass_minimum_temperature`| Bypass minimum temperature [2]     |
-| `bypass_maximum_temperature`| Bypass maximum temperature [2]     |
+| `bypass_minimum_temperature`| Bypass minimum temperature [2][5]  |
+| `bypass_maximum_temperature`| Bypass maximum temperature [2][5]  |
 | `eco_mode_timeout`          | Eco mode timeout [3]               |
 | `filter_lifetime`           | Filter lifetime [2]                |
 | `home_mode_timeout`         | Home mode timeout [3]              |
-| `manual_bypass_duration`    | Manual bypass duration [1][2]      |
+| `manual_bypass_duration`    | Manual bypass duration [1][2][5]   |
 
 #### Select Entities
 
@@ -131,12 +131,13 @@ The listed units are known to work with this integration. Basically, all units c
 | `night_mode_end_time`    | Night mode end time text [2]    |
 | `night_mode_start_time`  | Night mode start time text [2]  |
 
-### Notes
+<h3 id="entity-notes">Notes</h3>
 
 [1] The entity may not install due to lack of support or installation in the particular unit.  
 [2] The entity is disabled by default.  
 [3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
 [4] The entity can only be enabled if any of the adaptive triggers are configured.
+[5] The entity may not install due to firmware limitation.
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
