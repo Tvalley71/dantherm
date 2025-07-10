@@ -65,71 +65,71 @@ The listed units are known to work with this integration. Basically, all units c
 
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
-| `boost_mode_timeout`        | Boost mode timeout [3]             |
-| `bypass_minimum_temperature`| Bypass minimum temperature [2][5]  |
-| `bypass_maximum_temperature`| Bypass maximum temperature [2][5]  |
-| `eco_mode_timeout`          | Eco mode timeout [3]               |
-| `filter_lifetime`           | Filter lifetime [2]                |
-| `home_mode_timeout`         | Home mode timeout [3]              |
-| `manual_bypass_duration`    | Manual bypass duration [1][2][5]   |
+| `boost_mode_timeout`        | Boost mode timeout [[3]](#entity-notes) |
+| `bypass_minimum_temperature`| Bypass minimum temperature [[2][5]](#entity-notes) |
+| `bypass_maximum_temperature`| Bypass maximum temperature [[2][5]](#entity-notes) |
+| `eco_mode_timeout`          | Eco mode timeout [[3]](#entity-notes) |
+| `filter_lifetime`           | Filter lifetime [[2]](#entity-notes) |
+| `home_mode_timeout`         | Home mode timeout [[3]](#entity-notes) |
+| `manual_bypass_duration`    | Manual bypass duration [[1][2][5]](#entity-notes) |
 
 #### Select Entities
 
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
-| `boost_operation_selection` | Boost operation selection [3]      |
+| `boost_operation_selection` | Boost operation selection [[3]](#entity-notes) |
 | ~~`default_operation_selection`~~ | ~~Default operation selection~~ |
-| `eco_operation_selection`   | Eco operation selection [3]        |
+| `eco_operation_selection`   | Eco operation selection [[3]](#entity-notes) |
 | `fan_level_selection`       | Fan level selection                |
-| `home_operation_selection`  | Home operation selection [3]       |
+| `home_operation_selection`  | Home operation selection [[3]](#entity-notes) |
 | `operation_selection`       | Mode of operation selection        |
-| `week_program_selection`    | Week program selection [2]         |
+| `week_program_selection`    | Week program selection [[2]](#entity-notes) |
 
 #### Sensor Entities
 
 | Entity                        | Description                          |
 |-------------------------------|--------------------------------------|
-| `air_quality`                 | Air quality sensor [1]               |
-| `air_quality_level`           | Air quality level sensor [2]         |
+| `air_quality`                 | Air quality sensor [[1]](#entity-notes) |
+| `air_quality_level`           | Air quality level sensor [[2]](#entity-notes) |
 | `alarm`                       | Alarm sensor                         |
 | `exhaust_temperature`         | Exhaust temperature sensor           |
 | `extract_temperature`         | Extract temperature sensor           |
 | `fan_level`                   | Fan level                            |
-| `fan1_speed`                  | Fan 1 speed [2]                      |
-| `fan2_speed`                  | Fan 2 speed [2]                      |
+| `fan1_speed`                  | Fan 1 speed [[2]](#entity-notes)     |
+| `fan2_speed`                  | Fan 2 speed [[2]](#entity-notes)     |
 | `filter_remain`               | Filter remain                        |
-| `filter_remain_level`         | Filter remain level [2]              |
-| `humidity`                    | Humidity sensor [1]                  |
-| `humidity_level`              | Humidity sensor level [2]            |
-| `adaptive_state`              | Adaptive state [4]                   |
-| `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
+| `filter_remain_level`         | Filter remain level [[2]](#entity-notes) |
+| `humidity`                    | Humidity sensor [[1]](#entity-notes) |
+| `humidity_level`              | Humidity sensor level [[2]](#entity-notes) |
+| `adaptive_state`              | Adaptive state [[4]](#entity-notes)  |
+| `internal_preheater_dutycycle`| Preheater power dutycycle [[1][2]](#entity-notes) |
 | `operation_mode`              | Operation mode                       |
 | `outdoor_temperature`         | Outdoor temperature sensor           |
-| `room_temperature`            | Room temperature sensor [1][2]       |
+| `room_temperature`            | Room temperature sensor [[1][2]](#entity-notes) |
 | `supply_temperature`          | Supply temperature sensor            |
-| `work_time`                   | Work time [2]                        |
+| `work_time`                   | Work time [[2]](#entity-notes)       |
 
 #### Switch Entities
 
 | Entity                 | Description                     |
 |------------------------|---------------------------------|
 | `away_mode`            | Away mode                       |
-| `boost_mode`           | Boost mode [3]                  |
-| `disable_bypass`       | Disable bypass [2]              |
-| `eco_mode`             | Eco mode [3]                    |
+| `boost_mode`           | Boost mode [[3]](#entity-notes) |
+| `disable_bypass`       | Disable bypass [[2]](#entity-notes) |
+| `eco_mode`             | Eco mode [[3]](#entity-notes)   |
 | `fireplace_mode`       | Fireplace mode                  |
-| `home_mode`            | Home mode [3]                   |
-| `manual_bypass_mode`   | Manual bypass mode [1]          |
-| `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor filtering [2]            |
+| `home_mode`            | Home mode [[3]](#entity-notes)  |
+| `manual_bypass_mode`   | Manual bypass mode [[1]](#entity-notes) |
+| `night_mode`           | Night mode [[2]](#entity-notes) |
+| `sensor_filtering`     | Sensor filtering [[2]](#entity-notes) |
 | `summer_mode`          | Summer mode                     |
 
 #### Text Entities
 
 | Entity                   | Description                     |
 |--------------------------|---------------------------------|
-| `night_mode_end_time`    | Night mode end time text [2]    |
-| `night_mode_start_time`  | Night mode start time text [2]  |
+| `night_mode_end_time`    | Night mode end time text [[2]](#entity-notes) |
+| `night_mode_start_time`  | Night mode start time text [[2]](#entity-notes) |
 
 <h3 id="entity-notes">Notes</h3>
 
