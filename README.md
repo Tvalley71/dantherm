@@ -46,8 +46,8 @@ The listed units are known to work with this integration. Basically, all units c
 
 | Entity            | Description       |
 |-------------------|-------------------|
-| `alarm_reset`     | Clears active alarms and resets the system alarm state |
-| `filter_reset`    | Resets the filter replacement timer and alarm notification |
+| `alarm_reset`     | Clears the active alarm and dismis the alarm notification |
+| `filter_reset`    | Resets the filter remain timer and dismis the alarm notification |
 
 #### Calendar Entity
 
