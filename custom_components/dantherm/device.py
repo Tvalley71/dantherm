@@ -866,6 +866,13 @@ class DanthermDevice(DanthermModbus):
             ):
                 await update_operation(CurrentUnitMode.Summer, ActiveUnitMode.EndSummer)
 
+            _LOGGER.debug(
+                "Setting operation mode to %s and active mode to %s with fan level %s",
+                current_mode,
+                active_mode,
+                fan_level,
+            )
+
             # Update the current unit mode
             await self.set_active_unit_mode(active_mode)
 
