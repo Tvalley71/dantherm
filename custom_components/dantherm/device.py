@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import logging
 import os
 import re
-from types import SimpleNamespace
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +29,7 @@ from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
     ATTR_BYPASS_DAMPER,
-    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_NOTIFICATIONS,
     ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
@@ -300,10 +299,6 @@ class DanthermDevice(DanthermModbus):
         ):
             await self._set_up_tracking_for_adaptive_triggers(self._options)
 
-        # Set up event listener for alarm notification if not disabled
-        if not self._options.get(ATTR_DISABLE_ALARM_NOTIFICATIONS, False):
-            await self._set_up_alarm_notification()
-
         # Remove chached properties
         self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
         self.__dict__.pop("_get_filter_remain_entity_installed", None)
@@ -567,7 +562,13 @@ class DanthermDevice(DanthermModbus):
     async def async_get_alarm(self):
         """Get alarm."""
 
-        self._alarm = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
+        result = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
+        if result not in (None, 0, self._alarm):
+            # Create persistent notification if alarm is not zero
+            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
+                await self._create_notification("sensor", ATTR_ALARM, result)
+
+        self._alarm = result
         _LOGGER.debug("Alarm = %s", self._alarm)
         return self._alarm
 
@@ -594,6 +595,9 @@ class DanthermDevice(DanthermModbus):
 
     async def set_alarm_reset(self, value=None):
         """Reset alarm."""
+
+        # Dismiss persistent alarm notification if it exists
+        self._dismiss_notification(ATTR_ALARM)
 
         if value is None:
             value = self._alarm
@@ -699,9 +703,13 @@ class DanthermDevice(DanthermModbus):
     async def async_get_filter_remain(self):
         """Get filter remain."""
 
-        self._filter_remain = await self._read_holding_uint32(
-            MODBUS_REGISTER_FILTER_REMAIN
-        )
+        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
+        if result == 0 and result != self._filter_remain:
+            # Create persistent notification if filter remain is zero
+            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
+                await self._create_notification("sensor", ATTR_FILTER_REMAIN, result)
+
+        self._filter_remain = result
         _LOGGER.debug("Filter remain = %s", self._filter_remain)
 
         if not self._get_filter_remain_level_entity_installed:
@@ -814,6 +822,9 @@ class DanthermDevice(DanthermModbus):
     async def set_filter_reset(self, value=None):
         """Reset filter."""
 
+        # Dismiss persistent alarm notification if it exists
+        self._dismiss_notification(ATTR_FILTER_REMAIN)
+
         if value is None:
             value = 1
         await self._write_holding_uint32(MODBUS_REGISTER_FILTER_RESET, value)
@@ -826,12 +837,19 @@ class DanthermDevice(DanthermModbus):
     async def set_operation_selection(self, value):
         """Set operation selection."""
 
+        current_operation = self.get_operation_selection
+
+        if value is None:
+            return
+
+        if current_operation == value:
+            _LOGGER.debug("Operation selection is already set to %s", value)
+            return
+
         async def update_operation(
             current_mode, active_mode, fan_level: int | None = None
         ):
             """Update the operation mode and fan level."""
-
-            current_operation = self.get_operation_selection
 
             if current_operation == STATE_AWAY and current_mode != CurrentUnitMode.Away:
                 await update_operation(CurrentUnitMode.Away, ActiveUnitMode.EndAway)
@@ -855,9 +873,6 @@ class DanthermDevice(DanthermModbus):
             # change after setting the operation mode.
             if fan_level is not None:
                 await self.set_fan_level(fan_level)
-
-        if value is None:
-            return
 
         if value == STATE_AUTOMATIC:
             await update_operation(CurrentUnitMode.Automatic, ActiveUnitMode.Automatic)
@@ -1529,77 +1544,43 @@ class DanthermDevice(DanthermModbus):
 
         await self.set_operation_selection(target_operation)
 
-    async def _alarm_state_changed(self, event):
-        """Handle alarm state changes by creating a persistent notification in Home Assistant."""
+    async def _create_notification(self, platform: str, key: str, state):
+        """Create a persistent notification."""
 
-        # Skip, if the device is not available
-        if self._attr_available is False:
-            return
+        # Get the message and state text for the notification
+        message = await self.get_translated_exception_text(ATTR_DISABLE_NOTIFICATIONS)
+        state_text = await self.get_translated_state_text(platform, key, state)
 
-        # Skip, if old state is None or Unknown
-        old_state = event.data.get("old_state")
-        if old_state is None or old_state.state == STATE_UNKNOWN:
-            return
+        # Generate a unique notification id based on the device name and key
+        notification_id = f"{self._device_name}_{key}_notification"
 
-        # Skip, if new state is None
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-
-        # Only proceed if we have an old state, and it was 'None', and the new state is not 'None'
-        if (
-            new_state.state not in [STATE_UNKNOWN, "0"]
-            and new_state.state != old_state.state
-        ):
-            message = await self.get_translated_exception_text("alarm_notification")
-            state = await self.get_translated_state_text(
-                "sensor", ATTR_ALARM, new_state.state
+        # Create a persistent notification in Home Assistant
+        self._hass.async_create_task(
+            self._hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "title": f"{self._device_name}: {state_text}",
+                    "message": f"{message}",
+                    "notification_id": f"{notification_id}",
+                },
             )
-            # Create a persistent notification in Home Assistant
-            self._hass.async_create_task(
-                self._hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "title": f"{self._device_name}: {state}",
-                        "message": f"{message}",
-                    },
-                )
-            )
-
-    async def _set_up_alarm_notification(self):
-        """Set up alarm notification for the device."""
-
-        entities = self._get_device_entities()
-
-        # Find the alarm entity
-        entity = None
-        for entity in entities:
-            if entity.translation_key == ATTR_ALARM:
-                alarm_entity = entity
-                break
-
-        if not alarm_entity:
-            _LOGGER.warning("Alarm entity not found for device %s", self._device_name)
-            return
-
-        # Register a listener for state changes on the alarm entity
-        async_track_state_change_event(
-            self._hass, alarm_entity.entity_id, self._alarm_state_changed
         )
 
-        # Get current alarm state and fire notification if alarm is already active
-        state = self._hass.states.get(alarm_entity.entity_id)
-        if state is not None:
-            # Fake old and new state objects
-            old_state = SimpleNamespace(state="0")
-            new_state = SimpleNamespace(state=state.state)
+    async def _dismiss_notification(self, key: str):
+        """Dismiss a persistent notification."""
 
-            # Fake event object
-            event = SimpleNamespace(
-                data={"old_state": old_state, "new_state": new_state}
+        # Generate the notification id based on the device name and key
+        notification_id = f"{self._device_name}_{key}_notification"
+
+        # Dismiss the persistent notification in Home Assistant
+        self._hass.async_create_task(
+            self._hass.services.async_call(
+                "persistent_notification",
+                "dismiss",
+                {"notification_id": notification_id},
             )
-            await self._alarm_state_changed(event)
+        )
 
     def _push_event(
         self, mode_name, current_operation, new_operation, timeout=None
