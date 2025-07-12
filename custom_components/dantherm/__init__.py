@@ -1,6 +1,7 @@
 """Dantherm Integration."""
 
 import logging
+from typing import Final
 
 from packaging import version
 import pymodbus
@@ -23,13 +24,17 @@ from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ATTR_BOOST_MODE_TRIGGER,
-    ATTR_DISABLE_ALARM_NOTIFICATIONS,
+    ATTR_DISABLE_NOTIFICATIONS,
     ATTR_DISABLE_TEMPERATURE_UNKNOWN,
     ATTR_ECO_MODE_TRIGGER,
     ATTR_HOME_MODE_TRIGGER,
     REQUIRED_PYMODBUS_VERSION,
 )
 from .services import async_setup_services
+
+# Constants only for migration use
+ATTR_DISABLE_ALARM_NOTIFICATIONS: Final = "disable_alarm_notifications"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +68,7 @@ DEFAULT_OPTIONS = {
     ATTR_BOOST_MODE_TRIGGER: "",
     ATTR_ECO_MODE_TRIGGER: "",
     ATTR_DISABLE_TEMPERATURE_UNKNOWN: False,
-    ATTR_DISABLE_ALARM_NOTIFICATIONS: False,
+    ATTR_DISABLE_NOTIFICATIONS: False,
 }
 
 
@@ -84,18 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         message_template = translations.get("exceptions.pymodbus_version")
 
         if not message_template:
-            message_template = "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
+            message_template = "This integration requires pymodbus version %s or newer, but %s is installed"
 
         raise RuntimeError(
             message_template % (REQUIRED_PYMODBUS_VERSION, pymodbus.__version__)
         )
 
+    options = dict(entry.options)
     # If options are empty, initialize them with defaults
-    if not entry.options:
+    if not options:
         _LOGGER.warning("No stored options found, initializing defaults")
         hass.config_entries.async_update_entry(entry, options=DEFAULT_OPTIONS)
 
-    _LOGGER.debug("Loading stored options in setup: %s", entry.options)
+    _LOGGER.debug("Loading stored options in setup: %s", options)
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -118,15 +124,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
         "coordinator": coordinator,
-        ATTR_BOOST_MODE_TRIGGER: entry.options.get(ATTR_BOOST_MODE_TRIGGER, ""),
-        ATTR_ECO_MODE_TRIGGER: entry.options.get(ATTR_ECO_MODE_TRIGGER, ""),
-        ATTR_HOME_MODE_TRIGGER: entry.options.get(ATTR_HOME_MODE_TRIGGER, ""),
-        ATTR_DISABLE_TEMPERATURE_UNKNOWN: entry.options.get(
+        ATTR_BOOST_MODE_TRIGGER: options.get(ATTR_BOOST_MODE_TRIGGER, ""),
+        ATTR_ECO_MODE_TRIGGER: options.get(ATTR_ECO_MODE_TRIGGER, ""),
+        ATTR_HOME_MODE_TRIGGER: options.get(ATTR_HOME_MODE_TRIGGER, ""),
+        ATTR_DISABLE_TEMPERATURE_UNKNOWN: options.get(
             ATTR_DISABLE_TEMPERATURE_UNKNOWN, False
         ),
-        ATTR_DISABLE_ALARM_NOTIFICATIONS: entry.options.get(
-            ATTR_DISABLE_ALARM_NOTIFICATIONS, False
-        ),
+        ATTR_DISABLE_NOTIFICATIONS: options.get(ATTR_DISABLE_NOTIFICATIONS, False),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -151,9 +155,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+
     _LOGGER.debug("Migrating from version %s", config_entry.version)
+    options = dict(config_entry.options)
+
+    # Migration: Move disable_alarm_notifications to disable_notifications
+    if (
+        ATTR_DISABLE_NOTIFICATIONS not in options
+        and ATTR_DISABLE_ALARM_NOTIFICATIONS in options
+    ):
+        options[ATTR_DISABLE_NOTIFICATIONS] = options.pop(
+            ATTR_DISABLE_ALARM_NOTIFICATIONS
+        )
+        hass.config_entries.async_update_entry(config_entry, options=options)
+        _LOGGER.debug("Migrated disable_alarm_notifications to disable_notifications")
 
     return True
 

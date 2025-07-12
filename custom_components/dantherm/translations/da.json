@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
                 "home_mode_trigger": "Hjemmetilstand udløser entitet",
                 "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-                "disable_alarm_notifications": "Deaktiver alarmnotifikationer."
+                "disable_notifications": "Deaktiver notifikationer."
             }
         }
     },
@@ -379,8 +379,8 @@
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
     },
-    "alarm_notification": {
-      "message": "Alarmnotifikationer kan slås fra i integrationsindstillingerne."
+    "disable_notifications": {
+      "message": "Notifikationer kan deaktiveres i integrationsindstillingerne."
     }
   }
 }

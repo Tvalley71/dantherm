@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco mode trigger entity",
                 "home_mode_trigger": "Home mode trigger entity",
                 "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-                "disable_alarm_notifications": "Disable alarm notification."
+                "disable_notifications": "Disable notifications."
             }
         }
     },
@@ -379,8 +379,8 @@
     "pymodbus_version": {
       "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
     },
-    "alarm_notification": {
-      "message": "Alarm notifications can be disabled in the integration options."
+    "disable_notifications": {
+      "message": "Notifications can be disabled in the integration options."
     }
   }
 }

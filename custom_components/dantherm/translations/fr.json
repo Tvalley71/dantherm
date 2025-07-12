@@ -27,7 +27,8 @@
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",
                 "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
-                "disable_alarm_notifications": "Désactiver la notification d'alarme."
+                "disable_notifications": "Désactiver les notifications"
+
             }
         }
     },
@@ -201,7 +202,7 @@
         "name": "Niveau d'humidité",
         "state": {
           "0": "Très sec",
-          "1": "Sec", 
+          "1": "Sec",
           "2": "Normal",
           "3": "Élevé"
         }
@@ -378,8 +379,8 @@
     "pymodbus_version": {
       "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
     },
-    "alarm_notification": {
-      "message": "Les notifications d'alarme peuvent être désactivées dans les options de l'intégration."
+    "disable_notifications": {
+      "message": "Les notifications peuvent être désactivées dans les options de l'intégration."
     }
   }
 }

@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
                 "home_mode_trigger": "Thuis-modus Trigger Entiteit",
                 "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
-                "disable_alarm_notifications": "Alarmmelding uitschakelen."
+                "disable_notifications": "Melding uitschakelen."
             }
         }
     },
@@ -378,8 +378,8 @@
     "pymodbus_version": {
       "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
     },
-    "alarm_notification": {
-      "message": "Alarmmeldingen kunnen worden uitgeschakeld in de integratie-opties."
+    "disable_notifications": {
+      "message": "Meldingen kunnen worden uitgeschakeld in de integratie-opties."
     }
   }
 }
