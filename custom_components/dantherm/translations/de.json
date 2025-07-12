@@ -221,7 +221,12 @@
       "supply_temperature": { "name": "Zulufttemperatur" },
       "outdoor_temperature": { "name": "Außenlufttemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
-      "filter_remain": { "name": "Filter verbleibend" },
+      "filter_remain": {
+        "name": "Filter verbleibend",
+        "state": {
+          "0": "Bitte jetzt den Filter wechseln."
+        }
+      },
       "filter_remain_level": {
         "name": "Filterrestlaufzeit-Niveau",
         "state": {
@@ -380,6 +385,9 @@
     },
     "disable_notifications": {
       "message": "Benachrichtigungen können in den Integrationsoptionen deaktiviert werden."
+    },
+    "filter_remain_notification": {
+      "message": "Der Filter hat das Ende seiner Lebensdauer erreicht. Bitte wechseln Sie den Filter."
     }
   }
 }

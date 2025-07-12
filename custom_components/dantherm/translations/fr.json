@@ -222,7 +222,12 @@
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
-      "filter_remain": { "name": "Remplacement filtre dans" },
+      "filter_remain": {
+        "name": "Remplacement filtre dans",
+        "state": {
+          "0": "Remplacez le filtre maintenant."
+        }
+      },
       "filter_remain_level": {
         "name": "Niveau de durée de vie restante du filtre",
         "state": {
@@ -381,6 +386,9 @@
     },
     "disable_notifications": {
       "message": "Les notifications peuvent être désactivées dans les options de l'intégration."
+    },
+    "filter_remain_notification": {
+      "message": "Le filtre a atteint la fin de sa durée de vie. Veuillez remplacer le filtre."
     }
   }
 }

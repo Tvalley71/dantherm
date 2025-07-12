@@ -222,7 +222,12 @@
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
-      "filter_remain": { "name": "Filterrestlevetid" },
+      "filter_remain": {
+        "name": "Filterrestlevetid",
+        "state": {
+          "0": "Udskift filteret nu."
+        }
+      },
       "filter_remain_level": {
         "name": "Filterrestlevetidsniveau",
         "state": {
@@ -381,6 +386,9 @@
     },
     "disable_notifications": {
       "message": "Notifikationer kan deaktiveres i integrationsindstillingerne."
+    },
+    "filter_remain_notification": {
+      "message": "Filteret har nået slutningen af dets levetid. Udskift venligst filteret."
     }
   }
 }

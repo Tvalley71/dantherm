@@ -1555,7 +1555,10 @@ class DanthermDevice(DanthermModbus):
         """Create a persistent notification."""
 
         # Get the message and state text for the notification
-        message = await self.get_translated_exception_text(ATTR_DISABLE_NOTIFICATIONS)
+        message = await self.get_translated_exception_text(f"{key}_notification", "")
+        if message != "":
+            message += "\n\n"
+        message += await self.get_translated_exception_text(ATTR_DISABLE_NOTIFICATIONS)
         state_text = await self.get_translated_state_text(platform, key, state)
 
         # Generate a unique notification id based on the device name and key
@@ -1748,7 +1751,9 @@ class DanthermDevice(DanthermModbus):
             disabled_by=disabled_by,
         )
 
-    async def get_translated_exception_text(self, key: str, message="message") -> str:
+    async def get_translated_exception_text(
+        self, key: str, default=None, message="message"
+    ) -> str:
         """Return a translated exception message."""
         lang = self._hass.config.language
         translations = await async_get_translations(
@@ -1756,7 +1761,7 @@ class DanthermDevice(DanthermModbus):
         )
         full_key = f"component.{DOMAIN}.exceptions.{key}.{message}"
 
-        return translations.get(full_key, message)
+        return translations.get(full_key, default)
 
     async def get_translated_state_text(self, platform: str, key: str, state) -> str:
         """Return a translated state text for the current language."""

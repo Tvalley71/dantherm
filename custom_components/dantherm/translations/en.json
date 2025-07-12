@@ -222,7 +222,12 @@
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
-      "filter_remain": { "name": "Filter Remain" },
+      "filter_remain": {
+        "name": "Filter Remain",
+        "state": {
+          "0": "Replace the filter now."
+        }
+      },
       "filter_remain_level": {
         "name": "Filter Remain Level",
         "state": {
@@ -381,6 +386,9 @@
     },
     "disable_notifications": {
       "message": "Notifications can be disabled in the integration options."
+    },
+    "filter_remain_notification": {
+      "message": "The filter has reached the end of it's lifetime. Please replace the filter."
     }
   }
 }

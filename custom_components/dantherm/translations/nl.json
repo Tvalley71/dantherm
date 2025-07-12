@@ -221,7 +221,12 @@
       "supply_temperature": { "name": "Aanvoertemperatuur" },
       "outdoor_temperature": { "name": "Buitentemperatuur" },
       "room_temperature": { "name": "Kamertemperatuur" },
-      "filter_remain": { "name": "Levenduur Filter" },
+      "filter_remain": {
+        "name": "Levenduur Filter",
+        "state": {
+          "0": "Vervang het filter nu."
+        }
+      },
       "filter_remain_level": {
         "name": "Filterrestlevensduur niveau",
         "state": {
@@ -380,6 +385,9 @@
     },
     "disable_notifications": {
       "message": "Meldingen kunnen worden uitgeschakeld in de integratie-opties."
+    },
+    "filter_remain_notification": {
+      "message": "Het filter heeft het einde van zijn levensduur bereikt. Vervang het filter alstublieft."
     }
   }
 }
