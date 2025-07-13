@@ -647,26 +647,36 @@ Entities related to Boost, Eco, and Home Modes (e.g., mode switch, timeout, oper
 If you manually enable these entities via Home Assistant, they will be **automatically disabled again after a reload** of the integration unless a valid trigger is set in the integration options.
 
 
-### Configuring an Adaptive Trigger
+### Configuring the integration
 
-#### Steps to set up an Adaptive Trigger:
+#### How to Open the Integration Options
+To change settings such as disabling temperature unknown values, disabling notifications, or configuring adaptive triggers:
 
-1. **Go to Home Assistant → Integrations → Dantherm.**
-
+1. Go to Home Assistant → Settings → Devices & Services → Integrations.
+2. Find the Dantherm integration in the list.
 ![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
+3. Click the Configure button (gear icon) for your Dantherm integration instance.
+4. The options dialog will open, where you can adjust the available settings.
+![Skærmbillede 13-07-2025 kl  07 15 56 AM](https://github.com/user-attachments/assets/8e985613-1fb2-414c-b237-0f1d99256c93)
 
-2. **Click the Configure button** for the desired Dantherm integration instance.
+#### How to Set Up an Adaptive Trigger
 
-![Skærmbillede 23-04-2025 kl  07 15 19 AM](https://github.com/user-attachments/assets/550e7bde-6993-46bd-823f-82db0067ad89)
-
-3. **Enter the trigger entity**:
-   - Use the appropriate field (e.g., `Boost Mode Trigger`, `Eco Mode Trigger`, `Home Mode Trigger`)
-   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
-4. **Click Submit** to save the configuration.
-5. **Enable the corresponding mode** in the UI.
+1. Enter the trigger entity in the appropriate field.  
+Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).  
+Example values:  
+`binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
+2. Click Submit to save your configuration.
+3. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
+#### Disabling "Unknown" Temperatures in Bypass and Summer Mode
+To prevent temperature sensors from being set to unknown during bypass or summer mode, enable the option "Disable setting temperatures to unknown in bypass/summer modes".
+When this option is enabled, temperature sensors will always report their current value, even when the device is in bypass or summer mode.
+
+#### Disabling Notifications
+To disable all persistent notifications from the Dantherm integration, enable "Disable notifications".
+When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
