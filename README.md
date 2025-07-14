@@ -80,10 +80,10 @@ The listed units are known to work with this integration. Basically, all units c
 | `boost_operation_selection` | Defines which mode to apply when Boost Mode is triggered [[3]](#entity-notes) |
 | ~~`default_operation_selection`~~ | ~~Fallback mode used when no other mode is active~~ |
 | `eco_operation_selection`   | Defines which mode to apply when Eco Mode is triggered [[3]](#entity-notes) |
-| `fan_level_selection`       | Selects the current fan level for manual use |
+| `fan_level_selection`       | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
 | `home_operation_selection`  | Defines which mode to apply when Home Mode is triggered [[3]](#entity-notes) |
-| `operation_selection`       | Selects the system’s current mode of operation |
-| `week_program_selection`    | Selects the active predefined week program [[2]](#entity-notes) |
+| `operation_selection`       | Selects the current mode of operation (Standby, Automatic, Manual, Week Program, Away Mode, Summer Mode, Fireplace Mode and Night Mode). _Night Mode_ is display only. _Standby_ and _Fireplace Mode_ will timeout after a fixed period. |
+| `week_program_selection`    | Selects the active predefined week program (Week Program 1 to Week Program 11). _Week Program 11_ can be user defined but not through the integration. [[2]](#entity-notes) |
 
 #### Sensor Entities
 
@@ -94,7 +94,7 @@ The listed units are known to work with this integration. Basically, all units c
 | `alarm`                       | Reports active alarms such as fan or temperature alarms |
 | `exhaust_temperature`         | Temperature of indoor air being exhausted after heat recovery |
 | `extract_temperature`         | Temperature of indoor air being pulled out for heat recovery |
-| `fan_level`                   | Current fan level (Level 0–4) based on system mode |
+| `fan_level`                   | Current fan level (Level 0 to Level 4) |
 | `fan1_speed`                  | Actual RPM of fan 1 [[2]](#entity-notes) |
 | `fan2_speed`                  | Actual RPM of fan 2 [[2]](#entity-notes) |
 | `filter_remain`               | Remaining filter life in days |
