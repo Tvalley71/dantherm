@@ -328,14 +328,14 @@
     },
     "set_configuration": {
       "name": "Configuratie instellen",
-      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan.",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: Bypass minimumtemperatuur, bypass maximumtemperatuur en handmatige bypassduur worden alleen ondersteund op apparaten met firmwareversie 2.70 of nieuwer.",
       "fields": {
         "bypass_minimum_temperature": {
-          "name": "Minimale bypass-temperatuur",
+          "name": "Bypass minimum temperatuur",
           "description": "Stel de minimale temperatuur in voor bypass-bediening."
         },
         "bypass_maximum_temperature": {
-          "name": "Maximale bypass-temperatuur",
+          "name": "Bypass maximum temperatuur",
           "description": "Stel de maximale temperatuur in voor bypass-bediening."
         },
         "filter_lifetime": {
@@ -343,8 +343,8 @@
           "description": "Stel de levensduur van het filter in (dagen)."
         },
         "manual_bypass_duration": {
-          "name": "Duur van handmatige bypass",
-          "description": "Stel de duur van de handmatige bypass-modus in (minuten)."
+          "name": "Duur manuele bypass",
+          "description": "Stel de duur van de manuele bypass-modus in (minuten)."
         },
         "night_mode": {
           "name": "Nachtmodus",
@@ -379,6 +379,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
+    },
+    "unsupported_by_firmware": {
+      "message": "De firmware van uw apparaat ondersteunt de volgende functie(s) niet: {features}"
     },
     "pymodbus_version": {
       "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"

@@ -329,14 +329,14 @@
     },
     "set_configuration": {
       "name": "Sæt konfiguration",
-      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden.",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Bypass minimum temperatur, bypass maksimum temperatur og varighed af manuel bypass understøttes kun på enheder med firmwareversion 2.70 eller nyere.",
       "fields": {
         "bypass_minimum_temperature": {
-          "name": "Bypass minimumstemperatur",
+          "name": "Bypass minimum temperatur",
           "description": "Indstil den minimale temperatur for bypasstilstand."
         },
         "bypass_maximum_temperature": {
-          "name": "Bypass maksimumtemperatur",
+          "name": "Bypass maksimum temperatur",
           "description": "Indstil den maksimale temperatur for bypasstilstand."
         },
         "filter_lifetime": {
@@ -380,6 +380,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ugyldig filterlevetid. Brug værdier mellem 0 og 360 dage."
+    },
+    "unsupported_by_firmware": {
+      "message": "Din enheds firmware understøtter ikke følgende funktion(er): {features}"
     },
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"

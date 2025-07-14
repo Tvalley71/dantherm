@@ -328,7 +328,7 @@
     },
     "set_configuration": {
       "name": "Konfiguration festlegen",
-      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an.",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Bypass-Mindesttemperatur, Bypass-Höchsttemperatur und manuelle Bypass-Dauer werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
       "fields": {
         "bypass_minimum_temperature": {
           "name": "Minimale Bypass-Temperatur",
@@ -379,6 +379,9 @@
     },
     "invalid_filter_lifetime": {
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
+    },
+    "unsupported_by_firmware": {
+      "message": "Die Firmware Ihres Geräts unterstützt die folgenden Funktion(en) nicht: {features}"
     },
     "pymodbus_version": {
       "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
