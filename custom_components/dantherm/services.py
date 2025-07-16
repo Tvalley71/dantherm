@@ -179,8 +179,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
             """Apply configuration."""
 
             supports_write_from_2_70 = (
-                getattr(device, "get_device_fw_version", 0) >= 4.00
-            )  # 2.70
+                getattr(device, "get_device_fw_version", 0) >= 2.70
+            )
 
             # Check for unsupported fields and raise error if any are present
             if not supports_write_from_2_70:
