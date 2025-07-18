@@ -1,5 +1,16 @@
+# Home Assistant config directory (eksempel)
 config/*
-custom_components/dantherm/__pycache__
-tests/__pycache__
+
+# Python cache
+__pycache__/
+
+# Python bytecode
+*.pyc
+*.pyo
+*.pyd
+
+# Backup files
 *.bak
+
+# macOS metadata
 .DS_Store

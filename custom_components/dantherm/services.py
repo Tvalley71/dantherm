@@ -37,7 +37,7 @@ from .device_map import (
     WEEK_PROGRAM_SELECTIONS,
     ActiveUnitMode,
 )
-from .exceptions import InvalidTimeFormat
+from .exceptions import InvalidTimeFormat, UnsupportedByFirmware
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +177,24 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         async def apply_config(device, call):
             """Apply configuration."""
+
+            supports_write_from_2_70 = (
+                getattr(device, "get_device_fw_version", 0) >= 2.70
+            )
+
+            # Check for unsupported fields and raise error if any are present
+            if not supports_write_from_2_70:
+                unsupported = [
+                    key
+                    for key in (
+                        ATTR_BYPASS_MINIMUM_TEMPERATURE,
+                        ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+                        ATTR_MANUAL_BYPASS_DURATION,
+                    )
+                    if key in call.data
+                ]
+                if unsupported:
+                    raise UnsupportedByFirmware(unsupported)
 
             # Apply bypass minimum and maximum temperature, filter lifetime,
             # manual bypass duration, night mode, night mode start and end time,

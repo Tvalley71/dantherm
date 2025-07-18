@@ -27,7 +27,8 @@
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",
                 "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
-                "disable_alarm_notifications": "Désactiver la notification d'alarme."
+                "disable_notifications": "Désactiver les notifications"
+
             }
         }
     },
@@ -201,7 +202,7 @@
         "name": "Niveau d'humidité",
         "state": {
           "0": "Très sec",
-          "1": "Sec", 
+          "1": "Sec",
           "2": "Normal",
           "3": "Élevé"
         }
@@ -221,7 +222,12 @@
       "supply_temperature": { "name": "Température pulsion" },
       "outdoor_temperature": { "name": "Température extérieure" },
       "room_temperature": { "name": "Température ambiante" },
-      "filter_remain": { "name": "Remplacement filtre dans" },
+      "filter_remain": {
+        "name": "Remplacement filtre dans",
+        "state": {
+          "0": "Remplacez le filtre maintenant."
+        }
+      },
       "filter_remain_level": {
         "name": "Niveau de durée de vie restante du filtre",
         "state": {
@@ -323,23 +329,23 @@
     },
     "set_configuration": {
       "name": "Définir la configuration",
-      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm.",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque: La température minimale de bypass, la température maximale de bypass et la durée de bypass manuelle ne sont prises en charge que sur les appareils avec une version du firmware 2.70 ou supérieure.",
       "fields": {
         "bypass_minimum_temperature": {
-          "name": "Température minimale de dérivation",
-          "description": "Définissez la température minimale pour le fonctionnement de la dérivation."
+          "name": "Bypass température minimale",
+          "description": "Définissez la température minimale pour le fonctionnement de la bypass."
         },
         "bypass_maximum_temperature": {
-          "name": "Température maximale de dérivation",
-          "description": "Définissez la température maximale pour le fonctionnement de la dérivation."
+          "name": "Bypass température maximale",
+          "description": "Définissez la température maximale pour le fonctionnement de la bypass."
         },
         "filter_lifetime": {
           "name": "Durée de vie du filtre",
           "description": "Définissez la durée de vie du filtre en jours."
         },
         "manual_bypass_duration": {
-          "name": "Durée de la dérivation manuelle",
-          "description": "Définissez la durée du mode de dérivation manuelle en minutes."
+          "name": "Durée du bypass manuel",
+          "description": "Définissez la durée du mode de bypass manuelle en minutes."
         },
         "night_mode": {
           "name": "Mode nuit",
@@ -375,11 +381,17 @@
     "invalid_filter_lifetime": {
       "message": "Durée de vie du filtre invalide. Utilisez des valeurs entre 0 et 360 jours."
     },
+    "unsupported_by_firmware": {
+      "message": "Le firmware de votre appareil ne prend pas en charge la/les fonctionnalité(s) suivante(s) : {features}"
+    },
     "pymodbus_version": {
       "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
     },
-    "alarm_notification": {
-      "message": "Les notifications d'alarme peuvent être désactivées dans les options de l'intégration."
+    "disable_notifications": {
+      "message": "Les notifications peuvent être désactivées dans les options de l'intégration."
+    },
+    "filter_remain_notification": {
+      "message": "Le filtre a atteint la fin de sa durée de vie. Veuillez remplacer le filtre."
     }
   }
 }

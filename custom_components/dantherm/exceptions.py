@@ -31,3 +31,15 @@ class InvalidEntity(HomeAssistantError):
     def __init__(self) -> None:
         """Init HA error."""
         super().__init__(translation_domain=DOMAIN, translation_key="invalid_entity")
+
+
+class UnsupportedByFirmware(HomeAssistantError):
+    """Raised when an option is not supported on the firmware."""
+
+    def __init__(self, features: list[str]) -> None:
+        """Init HA error."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_by_firmware",
+            translation_placeholders={"features": ", ".join(features)},
+        )
