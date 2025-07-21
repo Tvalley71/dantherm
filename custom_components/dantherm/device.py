@@ -23,6 +23,7 @@ from .device_map import (
     ADAPTIVE_TRIGGERS,
     ATTR_ADAPTIVE_STATE,
     ATTR_AIR_QUALITY,
+    ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
@@ -43,6 +44,7 @@ from .device_map import (
     ATTR_HOME_MODE_TRIGGER,
     ATTR_HOME_OPERATION_SELECTION,
     ATTR_HUMIDITY,
+    ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
     STATE_AUTOMATIC,
@@ -1039,7 +1041,7 @@ class DanthermDevice(DanthermModbus):
         return self._filter_sensor("humidity", result)
 
     async def async_get_humidity_level(self):
-        """Get humidity level."""
+        """Get humidity level with hysteresis."""
 
         if self._get_humidity_entity_installed:
             humidity = self._get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
@@ -1049,17 +1051,39 @@ class DanthermDevice(DanthermModbus):
         if humidity is None:
             _LOGGER.debug("Humidity Level is not available")
             return None
-        if humidity <= 30:
-            humidity_level = 0
-        elif humidity <= 40:
-            humidity_level = 1
-        elif humidity <= 60:
-            humidity_level = 2
-        else:
-            humidity_level = 3
 
-        _LOGGER.debug("Humidity Level = %s", humidity_level)
-        return humidity_level
+        previous = self._get_entity_state_from_coordinator(ATTR_HUMIDITY_LEVEL, None)
+
+        if previous == 0 and humidity > 32:
+            level = 1
+        elif previous == 1:
+            if humidity <= 28:
+                level = 0
+            elif humidity > 42:
+                level = 2
+            else:
+                level = 1
+        elif previous == 2:
+            if humidity <= 38:
+                level = 1
+            elif humidity > 62:
+                level = 3
+            else:
+                level = 2
+        elif previous == 3 and humidity <= 58:
+            level = 2
+        else:  # noqa: PLR5501
+            if humidity <= 30:
+                level = 0
+            elif humidity <= 40:
+                level = 1
+            elif humidity <= 60:
+                level = 2
+            else:
+                level = 3
+
+        _LOGGER.debug("Humidity Level = %s", level)
+        return level
 
     async def async_get_air_quality(self):
         """Get air quality."""
@@ -1071,7 +1095,7 @@ class DanthermDevice(DanthermModbus):
         return self._filter_sensor("air_quality", result)
 
     async def async_get_air_quality_level(self):
-        """Get air quality level."""
+        """Get air quality level with hysteresis."""
 
         if self._get_air_quality_entity_installed:
             air_quality = self._get_entity_state_from_coordinator(
@@ -1083,17 +1107,39 @@ class DanthermDevice(DanthermModbus):
         if air_quality is None:
             _LOGGER.debug("Air Quality Level is not available")
             return None
-        if air_quality <= 600:
-            air_quality_level = 0
-        elif air_quality <= 1000:
-            air_quality_level = 1
-        elif air_quality <= 1400:
-            air_quality_level = 2
-        else:
-            air_quality_level = 3
 
-        _LOGGER.debug("Air Quality Level = %s", air_quality_level)
-        return air_quality_level
+        previous = self._get_entity_state_from_coordinator(ATTR_AIR_QUALITY_LEVEL, None)
+
+        if previous == 0 and air_quality > 650:
+            level = 1
+        elif previous == 1:
+            if air_quality <= 550:
+                level = 0
+            elif air_quality > 1050:
+                level = 2
+            else:
+                level = 1
+        elif previous == 2:
+            if air_quality <= 950:
+                level = 1
+            elif air_quality > 1450:
+                level = 3
+            else:
+                level = 2
+        elif previous == 3 and air_quality <= 1350:
+            level = 2
+        else:  # noqa: PLR5501
+            if air_quality <= 600:
+                level = 0
+            elif air_quality <= 1000:
+                level = 1
+            elif air_quality <= 1400:
+                level = 2
+            else:
+                level = 3
+
+        _LOGGER.debug("Air Quality Level = %s", level)
+        return level
 
     @property
     def get_exhaust_temperature_unknown(self) -> bool:
