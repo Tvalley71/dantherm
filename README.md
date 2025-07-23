@@ -46,97 +46,98 @@ The listed units are known to work with this integration. Basically, all units c
 
 | Entity            | Description       |
 |-------------------|-------------------|
-| `alarm_reset`     | Reset alarm       |
-| `filter_reset`    | Reset filter      |
+| `alarm_reset`     | Clears the active alarm and dismis the alarm notification |
+| `filter_reset`    | Resets the filter remain timer and dismis the alarm notification |
 
 #### Calendar Entity
 
-| Entity        | Description              |
-|---------------|--------------------------|
-| ~~`calendar`~~ | ~~Operation Calendar~~  |
+| Entity         | Description              |
+|----------------|--------------------------|
+| ~~`calendar`~~ | ~~Controls scheduled operations based on Home Assistant calendar events~~  |
 
 #### Cover Entity
 
 | Entity           | Description              |
 |------------------|--------------------------|
-| `bypass_damper`  | Bypass damper [1]        |
+| `bypass_damper`  | Indicates and controls the manual bypass state of the bypass damper [[1]](#entity-notes) |
 
 #### Number Entities
 
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
-| `boost_mode_timeout`        | Boost mode timeout [3]             |
-| `bypass_minimum_temperature`| Bypass minimum temperature [2]     |
-| `bypass_maximum_temperature`| Bypass maximum temperature [2]     |
-| `eco_mode_timeout`          | Eco mode timeout [3]               |
-| `filter_lifetime`           | Filter lifetime [2]                |
-| `home_mode_timeout`         | Home mode timeout [3]              |
-| `manual_bypass_duration`    | Manual bypass duration [1][2]      |
+| `boost_mode_timeout`        | Sets the duration for Boost Mode before it automatically turns off [[3]](#entity-notes) |
+| `bypass_minimum_temperature`| Minimum outdoor temperature allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `bypass_maximum_temperature`| Maximum outdoor temperature allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `eco_mode_timeout`          | Sets the duration for Eco Mode before it automatically deactivates [[3]](#entity-notes) |
+| `filter_lifetime`           | Expected lifetime of the filter before triggering a replacement notification [[2]](#entity-notes) |
+| `home_mode_timeout`         | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
+| `manual_bypass_duration`    | Duration for which manual bypass remains active after user activation [[1][2][5]](#entity-notes) |
 
 #### Select Entities
 
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
-| `boost_operation_selection` | Boost operation selection [3]      |
-| ~~`default_operation_selection`~~ | ~~Default operation selection~~ |
-| `eco_operation_selection`   | Eco operation selection [3]        |
-| `fan_level_selection`       | Fan level selection                |
-| `home_operation_selection`  | Home operation selection [3]       |
-| `operation_selection`       | Mode of operation selection        |
-| `week_program_selection`    | Week program selection [2]         |
+| `boost_operation_selection` | Defines which mode to apply when Boost Mode is triggered [[3]](#entity-notes) |
+| ~~`default_operation_selection`~~ | ~~Fallback mode used when no other mode is active~~ |
+| `eco_operation_selection`   | Defines which mode to apply when Eco Mode is triggered [[3]](#entity-notes) |
+| `fan_level_selection`       | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
+| `home_operation_selection`  | Defines which mode to apply when Home Mode is triggered [[3]](#entity-notes) |
+| `operation_selection`       | Selects the current mode of operation (Standby, Automatic, Manual, Week Program, Away Mode, Summer Mode, Fireplace Mode and Night Mode). _Night Mode_ is display only. _Standby_ and _Fireplace Mode_ will timeout after a fixed period. |
+| `week_program_selection`    | Selects the active predefined week program (Week Program 1 to Week Program 11). _Week Program 11_ can be user defined but not through the integration. [[2]](#entity-notes) |
 
 #### Sensor Entities
 
 | Entity                        | Description                          |
 |-------------------------------|--------------------------------------|
-| `air_quality`                 | Air quality sensor [1]               |
-| `air_quality_level`           | Air quality level sensor [2]         |
-| `alarm`                       | Alarm sensor                         |
-| `exhaust_temperature`         | Exhaust temperature sensor           |
-| `extract_temperature`         | Extract temperature sensor           |
-| `fan_level`                   | Fan level                            |
-| `fan1_speed`                  | Fan 1 speed [2]                      |
-| `fan2_speed`                  | Fan 2 speed [2]                      |
-| `filter_remain`               | Filter remain                        |
-| `filter_remain_level`         | Filter remain level [2]              |
-| `humidity`                    | Humidity sensor [1]                  |
-| `humidity_level`              | Humidity sensor level [2]            |
-| `adaptive_state`              | Adaptive state [4]                   |
-| `internal_preheater_dutycycle`| Preheater power dutycycle [1][2]     |
-| `operation_mode`              | Operation mode                       |
-| `outdoor_temperature`         | Outdoor temperature sensor           |
-| `room_temperature`            | Room temperature sensor [1][2]       |
-| `supply_temperature`          | Supply temperature sensor            |
-| `work_time`                   | Work time [2]                        |
+| `air_quality`                 | Measures air quality if the unit is equipped with a VOC or CO₂ sensor [[1]](#entity-notes) |
+| `air_quality_level`           | Indicates the qualitative level of air quality (Clean, Polluted, etc.) [[2]](#entity-notes) |
+| `alarm`                       | Reports active alarms such as fan or temperature alarms |
+| `exhaust_temperature`         | Temperature of indoor air being exhausted after heat recovery |
+| `extract_temperature`         | Temperature of indoor air being pulled out for heat recovery |
+| `fan_level`                   | Current fan level (Level 0 to Level 4) |
+| `fan1_speed`                  | Actual RPM of fan 1 [[2]](#entity-notes) |
+| `fan2_speed`                  | Actual RPM of fan 2 [[2]](#entity-notes) |
+| `filter_remain`               | Remaining filter life in days |
+| `filter_remain_level`         | Qualitative status of remaining filter life (e.g. Good, Replace) [[2]](#entity-notes) |
+| `humidity`                    | Indoor relative humidity from internal sensor [[1]](#entity-notes) |
+| `humidity_level`              | Qualitative level of humidity (e.g. Dry, Normal, Humid) [[2]](#entity-notes) |
+| `adaptive_state`              | Shows which adaptive mode (Home, Eco, Boost) is currently active [[4]](#entity-notes) |
+| `internal_preheater_dutycycle`| Percentage of power used by the internal electric preheater [[1][2]](#entity-notes) |
+| `operation_mode`              | Current system mode: Automatic, Manual, Week Program, etc. |
+| `outdoor_temperature`         | Temperature of fresh outdoor air being pulled in from outside the home |
+| `room_temperature`            | Room air temperature from the Dantherm HRC/Pluggit APRC remote [[1][2]](#entity-notes) |
+| `supply_temperature`          | Temperature of the supply air delivered to the home |
+| `work_time`                   | Total operational runtime of the unit [[2]](#entity-notes) |
 
 #### Switch Entities
 
 | Entity                 | Description                     |
 |------------------------|---------------------------------|
-| `away_mode`            | Away mode                       |
-| `boost_mode`           | Boost mode [3]                  |
-| `disable_bypass`       | Disable bypass [2]              |
-| `eco_mode`             | Eco mode [3]                    |
-| `fireplace_mode`       | Fireplace mode                  |
-| `home_mode`            | Home mode [3]                   |
-| `manual_bypass_mode`   | Manual bypass mode [1]          |
-| `night_mode`           | Night mode [2]                  |
-| `sensor_filtering`     | Sensor filtering [2]            |
-| `summer_mode`          | Summer mode                     |
+| `away_mode`            | Enables or disables Away Mode |
+| `boost_mode`           | Enables or disables Boost Mode [[3]](#entity-notes) |
+| `disable_bypass`       | Forces the bypass damper to remain closed [[2]](#entity-notes) |
+| `eco_mode`             | Enables or disables Eco Mode [[3]](#entity-notes) |
+| `fireplace_mode`       | Enables Fireplace Mode, increases supply air to compensate for fireplace draft |
+| `home_mode`            | Enables or disables Home Mode [[3]](#entity-notes) |
+| `manual_bypass_mode`   | Manually activates bypass regardless of conditions [[1]](#entity-notes) |
+| `night_mode`           | Enables or disables Night Mode [[2]](#entity-notes) |
+| `sensor_filtering`     | Enables or disables sensor value filtering for stability [[2]](#entity-notes) |
+| `summer_mode`          | Enables or disables Summer Mode |
 
 #### Text Entities
 
 | Entity                   | Description                     |
 |--------------------------|---------------------------------|
-| `night_mode_end_time`    | Night mode end time text [2]    |
-| `night_mode_start_time`  | Night mode start time text [2]  |
+| `night_mode_end_time`    | Sets the end time for Night Mode [[2]](#entity-notes) |
+| `night_mode_start_time`  | Sets the start time for Night Mode [[2]](#entity-notes) |
 
-### Notes
+<h4 id="entity-notes">Notes</h4>
 
 [1] The entity may not install due to lack of support or installation in the particular unit.  
 [2] The entity is disabled by default.  
 [3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
-[4] The entity can only be enabled if any of the adaptive triggers are configured.
+[4] The entity can only be enabled if any of the adaptive triggers are configured.  
+[5] The entity may not install due to firmware limitation.  
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
@@ -646,26 +647,36 @@ Entities related to Boost, Eco, and Home Modes (e.g., mode switch, timeout, oper
 If you manually enable these entities via Home Assistant, they will be **automatically disabled again after a reload** of the integration unless a valid trigger is set in the integration options.
 
 
-### Configuring an Adaptive Trigger
+### Configuring the integration
 
-#### Steps to set up an Adaptive Trigger:
+#### How to Open the Integration Options
+To change settings such as disabling temperature unknown values, disabling notifications, or configuring adaptive triggers:
 
-1. **Go to Home Assistant → Integrations → Dantherm.**
-
+1. Go to Home Assistant → Settings → Devices & Services → Integrations.
+2. Find the Dantherm integration in the list.
 ![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
+3. Click the Configure button (gear icon) for your Dantherm integration instance.
+4. The options dialog will open, where you can adjust the available settings.
+![Skærmbillede 13-07-2025 kl  07 15 56 AM](https://github.com/user-attachments/assets/8e985613-1fb2-414c-b237-0f1d99256c93)
 
-2. **Click the Configure button** for the desired Dantherm integration instance.
+#### How to Set Up an Adaptive Trigger
 
-![Skærmbillede 23-04-2025 kl  07 15 19 AM](https://github.com/user-attachments/assets/550e7bde-6993-46bd-823f-82db0067ad89)
-
-3. **Enter the trigger entity**:
-   - Use the appropriate field (e.g., `Boost Mode Trigger`, `Eco Mode Trigger`, `Home Mode Trigger`)
-   - Examples: `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
-4. **Click Submit** to save the configuration.
-5. **Enable the corresponding mode** in the UI.
+1. Enter the trigger entity in the appropriate field.  
+Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).  
+Example values:  
+`binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
+2. Click Submit to save your configuration.
+3. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
+#### Disabling "Unknown" Temperatures in Bypass and Summer Mode
+To prevent temperature sensors from being set to unknown during bypass or summer mode, enable the option "Disable setting temperatures to unknown in bypass/summer modes".
+When this option is enabled, temperature sensors will always report their current value, even when the device is in bypass or summer mode.
+
+#### Disabling Notifications
+To disable all persistent notifications from the Dantherm integration, enable "Disable notifications".
+When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
 
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  

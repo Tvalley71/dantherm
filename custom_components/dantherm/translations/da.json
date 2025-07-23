@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
                 "home_mode_trigger": "Hjemmetilstand udløser entitet",
                 "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-                "disable_alarm_notifications": "Deaktiver alarmnotifikationer."
+                "disable_notifications": "Deaktiver notifikationer."
             }
         }
     },
@@ -225,7 +225,12 @@
       "supply_temperature": { "name": "Indblæsningstemperatur" },
       "outdoor_temperature": { "name": "Udeluftstemperatur" },
       "room_temperature": { "name": "Rumtemperatur" },
-      "filter_remain": { "name": "Filterrestlevetid" },
+      "filter_remain": {
+        "name": "Filterrestlevetid",
+        "state": {
+          "0": "Udskift filteret nu."
+        }
+      },
       "filter_remain_level": {
         "name": "Filterrestlevetidsniveau",
         "state": {
@@ -327,14 +332,14 @@
     },
     "set_configuration": {
       "name": "Sæt konfiguration",
-      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden.",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Bypass minimum temperatur, bypass maksimum temperatur og varighed af manuel bypass understøttes kun på enheder med firmwareversion 2.70 eller nyere.",
       "fields": {
         "bypass_minimum_temperature": {
-          "name": "Bypass minimumstemperatur",
+          "name": "Bypass minimum temperatur",
           "description": "Indstil den minimale temperatur for bypasstilstand."
         },
         "bypass_maximum_temperature": {
-          "name": "Bypass maksimumtemperatur",
+          "name": "Bypass maksimum temperatur",
           "description": "Indstil den maksimale temperatur for bypasstilstand."
         },
         "filter_lifetime": {
@@ -379,11 +384,17 @@
     "invalid_filter_lifetime": {
       "message": "Ugyldig filterlevetid. Brug værdier mellem 0 og 360 dage."
     },
+    "unsupported_by_firmware": {
+      "message": "Din enheds firmware understøtter ikke følgende funktion(er): {features}"
+    },
     "pymodbus_version": {
       "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
     },
-    "alarm_notification": {
-      "message": "Alarmnotifikationer kan slås fra i integrationsindstillingerne."
+    "disable_notifications": {
+      "message": "Notifikationer kan deaktiveres i integrationsindstillingerne."
+    },
+    "filter_remain_notification": {
+      "message": "Filteret har nået slutningen af dets levetid. Udskift venligst filteret."
     }
   }
 }

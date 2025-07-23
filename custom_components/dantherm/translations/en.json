@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco mode trigger entity",
                 "home_mode_trigger": "Home mode trigger entity",
                 "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-                "disable_alarm_notifications": "Disable alarm notification."
+                "disable_notifications": "Disable notifications."
             }
         }
     },
@@ -225,7 +225,12 @@
       "supply_temperature": { "name": "Supply Temperature" },
       "outdoor_temperature": { "name": "Outdoor Temperature" },
       "room_temperature": { "name": "Room Temperature" },
-      "filter_remain": { "name": "Filter Remain" },
+      "filter_remain": {
+        "name": "Filter Remain",
+        "state": {
+          "0": "Replace the filter now."
+        }
+      },
       "filter_remain_level": {
         "name": "Filter Remain Level",
         "state": {
@@ -327,7 +332,7 @@
     },
     "set_configuration": {
       "name": "Set configuration",
-      "description": "Adjust the configuration settings for the Dantherm device.",
+      "description": "Adjust the configuration settings for the Dantherm device. Note: Bypass Minimum Temperature, Bypass Maximum Temperature and Manual Bypass Duration are only supported on device's with firmware version 2.70 or newer.",
       "fields": {
         "bypass_minimum_temperature": {
           "name": "Bypass Minimum Temperature",
@@ -379,11 +384,17 @@
     "invalid_filter_lifetime": {
       "message": "Invalid filter lifetime. Use values between 0 to 360 days."
     },
+    "unsupported_by_firmware": {
+      "message": "Your device's firmware does not support the following feature(s): {features}"
+    },
     "pymodbus_version": {
       "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
     },
-    "alarm_notification": {
-      "message": "Alarm notifications can be disabled in the integration options."
+    "disable_notifications": {
+      "message": "Notifications can be disabled in the integration options."
+    },
+    "filter_remain_notification": {
+      "message": "The filter has reached the end of it's lifetime. Please replace the filter."
     }
   }
 }

@@ -27,7 +27,7 @@
                 "eco_mode_trigger": "Eco-Modus Auslöser Entität",
                 "home_mode_trigger": "Heim-Modus Auslöser Entität",
                 "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus.",
-                "disable_alarm_notifications": "Alarmbenachrichtigung deaktivieren."
+                "disable_notifications": "Benachrichtigung deaktivieren."
             }
         }
     },
@@ -224,7 +224,12 @@
       "supply_temperature": { "name": "Zulufttemperatur" },
       "outdoor_temperature": { "name": "Außenlufttemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
-      "filter_remain": { "name": "Filter verbleibend" },
+      "filter_remain": {
+        "name": "Filter verbleibend",
+        "state": {
+          "0": "Bitte jetzt den Filter wechseln."
+        }
+      },
       "filter_remain_level": {
         "name": "Filterrestlaufzeit-Niveau",
         "state": {
@@ -326,7 +331,7 @@
     },
     "set_configuration": {
       "name": "Konfiguration festlegen",
-      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an.",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Bypass-Mindesttemperatur, Bypass-Höchsttemperatur und manuelle Bypass-Dauer werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
       "fields": {
         "bypass_minimum_temperature": {
           "name": "Minimale Bypass-Temperatur",
@@ -378,11 +383,17 @@
     "invalid_filter_lifetime": {
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
     },
+    "unsupported_by_firmware": {
+      "message": "Die Firmware Ihres Geräts unterstützt die folgenden Funktion(en) nicht: {features}"
+    },
     "pymodbus_version": {
       "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
     },
-    "alarm_notification": {
-      "message": "Alarmbenachrichtigungen können in den Integrationsoptionen deaktiviert werden."
+    "disable_notifications": {
+      "message": "Benachrichtigungen können in den Integrationsoptionen deaktiviert werden."
+    },
+    "filter_remain_notification": {
+      "message": "Der Filter hat das Ende seiner Lebensdauer erreicht. Bitte wechseln Sie den Filter."
     }
   }
 }
