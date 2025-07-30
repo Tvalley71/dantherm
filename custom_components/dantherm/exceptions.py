@@ -43,3 +43,15 @@ class UnsupportedByFirmware(HomeAssistantError):
             translation_key="unsupported_by_firmware",
             translation_placeholders={"features": ", ".join(features)},
         )
+
+
+class InvalidAdaptiveState(HomeAssistantError):
+    """Raised when an adaptive state is not valid."""
+
+    def __init__(self, state: str) -> None:
+        """Init HA error."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="invalid_adaptive_state",
+            translation_placeholders={"state": state},
+        )
