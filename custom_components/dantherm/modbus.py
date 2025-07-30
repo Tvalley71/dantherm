@@ -56,6 +56,14 @@ class DataClass(Enum):
     Float32 = 4
 
 
+class ABSwitchPosition(Enum):
+    """Dantherm A/B switch position class."""
+
+    Unknown = 0
+    A = 1
+    B = 2
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -198,6 +206,26 @@ class DanthermModbus:
             self.coordinator.enqueue_backend(
                 self.__write_holding_registers, address, value
             )
+
+    async def get_device_ab_switch_position(self) -> ABSwitchPosition:
+        """Get device A/B switch position."""
+
+        HALLeft = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
+        )
+        _LOGGER.debug("HALLeft = %s", HALLeft)
+        HALRight = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
+        )
+        _LOGGER.debug("HALRight = %s", HALRight)
+
+        result = ABSwitchPosition.Unknown
+        if HALRight == 1 and HALLeft == 0:
+            result = ABSwitchPosition.A
+        elif HALRight == 0 and HALLeft == 1:
+            result = ABSwitchPosition.B
+        _LOGGER.debug("Device A/B switch position = %s", result.name)
+        return result
 
     async def __read_holding_registers_with_retry(
         self, address: int, count: int, retries: int = 3, initial_delay: float = 0.5
