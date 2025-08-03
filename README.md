@@ -569,8 +569,6 @@ The **Dantherm: Set configuration** action allows you to adjust various configur
 
 ![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
 
-## ⏳ The following sections are a work in progress  
-These features are planned for version **0.5.0**. The calendar function is currently still under development.
 
 ## Integration enhancements
 
@@ -678,6 +676,11 @@ When this option is enabled, temperature sensors will always report their curren
 To disable all persistent notifications from the Dantherm integration, enable "Disable notifications".
 When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
 
+
+## ⏳ The following sections are a work in progress  
+These features are planned for version **1.0.0**. The calendar function is currently still under development.
+
+
 ### Calendar Function 📅  
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
 
@@ -709,6 +712,8 @@ The available operations in **Default Operation Selection** are **Automatic**, *
 
 > [!IMPORTANT]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
+
+<img width="517" height="486" alt="Skærmbillede 2025-08-03 kl  17 25 42" src="https://github.com/user-attachments/assets/02a362f1-19c6-4fd0-94a9-e5be88ef986c" />
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
 
