@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def _init_after_start(event=None) -> None:
         """Initialize the device after Home Assistant has started."""
-        hass.async_create_task(device.async_initialize_after_restart())
+        hass.async_create_task(device.async_init_after_start())
 
     # If Home Assistant is already running, we can run the routine immediately
     if hass.state != CoreState.running:

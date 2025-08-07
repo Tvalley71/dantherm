@@ -186,6 +186,7 @@
           "boost": "Boost Mode",
           "eco": "Eco Mode",
           "home": "Home Mode",
+          "level_0": "Level 0",
           "level_1": "Level 1",
           "level_2": "Level 2",
           "level_3": "Level 3",
@@ -194,7 +195,7 @@
           "night": "Night Mode",
           "standby": "Standby",
           "summer": "Summer Mode",
-          "week_program": "Week program"
+          "week_program": "Week Program"
         }
       },
       "fan_level": { "name": "Fan Level" },
@@ -395,6 +396,9 @@
     },
     "filter_remain_notification": {
       "message": "The filter has reached the end of it's lifetime. Please replace the filter."
+    },
+    "invalid_adaptive_state": {
+      "message": "Invalid adaptive state: {state}"
     }
   }
 }

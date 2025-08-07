@@ -6,8 +6,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .adaptive_manager import AdaptiveEventStack
 from .const import DOMAIN
-from .device import DanthermDevice, EventStack
+from .device import DanthermDevice
 from .device_map import ATTR_ADAPTIVE_STATE, SENSORS, DanthermSensorEntityDescription
 from .entity import DanthermEntity
 
@@ -91,5 +92,5 @@ class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None:
             events_list = state.attributes.get("events", [])
-            self.device.events = EventStack.from_list(events_list)
+            self.device.events = AdaptiveEventStack.from_list(events_list)
             self._attr_extra_state_attributes = state.attributes

@@ -8,11 +8,11 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import STATE_OFF, STATE_ON, Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now as ha_now
 
-from .device_map import DanthermEntityDescription
+from .device_map import DanthermEntityDescription, DanthermSwitchEntityDescription
 from .store import DanthermStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,8 +104,8 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read bypass maximum temperature
             await self.hub.async_get_bypass_maximum_temperature()
 
-            # Update adaptive triggers
-            await self.hub.async_update_adaptive_triggers()
+            # Update adaptive state
+            await self.hub.async_update_adaptive_state()
 
             data = {}
             for entity in self._entities:
@@ -218,11 +218,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         ):  # disconnect and close modbus connection if no more entities
             await self.hub.disconnect_and_close()
 
-    def get_entity(self, key: str) -> Entity | None:
+    def get_entity(self, entity_id: str) -> Entity | None:
         """Get entity by key."""
 
         for entity in self._entities:
-            if entity.key == key:
+            if entity.entity_id == entity_id:
                 return entity
         return None
 
@@ -250,6 +250,14 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             return
         self.data.update({description.key: {"state": last_state}})
         entity.async_write_ha_state()
+
+    async def async_set_entity_state_from_entity_id(
+        self, entity_id: str, state: Any
+    ) -> Any:
+        """Schedule a write via the internal queue and update the cached data immediately."""
+        entity = self.get_entity(entity_id)
+        if entity:
+            await self.async_set_entity_state(entity, state)
 
     async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
         """Schedule a write via the internal queue and update the cached data immediately."""
@@ -326,6 +334,18 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         """Set entity state."""
 
         description: DanthermEntityDescription = entity.entity_description
+
+        if isinstance(description, DanthermSwitchEntityDescription):
+            if state == STATE_ON:
+                state = True
+            elif state == STATE_OFF:
+                state = False
+
+            if isinstance(state, bool):
+                if state:
+                    state = description.state_seton or description.state_on
+                else:
+                    state = description.state_setoff or description.state_off
 
         if description.data_setinternal:
             await getattr(self.hub, f"set_{description.data_setinternal}")(state)
