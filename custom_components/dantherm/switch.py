@@ -57,13 +57,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         self._attr_is_on = state
         self._attr_icon = desc.icon_on if state else desc.icon_off
 
-        value = None
-        if state:
-            value = desc.state_seton or desc.state_on
-        else:
-            value = desc.state_setoff or desc.state_off
-
-        await self.coordinator.async_set_entity_state(self, value)
+        await self.coordinator.async_set_entity_state(self, state)
 
         self.async_write_ha_state()
 

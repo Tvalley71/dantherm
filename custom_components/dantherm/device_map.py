@@ -1,7 +1,6 @@
 """The device mapping."""
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
@@ -41,6 +40,7 @@ SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
 SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
+SERVICE_CLEAR_ADAPTIVE_EVENT_STACK = "clear_adaptive_event_stack"
 
 ATTR_BYPASS_DAMPER: Final = "bypass_damper"
 
@@ -67,28 +67,30 @@ STATE_FAN_LEVEL_2: Final = "2"
 STATE_FAN_LEVEL_3: Final = "3"
 STATE_FAN_LEVEL_4: Final = "4"
 
-ATTR_WEEK_PROGRAM_SELECTION: Final = "week_program_selection"
-STATE_WEEKPROGRAM_1: Final = "0"
-STATE_WEEKPROGRAM_2: Final = "1"
-STATE_WEEKPROGRAM_3: Final = "2"
-STATE_WEEKPROGRAM_4: Final = "3"
-STATE_WEEKPROGRAM_5: Final = "4"
-STATE_WEEKPROGRAM_6: Final = "5"
-STATE_WEEKPROGRAM_7: Final = "6"
-STATE_WEEKPROGRAM_8: Final = "7"
-STATE_WEEKPROGRAM_9: Final = "8"
-STATE_WEEKPROGRAM_10: Final = "9"
-STATE_WEEKPROGRAM_11: Final = "10"
-
-ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
+STATE_LEVEL_0: Final = "level_0"
+STATE_LEVEL_1: Final = "level_1"
+STATE_LEVEL_2: Final = "level_2"
 STATE_LEVEL_3: Final = "level_3"
 STATE_LEVEL_4: Final = "level_4"
+
+ATTR_WEEK_PROGRAM_SELECTION: Final = "week_program_selection"
+STATE_WEEK_PROGRAM_1: Final = "0"
+STATE_WEEK_PROGRAM_2: Final = "1"
+STATE_WEEK_PROGRAM_3: Final = "2"
+STATE_WEEK_PROGRAM_4: Final = "3"
+STATE_WEEK_PROGRAM_5: Final = "4"
+STATE_WEEK_PROGRAM_6: Final = "5"
+STATE_WEEK_PROGRAM_7: Final = "6"
+STATE_WEEK_PROGRAM_8: Final = "7"
+STATE_WEEK_PROGRAM_9: Final = "8"
+STATE_WEEK_PROGRAM_10: Final = "9"
+STATE_WEEK_PROGRAM_11: Final = "10"
+
+ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
 
 ATTR_ECO_OPERATION_SELECTION: Final = "eco_operation_selection"
 
 ATTR_HOME_OPERATION_SELECTION: Final = "home_operation_selection"
-STATE_LEVEL_1: Final = "level_1"
-STATE_LEVEL_2: Final = "level_2"
 
 ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 
@@ -188,17 +190,17 @@ FAN_LEVEL_SELECTIONS = [
 ]
 
 WEEK_PROGRAM_SELECTIONS = [
-    STATE_WEEKPROGRAM_1,
-    STATE_WEEKPROGRAM_2,
-    STATE_WEEKPROGRAM_3,
-    STATE_WEEKPROGRAM_4,
-    STATE_WEEKPROGRAM_5,
-    STATE_WEEKPROGRAM_6,
-    STATE_WEEKPROGRAM_7,
-    STATE_WEEKPROGRAM_8,
-    STATE_WEEKPROGRAM_9,
-    STATE_WEEKPROGRAM_10,
-    STATE_WEEKPROGRAM_11,
+    STATE_WEEK_PROGRAM_1,
+    STATE_WEEK_PROGRAM_2,
+    STATE_WEEK_PROGRAM_3,
+    STATE_WEEK_PROGRAM_4,
+    STATE_WEEK_PROGRAM_5,
+    STATE_WEEK_PROGRAM_6,
+    STATE_WEEK_PROGRAM_7,
+    STATE_WEEK_PROGRAM_8,
+    STATE_WEEK_PROGRAM_9,
+    STATE_WEEK_PROGRAM_10,
+    STATE_WEEK_PROGRAM_11,
 ]
 
 ADAPTIVE_TRIGGERS = [
@@ -231,6 +233,7 @@ STATE_PRIORITIES = {
     STATE_WEEKPROGRAM: 0,
     STATE_AUTOMATIC: 1,
     STATE_STANDBY: 2,
+    STATE_LEVEL_0: 2,
     STATE_LEVEL_1: 3,
     STATE_LEVEL_2: 4,
     STATE_LEVEL_3: 5,
@@ -310,14 +313,6 @@ class BypassDamperState(int):
     Opened = 255
     Closing = 32
     Closed = 0
-
-
-class ABSwitchPosition(Enum):
-    """Dantherm A/B switch position class."""
-
-    Unknown = 0
-    A = 1
-    B = 2
 
 
 @dataclass

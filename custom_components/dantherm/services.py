@@ -31,6 +31,7 @@ from .device_map import (
     FAN_LEVEL_SELECTIONS,
     OPERATION_SELECTIONS,
     SERVICE_ALARM_RESET,
+    SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
     SERVICE_SET_STATE,
@@ -267,7 +268,7 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
         async def apply_reset(device, call):
-            device.coordinator.write(device.filter_reset)
+            device.coordinator.write(device.set_filter_reset)
 
         await async_apply_device_function(call, apply_reset)
 
@@ -275,9 +276,17 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Alarm reset, reset first pending alarm."""
 
         async def apply_reset(device, call):
-            device.coordinator.write(device.alarm_reset)
+            device.coordinator.write(device.set_alarm_reset)
 
         await async_apply_device_function(call, apply_reset)
+
+    async def async_clear_adaptive_event_stack(call):
+        """Clear the adaptive event stack."""
+
+        async def apply_clear(device, call):
+            device.coordinator.write(device.clear_adaptive_event_stack)
+
+        await async_apply_device_function(call, apply_clear)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_STATE, async_set_state, schema=DANTHERM_SET_STATE_SCHEMA
@@ -290,3 +299,7 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
     )
     hass.services.async_register(DOMAIN, SERVICE_FILTER_RESET, async_filter_reset)
     hass.services.async_register(DOMAIN, SERVICE_ALARM_RESET, async_alarm_reset)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_ADAPTIVE_EVENT_STACK, async_clear_adaptive_event_stack
+    )
