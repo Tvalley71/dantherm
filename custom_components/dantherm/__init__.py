@@ -36,6 +36,10 @@ from .services import async_setup_services
 
 # Constants only for migration use
 ATTR_DISABLE_ALARM_NOTIFICATIONS: Final = "disable_alarm_notifications"
+# Number of setup attempts before discovery is triggered. Discovery will only run once with
+# each startup of Home Assistant.
+DISCOVERY_TRIGGER_ATTEMPT: Final = 4
+ATTR_SETUP_ATTEMPTS: Final = "setup_attempts"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,15 +93,8 @@ def get_expected_serial_for_entry(
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Dantherm component."""
+
     hass.data[DOMAIN] = {}
-
-    async def _reset_attempts(_event=None):
-        """Reset connect_attempts for all entries on HA startup."""
-        for entry_id in hass.data[DOMAIN]:
-            hass.data[DOMAIN][entry_id]["connect_attempts"] = 0
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _reset_attempts)
-
     await async_setup_services(hass)
     return True
 
@@ -128,11 +125,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    connect_attempts = hass.data[DOMAIN][entry.entry_id].get("connect_attempts", 0)
+
+    # Get the entry data
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    # Set the default number of setup attempts to 0 if not already set
+    entry_data.setdefault(ATTR_SETUP_ATTEMPTS, 0)
 
     name = entry.data[CONF_NAME]
-    # host = entry.data[CONF_HOST]
-    host = "192.168.1.123"  # Temporary hardcoded faulty IP for testing
+    host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
@@ -142,10 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
     try:
         coordinator = await device.async_init_and_connect()
-        connect_attempts = 0
     except ValueError as ex:
-        connect_attempts += 1
-        if connect_attempts == 4:
+        if entry_data[ATTR_SETUP_ATTEMPTS] <= DISCOVERY_TRIGGER_ATTEMPT:
+            entry_data[ATTR_SETUP_ATTEMPTS] += 1
+        if entry_data[ATTR_SETUP_ATTEMPTS] == DISCOVERY_TRIGGER_ATTEMPT:
             _LOGGER.warning(
                 "Could not connect to device at %s, starting discovery", host
             )
@@ -191,9 +191,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coordinator = await device.async_init_and_connect()
         else:
             raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
-
-    finally:
-        hass.data[DOMAIN][entry.entry_id]["connect_attempts"] = connect_attempts
 
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
