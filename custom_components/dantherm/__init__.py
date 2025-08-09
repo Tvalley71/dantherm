@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
 
@@ -30,10 +31,15 @@ from .device_map import (
     ATTR_HOME_MODE_TRIGGER,
     REQUIRED_PYMODBUS_VERSION,
 )
+from .discovery import async_discover
 from .services import async_setup_services
 
 # Constants only for migration use
 ATTR_DISABLE_ALARM_NOTIFICATIONS: Final = "disable_alarm_notifications"
+# Number of setup attempts before discovery is triggered. Discovery will only run once with
+# each startup of Home Assistant.
+DISCOVERY_TRIGGER_ATTEMPT: Final = 4
+ATTR_SETUP_ATTEMPTS: Final = "setup_attempts"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,14 +78,28 @@ DEFAULT_OPTIONS = {
 }
 
 
+def get_expected_serial_for_entry(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> str | None:
+    """Get the expected serial number for a config entry."""
+    dev_reg = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    # Only 1 device is expected
+    for dev in devices:
+        if dev.serial_number is not None:
+            return dev.serial_number
+    return None
+
+
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Dantherm component."""
+
     hass.data[DOMAIN] = {}
     await async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Dantherm device."""
 
     if version.parse(pymodbus.__version__) < version.parse(REQUIRED_PYMODBUS_VERSION):
@@ -104,6 +124,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Loading stored options in setup: %s", options)
 
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+
+    # Get the entry data
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    # Set the default number of setup attempts to 0 if not already set
+    entry_data.setdefault(ATTR_SETUP_ATTEMPTS, 0)
 
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
@@ -112,15 +138,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
-    # Create the device instance
+    # Try to connect to the device at the configured address
     device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
-
     try:
         coordinator = await device.async_init_and_connect()
     except ValueError as ex:
-        raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
+        if entry_data[ATTR_SETUP_ATTEMPTS] <= DISCOVERY_TRIGGER_ATTEMPT:
+            entry_data[ATTR_SETUP_ATTEMPTS] += 1
+        if entry_data[ATTR_SETUP_ATTEMPTS] == DISCOVERY_TRIGGER_ATTEMPT:
+            _LOGGER.warning(
+                "Could not connect to device at %s, starting discovery", host
+            )
+            # Only run discovery at startup, not on later disconnects
+            discovered = await async_discover(hass, host)
+            found = False
+            for d in discovered:
+                ip = d["ip"]
 
-    # Store device instance and options
+                expected_serial = get_expected_serial_for_entry(hass, entry)
+                if not expected_serial:
+                    _LOGGER.warning(
+                        "No serial number found for device registry entry: %s",
+                        entry.entry_id,
+                    )
+                    continue
+
+                _LOGGER.debug("Serial from device registry: %s", expected_serial)
+
+                test_device = DanthermDevice(
+                    hass, name, ip, port, 1, scan_interval, entry
+                )
+
+                try:
+                    await test_device.async_init_and_connect()
+
+                    # Match serial number read from the test device with the expected
+                    # serial number from config entry
+                    serial = test_device.get_device_serial_number
+                    if serial == expected_serial:
+                        _LOGGER.info("Found device at new IP %s", ip)
+                        # Update config entry with new IP
+                        new_data = dict(entry.data)
+                        new_data[CONF_HOST] = ip
+                        hass.config_entries.async_update_entry(entry, data=new_data)
+                        device = test_device
+                        found = True
+                        break
+                except Exception:  # noqa: BLE001
+                    continue
+            if not found:
+                raise ConfigEntryNotReady("Device not found on network") from ex
+            coordinator = await device.async_init_and_connect()
+        else:
+            raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
+
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
         "coordinator": coordinator,
@@ -137,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await device.async_start()
-    except:  # noqa: E722
+    except Exception:
         _LOGGER.exception("Failed to start device")
         return False
 
