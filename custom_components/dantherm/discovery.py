@@ -30,17 +30,20 @@ PROBE_UUID = b"b26dd68e-3335-11e3-bfea-3c970e317c6d"
 _LOGGER = logging.getLogger(__name__)
 
 
-def _guess_broadcast_from_local(local_ip: str) -> str:
-    """Guess a /24 broadcast address based on the local IP.
+def _get_broadcast(ip: str) -> str:
+    """Return the /24 broadcast address for an IPv4 address, or None if invalid."""
+    parts = ip.split(".")
+    if len(parts) == 4 and all(part.isdigit() for part in parts):
+        return f"{parts[0]}.{parts[1]}.{parts[2]}.255"
+    return ""
 
-    Falls back to DISCOVERY_BROADCAST_DEFAULT on error.
-    """
-    try:
-        parts = local_ip.split(".")
-        parts[-1] = "255"
-        return ".".join(parts)
-    except Exception:  # noqa: BLE001
-        return DISCOVERY_BROADCAST_DEFAULT
+
+def _get_subnet(ip: str) -> str:
+    """Return the /24 subnet for an IPv4 address as a string, or None if invalid."""
+    parts = ip.split(".")
+    if len(parts) == 4 and all(part.isdigit() for part in parts):
+        return f"{parts[0]}.{parts[1]}.{parts[2]}"
+    return ""
 
 
 def _parse_name_from_reply(data: bytes) -> str | None:
@@ -153,26 +156,84 @@ async def async_discover(
     broadcast_ip: str | None = None,
     include_raw: bool = False,
 ) -> list[dict[str, Any]]:
-    """Broadcast discovery or fallback to unicast sweep if needed."""
-    hint_ip = last_known_ip or hass.config.api.local_ip
-    bcast = broadcast_ip or _guess_broadcast_from_local(hint_ip)
-    _LOGGER.info("Discovery: using bcast %s (hint %s)", bcast, hint_ip)
+    """Discover Dantherm/Pluggit devices on the network.
 
+    Tries broadcast on the current subnet, then (if needed) on the last known subnet,
+    then unicast sweep, and finally global broadcast. Handles cases where either
+    Home Assistant or the device has changed subnet.
+    """
     devices_by_ip: dict[str, dict[str, Any]] = {}
-    results = await _discover_broadcast(hass, bcast, PROBE_UUID)
 
-    # Fallback hvis broadcast ikke gav noget
-    if not results:
-        _LOGGER.debug(
-            "No devices via broadcast; trying unicast sweep on %s/24", hint_ip
-        )
-        results = await _discover_unicast_sweep(hass, hint_ip, PROBE_UUID)
-
-    for d in results:
-        ip = d["ip"]
-        if ip not in devices_by_ip:
-            devices_by_ip[ip] = {"ip": ip, "name": d.get("name")}
+    # Helper function to add discovered devices
+    def _add_discovered_devices(
+        results: list[dict[str, Any]],
+    ) -> None:
+        """Add discovered devices to the devices_by_ip dictionary."""
+        for d in results:
+            devices_by_ip[d["ip"]] = {"ip": d["ip"], "name": d.get("name")}
             if include_raw:
-                devices_by_ip[ip]["raw"] = d.get("raw")
+                devices_by_ip[d["ip"]]["raw"] = d.get("raw")
+
+    # Get Home Assistant's current IP and subnet
+    ha_ip = hass.config.api.local_ip
+    ha_subnet = _get_subnet(ha_ip)
+
+    # Try broadcast on Home Assistant's current subnet
+    bcast = broadcast_ip or _get_broadcast(ha_ip)
+    if bcast:
+        _LOGGER.info("Discovery: using broadcast %s (HA subnet %s)", bcast, ha_subnet)
+        results = await _discover_broadcast(hass, bcast, PROBE_UUID)
+        _add_discovered_devices(results)
+
+    # if nothing found and last_known_ip is present on a different subnet, try that subnet
+    if not devices_by_ip and last_known_ip:
+        try:
+            last_subnet = _get_subnet(last_known_ip)
+            if last_subnet != ha_subnet:
+                bcast_last = _get_broadcast(last_known_ip)
+                _LOGGER.info(
+                    "Discovery: trying broadcast %s (last known subnet %s)",
+                    bcast_last,
+                    last_subnet,
+                )
+                results = await _discover_broadcast(hass, bcast_last, PROBE_UUID)
+                _add_discovered_devices(results)
+
+                # Optionally, try unicast sweep on last subnet if nothing found yet
+                if not results:
+                    _LOGGER.info(
+                        "Discovery: trying unicast sweep on last known subnet %s.0/24",
+                        last_subnet,
+                    )
+                    results = await _discover_unicast_sweep(
+                        hass, last_known_ip, PROBE_UUID
+                    )
+                    _add_discovered_devices(results)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug(
+                "Could not parse last_known_ip %s for subnet discovery", last_known_ip
+            )
+
+    # Fallback: try unicast sweep on Home Assistant's current subnet if nothing found yet
+    if not devices_by_ip:
+        _LOGGER.info(
+            "No devices via broadcast; trying unicast sweep on Home Assistant's subnet %s.0/24",
+            ha_subnet,
+        )
+        results = await _discover_unicast_sweep(hass, ha_ip, PROBE_UUID)
+        _add_discovered_devices(results)
+
+    # Optionally, try global broadcast as a last resort
+    if not devices_by_ip and bcast != DISCOVERY_BROADCAST_DEFAULT:
+        _LOGGER.info(
+            "No devices found; trying global broadcast %s", DISCOVERY_BROADCAST_DEFAULT
+        )
+        results = await _discover_broadcast(
+            hass, DISCOVERY_BROADCAST_DEFAULT, PROBE_UUID
+        )
+        _add_discovered_devices(results)
+
+    if not devices_by_ip:
+        _LOGGER.info("No Dantherm/Pluggit devices found on the network")
 
     return list(devices_by_ip.values())
