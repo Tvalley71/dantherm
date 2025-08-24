@@ -23,6 +23,8 @@
         "init": {
             "title": "Configuration de l'intégration Dantherm",
             "data": {
+                "host": "Adresse IP de la VMC",
+                "port": "Port TCP de de la VMC",
                 "boost_mode_trigger": "Entité de déclenchement du mode Boost",
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",

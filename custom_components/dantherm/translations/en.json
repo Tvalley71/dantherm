@@ -4,7 +4,7 @@
         "user": {
             "title": "Modbus connection",
             "data": {
-                "host": "Enter ip-address of your unit",
+                "host": "Enter ip-address of your device",
                 "name": "Enter prefix for the device entities",
                 "port": "Enter TCP port on which to connect to the device",
                 "scan_interval": "Enter polling frequency of the modbus registers in seconds"
@@ -23,6 +23,8 @@
         "init": {
             "title": "Dantherm Integration Options",
             "data": {
+                "host": "Enter ip-address of your device",
+                "port": "Enter TCP port on which to connect to the device",
                 "boost_mode_trigger": "Boost mode trigger entity",
                 "eco_mode_trigger": "Eco mode trigger entity",
                 "home_mode_trigger": "Home mode trigger entity",
@@ -392,6 +394,9 @@
     },
     "filter_remain_notification": {
       "message": "The filter has reached the end of it's lifetime. Please replace the filter."
+    },
+    "device_discovery": {
+      "message": "Device discovered at new IP: %s"
     }
   }
 }

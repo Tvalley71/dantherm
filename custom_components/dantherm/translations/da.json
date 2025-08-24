@@ -23,6 +23,8 @@
         "init": {
         "title": "Indstillinger for Dantherm-integration",
             "data": {
+                "host": "Indtast ip-adresse til din enhed",
+                "port": "Indtast TCP-port der skal forbindes til på din enhed",
                 "boost_mode_trigger": "Boost-tilstand udløser entitet",
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
                 "home_mode_trigger": "Hjemmetilstand udløser entitet",
