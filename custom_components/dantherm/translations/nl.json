@@ -23,6 +23,8 @@
         "init": {
             "title": "Dantherm Integratie Configuratie",
             "data": {
+                "host": "Voer het ip-adres in van uw apparaat",
+                "port": "Voer de TCP-poort in waarop verbinding moet worden gemaakt met het apparaat",
                 "boost_mode_trigger": "Boost-modus Trigger Entiteit",
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
                 "home_mode_trigger": "Thuis-modus Trigger Entiteit",

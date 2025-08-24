@@ -40,12 +40,12 @@ def host_valid(host):
         return all(x and not disallowed.search(x) for x in host.split("."))
 
 
-@callback
-def dantherm_modbus_entries(hass: HomeAssistant):
-    """Return the hosts already configured."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
+def host_in_configuration_exists(hass: HomeAssistant, host, entry_id=None):
+    """Return True if host exists in configuration (ignore current entry in options flow)."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_HOST] == host and entry.entry_id != entry_id:
+            return True
+    return False
 
 
 class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,12 +54,6 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def _host_in_configuration_exists(self, host) -> bool:
-        """Return True if host exists in configuration."""
-        if host in dantherm_modbus_entries(self.hass):
-            return True
-        return False
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -67,7 +61,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
 
-            if self._host_in_configuration_exists(host):
+            if host_in_configuration_exists(
+                self.hass, user_input[CONF_HOST], self.config_entry.entry_id
+            ):
                 errors[CONF_HOST] = "already_configured"
             elif not host_valid(user_input[CONF_HOST]):
                 errors[CONF_HOST] = "invalid host IP"
@@ -94,14 +90,25 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow handler."""
 
+    def _get_suggested_options(self, user_input, data, options):
+        """Combine user_input, data, and options for suggested values."""
+        suggested = dict(options)
+        suggested.update(data)
+        if user_input:
+            suggested.update(user_input)
+        return suggested
+
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
 
         options = dict(self.config_entry.options)
+        data = dict(self.config_entry.data)
 
         STEP_INIT_SCHEMA = vol.Schema(
             {
+                vol.Optional(CONF_HOST, default=data.get(CONF_HOST, "")): str,
+                vol.Optional(CONF_PORT, default=data.get(CONF_PORT, 0)): int,
                 vol.Optional(ATTR_BOOST_MODE_TRIGGER): str,
                 vol.Optional(ATTR_ECO_MODE_TRIGGER): str,
                 vol.Optional(ATTR_HOME_MODE_TRIGGER): str,
@@ -126,25 +133,64 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
                 ]:
                     errors[entity_key] = "invalid_entity"
 
+            # Validate host and port
+            host = user_input.get(CONF_HOST)
+            port = user_input.get(CONF_PORT)
+
+            if not host:
+                errors[CONF_HOST] = "required"
+            elif host_in_configuration_exists(
+                self.hass, host, self.config_entry.entry_id
+            ):
+                errors[CONF_HOST] = "already_configured"
+            elif not host_valid(host):
+                errors[CONF_HOST] = "invalid host IP"
+
+            if not port:
+                errors[CONF_PORT] = "required"
+
             if not errors:
+                # Update config entry data if host or port changed
+                new_data = dict(self.config_entry.data)
+                if user_input[CONF_HOST] != self.config_entry.data.get(
+                    CONF_HOST
+                ) or user_input[CONF_PORT] != self.config_entry.data.get(CONF_PORT):
+                    new_data[CONF_HOST] = user_input[CONF_HOST]
+                    new_data[CONF_PORT] = user_input[CONF_PORT]
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=new_data
+                    )
+
+                # Remove host/port from options before saving
+                options_to_save = dict(user_input)
+                options_to_save.pop(CONF_HOST, None)
+                options_to_save.pop(CONF_PORT, None)
+
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, options=user_input
+                    self.config_entry, options=options_to_save
                 )
 
                 hass_data = self.hass.data[DOMAIN].get(self.config_entry.entry_id)
                 if hass_data and "coordinator" in hass_data:
                     hass_data["coordinator"].schedule_reload()
 
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(title="", data=options_to_save)
 
+            # Brug kombinerede værdier som defaults hvis der er fejl
+            suggested = self._get_suggested_options(user_input, data, options)
             return self.async_show_form(
-                step_id="init", data_schema=STEP_INIT_SCHEMA, errors=errors
+                step_id="init",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_INIT_SCHEMA, suggested
+                ),
+                errors=errors,
             )
 
+        # Første gang: brug data+options
+        suggested = self._get_suggested_options(None, data, options)
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_INIT_SCHEMA,
-                self.config_entry.options,
+                STEP_INIT_SCHEMA, suggested
             ),
         )
