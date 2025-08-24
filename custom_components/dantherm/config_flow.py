@@ -61,14 +61,12 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
 
-            if host_in_configuration_exists(
-                self.hass, user_input[CONF_HOST], self.config_entry.entry_id
-            ):
+            if host_in_configuration_exists(self.hass, host):
                 errors[CONF_HOST] = "already_configured"
-            elif not host_valid(user_input[CONF_HOST]):
+            elif not host_valid(host):
                 errors[CONF_HOST] = "invalid host IP"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                await self.async_set_unique_id(host)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
