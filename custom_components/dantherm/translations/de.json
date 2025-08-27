@@ -12,10 +12,12 @@
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "already_configured": "Gerät ist bereits konfiguriert."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "already_configured": "Gerät ist bereits konfiguriert."
     }
   },
   "options": {
@@ -34,7 +36,8 @@
         }
     },
     "error": {
-        "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
+      "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
     }
   },
   "entity": {
