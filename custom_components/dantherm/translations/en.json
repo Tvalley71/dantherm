@@ -12,10 +12,12 @@
         }
     },
     "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "invalid_host": "Invalid host or IP address.",
+        "already_configured": "Device is already configured."
     },
     "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "invalid_host": "Invalid host or IP address.",
+        "already_configured": "Device is already configured."
     }
   },
   "options": {
@@ -34,6 +36,7 @@
         }
     },
     "error": {
+        "invalid_host": "Invalid host or IP address.",
         "invalid_entity": "Invalid entity ID. Please enter a valid binary sensor or input boolean."
     }
   },
@@ -394,9 +397,6 @@
     },
     "filter_remain_notification": {
       "message": "The filter has reached the end of it's lifetime. Please replace the filter."
-    },
-    "device_discovery": {
-      "message": "Device discovered at new IP: %s"
     }
   }
 }

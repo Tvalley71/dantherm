@@ -12,10 +12,12 @@
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Hôte ou adresse IP invalide.",
+      "already_configured": "L'appareil est déjà configuré."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Hôte ou adresse IP invalide.",
+      "already_configured": "L'appareil est déjà configuré."
     }
   },
   "options": {
@@ -35,7 +37,8 @@
         }
     },
     "error": {
-        "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
+      "invalid_host": "Hôte ou adresse IP invalide.",
+      "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
     }
   },
   "entity": {

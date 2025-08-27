@@ -12,10 +12,12 @@
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Ugyldig host eller IP-adresse.",
+      "already_configured": "Enhed er allerede konfigureret."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_host": "Ugyldig host eller IP-adresse.",
+      "already_configured": "Enhed er allerede konfigureret."
     }
   },
   "options": {
@@ -34,7 +36,8 @@
         }
     },
     "error": {
-        "invalid_entity": "Ugyldigt enheds-ID. Indtast venligst en gyldig binær sensor eller input boolean."
+      "invalid_host": "Ugyldig host eller IP-adresse.",
+      "invalid_entity": "Ugyldigt enheds-ID. Indtast venligst en gyldig binær sensor eller input boolean."
     }
   },
   "entity": {
