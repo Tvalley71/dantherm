@@ -655,7 +655,17 @@ To change settings such as disabling temperature unknown values, disabling notif
 ![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
 3. Click the Configure button (gear icon) for your Dantherm integration instance.
 4. The options dialog will open, where you can adjust the available settings.
-![Skærmbillede 13-07-2025 kl  07 15 56 AM](https://github.com/user-attachments/assets/8e985613-1fb2-414c-b237-0f1d99256c93)
+<img width="588" height="691" alt="Skærmbillede 27-08-2025 kl  14 33 15 PM" src="https://github.com/user-attachments/assets/20ab43d5-1384-4fc7-b72a-5f68307910ac" />
+
+#### Changing Host and Port
+
+If device discovery does not find your unit, you can manually update the IP address and Port in the integration options dialog.
+
+Ip-address should be set to the unit’s current IP address.
+
+Port is typically the Modbus port used by your unit (default: 502).
+
+This allows you to keep the integration connected even if discovery is unavailable or the network configuration changes, without having to remove and re-add the integration.
 
 #### How to Set Up an Adaptive Trigger
 
