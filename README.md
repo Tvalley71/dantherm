@@ -657,7 +657,7 @@ To change settings such as disabling temperature unknown values, disabling notif
 4. The options dialog will open, where you can adjust the available settings.
 <img width="588" height="691" alt="Skærmbillede 27-08-2025 kl  14 33 15 PM" src="https://github.com/user-attachments/assets/20ab43d5-1384-4fc7-b72a-5f68307910ac" />
 
-#### Changing Host and Port
+#### Changing IP address and Port
 
 If device discovery does not find your unit, you can manually update the IP address and Port in the integration options dialog.
 
