@@ -82,7 +82,10 @@ from .modbus import (
     ABSwitchPosition,
     DanthermModbus,
 )
-from .notifications import async_create_notification, async_dismiss_notification
+from .notifications import (
+    async_create_key_value_notification,
+    async_dismiss_notification,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -815,7 +818,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         if result not in (None, 0, self._alarm):
             # Create persistent notification if alarm is not zero
             if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
-                await async_create_notification(
+                await async_create_key_value_notification(
                     self._hass, self._device_name, ATTR_ALARM, result
                 )
 
@@ -874,7 +877,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         if result == 0 and result != self._filter_remain:
             # Create persistent notification if filter remain is zero
             if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
-                await async_create_notification(
+                await async_create_key_value_notification(
                     self._hass, self._device_name, ATTR_FILTER_REMAIN, result
                 )
 

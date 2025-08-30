@@ -32,6 +32,7 @@ from .device_map import (
     REQUIRED_PYMODBUS_VERSION,
 )
 from .discovery import async_discover
+from .notifications import async_create_exception_notification
 from .services import async_setup_services
 
 # Constants only for migration use
@@ -171,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
                 try:
-                    await test_device.async_init_and_connect()
+                    coordinator = await test_device.async_init_and_connect()
 
                     # Match serial number read from the test device with the expected
                     # serial number from config entry
@@ -184,12 +185,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         hass.config_entries.async_update_entry(entry, data=new_data)
                         device = test_device
                         found = True
+
+                        # Send a notification about the rediscovery
+                        if not options.get(ATTR_DISABLE_NOTIFICATIONS, False):
+                            await async_create_exception_notification(
+                                hass,
+                                name,
+                                "rediscovery",
+                                domain=DOMAIN.capitalize(),
+                                serial_number=serial,
+                                ip_address=ip,
+                            )
                         break
+                    # If the serial numbers do not match, disconnect the test device
+                    await test_device.disconnect_and_close()
                 except Exception:  # noqa: BLE001
                     continue
             if not found:
                 raise ConfigEntryNotReady("Device not found on network") from ex
-            coordinator = await device.async_init_and_connect()
         else:
             raise ConfigEntryNotReady(f"Timeout while connecting {host}") from ex
 

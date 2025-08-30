@@ -4,7 +4,7 @@
       "user": {
         "title": "Modbus Connectie",
         "data": {
-          "host": "Voer het ip-address in van uw apparaat",
+          "host": "Voer het ip-adres in van uw apparaat",
           "name": "Voer prefix in voor de apparaat entiteiten",
           "port": "Voer de TCP poort in waarop verbinding moet worden gemaakt met het apparaat",
           "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in"
@@ -400,6 +400,9 @@
     },
     "filter_remain_notification": {
       "message": "Het filter heeft het einde van zijn levensduur bereikt. Vervang het filter alstublieft."
+    },
+    "rediscovery_notification": {
+      "message": "Een {domain}-apparaat met serienummer {serial_number} is opnieuw ontdekt op IP-adres {ip_address}."
     }
   }
 }

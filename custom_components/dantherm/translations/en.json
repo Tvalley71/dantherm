@@ -404,6 +404,9 @@
     },
     "invalid_adaptive_state": {
       "message": "Invalid adaptive state: {state}"
+    },
+    "rediscovery_notification": {
+      "message": "A {domain} device with serial number {serial_number} was rediscovered at ip-address: {ip_address}."
     }
   }
 }

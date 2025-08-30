@@ -401,6 +401,9 @@
     },
     "filter_remain_notification": {
       "message": "Filteret har nået slutningen af dets levetid. Udskift venligst filteret."
+    },
+    "rediscovery_notification": {
+      "message": "En {domain}-enhed med serienummer {serial_number} blev genopdaget på ip-adresse {ip_address}."
     }
   }
 }

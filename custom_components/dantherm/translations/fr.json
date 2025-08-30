@@ -401,6 +401,9 @@
     },
     "filter_remain_notification": {
       "message": "Le filtre a atteint la fin de sa durée de vie. Veuillez remplacer le filtre."
+    },
+    "rediscovery_notification": {
+      "message": "Un appareil {domain} avec le numéro de série {serial_number} a été redécouvert à l'adresse IP {ip_address}."
     }
   }
 }
