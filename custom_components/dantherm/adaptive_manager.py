@@ -330,7 +330,14 @@ class DanthermAdaptiveManager:
     async def _update_adaptive_calendar_events(self):
         """Get calendar events."""
 
-        calendar = self._hass.data[DOMAIN][ATTR_CALENDAR]
+        # Get domain data
+        data = self._hass.data.get(DOMAIN, None)
+        if not data:
+            _LOGGER.debug("No data found for domain: %s", DOMAIN)
+            return
+
+        # Get calendar data
+        calendar = data.get(ATTR_CALENDAR, None)
         if not calendar:
             _LOGGER.debug("No calendar events found")
             return

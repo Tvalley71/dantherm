@@ -277,8 +277,8 @@ class DanthermCalendar(CalendarEntity, DanthermEntity):
             rule = rrulestr(master.rrule, dtstart=master.start)
             first_occurrence = rule.after(today_midnight, inc=True)
 
-        # 1) THISANDFUTURE branch
-        if recurrence_range == "THISANDFUTURE":
+        # 1) THIS_AND_FUTURE branch
+        if recurrence_range in ("THISANDFUTURE", "THIS_AND_FUTURE"):
             # a) Deleting first upcoming occurrence → remove entire series
             if recurrence_id is not None and recurrence_id == first_occurrence:
                 self._events = [e for e in self._events if e.uid != uid]
