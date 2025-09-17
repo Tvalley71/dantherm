@@ -101,6 +101,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read alarm
             await self.hub.async_get_alarm()
 
+            # Read sensor filtering, make sure we have the latest value
+            await self.hub.async_get_sensor_filtering()
+
             # Read bypass maximum temperature
             await self.hub.async_get_bypass_maximum_temperature()
 

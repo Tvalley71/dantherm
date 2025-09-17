@@ -826,7 +826,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Alarm = %s", self._alarm)
         return self._alarm
 
-    async def async_sensor_filtering(self):
+    async def async_get_sensor_filtering(self):
         """Get sensor filtering."""
 
         self._sensor_filtering = self.get_entity_state_from_coordinator(
