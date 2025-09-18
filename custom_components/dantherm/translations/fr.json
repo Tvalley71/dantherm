@@ -51,9 +51,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Durée de vie filtre" },
+      "humidity_setpoint": { "name": "Consigne d'humidité" },
+      "humidity_setpoint_summer": { "name": "Consigne d'humidité (été)" },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
       "manual_bypass_duration": { "name": "Durée du bypass manuel" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass température minimale (été)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass température maximale (été)" },
       "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
       "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
       "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" }
@@ -347,6 +351,10 @@
         "filter_lifetime": {
           "name": "Durée de vie du filtre",
           "description": "Définissez la durée de vie du filtre en jours."
+        },
+        "humidity_setpoint": {
+          "name": "Consigne d'humidité",
+          "description": "Définissez la consigne d'humidité."
         },
         "manual_bypass_duration": {
           "name": "Durée du bypass manuel",

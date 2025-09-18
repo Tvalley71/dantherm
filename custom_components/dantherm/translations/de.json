@@ -50,9 +50,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Filterlebensdauer" },
+      "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },
+      "humidity_setpoint_summer": { "name": "Luftfeuchtigkeits-Sollwert (Sommer)" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
       "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass-Minimaltemperatur (Sommer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass-Maximaltemperatur (Sommer)" },
       "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
       "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
       "home_mode_timeout": { "name": "Heim-Modus Timeout" }
@@ -346,6 +350,10 @@
         "filter_lifetime": {
           "name": "Filterlebensdauer",
           "description": "Legen Sie die Lebensdauer des Filters in Tagen fest."
+        },
+        "humidity_setpoint": {
+          "name": "Luftfeuchtigkeits-Sollwert",
+          "description": "Legen Sie den Luftfeuchtigkeits-Sollwert fest."
         },
         "manual_bypass_duration": {
           "name": "Manuelle Bypass-Dauer",
