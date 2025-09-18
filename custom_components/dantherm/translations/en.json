@@ -50,9 +50,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Filter Lifetime" },
+      "humidity_setpoint": { "name": "Humidity Setpoint" },
+      "humidity_setpoint_summer": { "name": "Humidity Setpoint (Summer)" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
       "manual_bypass_duration": { "name": "Manual Bypass Duration" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass Minimum Temperature (Summer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperature (Summer)" },
       "boost_mode_timeout": { "name": "Boost Mode Timeout" },
       "eco_mode_timeout": { "name": "Eco Mode Timeout" },
       "home_mode_timeout": { "name": "Home Mode Timeout" }
@@ -347,6 +351,10 @@
         "filter_lifetime": {
           "name": "Filter Lifetime",
           "description": "Set the lifetime of the filter in days."
+        },
+        "humidity_setpoint": {
+          "name": "Humidity Setpoint",
+          "description": "Set the humidity setpoint."
         },
         "manual_bypass_duration": {
           "name": "Manual Bypass Duration",

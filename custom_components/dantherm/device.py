@@ -77,7 +77,9 @@ from .modbus import (
     MODBUS_REGISTER_ALARM_RESET,
     MODBUS_REGISTER_BYPASS_DAMPER,
     MODBUS_REGISTER_BYPASS_MAX_TEMP,
+    MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER,
     MODBUS_REGISTER_BYPASS_MIN_TEMP,
+    MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER,
     MODBUS_REGISTER_CURRENT_MODE,
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
@@ -87,6 +89,8 @@ from .modbus import (
     MODBUS_REGISTER_FILTER_RESET,
     MODBUS_REGISTER_FIRMWARE_VERSION,
     MODBUS_REGISTER_HUMIDITY,
+    MODBUS_REGISTER_HUMIDITY_SETPOINT,
+    MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER,
     MODBUS_REGISTER_MANUAL_BYPASS_DURATION,
     MODBUS_REGISTER_NIGHT_MODE_END_HOUR,
     MODBUS_REGISTER_NIGHT_MODE_END_MINUTE,
@@ -816,6 +820,24 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Manual bypass duration = %s", result)
         return result
 
+    async def async_get_bypass_minimum_temperature_summer(self):
+        """Get bypass minimum temperature for summer."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, 1
+        )
+        _LOGGER.debug("Bypass minimum temperature (summer) = %.1f", result)
+        return result
+
+    async def async_get_bypass_maximum_temperature_summer(self):
+        """Get bypass maximum temperature for summer."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, 1
+        )
+        _LOGGER.debug("Bypass maximum temperature (summer) = %.1f", result)
+        return result
+
     @property
     def get_disable_bypass(self) -> bool:
         """Get disable bypass."""
@@ -969,6 +991,20 @@ class DanthermDevice(DanthermModbus):
             ):
                 await toggle_bypass_damper()
 
+    async def set_humidity_setpoint(self, value):
+        """Set humidity setpoint."""
+
+        # Write the setpoint to the humidity setpoint register
+        await self._write_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT, value)
+
+    async def set_humidity_setpoint_summer(self, value):
+        """Set humidity setpoint for summer."""
+
+        # Write the setpoint to the humidity setpoint summer register
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER, value
+        )
+
     async def set_night_mode_start_time(self, value):
         """Set night mode start time."""
 
@@ -1020,6 +1056,18 @@ class DanthermDevice(DanthermModbus):
 
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
+
+    async def set_bypass_minimum_temperature_summer(self, value):
+        """Set bypass minimum temperature for summer."""
+
+        # Write the temperature to the minimum temperature summer register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, value)
+
+    async def set_bypass_maximum_temperature_summer(self, value):
+        """Set bypass maximum temperature for summer."""
+
+        # Write the temperature to the maximum temperature summer register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, value)
 
     async def set_disable_bypass(self, value: bool):
         """Set automatic bypass."""
@@ -1084,6 +1132,22 @@ class DanthermDevice(DanthermModbus):
 
         _LOGGER.debug("Humidity Level = %s", level)
         return level
+
+    async def async_get_humidity_setpoint(self):
+        """Get humidity setpoint."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT)
+        _LOGGER.debug("Humidity setpoint = %s", result)
+        return result
+
+    async def async_get_humidity_setpoint_summer(self):
+        """Get humidity setpoint (summer)."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER
+        )
+        _LOGGER.debug("Humidity setpoint (summer) = %s", result)
+        return result
 
     async def async_get_air_quality(self):
         """Get air quality."""

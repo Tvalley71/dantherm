@@ -50,9 +50,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Levensduur Filter" },
+      "humidity_setpoint": { "name": "Vochtigheidsinstelwaarde" },
+      "humidity_setpoint_summer": { "name": "Vochtigheidsinstelwaarde (Zomer)" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
       "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass Minimum Temperatuur (Zomer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperatuur (Zomer)" },
       "boost_mode_timeout": { "name": "Boost-modus Time-out" },
       "eco_mode_timeout": { "name": "Eco-modus Time-out" },
       "home_mode_timeout": { "name": "Thuis-modus Time-out" }
@@ -346,6 +350,10 @@
         "filter_lifetime": {
           "name": "Filter levensduur",
           "description": "Stel de levensduur van het filter in (dagen)."
+        },
+        "humidity_setpoint": {
+          "name": "Vochtigheidsinstelwaarde",
+          "description": "Stel de vochtigheidsinstelwaarde in."
         },
         "manual_bypass_duration": {
           "name": "Duur manuele bypass",

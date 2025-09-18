@@ -20,6 +20,7 @@ from .device_map import (
     ATTR_FAN_LEVEL_SELECTION,
     ATTR_FILTER_LIFETIME,
     ATTR_FIREPLACE_MODE,
+    ATTR_HUMIDITY_SETPOINT,
     ATTR_MANUAL_BYPASS_DURATION,
     ATTR_MANUAL_BYPASS_MODE,
     ATTR_NIGHT_MODE,
@@ -64,6 +65,9 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
         ),
         vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=360)
+        ),
+        vol.Optional(ATTR_HUMIDITY_SETPOINT): vol.All(
+            vol.Coerce(float), vol.Range(min=35, max=65)
         ),
         vol.Optional(ATTR_MANUAL_BYPASS_DURATION): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=480)
@@ -189,6 +193,7 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
                     for key in (
                         ATTR_BYPASS_MINIMUM_TEMPERATURE,
                         ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+                        ATTR_HUMIDITY_SETPOINT,
                         ATTR_MANUAL_BYPASS_DURATION,
                     )
                     if key in call.data
@@ -219,6 +224,14 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
                 filter_lifetime = int(render_template(call.data[ATTR_FILTER_LIFETIME]))
                 device.coordinator.enqueue_frontend(
                     device.set_filter_lifetime, filter_lifetime
+                )
+
+            if ATTR_HUMIDITY_SETPOINT in call.data:
+                humidity_setpoint = float(
+                    render_template(call.data[ATTR_HUMIDITY_SETPOINT])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_humidity_setpoint, humidity_setpoint
                 )
 
             if ATTR_MANUAL_BYPASS_DURATION in call.data:

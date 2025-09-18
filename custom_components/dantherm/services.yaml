@@ -73,6 +73,14 @@ set_configuration:
         text:
           type: text
           multiline: false
+    humidity_setpoint:
+      example: 50
+      selector:
+        number:
+          min: 35
+          max: 65
+          step: 1
+          unit_of_measurement: "%"
     manual_bypass_duration:
       example: 360
       selector:

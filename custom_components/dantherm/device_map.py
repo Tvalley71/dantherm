@@ -98,6 +98,8 @@ ATTR_FAN2_SPEED: Final = "fan2_speed"
 
 ATTR_HUMIDITY = "humidity"
 ATTR_HUMIDITY_LEVEL = "humidity_level"
+ATTR_HUMIDITY_SETPOINT: Final = "humidity_setpoint"
+ATTR_HUMIDITY_SETPOINT_SUMMER: Final = "humidity_setpoint_summer"
 
 ATTR_AIR_QUALITY: Final = "air_quality"
 ATTR_AIR_QUALITY_LEVEL: Final = "air_quality_level"
@@ -140,6 +142,8 @@ ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
 ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
+ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER: Final = "bypass_minimum_temperature_summer"
+ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER: Final = "bypass_maximum_temperature_summer"
 ATTR_DISABLE_BYPASS: Final = "disable_bypass"
 ATTR_BYPASS_AVAILABLE: Final = "bypass_available"
 
@@ -464,6 +468,38 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     DanthermNumberEntityDescription(
+        key=ATTR_HUMIDITY_SETPOINT,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_HUMIDITY_SETPOINT,
+        data_getinternal=ATTR_HUMIDITY_SETPOINT,
+        firmware_exclude_if_below=2.70,
+        native_max_value=65,
+        native_min_value=35,
+        native_step=1,
+        native_unit_of_measurement="%",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        data_getinternal=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        firmware_exclude_if_below=3.14,
+        native_max_value=65,
+        native_min_value=35,
+        native_step=1,
+        native_unit_of_measurement="%",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermNumberEntityDescription(
         key=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         icon="mdi:thermometer-minus",
         data_getavailable=ATTR_BYPASS_AVAILABLE,
@@ -511,6 +547,42 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="min",
         mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        icon="mdi:thermometer-minus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
+        data_setinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        data_getinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        firmware_exclude_if_below=3.14,
+        native_max_value=15,
+        native_min_value=12,
+        native_step=0.1,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        icon="mdi:thermometer-plus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
+        data_setinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        data_getinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        firmware_exclude_if_below=3.14,
+        native_max_value=27,
+        native_min_value=21,
+        native_step=0.1,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
