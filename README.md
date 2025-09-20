@@ -564,16 +564,27 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Summer Mode**: Turn summer mode on or off.
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
-
-![Skærmbillede fra 2025-02-09 14-46-28](https://github.com/user-attachments/assets/679f4582-4fcf-4adf-bb71-6042409aadb9)
+       - 
+<img width="904" height="1140" alt="Skærmbillede 20-09-2025 kl  10 58 20 AM" src="https://github.com/user-attachments/assets/a4b9ceca-fcd9-4d45-a265-640ea7a0624d" />
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
 
-The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
+The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools. 
 
-![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
+Starting from version _0.4.17_ of the integration, the actions have been reorganized into multiple variants, because Home Assistant actions cannot dynamically add or remove fields. Therefore, you now have **Set configuration**, **Set configuration 2**, and **Set configuration 3**, each containing the fields supported by a specific firmware versions:
 
+| Action               | Supported firmware         |
+|----------------------|----------------------------|
+| Set configuration    | All supported firmwares    |
+| Set configuration 2  | 2.70 and newer             |
+| Set configuration 3  | 3.14 and newer             |
+
+<img width="904" height="731" alt="Skærmbillede 20-09-2025 kl  10 57 31 AM" src="https://github.com/user-attachments/assets/0745d303-76c2-4a40-a4a4-f965220553d7" />
+
+<img width="904" height="754" alt="Skærmbillede 20-09-2025 kl  10 57 09 AM" src="https://github.com/user-attachments/assets/6cd4fb0e-9c3e-4377-827f-5002062eb2c5" />
+
+<img width="904" height="576" alt="Skærmbillede 20-09-2025 kl  10 56 38 AM" src="https://github.com/user-attachments/assets/a5fdbf02-7633-4e88-a3f4-8a14d10d5541" />
 
 ## Integration enhancements
 
