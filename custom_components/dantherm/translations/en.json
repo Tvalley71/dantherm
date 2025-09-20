@@ -326,10 +326,6 @@
           "name": "Fireplace Mode",
           "description": "Turn fireplace mode on or off. Note: The fireplace mode will be on for a limited time period."
         },
-        "disable_bypass": {
-          "name": "Disable Bypass Damper",
-          "description": "Disable the bypass damper."
-        },
         "manual_bypass_mode": {
           "name": "Manual Bypass Mode",
           "description": "Turn manual bypass mode on or off. Note: Manual bypass mode will be limited by the specified manual bypass duration."
@@ -338,27 +334,11 @@
     },
     "set_configuration": {
       "name": "Set configuration",
-      "description": "Adjust the configuration settings for the Dantherm device. Note: Bypass Minimum Temperature, Bypass Maximum Temperature and Manual Bypass Duration are only supported on device's with firmware version 2.70 or newer.",
+      "description": "Adjust the configuration settings for the Dantherm device.",
       "fields": {
-        "bypass_minimum_temperature": {
-          "name": "Bypass Minimum Temperature",
-          "description": "Set the minimum temperature for bypass operation."
-        },
-        "bypass_maximum_temperature": {
-          "name": "Bypass Maximum Temperature",
-          "description": "Set the maximum temperature for bypass operation."
-        },
         "filter_lifetime": {
           "name": "Filter Lifetime",
           "description": "Set the lifetime of the filter in days."
-        },
-        "humidity_setpoint": {
-          "name": "Humidity Setpoint",
-          "description": "Set the humidity setpoint."
-        },
-        "manual_bypass_duration": {
-          "name": "Manual Bypass Duration",
-          "description": "Set the duration for manual bypass mode in minutes."
         },
         "night_mode": {
           "name": "Night Mode",
@@ -375,6 +355,50 @@
         "week_program_selection": {
           "name": "Week Program Selection",
           "description": "Select the active week program."
+        }
+      }
+    },
+    "set_configuration_2": {
+      "name": "Set configuration 2",
+      "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 2.70 or above.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass Minimum Temperature",
+          "description": "Set the minimum temperature for bypass operation."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass Maximum Temperature",
+          "description": "Set the maximum temperature for bypass operation."
+        },
+        "humidity_setpoint": {
+          "name": "Humidity Setpoint",
+          "description": "Set the humidity setpoint."
+        },
+        "manual_bypass_duration": {
+          "name": "Manual Bypass Duration",
+          "description": "Set the duration for manual bypass mode in minutes."
+        },
+        "disable_bypass": {
+          "name": "Disable Bypass Damper",
+          "description": "Disable the bypass damper."
+        }
+      }
+    },
+    "set_configuration_3": {
+      "name": "Set configuration 3",
+      "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 3.14 or above.",
+      "fields": {
+        "bypass_minimum_temperature_summer": {
+          "name": "Bypass Minimum Temperature (Summer)",
+          "description": "Set the minimum temperature for bypass operation."
+        },
+        "bypass_maximum_temperature_summer": {
+          "name": "Bypass Maximum Temperature (Summer)",
+          "description": "Set the maximum temperature for bypass operation."
+        },
+        "humidity_setpoint_summer": {
+          "name": "Humidity Setpoint (Summer)",
+          "description": "Set the humidity setpoint."
         }
       }
     },
@@ -395,10 +419,10 @@
       "message": "Invalid filter lifetime. Use values between 0 to 360 days."
     },
     "unsupported_by_firmware": {
-      "message": "Your device's firmware does not support the following feature(s): {features}"
+      "message": "The features in this action are not supported by the device's firmware version."
     },
     "pymodbus_version": {
-      "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed"
+      "message": "Dantherm integration requires pymodbus version %s or newer, but %s is installed."
     },
     "disable_notifications": {
       "message": "Notifications can be disabled in the integration options."

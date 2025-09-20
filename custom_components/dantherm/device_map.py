@@ -38,6 +38,8 @@ REQUIRED_PYMODBUS_VERSION = "3.7.4"
 
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
+SERVICE_SET_CONFIGURATION_2 = "set_configuration_2"
+SERVICE_SET_CONFIGURATION_3 = "set_configuration_3"
 SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
 
@@ -938,10 +940,12 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         key=ATTR_DISABLE_BYPASS,
         data_setinternal=ATTR_DISABLE_BYPASS,
         data_getinternal=ATTR_DISABLE_BYPASS,
+        firmware_exclude_if_below=2.70,
         icon_on="mdi:repeat-off",
         icon_off="mdi:repeat",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),
