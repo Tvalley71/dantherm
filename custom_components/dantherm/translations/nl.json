@@ -385,7 +385,7 @@
     },
     "set_configuration_3": {
       "name": "Configuratie instellen 3",
-      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 3.14 of nieuwer.",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 3.08 of nieuwer.",
       "fields": {
         "bypass_minimum_temperature_summer": {
           "name": "Bypass minimum temperatuur (zomer)",

@@ -386,7 +386,7 @@
     },
     "set_configuration_3": {
       "name": "Set configuration 3",
-      "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 3.14 or above.",
+      "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 3.08 or above.",
       "fields": {
         "bypass_minimum_temperature_summer": {
           "name": "Bypass Minimum Temperature (Summer)",

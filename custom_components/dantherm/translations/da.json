@@ -386,7 +386,7 @@
     },
     "set_configuration_3": {
       "name": "Sæt konfiguration 3",
-      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 3.14 eller nyere.",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 3.08 eller nyere.",
       "fields": {
         "bypass_minimum_temperature_summer": {
           "name": "Bypass minimum temperatur (sommer)",
