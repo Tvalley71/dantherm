@@ -385,7 +385,7 @@
     },
     "set_configuration_3": {
       "name": "Konfiguration festlegen 3",
-      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 3.14 oder neuer unterstützt.",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 3.08 oder neuer unterstützt.",
       "fields": {
         "bypass_minimum_temperature_summer": {
           "name": "Bypass-Minimaltemperatur (Sommer)",

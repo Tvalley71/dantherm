@@ -386,7 +386,7 @@
     },
     "set_configuration_3": {
       "name": "Définir la configuration 3",
-      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 3.14 ou supérieure.",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 3.08 ou supérieure.",
       "fields": {
         "bypass_minimum_temperature_summer": {
           "name": "Bypass température minimale (été)",

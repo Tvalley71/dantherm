@@ -34,6 +34,8 @@ from .device_map import (
     ATTR_WEEK_PROGRAM_SELECTION,
     FAN_LEVEL_SELECTIONS,
     OPERATION_SELECTIONS,
+    REQUIRED_FIRMWARE_2,
+    REQUIRED_FIRMWARE_3,
     SERVICE_ALARM_RESET,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
@@ -252,7 +254,7 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
             firmware_version = getattr(device, "get_device_fw_version", 0)
 
             # All fields in this service are unsupported for firmware < 2.70
-            if firmware_version < 2.70:
+            if firmware_version < REQUIRED_FIRMWARE_2:
                 raise UnsupportedByFirmware
 
             # Apply bypass minimum and maximum temperature, manual bypass duration
@@ -305,8 +307,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
             # Get firmware version, default to 0 if not available
             firmware_version = getattr(device, "get_device_fw_version", 0)
 
-            # All fields in this service are unsupported for firmware < 3.14
-            if firmware_version < 3.14:
+            # All fields in this service are unsupported for firmware < 3.08
+            if firmware_version < REQUIRED_FIRMWARE_3:
                 raise UnsupportedByFirmware
 
             # Apply bypass minimum and maximum temperature, manual bypass duration
