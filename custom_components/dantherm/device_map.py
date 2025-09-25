@@ -743,7 +743,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:molecule-co2",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
-        device_class=SensorDeviceClass.AQI,
+        device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         component_class=ComponentClass.VOC_sensor,
     ),
