@@ -31,10 +31,10 @@ Known supported units:
 
 <!-- START:shared-section -->
 
-A user has reported that the integration also works with the **Bosch Vent 5000 C** ventilation unit.
-
 <!-- START:shared-section no-replace -->
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
+
+A user has reported that the integration also works with the **Bosch Vent 5000 C** ventilation unit.
 <!-- END:shared-section -->
 
 > [!NOTE]  
