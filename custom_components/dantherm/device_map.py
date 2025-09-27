@@ -36,8 +36,13 @@ from .modbus import (
 
 REQUIRED_PYMODBUS_VERSION = "3.7.4"
 
+REQUIRED_FIRMWARE_2 = 2.70
+REQUIRED_FIRMWARE_3 = 3.08
+
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
+SERVICE_SET_CONFIGURATION_2 = "set_configuration_2"
+SERVICE_SET_CONFIGURATION_3 = "set_configuration_3"
 SERVICE_FILTER_RESET = "filter_reset"
 SERVICE_ALARM_RESET = "alarm_reset"
 SERVICE_CLEAR_ADAPTIVE_EVENT_STACK = "clear_adaptive_event_stack"
@@ -103,6 +108,8 @@ ATTR_FAN2_SPEED: Final = "fan2_speed"
 
 ATTR_HUMIDITY = "humidity"
 ATTR_HUMIDITY_LEVEL = "humidity_level"
+ATTR_HUMIDITY_SETPOINT: Final = "humidity_setpoint"
+ATTR_HUMIDITY_SETPOINT_SUMMER: Final = "humidity_setpoint_summer"
 
 ATTR_AIR_QUALITY: Final = "air_quality"
 ATTR_AIR_QUALITY_LEVEL: Final = "air_quality_level"
@@ -145,6 +152,8 @@ ATTR_MANUAL_BYPASS_MODE: Final = "manual_bypass_mode"
 ATTR_MANUAL_BYPASS_DURATION: Final = "manual_bypass_duration"
 ATTR_BYPASS_MINIMUM_TEMPERATURE: Final = "bypass_minimum_temperature"
 ATTR_BYPASS_MAXIMUM_TEMPERATURE: Final = "bypass_maximum_temperature"
+ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER: Final = "bypass_minimum_temperature_summer"
+ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER: Final = "bypass_maximum_temperature_summer"
 ATTR_DISABLE_BYPASS: Final = "disable_bypass"
 ATTR_BYPASS_AVAILABLE: Final = "bypass_available"
 
@@ -476,12 +485,44 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     DanthermNumberEntityDescription(
+        key=ATTR_HUMIDITY_SETPOINT,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_HUMIDITY_SETPOINT,
+        data_getinternal=ATTR_HUMIDITY_SETPOINT,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_2,
+        native_max_value=65,
+        native_min_value=35,
+        native_step=1,
+        native_unit_of_measurement="%",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        data_getinternal=ATTR_HUMIDITY_SETPOINT_SUMMER,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_3,
+        native_max_value=65,
+        native_min_value=35,
+        native_step=1,
+        native_unit_of_measurement="%",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.RH_Senser,
+    ),
+    DanthermNumberEntityDescription(
         key=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         icon="mdi:thermometer-minus",
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE,
-        firmware_exclude_if_below=2.70,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_2,
         native_max_value=15,
         native_min_value=12,
         native_step=0.1,
@@ -499,7 +540,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
         data_getinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE,
-        firmware_exclude_if_below=2.70,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_2,
         native_max_value=27,
         native_min_value=21,
         native_step=0.1,
@@ -516,13 +557,49 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         data_getavailable=ATTR_BYPASS_AVAILABLE,
         data_setinternal=ATTR_MANUAL_BYPASS_DURATION,
         data_getinternal=ATTR_MANUAL_BYPASS_DURATION,
-        firmware_exclude_if_below=2.70,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_2,
         native_max_value=480,
         native_min_value=60,
         native_step=15,
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement="min",
         mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        icon="mdi:thermometer-minus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
+        data_setinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        data_getinternal=ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_3,
+        native_max_value=17,
+        native_min_value=12,
+        native_step=0.1,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        icon="mdi:thermometer-plus",
+        data_getavailable=ATTR_BYPASS_AVAILABLE,
+        data_setinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        data_getinternal=ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_3,
+        native_max_value=30,
+        native_min_value=21,
+        native_step=0.1,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
@@ -678,7 +755,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:molecule-co2",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
-        device_class=SensorDeviceClass.AQI,
+        device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         component_class=ComponentClass.VOC_sensor,
     ),
@@ -878,10 +955,12 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         key=ATTR_DISABLE_BYPASS,
         data_setinternal=ATTR_DISABLE_BYPASS,
         data_getinternal=ATTR_DISABLE_BYPASS,
+        firmware_exclude_if_below=REQUIRED_FIRMWARE_2,
         icon_on="mdi:repeat-off",
         icon_off="mdi:repeat",
         component_class=ComponentClass.Bypass,
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
     ),

@@ -33,6 +33,8 @@ Known supported units:
 
 <!-- START:shared-section no-replace -->
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
+
+A user has reported that the integration also works with the **Bosch Vent 5000 C** ventilation unit.
 <!-- END:shared-section -->
 
 > [!NOTE]  
@@ -63,15 +65,19 @@ The listed units are known to work with this integration. Basically, all units c
 
 #### Number Entities
 
-| Entity                      | Description                        |
-|-----------------------------|------------------------------------|
-| `boost_mode_timeout`        | Sets the duration for Boost Mode before it automatically turns off [[3]](#entity-notes) |
-| `bypass_minimum_temperature`| Minimum outdoor temperature allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `bypass_maximum_temperature`| Maximum outdoor temperature allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `eco_mode_timeout`          | Sets the duration for Eco Mode before it automatically deactivates [[3]](#entity-notes) |
-| `filter_lifetime`           | Expected lifetime of the filter before triggering a replacement notification [[2]](#entity-notes) |
-| `home_mode_timeout`         | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
-| `manual_bypass_duration`    | Duration for which manual bypass remains active after user activation [[1][2][5]](#entity-notes) |
+| Entity                              | Description                        |
+|-------------------------------------|------------------------------------|
+| `boost_mode_timeout`                | Sets the duration for Boost Mode before it automatically turns off [[3]](#entity-notes) |
+| `bypass_minimum_temperature`        | Minimum outdoor temperature (winter[[6]](#entity-notes)) allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `bypass_maximum_temperature`        | Maximum outdoor temperature (winter[[6]](#entity-notes)) allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `bypass_minimum_temperature_summer` | Minimum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `bypass_maximum_temperature_summer` | Maximum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
+| `eco_mode_timeout`                  | Sets the duration for Eco Mode before it automatically deactivates [[3]](#entity-notes) |
+| `filter_lifetime`                   | Expected lifetime of the filter before triggering a replacement notification [[2]](#entity-notes) |
+| `humidity_setpoint`                 | Humidity setpoint in % (winter[[6]](#entity-notes)) [[2][5]](#entity-notes) |
+| `humidity_setpoint_summer`          | Humidity setpoint in % (summer) [[2][5]](#entity-notes) |
+| `home_mode_timeout`                 | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
+| `manual_bypass_duration`            | Duration for which manual bypass remains active after user activation [[1][2][5]](#entity-notes) |
 
 #### Select Entities
 
@@ -138,6 +144,7 @@ The listed units are known to work with this integration. Basically, all units c
 [3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
 [4] The entity can only be enabled if any of the adaptive triggers are configured.  
 [5] The entity may not install due to firmware limitation.  
+[6] Winter setting if summer setting is available (Firmware ≥ 3.14).  
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
@@ -559,16 +566,27 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Summer Mode**: Turn summer mode on or off.
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
-
-![Skærmbillede fra 2025-02-09 14-46-28](https://github.com/user-attachments/assets/679f4582-4fcf-4adf-bb71-6042409aadb9)
+       - 
+<img width="904" height="1140" alt="Skærmbillede 20-09-2025 kl  10 58 20 AM" src="https://github.com/user-attachments/assets/a4b9ceca-fcd9-4d45-a265-640ea7a0624d" />
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
 
-The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
+The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools. 
 
-![Skærmbillede fra 2025-02-09 14-49-25](https://github.com/user-attachments/assets/2fad1928-d028-45cb-9bea-147944adf2ab)
+Starting from version _0.4.17_ of the integration, the actions have been reorganized into multiple variants, because Home Assistant actions cannot dynamically add or remove fields. Therefore, you now have **Set configuration**, **Set configuration 2**, and **Set configuration 3**, each containing the fields supported by a specific firmware versions:
 
+| Action               | Supported firmware         |
+|----------------------|----------------------------|
+| Set configuration    | All supported firmwares    |
+| Set configuration 2  | 2.70 and newer             |
+| Set configuration 3  | 3.14 and newer             |
+
+<img width="904" height="731" alt="Skærmbillede 20-09-2025 kl  10 57 31 AM" src="https://github.com/user-attachments/assets/0745d303-76c2-4a40-a4a4-f965220553d7" />
+
+<img width="904" height="754" alt="Skærmbillede 20-09-2025 kl  10 57 09 AM" src="https://github.com/user-attachments/assets/6cd4fb0e-9c3e-4377-827f-5002062eb2c5" />
+
+<img width="904" height="576" alt="Skærmbillede 20-09-2025 kl  10 56 38 AM" src="https://github.com/user-attachments/assets/a5fdbf02-7633-4e88-a3f4-8a14d10d5541" />
 
 ## Integration enhancements
 
@@ -657,7 +675,7 @@ To change settings such as disabling temperature unknown values, disabling notif
 4. The options dialog will open, where you can adjust the available settings.
 <img width="588" height="691" alt="Skærmbillede 27-08-2025 kl  14 33 15 PM" src="https://github.com/user-attachments/assets/20ab43d5-1384-4fc7-b72a-5f68307910ac" />
 
-#### Changing Host and Port
+#### Changing IP address and Port
 
 If device discovery does not find your unit, you can manually update the IP address and Port in the integration options dialog.
 

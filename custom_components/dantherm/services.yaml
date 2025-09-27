@@ -40,10 +40,6 @@ set_state:
       example: true
       selector:
         boolean:
-    disable_bypass:
-      example: true
-      selector:
-        boolean:
 set_configuration:
   target:
     device:
@@ -51,36 +47,12 @@ set_configuration:
     entity:
       integration: dantherm
   fields:
-    bypass_minimum_temperature:
-      example: 15
-      selector:
-        number:
-          min: 12
-          max: 15
-          step: 0.1
-          unit_of_measurement: "°C"
-    bypass_maximum_temperature:
-      example: 24
-      selector:
-        number:
-          min: 21
-          max: 27
-          step: 0.1
-          unit_of_measurement: "°C"
     filter_lifetime:
       example: "180"
       selector:
         text:
           type: text
           multiline: false
-    manual_bypass_duration:
-      example: 360
-      selector:
-        number:
-          min: 60
-          max: 480
-          step: 15
-          unit_of_measurement: "min"
     night_mode:
       example: true
       selector:
@@ -113,6 +85,80 @@ set_configuration:
             - "8"
             - "9"
             - "10"
+set_configuration_2:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
+  fields:
+    bypass_minimum_temperature:
+      example: 15
+      selector:
+        number:
+          min: 12
+          max: 15
+          step: 0.1
+          unit_of_measurement: "°C"
+    bypass_maximum_temperature:
+      example: 24
+      selector:
+        number:
+          min: 21
+          max: 27
+          step: 0.1
+          unit_of_measurement: "°C"
+    humidity_setpoint:
+      example: 50
+      selector:
+        number:
+          min: 35
+          max: 65
+          step: 1
+          unit_of_measurement: "%"
+    manual_bypass_duration:
+      example: 360
+      selector:
+        number:
+          min: 60
+          max: 480
+          step: 15
+          unit_of_measurement: "min"
+    disable_bypass:
+      example: true
+      selector:
+        boolean:
+set_configuration_3:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
+  fields:
+    bypass_minimum_temperature_summer:
+      example: 15
+      selector:
+        number:
+          min: 12
+          max: 17
+          step: 0.1
+          unit_of_measurement: "°C"
+    bypass_maximum_temperature_summer:
+      example: 24
+      selector:
+        number:
+          min: 21
+          max: 30
+          step: 0.1
+          unit_of_measurement: "°C"
+    humidity_setpoint_summer:
+      example: 50
+      selector:
+        number:
+          min: 35
+          max: 65
+          step: 1
+          unit_of_measurement: "%"
 filter_reset:
   target:
     device:

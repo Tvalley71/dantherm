@@ -53,9 +53,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Levensduur Filter" },
+      "humidity_setpoint": { "name": "Vochtigheidsinstelwaarde" },
+      "humidity_setpoint_summer": { "name": "Vochtigheidsinstelwaarde (Zomer)" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
       "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass Minimum Temperatuur (Zomer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperatuur (Zomer)" },
       "boost_mode_timeout": { "name": "Boost-modus Time-out" },
       "eco_mode_timeout": { "name": "Eco-modus Time-out" },
       "home_mode_timeout": { "name": "Thuis-modus Time-out" }
@@ -325,10 +329,6 @@
           "name": "Open Haardmodus",
           "description": "Schakel de open haardmodus in of uit. De open haardmodus is voor een beperkte tijd ingeschakeld."
         },
-        "disable_bypass": {
-          "name": "Bypass uitschakelen",
-          "description": "Schakel de bypass-klep uit."
-        },
         "manual_bypass_mode": {
           "name": "Manuele Bypassmodus",
           "description": "Manuele bypassmodus in- of uitschakelen. De manuele bypassmodus is beperkt tot de ingestelde handmatige bypassduur."
@@ -337,23 +337,11 @@
     },
     "set_configuration": {
       "name": "Configuratie instellen",
-      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: Bypass minimumtemperatuur, bypass maximumtemperatuur en handmatige bypassduur worden alleen ondersteund op apparaten met firmwareversie 2.70 of nieuwer.",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan.",
       "fields": {
-        "bypass_minimum_temperature": {
-          "name": "Bypass minimum temperatuur",
-          "description": "Stel de minimale temperatuur in voor bypass-bediening."
-        },
-        "bypass_maximum_temperature": {
-          "name": "Bypass maximum temperatuur",
-          "description": "Stel de maximale temperatuur in voor bypass-bediening."
-        },
         "filter_lifetime": {
           "name": "Filter levensduur",
           "description": "Stel de levensduur van het filter in (dagen)."
-        },
-        "manual_bypass_duration": {
-          "name": "Duur manuele bypass",
-          "description": "Stel de duur van de manuele bypass-modus in (minuten)."
         },
         "night_mode": {
           "name": "Nachtmodus",
@@ -370,6 +358,50 @@
         "week_program_selection": {
           "name": "Weekprogramma selectie",
           "description": "Selecteer het actieve weekprogramma."
+        }
+      }
+    },
+    "set_configuration_2": {
+      "name": "Configuratie instellen 2",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 2.70 of nieuwer.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass minimum temperatuur",
+          "description": "Stel de minimale temperatuur in voor bypass-bediening."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass maximum temperatuur",
+          "description": "Stel de maximale temperatuur in voor bypass-bediening."
+        },
+        "humidity_setpoint": {
+          "name": "Vochtigheidsinstelwaarde",
+          "description": "Stel de vochtigheidsinstelwaarde in."
+        },
+        "manual_bypass_duration": {
+          "name": "Duur manuele bypass",
+          "description": "Stel de duur van de manuele bypass-modus in (minuten)."
+        },
+        "disable_bypass": {
+          "name": "Bypass uitschakelen",
+          "description": "Schakel de bypass-klep uit."
+        }
+      }
+    },
+    "set_configuration_3": {
+      "name": "Configuratie instellen 3",
+      "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 3.08 of nieuwer.",
+      "fields": {
+        "bypass_minimum_temperature_summer": {
+          "name": "Bypass minimum temperatuur (zomer)",
+          "description": "Stel de minimale temperatuur in voor bypass-bediening."
+        },
+        "bypass_maximum_temperature_summer": {
+          "name": "Bypass maximum temperatuur (zomer)",
+          "description": "Stel de maximale temperatuur in voor bypass-bediening."
+        },
+        "humidity_setpoint_summer": {
+          "name": "Vochtigheidsinstelwaarde (zomer)",
+          "description": "Stel de vochtigheidsinstelwaarde in."
         }
       }
     },
@@ -390,10 +422,10 @@
       "message": "Ongeldige filter levensduur. Gebruik waarden tussen 0 en 360 dagen."
     },
     "unsupported_by_firmware": {
-      "message": "De firmware van uw apparaat ondersteunt de volgende functie(s) niet: {features}"
+      "message": "De functies in deze actie worden niet ondersteund door de firmwareversie van het apparaat."
     },
     "pymodbus_version": {
-      "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd"
+      "message": "De Dantherm-integratie vereist pymodbus versie %s of hoger, maar versie %s is geïnstalleerd."
     },
     "disable_notifications": {
       "message": "Meldingen kunnen worden uitgeschakeld in de integratie-opties."

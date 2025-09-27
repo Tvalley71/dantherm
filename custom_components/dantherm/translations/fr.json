@@ -54,9 +54,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Durée de vie filtre" },
+      "humidity_setpoint": { "name": "Consigne d'humidité" },
+      "humidity_setpoint_summer": { "name": "Consigne d'humidité (été)" },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
       "manual_bypass_duration": { "name": "Durée du bypass manuel" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass température minimale (été)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass température maximale (été)" },
       "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
       "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
       "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" }
@@ -326,10 +330,6 @@
           "name": "Mode cheminée",
           "description": "Activez ou désactivez le mode cheminée. Le mode cheminée restera activé pendant une période limitée."
         },
-        "disable_bypass": {
-          "name": "Désactiver le bypass",
-          "description": "Désactivez le clapet de bypass."
-        },
         "manual_bypass_mode": {
           "name": "Mode bypass manuel",
           "description": "Activez ou désactivez le mode de contournement manuel. Le contournement manuel sera limité à la durée de contournement manuelle."
@@ -338,23 +338,11 @@
     },
     "set_configuration": {
       "name": "Définir la configuration",
-      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque: La température minimale de bypass, la température maximale de bypass et la durée de bypass manuelle ne sont prises en charge que sur les appareils avec une version du firmware 2.70 ou supérieure.",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm.",
       "fields": {
-        "bypass_minimum_temperature": {
-          "name": "Bypass température minimale",
-          "description": "Définissez la température minimale pour le fonctionnement de la bypass."
-        },
-        "bypass_maximum_temperature": {
-          "name": "Bypass température maximale",
-          "description": "Définissez la température maximale pour le fonctionnement de la bypass."
-        },
         "filter_lifetime": {
           "name": "Durée de vie du filtre",
           "description": "Définissez la durée de vie du filtre en jours."
-        },
-        "manual_bypass_duration": {
-          "name": "Durée du bypass manuel",
-          "description": "Définissez la durée du mode de bypass manuelle en minutes."
         },
         "night_mode": {
           "name": "Mode nuit",
@@ -371,6 +359,50 @@
         "week_program_selection": {
           "name": "Sélection du programme hebdomadaire",
           "description": "Sélectionnez le programme hebdomadaire actif."
+        }
+      }
+    },
+    "set_configuration_2": {
+      "name": "Définir la configuration 2",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 2.70 ou supérieure.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass température minimale",
+          "description": "Définissez la température minimale pour le fonctionnement de la bypass."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass température maximale",
+          "description": "Définissez la température maximale pour le fonctionnement de la bypass."
+        },
+        "humidity_setpoint": {
+          "name": "Consigne d'humidité",
+          "description": "Définissez la consigne d'humidité."
+        },
+        "manual_bypass_duration": {
+          "name": "Durée du bypass manuel",
+          "description": "Définissez la durée du mode de bypass manuelle en minutes."
+        },
+        "disable_bypass": {
+          "name": "Désactiver le bypass",
+          "description": "Désactivez le clapet de bypass."
+        }
+      }
+    },
+    "set_configuration_3": {
+      "name": "Définir la configuration 3",
+      "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 3.08 ou supérieure.",
+      "fields": {
+        "bypass_minimum_temperature_summer": {
+          "name": "Bypass température minimale (été)",
+          "description": "Définissez la température minimale pour le fonctionnement de la bypass."
+        },
+        "bypass_maximum_temperature_summer": {
+          "name": "Bypass température maximale (été)",
+          "description": "Définissez la température maximale pour le fonctionnement de la bypass."
+        },
+        "humidity_setpoint_summer": {
+          "name": "Consigne d'humidité (été)",
+          "description": "Définissez la consigne d'humidité."
         }
       }
     },
@@ -391,10 +423,10 @@
       "message": "Durée de vie du filtre invalide. Utilisez des valeurs entre 0 et 360 jours."
     },
     "unsupported_by_firmware": {
-      "message": "Le firmware de votre appareil ne prend pas en charge la/les fonctionnalité(s) suivante(s) : {features}"
+      "message": "Les fonctionnalités dans cette action ne sont pas prises en charge par la version du firmware de l'appareil."
     },
     "pymodbus_version": {
-      "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée"
+      "message": "L'intégration Dantherm nécessite pymodbus version %s ou supérieure, mais la version %s est installée."
     },
     "disable_notifications": {
       "message": "Les notifications peuvent être désactivées dans les options de l'intégration."

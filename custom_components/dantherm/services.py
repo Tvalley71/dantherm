@@ -15,11 +15,15 @@ from .const import DOMAIN
 from .device_map import (
     ATTR_AWAY_MODE,
     ATTR_BYPASS_MAXIMUM_TEMPERATURE,
+    ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
     ATTR_BYPASS_MINIMUM_TEMPERATURE,
+    ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
     ATTR_DISABLE_BYPASS,
     ATTR_FAN_LEVEL_SELECTION,
     ATTR_FILTER_LIFETIME,
     ATTR_FIREPLACE_MODE,
+    ATTR_HUMIDITY_SETPOINT,
+    ATTR_HUMIDITY_SETPOINT_SUMMER,
     ATTR_MANUAL_BYPASS_DURATION,
     ATTR_MANUAL_BYPASS_MODE,
     ATTR_NIGHT_MODE,
@@ -30,10 +34,14 @@ from .device_map import (
     ATTR_WEEK_PROGRAM_SELECTION,
     FAN_LEVEL_SELECTIONS,
     OPERATION_SELECTIONS,
+    REQUIRED_FIRMWARE_2,
+    REQUIRED_FIRMWARE_3,
     SERVICE_ALARM_RESET,
     SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
+    SERVICE_SET_CONFIGURATION_2,
+    SERVICE_SET_CONFIGURATION_3,
     SERVICE_SET_STATE,
     WEEK_PROGRAM_SELECTIONS,
     ActiveUnitMode,
@@ -51,11 +59,22 @@ DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
         vol.Optional(ATTR_SUMMER_MODE): cv.boolean,
         vol.Optional(ATTR_FIREPLACE_MODE): cv.boolean,
         vol.Optional(ATTR_MANUAL_BYPASS_MODE): cv.boolean,
-        vol.Optional(ATTR_DISABLE_BYPASS): cv.boolean,
     }
 )
 
 DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
+    {
+        vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=360)
+        ),
+        vol.Optional(ATTR_NIGHT_MODE): cv.boolean,
+        vol.Optional(ATTR_NIGHT_MODE_START_TIME): cv.string,
+        vol.Optional(ATTR_NIGHT_MODE_END_TIME): cv.string,
+        vol.Optional(ATTR_WEEK_PROGRAM_SELECTION): vol.In(WEEK_PROGRAM_SELECTIONS),
+    }
+)
+
+DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
     {
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=15)
@@ -63,16 +82,27 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
         vol.Optional(ATTR_BYPASS_MAXIMUM_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=21, max=27)
         ),
-        vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=360)
+        vol.Optional(ATTR_HUMIDITY_SETPOINT): vol.All(
+            vol.Coerce(float), vol.Range(min=35, max=65)
         ),
         vol.Optional(ATTR_MANUAL_BYPASS_DURATION): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=480)
         ),
-        vol.Optional(ATTR_NIGHT_MODE): cv.boolean,
-        vol.Optional(ATTR_NIGHT_MODE_START_TIME): cv.string,
-        vol.Optional(ATTR_NIGHT_MODE_END_TIME): cv.string,
-        vol.Optional(ATTR_WEEK_PROGRAM_SELECTION): vol.In(WEEK_PROGRAM_SELECTIONS),
+        vol.Optional(ATTR_DISABLE_BYPASS): cv.boolean,
+    }
+)
+
+DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
+    {
+        vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER): vol.All(
+            vol.Coerce(float), vol.Range(min=12, max=17)
+        ),
+        vol.Optional(ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER): vol.All(
+            vol.Coerce(float), vol.Range(min=21, max=30)
+        ),
+        vol.Optional(ATTR_HUMIDITY_SETPOINT_SUMMER): vol.All(
+            vol.Coerce(float), vol.Range(min=35, max=65)
+        ),
     }
 )
 
@@ -155,12 +185,6 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
                     device.set_active_unit_mode, fireplace_mode
                 )
 
-            if ATTR_DISABLE_BYPASS in call.data:
-                disable_bypass = bool(render_template(call.data[ATTR_DISABLE_BYPASS]))
-                device.coordinator.enqueue_frontend(
-                    device.set_disable_bypass, disable_bypass
-                )
-
             if ATTR_MANUAL_BYPASS_MODE in call.data:
                 bypass_mode = (
                     ActiveUnitMode.SelectManualBypass
@@ -179,55 +203,12 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         async def apply_config(device, call):
             """Apply configuration."""
 
-            supports_write_from_2_70 = (
-                getattr(device, "get_device_fw_version", 0) >= 2.70
-            )
-
-            # Check for unsupported fields and raise error if any are present
-            if not supports_write_from_2_70:
-                unsupported = [
-                    key
-                    for key in (
-                        ATTR_BYPASS_MINIMUM_TEMPERATURE,
-                        ATTR_BYPASS_MAXIMUM_TEMPERATURE,
-                        ATTR_MANUAL_BYPASS_DURATION,
-                    )
-                    if key in call.data
-                ]
-                if unsupported:
-                    raise UnsupportedByFirmware(unsupported)
-
-            # Apply bypass minimum and maximum temperature, filter lifetime,
-            # manual bypass duration, night mode, night mode start and end time,
+            # Apply filter lifetime, night mode, night mode start and end time,
             # and week program selection
-            if ATTR_BYPASS_MINIMUM_TEMPERATURE in call.data:
-                bypass_minimum_temperature = float(
-                    render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE])
-                )
-                device.coordinator.enqueue_frontend(
-                    device.set_bypass_minimum_temperature, bypass_minimum_temperature
-                )
-
-            if ATTR_BYPASS_MAXIMUM_TEMPERATURE in call.data:
-                bypass_maximum_temperature = float(
-                    render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE])
-                )
-                device.coordinator.enqueue_frontend(
-                    device.set_bypass_maximum_temperature, bypass_maximum_temperature
-                )
-
             if ATTR_FILTER_LIFETIME in call.data:
                 filter_lifetime = int(render_template(call.data[ATTR_FILTER_LIFETIME]))
                 device.coordinator.enqueue_frontend(
                     device.set_filter_lifetime, filter_lifetime
-                )
-
-            if ATTR_MANUAL_BYPASS_DURATION in call.data:
-                bypass_duration = int(
-                    render_template(call.data[ATTR_MANUAL_BYPASS_DURATION])
-                )
-                device.coordinator.enqueue_frontend(
-                    device.set_manual_bypass_duration, bypass_duration
                 )
 
             if ATTR_NIGHT_MODE in call.data:
@@ -264,6 +245,102 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config)
 
+    async def async_set_configuration_2(call):
+        """Set configuration for Dantherm devices."""
+
+        async def apply_config_2(device, call):
+            """Apply configuration 2."""
+
+            # Get firmware version, default to 0 if not available
+            firmware_version = getattr(device, "get_device_fw_version", 0)
+
+            # All fields in this service are unsupported for firmware < 2.70
+            if firmware_version < REQUIRED_FIRMWARE_2:
+                raise UnsupportedByFirmware
+
+            # Apply bypass minimum and maximum temperature, manual bypass duration
+            if ATTR_BYPASS_MINIMUM_TEMPERATURE in call.data:
+                bypass_minimum_temperature = float(
+                    render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_minimum_temperature, bypass_minimum_temperature
+                )
+
+            if ATTR_BYPASS_MAXIMUM_TEMPERATURE in call.data:
+                bypass_maximum_temperature = float(
+                    render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_maximum_temperature, bypass_maximum_temperature
+                )
+
+            if ATTR_HUMIDITY_SETPOINT in call.data:
+                humidity_setpoint = float(
+                    render_template(call.data[ATTR_HUMIDITY_SETPOINT])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_humidity_setpoint, humidity_setpoint
+                )
+
+            if ATTR_MANUAL_BYPASS_DURATION in call.data:
+                bypass_duration = int(
+                    render_template(call.data[ATTR_MANUAL_BYPASS_DURATION])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_manual_bypass_duration, bypass_duration
+                )
+
+            if ATTR_DISABLE_BYPASS in call.data:
+                disable_bypass = bool(render_template(call.data[ATTR_DISABLE_BYPASS]))
+                device.coordinator.enqueue_frontend(
+                    device.set_disable_bypass, disable_bypass
+                )
+
+        await async_apply_device_function(call, apply_config_2)
+
+    async def async_set_configuration_3(call):
+        """Set configuration for Dantherm devices."""
+
+        async def apply_config_3(device, call):
+            """Apply configuration 3."""
+
+            # Get firmware version, default to 0 if not available
+            firmware_version = getattr(device, "get_device_fw_version", 0)
+
+            # All fields in this service are unsupported for firmware < 3.08
+            if firmware_version < REQUIRED_FIRMWARE_3:
+                raise UnsupportedByFirmware
+
+            # Apply bypass minimum and maximum temperature, manual bypass duration
+            if ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER in call.data:
+                bypass_minimum_temperature_summer = float(
+                    render_template(call.data[ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_minimum_temperature_summer,
+                    bypass_minimum_temperature_summer,
+                )
+
+            if ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER in call.data:
+                bypass_maximum_temperature_summer = float(
+                    render_template(call.data[ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_bypass_maximum_temperature_summer,
+                    bypass_maximum_temperature_summer,
+                )
+
+            if ATTR_HUMIDITY_SETPOINT_SUMMER in call.data:
+                humidity_setpoint_summer = float(
+                    render_template(call.data[ATTR_HUMIDITY_SETPOINT_SUMMER])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_humidity_setpoint_summer, humidity_setpoint_summer
+                )
+
+        await async_apply_device_function(call, apply_config_3)
+
     async def async_filter_reset(call):
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
@@ -296,6 +373,18 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         SERVICE_SET_CONFIGURATION,
         async_set_configuration,
         schema=DANTHERM_SET_CONFIGURATION_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CONFIGURATION_2,
+        async_set_configuration_2,
+        schema=DANTHERM_SET_CONFIGURATION_2_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CONFIGURATION_3,
+        async_set_configuration_3,
+        schema=DANTHERM_SET_CONFIGURATION_3_SCHEMA,
     )
     hass.services.async_register(DOMAIN, SERVICE_FILTER_RESET, async_filter_reset)
     hass.services.async_register(DOMAIN, SERVICE_ALARM_RESET, async_alarm_reset)

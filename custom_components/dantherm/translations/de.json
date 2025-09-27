@@ -53,9 +53,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Filterlebensdauer" },
+      "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },
+      "humidity_setpoint_summer": { "name": "Luftfeuchtigkeits-Sollwert (Sommer)" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
       "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass-Minimaltemperatur (Sommer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass-Maximaltemperatur (Sommer)" },
       "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
       "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
       "home_mode_timeout": { "name": "Heim-Modus Timeout" }
@@ -325,10 +329,6 @@
           "name": "Kaminmodus",
           "description": "Schalten Sie den Kaminmodus ein oder aus. Der Kaminmodus bleibt für einen begrenzten Zeitraum aktiviert."
         },
-        "disable_bypass": {
-          "name": "Bypass deaktivieren",
-          "description": "Deaktiviere die Bypass-Klappe."
-        },
         "manual_bypass_mode": {
           "name": "Manueller Bypass-Modus",
           "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus. Der manuelle Bypass wird auf die manuelle Bypass-Dauer begrenzt."
@@ -337,23 +337,11 @@
     },
     "set_configuration": {
       "name": "Konfiguration festlegen",
-      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Bypass-Mindesttemperatur, Bypass-Höchsttemperatur und manuelle Bypass-Dauer werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an.",
       "fields": {
-        "bypass_minimum_temperature": {
-          "name": "Minimale Bypass-Temperatur",
-          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
-        },
-        "bypass_maximum_temperature": {
-          "name": "Maximale Bypass-Temperatur",
-          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
-        },
         "filter_lifetime": {
           "name": "Filterlebensdauer",
           "description": "Legen Sie die Lebensdauer des Filters in Tagen fest."
-        },
-        "manual_bypass_duration": {
-          "name": "Manuelle Bypass-Dauer",
-          "description": "Legen Sie die Dauer des manuellen Bypass-Modus in Minuten fest."
         },
         "night_mode": {
           "name": "Nachtmodus",
@@ -370,6 +358,50 @@
         "week_program_selection": {
           "name": "Wochentagsprogramm Auswahl",
           "description": "Wählen Sie das aktive Wochenprogramm aus."
+        }
+      }
+    },
+    "set_configuration_2": {
+      "name": "Konfiguration festlegen 2",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Minimale Bypass-Temperatur",
+          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Maximale Bypass-Temperatur",
+          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
+        },
+        "humidity_setpoint": {
+          "name": "Luftfeuchtigkeits-Sollwert",
+          "description": "Legen Sie den Luftfeuchtigkeits-Sollwert fest."
+        },
+        "manual_bypass_duration": {
+          "name": "Manuelle Bypass-Dauer",
+          "description": "Legen Sie die Dauer des manuellen Bypass-Modus in Minuten fest."
+        },
+        "disable_bypass": {
+          "name": "Bypass deaktivieren",
+          "description": "Deaktiviere die Bypass-Klappe."
+        }
+      }
+    },
+    "set_configuration_3": {
+      "name": "Konfiguration festlegen 3",
+      "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 3.08 oder neuer unterstützt.",
+      "fields": {
+        "bypass_minimum_temperature_summer": {
+          "name": "Bypass-Minimaltemperatur (Sommer)",
+          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
+        },
+        "bypass_maximum_temperature_summer": {
+          "name": "Bypass-Maximaltemperatur (Sommer)",
+          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
+        },
+        "humidity_setpoint_summer": {
+          "name": "Luftfeuchtigkeits-Sollwert (Sommer)",
+          "description": "Legen Sie den Luftfeuchtigkeits-Sollwert fest."
         }
       }
     },
@@ -390,10 +422,10 @@
       "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
     },
     "unsupported_by_firmware": {
-      "message": "Die Firmware Ihres Geräts unterstützt die folgenden Funktion(en) nicht: {features}"
+      "message": "Die Funktionen in dieser Aktion werden von der Firmware-Version des Geräts nicht unterstützt."
     },
     "pymodbus_version": {
-      "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert"
+      "message": "Die Dantherm-Integration erfordert pymodbus Version %s oder höher, aber Version %s ist installiert."
     },
     "disable_notifications": {
       "message": "Benachrichtigungen können in den Integrationsoptionen deaktiviert werden."

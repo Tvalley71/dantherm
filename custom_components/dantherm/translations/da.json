@@ -53,9 +53,13 @@
     },
     "number": {
       "filter_lifetime": { "name": "Filterlevetid" },
+      "humidity_setpoint": { "name": "Luftfugtighedssætpunkt" },
+      "humidity_setpoint_summer": { "name": "Luftfugtighedssætpunkt (sommer)" },
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
       "manual_bypass_duration": { "name": "Varighed af manuel bypass" },
+      "bypass_minimum_temperature_summer": { "name": "Bypass minimum temperatur (sommer)" },
+      "bypass_maximum_temperature_summer": { "name": "Bypass maximum temperatur (sommer)" },
       "boost_mode_timeout": { "name": "Boost-tilstand timeout" },
       "eco_mode_timeout": { "name": "Eco-tilstand timeout" },
       "home_mode_timeout": { "name": "Hjemmetilstand timeout" }
@@ -326,10 +330,6 @@
           "name": "Brændeovnstilstand",
           "description": "Slå brændeovnstilstand til eller fra. Bemærk: brændeovnstilstand vil være til i en begrænset tidsperiode."
         },
-        "disable_bypass": {
-          "name": "Deaktiver bypass-spjældet",
-          "description": "Deaktiver bypass-spjældet."
-        },
         "manual_bypass_mode": {
           "name": "Manuel bypasstilstand",
           "description": "Slå manuel bypasstilstand til eller fra. Bemærk: manuel bypasstilstand vil være begrænset af den angivne varighed."
@@ -338,23 +338,11 @@
     },
     "set_configuration": {
       "name": "Sæt konfiguration",
-      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Bypass minimum temperatur, bypass maksimum temperatur og varighed af manuel bypass understøttes kun på enheder med firmwareversion 2.70 eller nyere.",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden.",
       "fields": {
-        "bypass_minimum_temperature": {
-          "name": "Bypass minimum temperatur",
-          "description": "Indstil den minimale temperatur for bypasstilstand."
-        },
-        "bypass_maximum_temperature": {
-          "name": "Bypass maksimum temperatur",
-          "description": "Indstil den maksimale temperatur for bypasstilstand."
-        },
         "filter_lifetime": {
           "name": "Filterlevetid",
           "description": "Indstil filterets levetid i dage."
-        },
-        "manual_bypass_duration": {
-          "name": "Varighed af manuel bypass",
-          "description": "Indstil varigheden for manuel bypasstilstand i minutter."
         },
         "night_mode": {
           "name": "Nattilstand",
@@ -371,6 +359,50 @@
         "week_program_selection": {
           "name": "Ugeprogram",
           "description": "Vælg det aktive ugeprogram."
+        }
+      }
+    },
+    "set_configuration_2": {
+      "name": "Sæt konfiguration 2",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 2.70 eller nyere.",
+      "fields": {
+        "bypass_minimum_temperature": {
+          "name": "Bypass minimum temperatur",
+          "description": "Indstil den minimale temperatur for bypasstilstand."
+        },
+        "bypass_maximum_temperature": {
+          "name": "Bypass maksimum temperatur",
+          "description": "Indstil den maksimale temperatur for bypasstilstand."
+        },
+        "humidity_setpoint": {
+          "name": "Luftfugtighedssætpunkt",
+          "description": "Indstil luftfugtighedssætpunktet."
+        },
+        "manual_bypass_duration": {
+          "name": "Varighed af manuel bypass",
+          "description": "Indstil varigheden for manuel bypasstilstand i minutter."
+        },
+        "disable_bypass": {
+          "name": "Deaktiver bypass-spjældet",
+          "description": "Deaktiver bypass-spjældet."
+        }
+      }
+    },
+    "set_configuration_3": {
+      "name": "Sæt konfiguration 3",
+      "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 3.08 eller nyere.",
+      "fields": {
+        "bypass_minimum_temperature_summer": {
+          "name": "Bypass minimum temperatur (sommer)",
+          "description": "Indstil den minimale temperatur for bypasstilstand."
+        },
+        "bypass_maximum_temperature_summer": {
+          "name": "Bypass maksimum temperatur (sommer)",
+          "description": "Indstil den maksimale temperatur for bypasstilstand."
+        },
+        "humidity_setpoint_summer": {
+          "name": "Luftfugtighedssætpunkt (sommer)",
+          "description": "Indstil luftfugtighedssætpunktet."
         }
       }
     },
@@ -391,10 +423,10 @@
       "message": "Ugyldig filterlevetid. Brug værdier mellem 0 og 360 dage."
     },
     "unsupported_by_firmware": {
-      "message": "Din enheds firmware understøtter ikke følgende funktion(er): {features}"
+      "message": "De funktioner i denne handling understøttes ikke af enhedens firmwareversion."
     },
     "pymodbus_version": {
-      "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret"
+      "message": "Dantherm-integrationen kræver pymodbus version %s eller højere, men %s er installeret."
     },
     "disable_notifications": {
       "message": "Notifikationer kan deaktiveres i integrationsindstillingerne."
