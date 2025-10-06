@@ -566,7 +566,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Summer Mode**: Turn summer mode on or off.
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
-       - 
+
 <img width="904" height="1140" alt="Skærmbillede 20-09-2025 kl  10 58 20 AM" src="https://github.com/user-attachments/assets/a4b9ceca-fcd9-4d45-a265-640ea7a0624d" />
 
 5. **Save the Automation:**
