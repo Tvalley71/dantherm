@@ -23,19 +23,19 @@
   },
   "options": {
     "step": {
-        "init": {
-            "title": "Configuration de l'intégration Dantherm",
-            "data": {
-                "host": "Adresse IP de la VMC",
-                "port": "Port TCP de de la VMC",
-                "boost_mode_trigger": "Entité de déclenchement du mode Boost",
-                "eco_mode_trigger": "Entité de déclenchement du mode Eco",
-                "home_mode_trigger": "Entité de déclenchement du mode Maison",
-                "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
-                "disable_notifications": "Désactiver les notifications",
-                "link_calendar_to_primary": "Lier le calendrier à l'appareil principal."
-            }
+      "init": {
+        "title": "Configuration de l'intégration Dantherm",
+        "data": {
+          "host": "Adresse IP de la VMC",
+          "port": "Port TCP de de la VMC",
+          "boost_mode_trigger": "Entité de déclenchement du mode Boost",
+          "eco_mode_trigger": "Entité de déclenchement du mode Eco",
+          "home_mode_trigger": "Entité de déclenchement du mode Maison",
+          "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
+          "disable_notifications": "Désactiver les notifications",
+          "link_calendar_to_primary": "Lier le calendrier à l'appareil principal."
         }
+      }
     },
     "error": {
       "invalid_host": "Hôte ou adresse IP invalide.",

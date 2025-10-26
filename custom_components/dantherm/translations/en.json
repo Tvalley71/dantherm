@@ -1,41 +1,41 @@
 {
   "config": {
     "step": {
-        "user": {
-            "title": "Modbus connection",
-            "data": {
-                "host": "Enter ip-address of your device",
-                "name": "Enter prefix for the device entities",
-                "port": "Enter TCP port on which to connect to the device",
-                "scan_interval": "Enter polling frequency of the modbus registers in seconds"
-            }
+      "user": {
+        "title": "Modbus connection",
+        "data": {
+          "host": "Enter ip-address of your device",
+          "name": "Enter prefix for the device entities",
+          "port": "Enter TCP port on which to connect to the device",
+          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
         }
+      }
     },
     "error": {
-        "invalid_host": "Invalid host or IP address.",
-        "already_configured": "Device is already configured.",
-        "cannot_connect": "Cannot connect to the device."
+      "invalid_host": "Invalid host or IP address.",
+      "already_configured": "Device is already configured.",
+      "cannot_connect": "Cannot connect to the device."
     },
     "abort": {
-        "invalid_host": "Invalid host or IP address.",
-        "already_configured": "Device is already configured."
+      "invalid_host": "Invalid host or IP address.",
+      "already_configured": "Device is already configured."
     }
   },
   "options": {
     "step": {
-        "init": {
-            "title": "Dantherm Integration Options",
-            "data": {
-                "host": "Enter ip-address of your device",
-                "port": "Enter TCP port on which to connect to the device",
-                "boost_mode_trigger": "Boost mode trigger entity",
-                "eco_mode_trigger": "Eco mode trigger entity",
-                "home_mode_trigger": "Home mode trigger entity",
-                "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-                "disable_notifications": "Disable notifications.",
-                "link_calendar_to_primary": "Link calendar to primary device."
-            }
+      "init": {
+        "title": "Dantherm Integration Options",
+        "data": {
+          "host": "Enter ip-address of your device",
+          "port": "Enter TCP port on which to connect to the device",
+          "boost_mode_trigger": "Boost mode trigger entity",
+          "eco_mode_trigger": "Eco mode trigger entity",
+          "home_mode_trigger": "Home mode trigger entity",
+          "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
+          "disable_notifications": "Disable notifications.",
+          "link_calendar_to_primary": "Link calendar to primary device."
         }
+      }
     },
     "error": {
         "invalid_host": "Invalid host or IP address.",

@@ -23,19 +23,19 @@
   },
   "options": {
     "step": {
-        "init": {
-        "title": "Indstillinger for Dantherm-integration",
-            "data": {
-                "host": "Indtast ip-adresse til din enhed",
-                "port": "Indtast TCP-port der skal forbindes til på din enhed",
-                "boost_mode_trigger": "Boost-tilstand udløser entitet",
-                "eco_mode_trigger": "Eco-tilstand udløser entitet",
-                "home_mode_trigger": "Hjemmetilstand udløser entitet",
-                "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-                "disable_notifications": "Deaktiver notifikationer.",
-                "link_calendar_to_primary": "Link kalender til primært enhed."
-            }
+      "init": {
+      "title": "Indstillinger for Dantherm-integration",
+        "data": {
+          "host": "Indtast ip-adresse til din enhed",
+          "port": "Indtast TCP-port der skal forbindes til på din enhed",
+          "boost_mode_trigger": "Boost-tilstand udløser entitet",
+          "eco_mode_trigger": "Eco-tilstand udløser entitet",
+          "home_mode_trigger": "Hjemmetilstand udløser entitet",
+          "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
+          "disable_notifications": "Deaktiver notifikationer.",
+          "link_calendar_to_primary": "Link kalender til primært enhed."
         }
+      }
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",

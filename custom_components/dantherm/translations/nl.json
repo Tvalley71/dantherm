@@ -23,19 +23,19 @@
   },
   "options": {
     "step": {
-        "init": {
-            "title": "Dantherm Integratie Configuratie",
-            "data": {
-                "host": "Voer het ip-adres in van uw apparaat",
-                "port": "Voer de TCP-poort in waarop verbinding moet worden gemaakt met het apparaat",
-                "boost_mode_trigger": "Boost-modus Trigger Entiteit",
-                "eco_mode_trigger": "Eco-modus Trigger Entiteit",
-                "home_mode_trigger": "Thuis-modus Trigger Entiteit",
-                "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
-                "disable_notifications": "Melding uitschakelen.",
-                "link_calendar_to_primary": "Koppel kalender aan primair apparaat."
-            }
+      "init": {
+        "title": "Dantherm Integratie Configuratie",
+        "data": {
+          "host": "Voer het ip-adres in van uw apparaat",
+          "port": "Voer de TCP-poort in waarop verbinding moet worden gemaakt met het apparaat",
+          "boost_mode_trigger": "Boost-modus Trigger Entiteit",
+          "eco_mode_trigger": "Eco-modus Trigger Entiteit",
+          "home_mode_trigger": "Thuis-modus Trigger Entiteit",
+          "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
+          "disable_notifications": "Melding uitschakelen.",
+          "link_calendar_to_primary": "Koppel kalender aan primair apparaat."
         }
+      }
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
