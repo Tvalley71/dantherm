@@ -79,7 +79,9 @@ async def test_async_discover_with_last_known_ip(
 
     called = {}
 
-    async def fake_discover_broadcast(hass: HomeAssistant, bcast_ip: str, probe: bool):
+    async def fake_discover_broadcast(
+        hass: HomeAssistant, bcast_ip: str, probe: bytes, local_ips: list[str] | None
+    ):
         called.setdefault("broadcasts", []).append(bcast_ip)
         # Only return device if broadcast is on last_known_ip subnet
         if bcast_ip == "10.0.0.255":
@@ -114,7 +116,9 @@ async def test_async_discover_with_broadcast_ip(
     hass.config.api = type("api", (), {})()
     hass.config.api.local_ip = "192.168.1.2"
 
-    async def fake_discover_broadcast(hass: HomeAssistant, bcast_ip: str, probe: bool):
+    async def fake_discover_broadcast(
+        hass: HomeAssistant, bcast_ip: str, probe: bytes, local_ips: list[str] | None
+    ):
         if bcast_ip == "172.16.0.255":
             return [{"ip": "172.16.0.42", "name": "BroadcastDevice"}]
         return []

@@ -33,10 +33,19 @@ async def test_filter_remain_notification(hass: HomeAssistant) -> None:
     device.coordinator = MagicMock()
     device.coordinator.is_entity_installed.return_value = True
 
-    # Patch the modbus read to return 0 for filter_remain
+    # Patch the modbus read to return 0 for filter_remain and intercept helper
     with (
         patch.object(device, "_read_holding_uint32", return_value=0),
-        patch.object(device, "_create_notification", new=AsyncMock()) as mock_notify,
+        patch(
+            "config.custom_components.dantherm.device.async_create_key_value_notification",
+            new=AsyncMock(),
+        ) as mock_notify,
     ):
         await device.async_get_filter_remain()
-        mock_notify.assert_awaited_once_with("sensor", "filter_remain", 0)
+        mock_notify.assert_awaited_once()
+        args, _ = mock_notify.await_args
+        assert args[0] is hass
+        assert args[1] == "TestDevice"
+        assert args[2] == "sensor"
+        assert args[3] == "filter_remain"
+        assert args[4] == 0

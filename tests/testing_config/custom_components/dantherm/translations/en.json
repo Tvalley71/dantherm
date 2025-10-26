@@ -1,0 +1,8 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "Cannot connect to the device.",
+      "invalid_host": "Invalid host or IP address."
+    }
+  }
+}
