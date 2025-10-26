@@ -7,8 +7,7 @@
           "host": "Adresse IP de la VMC",
           "name": "Préfixe à utiliser pour les entités",
           "port": "Port TCP de de la VMC",
-          "scan_interval": "Fréquence d'interrogation des registres modbus (secondes)",
-          "link_calendar_to_primary": "Lier le calendrier à l'appareil principal."
+          "scan_interval": "Fréquence d'interrogation des registres modbus (secondes)"
         }
       }
     },

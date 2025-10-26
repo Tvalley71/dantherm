@@ -7,8 +7,7 @@
           "host": "Enter ip-address of your device",
           "name": "Enter prefix for the device entities",
           "port": "Enter TCP port on which to connect to the device",
-          "scan_interval": "Enter polling frequency of the modbus registers in seconds",
-          "link_calendar_to_primary": "Link calendar to primary device."
+          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
         }
       }
     },
