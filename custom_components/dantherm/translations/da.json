@@ -13,6 +13,7 @@
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
+      "cannot_connect": "Kan ikke oprette forbindelse.",
       "already_configured": "Enhed er allerede konfigureret."
     },
     "abort": {
@@ -31,7 +32,8 @@
                 "eco_mode_trigger": "Eco-tilstand udløser entitet",
                 "home_mode_trigger": "Hjemmetilstand udløser entitet",
                 "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-                "disable_notifications": "Deaktiver notifikationer."
+                "disable_notifications": "Deaktiver notifikationer.",
+                "link_calendar_to_primary": "Link kalender til primært enhed."
             }
         }
     },

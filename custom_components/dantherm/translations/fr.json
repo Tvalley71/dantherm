@@ -13,6 +13,7 @@
     },
     "error": {
       "invalid_host": "Hôte ou adresse IP invalide.",
+      "cannot_connect": "Impossible de se connecter.",
       "already_configured": "L'appareil est déjà configuré."
     },
     "abort": {
@@ -31,8 +32,8 @@
                 "eco_mode_trigger": "Entité de déclenchement du mode Eco",
                 "home_mode_trigger": "Entité de déclenchement du mode Maison",
                 "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
-                "disable_notifications": "Désactiver les notifications"
-
+                "disable_notifications": "Désactiver les notifications",
+                "link_calendar_to_primary": "Lier le calendrier à l'appareil principal."
             }
         }
     },

@@ -13,6 +13,7 @@
     },
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "cannot_connect": "Kann keine Verbindung herstellen.",
       "already_configured": "Gerät ist bereits konfiguriert."
     },
     "abort": {
@@ -31,7 +32,8 @@
                 "eco_mode_trigger": "Eco-Modus Auslöser Entität",
                 "home_mode_trigger": "Heim-Modus Auslöser Entität",
                 "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus.",
-                "disable_notifications": "Benachrichtigung deaktivieren."
+                "disable_notifications": "Benachrichtigung deaktivieren.",
+                "link_calendar_to_primary": "Kalender mit primärem Gerät verknüpfen."
             }
         }
     },

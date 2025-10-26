@@ -13,6 +13,7 @@
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
+      "cannot_connect": "Kan geen verbinding maken.",
       "already_configured": "Apparaat is al geconfigureerd."
     },
     "abort": {
@@ -31,7 +32,8 @@
                 "eco_mode_trigger": "Eco-modus Trigger Entiteit",
                 "home_mode_trigger": "Thuis-modus Trigger Entiteit",
                 "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
-                "disable_notifications": "Melding uitschakelen."
+                "disable_notifications": "Melding uitschakelen.",
+                "link_calendar_to_primary": "Koppel kalender aan primair apparaat."
             }
         }
     },

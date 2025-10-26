@@ -13,7 +13,8 @@
     },
     "error": {
         "invalid_host": "Invalid host or IP address.",
-        "already_configured": "Device is already configured."
+        "already_configured": "Device is already configured.",
+        "cannot_connect": "Cannot connect to the device."
     },
     "abort": {
         "invalid_host": "Invalid host or IP address.",
@@ -31,7 +32,8 @@
                 "eco_mode_trigger": "Eco mode trigger entity",
                 "home_mode_trigger": "Home mode trigger entity",
                 "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-                "disable_notifications": "Disable notifications."
+                "disable_notifications": "Disable notifications.",
+                "link_calendar_to_primary": "Link calendar to primary device."
             }
         }
     },
@@ -148,7 +150,7 @@
           "0": "Standby",
           "1": "Manual",
           "2": "Automatic",
-          "3": "Week program",
+          "3": "Week Program",
           "4": "Servoflow",
           "5": "Away Mode",
           "6": "Summer Mode",
