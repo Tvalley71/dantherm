@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from config.custom_components.dantherm.const import (
@@ -20,7 +22,66 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.fixture
+def temp_integration_files():
+    """Create temporary integration files for testing."""
+    # Path til test integration
+    test_integration_path = Path("tests/testing_config/custom_components/dantherm")
+
+    # Opret directories hvis de ikke findes
+    test_integration_path.mkdir(parents=True, exist_ok=True)
+    (test_integration_path / "translations").mkdir(exist_ok=True)
+
+    # Minimal manifest for test
+    manifest_content = {
+        "domain": "dantherm",
+        "name": "Test Dantherm",
+        "codeowners": [],
+        "documentation": "https://example.com",
+        "iot_class": "local_polling",
+        "requirements": [],
+        "version": "0.0.0",
+    }
+
+    # Tom translations fil med påkrævet config.error struktur
+    translations_content = {
+        "config": {
+            "error": {
+                "cannot_connect": "Cannot connect to the device.",
+                "invalid_host": "Invalid host or IP address.",
+            }
+        }
+    }
+
+    # Opret filerne
+    manifest_file = test_integration_path / "manifest.json"
+    translations_file = test_integration_path / "translations" / "en.json"
+
+    with open(manifest_file, "w") as f:
+        json.dump(manifest_content, f, indent=2)
+
+    with open(translations_file, "w") as f:
+        json.dump(translations_content, f, indent=2)
+
+    # Yield control tilbage til test
+    yield
+
+    # Cleanup - slet filerne efter test
+    try:
+        if translations_file.exists():
+            translations_file.unlink()
+        if (test_integration_path / "translations").exists():
+            (test_integration_path / "translations").rmdir()
+        if manifest_file.exists():
+            manifest_file.unlink()
+        if test_integration_path.exists():
+            test_integration_path.rmdir()
+    except OSError:
+        # Ignore cleanup errors - filerne bliver automatisk slettet
+        pass
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
 async def test_user_flow_success(
     hass: HomeAssistant,
@@ -53,7 +114,7 @@ async def test_user_flow_success(
         assert result2["title"] == DEFAULT_NAME
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
@@ -82,7 +143,7 @@ async def test_user_flow_cannot_connect(
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
 async def test_user_flow_invalid_host(
     hass: HomeAssistant,
@@ -104,7 +165,7 @@ async def test_user_flow_invalid_host(
     assert result2["errors"].get(CONF_HOST) == "invalid_host"
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
 async def test_options_flow_update_and_reload(
     hass: HomeAssistant,
