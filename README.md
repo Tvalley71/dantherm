@@ -53,9 +53,9 @@ A user has reported that the integration also works with the **Bosch Vent 5000 C
 
 #### Calendar Entity
 
-| Entity         | Description              |
-|----------------|--------------------------|
-| ~~`calendar`~~ | ~~Controls scheduled operations based on Home Assistant calendar events~~  |
+| Entity    | Description              |
+|-----------|--------------------------|
+| `calendar`| Controls scheduled operations based on Home Assistant calendar events |
 
 #### Cover Entity
 
@@ -590,6 +590,8 @@ Starting from version _0.4.17_ of the integration, the actions have been reorgan
 
 ## Integration enhancements
 
+## Advanced Features 🚀
+
 The integration enhances the control of Dantherm ventilation units by introducing **Boost Mode**, **Eco Mode**, **Home Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
 
@@ -705,38 +707,137 @@ To disable all persistent notifications from the Dantherm integration, enable "D
 When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
 
 
-## ⏳ The following sections are a work in progress  
-These features are planned for version **1.0.0**. The calendar function is currently still under development.
-
+## ⏳ Advanced Scheduling Features
 
 ### Calendar Function 📅  
-The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
+The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.
+
+#### How to Use the Calendar Function
+
+1. **Enable Calendar Entity**: In your Home Assistant, go to **Settings > Devices & Services > Dantherm** and ensure the calendar entity is enabled.
+
+2. **Create Calendar Events**: Use the Dantherm calendar entity to create events with specific keywords in the event **summary** (title).
+
+3. **Supported Event Keywords**: Use these exact words in your calendar event summaries:
+   - **Level 1**, **Level 2**, **Level 3** - Sets manual fan levels
+   - **Automatic** - Switches to automatic demand mode  
+   - **Away Mode** - Activates away mode for the event duration
+   - **Night Mode** - Activates night mode for the event duration
+   - **Boost Mode** - Activates boost mode for the event duration
+   - **Home Mode** - Activates home mode for the event duration
+   - **Eco Mode** - Activates eco mode for the event duration
+   - **Week Program** - Follows the selected week program
+
+4. **Language Support**: Keywords are automatically translated based on your Home Assistant language settings (if supported by the integration).
+
+#### Example Calendar Usage
+
+```
+Event: "Boost Mode"
+Start: Today 07:00
+End: Today 09:00
+Result: Boost mode active from 7 AM to 9 AM
+```
+
+```
+Event: "Level 3" 
+Start: Today 19:00
+End: Today 22:00
+Result: Manual mode Level 3 from 7 PM to 10 PM
+```
+
+```
+Event: "Away Mode"
+Start: Friday 08:00  
+End: Sunday 18:00
+Result: Away mode active for the weekend
+```  
 
 - **Integration - Calendar Events**:  
-  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will revert to the **Default Operation Selection**.
+  Calendar events control the ventilation system automatically. When an event starts, the system switches to the specified operation mode. When the event ends, it reverts to the previous active mode or the default operation.
 
-- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", "**Eco Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
+- **Event Behavior**:
+  - **Manual Levels (Level 1-3)**: Unit runs in Manual mode at the specified fan level
+  - **Automatic**: Unit operates in Demand Mode with automatic fan speed control
+  - **Mode Toggles (Away, Night, Boost, Home, Eco)**: These modes are **enabled at event start** and **disabled at event end**
+  - **Week Program**: Unit follows the predefined week program selected in **Week Program Selection**
+
+- **Smart Scheduling**: The calendar respects the priority system below, so higher priority events override lower priority ones when they overlap.
+
+#### Calendar Configuration Options
+
+In the integration's **Configure** menu, you can find several calendar-related options:
+
+- **Link to Primary Calendar**: When multiple Dantherm units are installed, link all calendar functions to the primary unit's calendar for centralized control.
+
+#### Recurring Events and Advanced Scheduling
+
+The calendar supports:
+- **Single Events**: One-time scheduled operations
+- **Recurring Events**: Daily, weekly, or custom recurring patterns
+- **All-Day Events**: Events without specific times
+- **Overlapping Events**: Higher priority events override lower priority ones
+
+#### Troubleshooting Calendar Function
+
+- **Events Not Working**: Ensure event keywords match exactly (case-sensitive)
+- **Language Issues**: Check that your Home Assistant language is supported
+- **Priority Conflicts**: Higher priority events will override lower ones
+- **Night Mode Timing**: Built-in Night Mode times may conflict with scheduled events
   
   - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
   - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the event.
-  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode’s trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
+  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode's trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
-- **Priority System**: The following is the **priority order** for calendar scheduling:  
-  1. **Away Mode** (highest priority)  
-  2. **Boost Mode**  
-  3. **Night Mode**  
-  4. **Home Mode**  
-  5. **Eco Mode**  
-  6. **Level 3**  
-  7. **Level 2**  
-  8. **Level 1**  
-  9. **Automatic**  
-  10. **Week Program** (lowest priority)  
+#### Event Priority System
 
-The available operations in **Default Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+When multiple calendar events overlap, the system follows this priority order (highest to lowest):
+
+- **Priority System**: The following is the **priority order** for calendar scheduling:  
+  1. 🚨 **Away Mode** (highest priority) - For vacation/extended absence
+  2. ⚡ **Boost Mode** - For high ventilation needs
+  3. 🌙 **Night Mode** - For quiet nighttime operation  
+  4. 🏠 **Home Mode** - For normal occupied periods
+  5. 🍃 **Eco Mode** - For energy-saving operation
+  6. 💨 **Level 3** - Maximum manual fan speed
+  7. 💨 **Level 2** - Medium manual fan speed  
+  8. 💨 **Level 1** - Minimum manual fan speed
+  9. 🤖 **Automatic** - Demand-based automatic control
+  10. 📅 **Week Program** (lowest priority) - Predefined weekly schedules
+
+**Example**: If you have "Eco Mode" scheduled from 8 AM-6 PM and "Boost Mode" from 12 PM-1 PM, Boost Mode will take priority during the lunch hour, then revert back to Eco Mode.
+
+#### Step-by-Step: Creating Your First Calendar Event
+
+1. **Access the Calendar**: 
+   - Go to **Calendar** in Home Assistant's sidebar
+   - Find your "Dantherm Calendar" entity
+
+2. **Create New Event**:
+   - Click the **+** button or a time slot
+   - Enter a **Title/Summary** with one of the supported keywords (e.g., "Boost Mode")
+   - Set **Start** and **End** times
+   - Save the event
+
+3. **Verify Operation**:
+   - Check that the event appears in the calendar
+   - Monitor the ventilation unit at the scheduled time
+   - Verify mode changes occur as expected
+
+#### Best Practices for Calendar Scheduling
+
+- **Morning Routine**: Schedule "Boost Mode" during morning activities (7-9 AM)
+- **Work Hours**: Use "Eco Mode" when away during work hours (9 AM-5 PM) 
+- **Evening Comfort**: Schedule "Home Mode" for family time (6-10 PM)
+- **Night Rest**: Use "Night Mode" for quiet overnight operation (10 PM-7 AM)
+- **Weekend Away**: Schedule "Away Mode" for entire weekends when traveling
+- **Cooking Events**: Create "Level 3" events during cooking times for extra ventilation
+
+> [!TIP]
+> Start with simple single events before creating complex recurring schedules. Test each event type to understand how your system responds.
 
 > [!IMPORTANT]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
