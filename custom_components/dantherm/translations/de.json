@@ -7,7 +7,8 @@
           "host": "Geben Sie die IP-Adresse Ihres Geräts ein",
           "name": "Geben Sie ein Präfix für die Geräteeinheiten ein",
           "port": "Geben Sie den TCP-Port ein, über den die Verbindung zum Gerät hergestellt wird",
-          "scan_interval": "Geben Sie die Abfragefrequenz der Modbus-Register in Sekunden ein"
+          "scan_interval": "Geben Sie die Abfragefrequenz der Modbus-Register in Sekunden ein",
+          "link_calendar_to_primary": "Kalender mit primärem Gerät verknüpfen."
         }
       }
     },

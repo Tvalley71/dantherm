@@ -7,14 +7,15 @@
           "host": "Enter ip-address of your device",
           "name": "Enter prefix for the device entities",
           "port": "Enter TCP port on which to connect to the device",
-          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
+          "scan_interval": "Enter polling frequency of the modbus registers in seconds",
+          "link_calendar_to_primary": "Link calendar to primary device."
         }
       }
     },
     "error": {
       "invalid_host": "Invalid host or IP address.",
-      "already_configured": "Device is already configured.",
-      "cannot_connect": "Cannot connect to the device."
+      "cannot_connect": "Cannot connect to the device.",
+      "already_configured": "Device is already configured."
     },
     "abort": {
       "invalid_host": "Invalid host or IP address.",

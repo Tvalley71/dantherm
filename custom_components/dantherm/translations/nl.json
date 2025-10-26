@@ -7,7 +7,8 @@
           "host": "Voer het ip-adres in van uw apparaat",
           "name": "Voer prefix in voor de apparaat entiteiten",
           "port": "Voer de TCP poort in waarop verbinding moet worden gemaakt met het apparaat",
-          "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in"
+          "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in",
+          "link_calendar_to_primary": "Koppel kalender aan primair apparaat."
         }
       }
     },
