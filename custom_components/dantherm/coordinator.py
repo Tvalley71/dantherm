@@ -36,8 +36,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             hass,
             _LOGGER,
             name=f"{name}Coordinator",
-            update_method=self._async_update_data,
+            update_method=self._update_data,
             update_interval=timedelta(seconds=scan_interval),
+            config_entry=config_entry,
         )
         DanthermStore.__init__(
             self,
@@ -71,7 +72,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         """Flag the integration to reload on the next update."""
         self._reload_on_update = True
 
-    async def _async_update_data(self) -> dict:
+    async def _update_data(self) -> dict:
         """Read all entities."""
 
         # Check if any entities is installed
@@ -108,7 +109,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             await self.hub.async_get_bypass_maximum_temperature()
 
             # Update adaptive state
-            await self.hub.async_update_adaptive_state()
+            await self.hub.async_update_adaptive_triggers()
 
             data = {}
             for entity in self._entities:
@@ -127,6 +128,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
                 # Reset the flag
                 self._reload_on_update = False
+
+            # Process expired events
+            await self.hub.async_process_expired_events()
 
             _LOGGER.debug("<<< UPDATE END - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
@@ -268,7 +272,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         description: DanthermEntityDescription = entity.entity_description
 
         # Enqueue frontent corotine
-        fut = self.enqueue_frontend(self._async_set_entity_state, entity, state)
+        fut = self.enqueue_frontend(self._set_entity_state, entity, state)
 
         # Update the in-memory cache
         self.data.update(
@@ -333,7 +337,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         return {"state": state, "icon": icon, "attrs": attrs}
 
-    async def _async_set_entity_state(self, entity: Entity, state):
+    async def _set_entity_state(self, entity: Entity, state):
         """Set entity state."""
 
         description: DanthermEntityDescription = entity.entity_description

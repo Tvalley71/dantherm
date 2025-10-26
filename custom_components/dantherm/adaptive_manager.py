@@ -2,9 +2,9 @@
 
 from collections import deque
 from datetime import datetime, timedelta
-import os
 
 from homeassistant.components.calendar import CalendarEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.helpers.event import async_track_state_change_event
@@ -13,30 +13,28 @@ from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_dateti
 from .const import DOMAIN
 from .device_map import (
     ADAPTIVE_TRIGGERS,
-    ATTR_ADAPTIVE_STATE,
     ATTR_BOOST_MODE,
     ATTR_BOOST_MODE_TIMEOUT,
-    ATTR_BOOST_MODE_TRIGGER,
     ATTR_BOOST_OPERATION_SELECTION,
     ATTR_CALENDAR,
     ATTR_ECO_MODE,
     ATTR_ECO_MODE_TIMEOUT,
-    ATTR_ECO_MODE_TRIGGER,
     ATTR_ECO_OPERATION_SELECTION,
     ATTR_HOME_MODE,
     ATTR_HOME_MODE_TIMEOUT,
-    ATTR_HOME_MODE_TRIGGER,
     ATTR_HOME_OPERATION_SELECTION,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
+    CONF_LINK_TO_PRIMARY_CALENDAR,
     STATE_BOOST,
     STATE_ECO,
     STATE_FIREPLACE,
     STATE_NIGHT,
     STATE_PRIORITIES,
 )
+from .helpers import is_primary_entry, set_device_entities_enabled_by_suffix
 from .translations import async_get_adaptive_state_from_text
-
-# This is used to determine if the debug mode is enabled.
-IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
 # This is used to represent the minimum datetime value in the system.
 MIN_DATETIME = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
@@ -48,9 +46,11 @@ MAX_DATETIME = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
 class DanthermAdaptiveManager:
     """Manage adaptive states and triggers for Dantherm devices."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Init adaptive manager."""
         self._hass = hass
+        self._config_entry = config_entry
+        self._calendar = None
 
         # Timeout for the earliest operation change
         self._operation_change_timeout = MIN_DATETIME
@@ -62,7 +62,7 @@ class DanthermAdaptiveManager:
         self.events = AdaptiveEventStack()
 
         self._adaptive_triggers = {
-            ATTR_BOOST_MODE_TRIGGER: {
+            CONF_BOOST_MODE_TRIGGER: {
                 "name": "boost",
                 "associated_entities": [
                     ATTR_BOOST_MODE,
@@ -75,7 +75,7 @@ class DanthermAdaptiveManager:
                 "trigger": None,
                 "unsub": None,
             },
-            ATTR_ECO_MODE_TRIGGER: {
+            CONF_ECO_MODE_TRIGGER: {
                 "name": "eco",
                 "associated_entities": [
                     ATTR_ECO_MODE,
@@ -88,7 +88,7 @@ class DanthermAdaptiveManager:
                 "trigger": None,
                 "unsub": None,
             },
-            ATTR_HOME_MODE_TRIGGER: {
+            CONF_HOME_MODE_TRIGGER: {
                 "name": "home",
                 "associated_entities": [
                     ATTR_HOME_MODE,
@@ -103,18 +103,19 @@ class DanthermAdaptiveManager:
             },
         }
 
-    async def async_set_up_adaptive_triggers(self, options: dict):
+    async def async_set_up_adaptive_manager(self):
         """Enable/disable associated entities based on configured adaptive triggers."""
-        entities = self.get_device_entities()
+        device_id = self.get_device_id()
+        if not device_id:
+            _LOGGER.error("Cannot set up adaptive manager: no device ID found")
+            return
 
+        # Enable/disable associated entities based on triggers
         any_trigger_available = False
-
         for trigger in ADAPTIVE_TRIGGERS:
-            trigger_entity = options.get(trigger)
-
+            trigger_entity = self._config_entry.options.get(trigger)
             enabled = bool(trigger_entity)
-            if enabled:
-                any_trigger_available = True
+            any_trigger_available |= enabled
 
             trigger_data = self._adaptive_triggers.get(trigger)
             if not trigger_data:
@@ -122,18 +123,25 @@ class DanthermAdaptiveManager:
                 continue
 
             for entity_name in trigger_data["associated_entities"]:
-                self.set_entity_enabled_by_suffix(entities, entity_name, enabled)
+                set_device_entities_enabled_by_suffix(
+                    self._hass, device_id, entity_name, enabled
+                )
 
-        # The adaptive_state entity should be enabled or disabled if any triggers are available.
-        self.set_entity_enabled_by_suffix(
-            entities, ATTR_ADAPTIVE_STATE, any_trigger_available
-        )
+        # Resolve calendar reference:
+        domain_data = self._hass.data.get(DOMAIN, {}) or {}
+        if is_primary_entry(self._hass, self._config_entry.entry_id) or bool(
+            self._config_entry.options.get(CONF_LINK_TO_PRIMARY_CALENDAR, True)
+        ):
+            self._calendar = domain_data.get(ATTR_CALENDAR)
+        else:
+            entry_data = domain_data.get(self._config_entry.entry_id, {}) or {}
+            self._calendar = entry_data.get(ATTR_CALENDAR)
 
-    async def async_set_up_tracking_for_adaptive_triggers(self, options: dict):
+    async def async_set_up_tracking_for_adaptive_triggers(self):
         """Set up tracking for adaptive triggers."""
 
         for trigger in ADAPTIVE_TRIGGERS:
-            trigger_entity = options.get(trigger)
+            trigger_entity = self._config_entry.options.get(trigger)
             if trigger_entity:
                 trigger_data = self._adaptive_triggers[trigger]
 
@@ -147,7 +155,7 @@ class DanthermAdaptiveManager:
                             [trigger_data["trigger"]],
                             getattr(
                                 self,
-                                f"_async_{trigger_data['name']}_mode_trigger_changed",
+                                f"_{trigger_data['name']}_mode_trigger_changed",
                             ),
                         )
 
@@ -178,7 +186,7 @@ class DanthermAdaptiveManager:
                 mode_data["timeout"],
             )
 
-    async def _async_adaptive_trigger_changed(self, trigger: str, event):
+    async def _adaptive_trigger_changed(self, trigger: str, event):
         """Mode trigger state change callback."""
 
         # Skip, if old state is None or Unknown
@@ -202,30 +210,7 @@ class DanthermAdaptiveManager:
             mode_data["undetected"] = ha_now()
             _LOGGER.debug("%s undetected!", trigger.capitalize())
 
-    async def async_update_adaptive_state(self):
-        """Update adaptive state."""
-
-        # Update adaptive triggers and calendar events
-        await self._async_update_adaptive_triggers()
-        await self._update_adaptive_calendar_events()
-
-        # Process expired events
-        while (event := self.expired_event()) is not None:
-            # Check if operation mode change timeout has passed
-            if ha_now() < self._operation_change_timeout:
-                return
-
-            # Remove event from stack
-            target_operation = self.remove_event(event)
-            if target_operation:
-                current_operation = self.get_current_operation
-
-                # Set the target operation if it is different from the current operation
-                await self._async_set_adaptive_target_operation(
-                    target_operation, current_operation
-                )
-
-    async def _async_update_adaptive_triggers(self):
+    async def async_update_adaptive_triggers(self):
         """Update adaptive triggers."""
 
         triggers_to_process = []
@@ -260,9 +245,9 @@ class DanthermAdaptiveManager:
 
         # Process all triggers in order
         for _, trigger_name in triggers_to_process:
-            await self._async_update_adaptive_trigger_state(trigger_name)
+            await self._update_adaptive_trigger_state(trigger_name)
 
-    async def _async_update_adaptive_trigger_state(self, trigger_name: str):
+    async def _update_adaptive_trigger_state(self, trigger_name: str):
         """Update adaptive trigger state."""
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
@@ -297,7 +282,7 @@ class DanthermAdaptiveManager:
                     end_time=mode_data["timeout"],
                 ):
                     # Set the target operation if it is different from the current operation
-                    await self._async_set_adaptive_target_operation(
+                    await self._set_adaptive_target_operation(
                         target_operation, current_operation
                     )
             else:
@@ -327,41 +312,32 @@ class DanthermAdaptiveManager:
             else:
                 mode_data["timeout"] = None
 
-    async def _update_adaptive_calendar_events(self):
-        """Get calendar events."""
+    async def async_update_adaptive_calendar(self):
+        """Update adaptive calendar events."""
 
-        # Get domain data
-        data = self._hass.data.get(DOMAIN, None)
-        if not data:
-            _LOGGER.debug("No data found for domain: %s", DOMAIN)
+        if self._calendar is None:
             return
 
-        # Get calendar data
-        calendar = data.get(ATTR_CALENDAR, None)
-        if not calendar:
-            _LOGGER.debug("No calendar events found")
-            return
-
-        events = await calendar.async_get_active_events()
+        events = await self._calendar.async_get_active_events()
         # Check for events that have ended
         for event in self._active_calendar_events:
             if event not in events:
-                if calendar.event_exists(event):
+                if self._calendar.event_exists(event):
                     _LOGGER.debug("Ending calendar event: %s", event)
-                    await self._async_update_adaptive_calendar_state("end", event)
+                    await self._update_adaptive_calendar_state("end", event)
                 else:
                     _LOGGER.debug("Deleted calendar event: %s", event)
-                    await self._async_update_adaptive_calendar_state("deleted", event)
+                    await self._update_adaptive_calendar_state("deleted", event)
         # Check for new events
         for event in events:
             if event not in self._active_calendar_events:
                 _LOGGER.debug("Starting calendar event: %s", event)
-                await self._async_update_adaptive_calendar_state("start", event)
+                await self._update_adaptive_calendar_state("start", event)
 
         # Update the active calendar events
         self._active_calendar_events = events
 
-    async def _async_update_adaptive_calendar_state(
+    async def _update_adaptive_calendar_state(
         self, action: str, event: CalendarEvent
     ) -> None:
         """Update adaptive calendar state based on action."""
@@ -430,26 +406,42 @@ class DanthermAdaptiveManager:
             target_operation = self.pop_event(operation, event_id=event_id)
 
         # Set the target operation if it is different from the current operation
-        await self._async_set_adaptive_target_operation(
-            target_operation, current_operation
-        )
+        await self._set_adaptive_target_operation(target_operation, current_operation)
 
-    async def _async_boost_mode_trigger_changed(self, event):
+    async def async_process_expired_events(self):
+        """Process expired events."""
+
+        while (event := self.expired_event()) is not None:
+            # Check if operation mode change timeout has passed
+            if ha_now() < self._operation_change_timeout:
+                return
+
+            # Remove event from stack
+            target_operation = self.remove_event(event)
+            if target_operation:
+                current_operation = self.get_current_operation
+
+                # Set the target operation if it is different from the current operation
+                await self._set_adaptive_target_operation(
+                    target_operation, current_operation
+                )
+
+    async def _boost_mode_trigger_changed(self, event):
         """Boost trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_BOOST_MODE):
-            await self._async_adaptive_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
+            await self._adaptive_trigger_changed(CONF_BOOST_MODE_TRIGGER, event)
 
-    async def _async_eco_mode_trigger_changed(self, event):
+    async def _eco_mode_trigger_changed(self, event):
         """Eco trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_ECO_MODE):
-            await self._async_adaptive_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
+            await self._adaptive_trigger_changed(CONF_ECO_MODE_TRIGGER, event)
 
-    async def _async_home_mode_trigger_changed(self, event):
+    async def _home_mode_trigger_changed(self, event):
         """Home trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_HOME_MODE):
-            await self._async_adaptive_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
+            await self._adaptive_trigger_changed(CONF_HOME_MODE_TRIGGER, event)
 
-    async def _async_set_adaptive_target_operation(
+    async def _set_adaptive_target_operation(
         self, target_operation: str | None, current_operation: str | None
     ):
         """Set the adaptive target operation."""
@@ -460,11 +452,9 @@ class DanthermAdaptiveManager:
             return
 
         # Set the operation change timeout
-        self._operation_change_timeout = current_time + (
-            timedelta(seconds=30)  # Default timeout for debug mode
-            if IS_DEBUG
-            else timedelta(minutes=2)  # Default timeout
-        )
+        self._operation_change_timeout = current_time + timedelta(
+            minutes=2
+        )  # Default timeout
 
         _LOGGER.info("Target operation = %s", target_operation)
 
@@ -472,11 +462,7 @@ class DanthermAdaptiveManager:
 
     def _get_adaptive_trigger_timeout(self, mode_name: str):
         """Get adaptive trigger timeout."""
-        minutes = (
-            3
-            if IS_DEBUG
-            else self.get_entity_state_from_coordinator(f"{mode_name}_mode_timeout", 5)
-        )
+        minutes = self.get_entity_state_from_coordinator(f"{mode_name}_mode_timeout", 5)
         return ha_now() + timedelta(minutes=minutes)
 
     def push_event(

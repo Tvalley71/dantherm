@@ -2,14 +2,12 @@
 
 from collections import deque
 import logging
-import re
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import cached_property
-from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEVICE_TYPES
@@ -18,19 +16,19 @@ from .device_map import (
     ATTR_AIR_QUALITY,
     ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
-    ATTR_BOOST_MODE_TRIGGER,
     ATTR_BYPASS_DAMPER,
-    ATTR_DISABLE_NOTIFICATIONS,
-    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
-    ATTR_ECO_MODE_TRIGGER,
     ATTR_FILTER_LIFETIME,
     ATTR_FILTER_REMAIN,
     ATTR_FILTER_REMAIN_LEVEL,
-    ATTR_HOME_MODE_TRIGGER,
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_DISABLE_NOTIFICATIONS,
+    CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -105,7 +103,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         port,
         unit_id,
         scan_interval,
-        config_entry: ConfigEntry,
+        config_entry: ConfigEntry | None,
     ) -> None:
         """Init device."""
         super().__init__(
@@ -114,9 +112,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             port,
             unit_id,
         )
-        DanthermAdaptiveManager.__init__(self, hass)
+        DanthermAdaptiveManager.__init__(
+            self,
+            hass,
+            config_entry,  # May be None during config flow probing
+        )
         self._config_entry = config_entry
-        self._options = config_entry.options
         self._scan_interval = scan_interval
         self._device_name = name
         self._device_type = 0
@@ -136,6 +137,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._last_current_operation = None
         self.coordinator = None
         self.installed_components = 0
+
+        # During config flow we may not have a ConfigEntry yet
+        if config_entry is not None:
+            self._options = config_entry.options
+        else:
+            self._options = {}
 
         # Initialize filtered sensors
         self._filtered_sensors = {
@@ -226,7 +233,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Start the integration."""
 
         # Set up adaptive triggers
-        await self.async_set_up_adaptive_triggers(self._options)
+        await self.async_set_up_adaptive_manager()
 
         # Do the first refresh of entities
         await self.coordinator.async_config_entry_first_refresh()
@@ -237,7 +244,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             or self._get_eco_mode_trigger_available
             or self._get_home_mode_trigger_available
         ):
-            await self.async_set_up_tracking_for_adaptive_triggers(self._options)
+            await self.async_set_up_tracking_for_adaptive_triggers()
 
         # Remove chached properties
         self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
@@ -319,21 +326,6 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
-        """Find device_id from entity_id."""
-        entity_registry = er.async_get(hass)
-        device_registry = dr.async_get(hass)
-
-        entity = entity_registry.async_get(entity_id)
-        if entity is None or entity.device_id is None:
-            return None
-
-        device_entry = device_registry.async_get(entity.device_id)
-        if device_entry is None:
-            return None
-
-        return device_entry.id
-
     def get_device_entities(self) -> list:
         """Return all entities that belong to this integration's device."""
         entity_registry = er.async_get(self._hass)
@@ -351,7 +343,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         if not device_id:
             _LOGGER.warning(
-                "No device found for config entry: %s", self._config_entry_id
+                "No device found for config entry: %s", self._config_entry.entry_id
             )
             return []
 
@@ -361,32 +353,26 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             if entry.device_id == device_id
         ]
 
-    def set_entity_enabled_by_suffix(
-        self, entities: list, name_suffix: str, enable: bool
-    ):
-        """Enable/disable entities that match a name suffix (with optional _#)."""
-        pattern = re.compile(rf"_{name_suffix}(_\d+)?$")
-        for entry in entities:
-            if pattern.search(entry.unique_id):
-                _LOGGER.debug(
-                    "Updating entity: %s, enable: %s", entry.entity_id, enable
-                )
-                if enable:
-                    self.set_entity_disabled_by(entry.entity_id, None)
-                else:
-                    self.set_entity_disabled_by(
-                        entry.entity_id, RegistryEntryDisabler.INTEGRATION
-                    )
+    def get_device_id(self) -> str | None:
+        """Return the device ID for this integration's device."""
+        device_registry = dr.async_get(self._hass)
 
-    def set_entity_disabled_by(self, entity_id, disabled_by: RegistryEntryDisabler):
-        """Set entity disabled by state."""
-
-        entity_registry = er.async_get(self._hass)
-
-        entity_registry.async_update_entity(
-            entity_id,
-            disabled_by=disabled_by,
+        # Find device_id that matches this config entry
+        device_id = next(
+            (
+                d.id
+                for d in device_registry.devices.values()
+                if self._config_entry.entry_id in d.config_entries
+            ),
+            None,
         )
+
+        if not device_id:
+            _LOGGER.warning(
+                "No device found for config entry: %s", self._config_entry.entry_id
+            )
+
+        return device_id
 
     def get_entity_state_from_coordinator(self, entity: str, default=None):
         """Get entity state from coordinator."""
@@ -423,7 +409,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return f"{device_type} ({device_mode})"
 
     @property
-    def get_device_fw_version(self) -> str:
+    def get_device_fw_version(self) -> float:
         """Device firmware version."""
 
         major = (self._device_fw_version >> 8) & 0xFF
@@ -609,8 +595,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         result = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
         if result not in (None, 0, self._alarm):
             # Create persistent notification if alarm is not zero
-            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
-                await self._create_notification("sensor", ATTR_ALARM, result)
+            if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
+                await async_create_key_value_notification(
+                    self._hass, self._device_name, "sensor", ATTR_ALARM, result
+                )
 
         self._alarm = result
         _LOGGER.debug("Alarm = %s", self._alarm)
@@ -630,6 +618,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         result = await self._read_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION)
         _LOGGER.debug("Week program selection = %s", result)
         return result
+
+    async def async_get_calendar(self):
+        """Get calendar."""
+
+        await self.async_update_adaptive_calendar()
 
     @property
     def get_alarm(self):
@@ -704,7 +697,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def get_exhaust_temperature_unknown(self) -> bool:
         """Check if exhaust temperature is not applicable."""
 
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self.get_bypass_available and self._bypass_damper in (
@@ -720,7 +713,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def get_supply_temperature_unknown(self) -> bool:
         """Check if supply temperature is not applicable."""
 
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self._current_unit_mode == CurrentUnitMode.Summer:
@@ -739,7 +732,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def get_outdoor_temperature_unknown(self) -> bool:
         """Check if outdoor temperature is not applicable."""
 
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
             return False
 
         if self._current_unit_mode == CurrentUnitMode.Summer:
@@ -806,17 +799,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     @cached_property
     def _get_boost_mode_trigger_available(self) -> bool:
         """Get boost mode trigger available."""
-        return self._options.get(ATTR_BOOST_MODE_TRIGGER, False)
+        return self._options.get(CONF_BOOST_MODE_TRIGGER, False)
 
     @cached_property
     def _get_eco_mode_trigger_available(self) -> bool:
         """Get eco mode trigger available."""
-        return self._options.get(ATTR_ECO_MODE_TRIGGER, False)
+        return self._options.get(CONF_ECO_MODE_TRIGGER, False)
 
     @cached_property
     def _get_home_mode_trigger_available(self) -> bool:
         """Get home mode trigger available."""
-        return self._options.get(ATTR_HOME_MODE_TRIGGER, False)
+        return self._options.get(CONF_HOME_MODE_TRIGGER, False)
 
     @cached_property
     def _get_filter_lifetime_entity_installed(self) -> bool:
@@ -878,9 +871,9 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
         if result == 0 and result != self._filter_remain:
             # Create persistent notification if filter remain is zero
-            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
+            if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
-                    self._hass, self._device_name, ATTR_FILTER_REMAIN, result
+                    self._hass, self._device_name, "sensor", ATTR_FILTER_REMAIN, result
                 )
 
         self._filter_remain = result

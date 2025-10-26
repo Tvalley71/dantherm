@@ -2,7 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 
-from .device_map import ATTR_DISABLE_NOTIFICATIONS
+from .device_map import CONF_DISABLE_NOTIFICATIONS
 from .translations import (
     async_get_translated_exception_text,
     async_get_translated_state_text,
@@ -59,7 +59,7 @@ async def async_create_notification(
     if message != "":
         message += "\n\n"
     message += await async_get_translated_exception_text(
-        hass, ATTR_DISABLE_NOTIFICATIONS
+        hass, CONF_DISABLE_NOTIFICATIONS
     )
 
     data = {

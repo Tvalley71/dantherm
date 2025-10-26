@@ -16,7 +16,18 @@ class DanthermEntity(CoordinatorEntity):
         """Initialize the instance."""
         super().__init__(device.coordinator)
         self._device = device
-        self._attr_unique_id = f"{self._device.get_device_name}_{description.key}"
+
+        # Prefer hardware serial number for a stable, unique id; fallback to entry id
+        try:
+            serial = self._device.get_device_serial_number
+        except Exception:  # noqa: BLE001
+            serial = None
+        if not serial:
+            serial = getattr(
+                getattr(self._device, "_config_entry", None), "entry_id", "unknown"
+            )
+        self._attr_unique_id = f"{serial}_{description.key}"
+
         self._attr_should_poll = False
         self._attr_changed = False
         self._attr_available = False

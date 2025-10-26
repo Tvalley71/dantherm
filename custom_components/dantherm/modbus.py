@@ -1,11 +1,11 @@
 """Modbus implementation."""
 
 import asyncio
+from enum import IntEnum
 import logging
 import re
 
 from pymodbus import ModbusException
-from voluptuous import Enum
 
 from homeassistant.components.modbus import modbus
 from homeassistant.helpers.entity import EntityDescription
@@ -51,7 +51,7 @@ MODBUS_REGISTER_WEEK_PROGRAM_SELECTION = 466
 MODBUS_REGISTER_WORK_TIME = 624
 
 
-class DataClass(Enum):
+class DataClass(IntEnum):
     """Dantherm modbus data class."""
 
     Int32 = 1
@@ -60,7 +60,7 @@ class DataClass(Enum):
     Float32 = 4
 
 
-class ABSwitchPosition(Enum):
+class ABSwitchPosition(IntEnum):
     """Dantherm A/B switch position class."""
 
     Unknown = 0

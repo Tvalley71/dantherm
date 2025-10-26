@@ -14,24 +14,36 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
+    Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_DISABLE_NOTIFICATIONS,
-    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
+    ATTR_CALENDAR,
+    BUTTONS,
+    CALENDAR,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_DISABLE_NOTIFICATIONS,
+    CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
+    COVERS,
+    NUMBERS,
     REQUIRED_PYMODBUS_VERSION,
+    SELECTS,
+    SENSORS,
+    SWITCHES,
+    TIMETEXTS,
 )
 from .discovery import async_discover
+from .helpers import get_primary_entry_id, is_primary_entry
 from .notifications import async_create_exception_notification
 from .services import async_setup_services
 
@@ -61,22 +73,22 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
-    "button",
-    "calendar",
-    "cover",
-    "number",
-    "select",
-    "sensor",
-    "switch",
-    "text",
+    Platform.BUTTON,
+    Platform.CALENDAR,
+    Platform.COVER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 DEFAULT_OPTIONS = {
-    ATTR_HOME_MODE_TRIGGER: "",
-    ATTR_BOOST_MODE_TRIGGER: "",
-    ATTR_ECO_MODE_TRIGGER: "",
-    ATTR_DISABLE_TEMPERATURE_UNKNOWN: False,
-    ATTR_DISABLE_NOTIFICATIONS: False,
+    CONF_HOME_MODE_TRIGGER: "",
+    CONF_BOOST_MODE_TRIGGER: "",
+    CONF_ECO_MODE_TRIGGER: "",
+    CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
+    CONF_DISABLE_NOTIFICATIONS: False,
 }
 
 
@@ -102,7 +114,7 @@ async def async_setup(hass: HomeAssistant, config):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Dantherm device."""
+    """Set up Dantherm from a config entry."""
 
     if version.parse(pymodbus.__version__) < version.parse(REQUIRED_PYMODBUS_VERSION):
         translations = await async_get_translations(
@@ -187,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         found = True
 
                         # Send a notification about the rediscovery
-                        if not options.get(ATTR_DISABLE_NOTIFICATIONS, False):
+                        if not options.get(CONF_DISABLE_NOTIFICATIONS, False):
                             await async_create_exception_notification(
                                 hass,
                                 name,
@@ -209,15 +221,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
         "coordinator": coordinator,
-        ATTR_BOOST_MODE_TRIGGER: options.get(ATTR_BOOST_MODE_TRIGGER, ""),
-        ATTR_ECO_MODE_TRIGGER: options.get(ATTR_ECO_MODE_TRIGGER, ""),
-        ATTR_HOME_MODE_TRIGGER: options.get(ATTR_HOME_MODE_TRIGGER, ""),
-        ATTR_DISABLE_TEMPERATURE_UNKNOWN: options.get(
-            ATTR_DISABLE_TEMPERATURE_UNKNOWN, False
+        CONF_BOOST_MODE_TRIGGER: options.get(CONF_BOOST_MODE_TRIGGER, ""),
+        CONF_ECO_MODE_TRIGGER: options.get(CONF_ECO_MODE_TRIGGER, ""),
+        CONF_HOME_MODE_TRIGGER: options.get(CONF_HOME_MODE_TRIGGER, ""),
+        CONF_DISABLE_TEMPERATURE_UNKNOWN: options.get(
+            CONF_DISABLE_TEMPERATURE_UNKNOWN, False
         ),
-        ATTR_DISABLE_NOTIFICATIONS: options.get(ATTR_DISABLE_NOTIFICATIONS, False),
+        CONF_DISABLE_NOTIFICATIONS: options.get(CONF_DISABLE_NOTIFICATIONS, False),
     }
 
+    # Execute migration of entity unique_ids (backwards compatibility) only once
+    if not entry.data.get("uids_migrated", False):
+        migrated = await _async_migrate_unique_ids(hass, entry, device)
+        if migrated:
+            # Persist that we've migrated to avoid re-running on every startup
+            new_data = dict(entry.data)
+            new_data["uids_migrated"] = True
+            hass.config_entries.async_update_entry(entry, data=new_data)
+
+    # Forward setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     try:
@@ -248,10 +270,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # Migration: Move disable_alarm_notifications to disable_notifications
     if (
-        ATTR_DISABLE_NOTIFICATIONS not in options
+        CONF_DISABLE_NOTIFICATIONS not in options
         and ATTR_DISABLE_ALARM_NOTIFICATIONS in options
     ):
-        options[ATTR_DISABLE_NOTIFICATIONS] = options.pop(
+        options[CONF_DISABLE_NOTIFICATIONS] = options.pop(
             ATTR_DISABLE_ALARM_NOTIFICATIONS
         )
         hass.config_entries.async_update_entry(config_entry, options=options)
@@ -262,8 +284,137 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    # Check if this entry was primary before unload
+    was_primary = is_primary_entry(hass, entry.entry_id)
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+
+        # Promote and reload new primary, so it can create shared calendar
+        if was_primary:
+            new_primary = get_primary_entry_id(hass)
+            if new_primary and new_primary != entry.entry_id:
+                hass.async_create_task(hass.config_entries.async_reload(new_primary))
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Clean up persistent data when a config entry is removed."""
+    # Remove per-instance calendar storage
+    await Store(hass, 1, f"{DOMAIN}_calendar_{entry.entry_id}").async_remove()
+
+    # Clear any runtime references (entity removal already runs, but be safe)
+    domain_data = hass.data.get(DOMAIN, {})
+    if isinstance(domain_data, dict):
+        entry_data = domain_data.get(entry.entry_id)
+        if isinstance(entry_data, dict):
+            entry_data.pop(ATTR_CALENDAR, None)
+        # If this entry owned the global calendar pointer, drop it
+        if domain_data.get(ATTR_CALENDAR) is not None:
+            try:
+                owner_id = getattr(domain_data[ATTR_CALENDAR], "_config_entry_id", None)
+            except (AttributeError, TypeError):
+                owner_id = None
+            if owner_id == entry.entry_id:
+                domain_data.pop(ATTR_CALENDAR, None)
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, device: DanthermDevice
+) -> bool:
+    """Migrate entity registry unique_ids to serial-based format.
+
+    - Old format: often <name>_<key> or other prefixes
+    - New format: <serial>_<key>
+    Handles collisions by preferring canonical entities (without numeric suffix)
+    and removing duplicate entities with numeric suffix that belong to the same
+    config entry.
+    """
+
+    # Using module-level imports for callback, er and entity descriptions
+
+    # Gather all known keys from entity descriptions
+    keys: set[str] = set()
+    try:
+        keys.update(desc.key for desc in BUTTONS)
+        keys.add(CALENDAR.key)
+        keys.update(desc.key for desc in COVERS)
+        keys.update(desc.key for desc in NUMBERS)
+        keys.update(desc.key for desc in SELECTS)
+        keys.update(desc.key for desc in SENSORS)
+        keys.update(desc.key for desc in SWITCHES)
+        keys.update(desc.key for desc in TIMETEXTS)
+    except Exception:  # noqa: BLE001
+        keys = set()
+
+    serial = str(device.get_device_serial_number)
+    ent_reg = er.async_get(hass)
+
+    changed: bool = False
+
+    @callback
+    def _async_migrate_entity_entry(entry_to_migrate: er.RegistryEntry):
+        uid = entry_to_migrate.unique_id
+        # Already in the new format
+        if uid.startswith(f"{serial}_"):
+            return None
+
+        for key in keys:
+            suffix = f"_{key}"
+            if uid.endswith(suffix):
+                new_uid = f"{serial}_{key}"
+                if new_uid != uid:
+                    # Check for conflicts and resolve in favor of the canonical entity (without numeric suffix)
+                    conflict_entity_id = ent_reg.async_get_entity_id(
+                        entry_to_migrate.domain, DOMAIN, new_uid
+                    )
+                    if (
+                        conflict_entity_id
+                        and conflict_entity_id != entry_to_migrate.entity_id
+                    ):
+                        # Prefer keeping the entity without a numeric suffix. If the conflicting entity_id
+                        # ends with a numeric suffix (e.g. _2, _3), remove it and proceed with migration.
+                        try:
+                            tail = conflict_entity_id.rsplit("_", 1)[-1]
+                            has_numeric_tail = tail.isdigit()
+                        except Exception:  # noqa: BLE001
+                            has_numeric_tail = False
+
+                        if has_numeric_tail:
+                            conflict_entry = ent_reg.async_get(conflict_entity_id)
+                            # Only remove if the conflicting entity belongs to the same config entry
+                            if (
+                                conflict_entry
+                                and conflict_entry.config_entry_id == entry.entry_id
+                            ):
+                                _LOGGER.debug(
+                                    "Removing duplicate entity %s to resolve unique_id conflict with %s",
+                                    conflict_entity_id,
+                                    entry_to_migrate.entity_id,
+                                )
+                                ent_reg.async_remove(conflict_entity_id)
+                            else:
+                                # Do not touch entities from other config entries
+                                return None
+                        else:
+                            # A non-suffixed entity already has the target unique_id; skip migrating this one
+                            return None
+
+                    _LOGGER.debug(
+                        "Migrating entity %s unique_id from %s to %s",
+                        entry_to_migrate.entity_id,
+                        uid,
+                        new_uid,
+                    )
+                    nonlocal changed
+                    changed = True
+                    return {"new_unique_id": new_uid}
+                break
+
+        # No migration needed
+        return None
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrate_entity_entry)
+    return changed

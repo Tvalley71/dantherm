@@ -345,7 +345,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
         async def apply_reset(device, call):
-            device.coordinator.write(device.set_filter_reset)
+            # Schedule the reset via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.set_filter_reset)
 
         await async_apply_device_function(call, apply_reset)
 
@@ -353,7 +354,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Alarm reset, reset first pending alarm."""
 
         async def apply_reset(device, call):
-            device.coordinator.write(device.set_alarm_reset)
+            # Schedule the reset via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.set_alarm_reset)
 
         await async_apply_device_function(call, apply_reset)
 
@@ -361,7 +363,8 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         """Clear the adaptive event stack."""
 
         async def apply_clear(device, call):
-            device.coordinator.write(device.clear_adaptive_event_stack)
+            # Schedule clear via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.clear_adaptive_event_stack)
 
         await async_apply_device_function(call, apply_clear)
 

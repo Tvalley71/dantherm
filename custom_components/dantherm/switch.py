@@ -50,7 +50,7 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         self._attr_icon = description.icon_off or description.icon
         self.entity_description: DanthermSwitchEntityDescription = description
 
-    async def _async_turn_state(self, state):
+    async def _turn_state(self, state):
         """Turn the entity state on or off."""
         desc = self.entity_description
 
@@ -63,11 +63,11 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._async_turn_state(False)
+        await self._turn_state(False)
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._async_turn_state(True)
+        await self._turn_state(True)
 
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""

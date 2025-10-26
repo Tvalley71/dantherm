@@ -50,6 +50,7 @@ SERVICE_CLEAR_ADAPTIVE_EVENT_STACK = "clear_adaptive_event_stack"
 ATTR_BYPASS_DAMPER: Final = "bypass_damper"
 
 ATTR_CALENDAR: Final = "calendar"
+CONF_LINK_TO_PRIMARY_CALENDAR: Final = "link_calendar_to_primary"
 
 ATTR_OPERATION_SELECTION: Final = "operation_selection"
 STATE_STANDBY: Final = "standby"
@@ -124,21 +125,21 @@ ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
 
 ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
 
-ATTR_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
+CONF_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
 
 ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
 
-ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
+CONF_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
 ATTR_BOOST_MODE: Final = "boost_mode"
 ATTR_BOOST_MODE_TIMEOUT: Final = "boost_mode_timeout"
 
-ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
+CONF_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
 ATTR_ECO_MODE: Final = "eco_mode"
 ATTR_ECO_MODE_TIMEOUT: Final = "eco_mode_timeout"
 
-ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
+CONF_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
 ATTR_HOME_MODE: Final = "home_mode"
 ATTR_HOME_MODE_TIMEOUT: Final = "home_mode_timeout"
 
@@ -177,7 +178,7 @@ ATTR_ALARM_RESET: Final = "alarm_reset"
 
 ATTR_FEATURES: Final = "features"
 
-ATTR_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
+CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,
@@ -213,9 +214,9 @@ WEEK_PROGRAM_SELECTIONS = [
 ]
 
 ADAPTIVE_TRIGGERS = [
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
 ]
 
 BOOST_OPERATION_SELECTIONS = [STATE_LEVEL_2, STATE_LEVEL_3, STATE_LEVEL_4]
@@ -445,11 +446,10 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     ),
 )
 
-CALENDAR: tuple[DanthermCalendarEntityDescription, ...] = (
-    DanthermCalendarEntityDescription(
-        key=ATTR_CALENDAR,
-        icon="mdi:calendar",
-    ),
+CALENDAR: DanthermCalendarEntityDescription = DanthermCalendarEntityDescription(
+    key=ATTR_CALENDAR,
+    icon="mdi:calendar",
+    data_getinternal=ATTR_CALENDAR,
 )
 
 COVERS: tuple[DanthermCoverEntityDescription, ...] = (
@@ -857,8 +857,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:information",
         data_getinternal=ATTR_ADAPTIVE_STATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
     ),
     # DanthermSensorEntityDescription(
     #    key=ATTR_FEATURES,

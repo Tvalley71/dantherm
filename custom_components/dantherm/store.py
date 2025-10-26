@@ -1,7 +1,7 @@
 """Store implementation."""
 
-from homeassistant.components.http.auth import Store
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 
 class DanthermStore:
