@@ -261,15 +261,22 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     async def async_set_entity_state_from_entity_id(
         self, entity_id: str, state: Any
     ) -> Any:
-        """Schedule a write via the internal queue and update the cached data immediately."""
+        """Schedule a set entity state from entity id via the internal queue and update the cached data immediately."""
+
         entity = self.get_entity(entity_id)
         if entity:
             await self.async_set_entity_state(entity, state)
 
     async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
-        """Schedule a write via the internal queue and update the cached data immediately."""
+        """Schedule a set entity state via the internal queue and update the cached data immediately."""
 
         description: DanthermEntityDescription = entity.entity_description
+
+        _LOGGER.debug(
+            "Schedule set entity state for entity_id=%s to state=%s",
+            entity.entity_id,
+            state,
+        )
 
         # Enqueue frontent corotine
         fut = self.enqueue_frontend(self._set_entity_state, entity, state)
