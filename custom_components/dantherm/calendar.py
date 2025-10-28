@@ -61,9 +61,6 @@ async def async_setup_entry(
             return
 
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
-    if device_entry is None:
-        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
-        return
     device: DanthermDevice | None = device_entry.get("device")
     if device is None:
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
@@ -592,14 +589,71 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
     async def async_get_active_events(self) -> list[CalendarEvent]:
         """Return currently active events without pruning (read-only path)."""
         now = ha_now()
-
-        instances = await self._expand_events_window(start_of_local_day(), now)
         active: list[CalendarEvent] = []
-        for inst in instances:
-            st = as_dt(inst.start)
-            en = as_dt(inst.end)
-            if st <= now < en:
-                active.append(inst)
+
+        for evt in self._events:
+            # Handle single (non-recurring) events
+            if not evt.rrule:
+                start_dt = as_dt(evt.start)
+                end_dt = as_dt(evt.end)
+                if start_dt <= now < end_dt:
+                    active.append(evt)
+                continue
+
+            # Handle recurring events
+            rule = rrulestr(evt.rrule, dtstart=as_dt(evt.start))
+            exdates = {as_dt(d).replace(microsecond=0) for d in (evt.exdate or [])}
+
+            # Find the most recent occurrence at or before now
+            last_occ = rule.before(now, inc=True)
+            if last_occ is None:
+                continue
+
+            occ_norm = last_occ.replace(microsecond=0)
+
+            # Skip if this occurrence is excluded
+            if occ_norm in exdates:
+                continue
+
+            # Check if there's an override for this occurrence
+            ovr = self._find_override(evt.uid, occ_norm)
+
+            if ovr:
+                # Use override event details
+                start_dt = as_dt(ovr.start)
+                end_dt = as_dt(ovr.end)
+                if start_dt <= now < end_dt:
+                    active.append(ovr)
+            else:
+                # Use original event with calculated occurrence time
+                duration = duration_dt(evt.start, evt.end)
+                is_all_day = isinstance(evt.start, date) and not isinstance(
+                    evt.start, datetime
+                )
+
+                if is_all_day:
+                    # For all-day events, convert occurrence to local day boundaries
+                    start_day = last_occ.astimezone(UTC).date()
+                    days = max(1, int(duration.total_seconds() // 86400))
+                    start_dt = start_of_local_day(start_day)
+                    end_dt = start_of_local_day(start_day + timedelta(days=days))
+                else:
+                    start_dt = last_occ
+                    end_dt = last_occ + duration
+
+                if start_dt <= now < end_dt:
+                    # Create instance event for this occurrence
+                    instance = DanthermCalendarEvent(
+                        uid=evt.uid,
+                        summary=evt.summary,
+                        start=start_dt,
+                        end=end_dt,
+                        description=evt.description,
+                        rrule=None,
+                        recurrence_id=occ_norm.isoformat(),
+                    )
+                    active.append(instance)
+
         return active
 
     @property
@@ -640,9 +694,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
                             start_day = last_occ.astimezone(UTC).date()
                             days = max(1, int(dur.total_seconds() // 86400))
                             st = start_of_local_day(start_day)
-                            en = start_of_local_day(
-                                start_day + timedelta(days=days)
-                            )
+                            en = start_of_local_day(start_day + timedelta(days=days))
                         else:
                             st = last_occ
                             en = last_occ + dur
