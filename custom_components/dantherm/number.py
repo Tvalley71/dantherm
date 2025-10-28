@@ -14,12 +14,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """."""
-    device_entry = hass.data[DOMAIN][config_entry.entry_id]
-    if device_entry is None:
+    """Set up number platform."""
+    # Check if entry exists in hass.data
+    if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
         _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
         return False
 
+    device_entry = hass.data[DOMAIN][config_entry.entry_id]
     device = device_entry.get("device")
     if device is None:
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
