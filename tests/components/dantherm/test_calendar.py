@@ -713,3 +713,360 @@ async def test_load_skips_corrupt_entries(hass: HomeAssistant) -> None:
 
     await cal._load_events()
     assert cal._events == []
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_single_events(hass: HomeAssistant) -> None:
+    """Test async_get_active_events with single (non-recurring) events."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_single"
+    )
+
+    now = ha_now()
+
+    # Active event (started 10 minutes ago, ends in 10 minutes)
+    await cal.async_create_event(
+        summary="currently_active",
+        dtstart=now - timedelta(minutes=10),
+        dtend=now + timedelta(minutes=10),
+    )
+
+    # Future event (starts in 1 hour)
+    await cal.async_create_event(
+        summary="future_event",
+        dtstart=now + timedelta(hours=1),
+        dtend=now + timedelta(hours=2),
+    )
+
+    # Past event (ended 5 minutes ago)
+    await cal.async_create_event(
+        summary="past_event",
+        dtstart=now - timedelta(hours=2),
+        dtend=now - timedelta(minutes=5),
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Only the currently active event should be returned
+    assert len(active_events) == 1
+    assert active_events[0].summary == "currently_active"
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_recurring_series(hass: HomeAssistant) -> None:
+    """Test async_get_active_events with recurring events."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_recurring"
+    )
+
+    now = ha_now()
+
+    # Daily recurring event that started yesterday and is currently active
+    # (each occurrence lasts 2 hours, happens daily at the same time)
+    daily_start = now - timedelta(minutes=30)  # Started 30 minutes ago
+    await cal.async_create_event(
+        uid="daily_series",
+        summary="daily_active",
+        dtstart=daily_start,
+        dtend=daily_start + timedelta(hours=2),  # Ends in 1.5 hours
+        rrule="FREQ=DAILY;COUNT=5",
+    )
+
+    # Weekly recurring event that's not currently active
+    # (started 3 days ago, each occurrence lasts 1 hour)
+    weekly_start = now - timedelta(days=3, hours=1)  # Ended 3 days ago
+    await cal.async_create_event(
+        uid="weekly_series",
+        summary="weekly_inactive",
+        dtstart=weekly_start,
+        dtend=weekly_start + timedelta(hours=1),
+        rrule="FREQ=WEEKLY;COUNT=3",
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Only the daily series should have an active occurrence
+    assert len(active_events) == 1
+    assert active_events[0].summary == "daily_active"
+    assert active_events[0].recurrence_id is not None  # It's an instance
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_with_overrides(hass: HomeAssistant) -> None:
+    """Test async_get_active_events with recurring events that have overrides."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_overrides"
+    )
+
+    now = ha_now()
+    uid = "series_with_override"
+
+    # Create a daily series where current occurrence should be active
+    series_start = now - timedelta(minutes=15)  # Started 15 minutes ago
+    await cal.async_create_event(
+        uid=uid,
+        summary="original_summary",
+        dtstart=series_start,
+        dtend=series_start + timedelta(hours=1),  # Ends in 45 minutes
+        rrule="FREQ=DAILY;COUNT=3",
+    )
+
+    # Override today's occurrence with different timing and summary
+    override_start = now - timedelta(minutes=5)  # Override started 5 minutes ago
+    await cal.async_update_event(
+        uid=uid,
+        event={
+            "summary": "overridden_summary",
+            "dtstart": override_start,
+            "dtend": override_start + timedelta(minutes=30),  # Ends in 25 minutes
+        },
+        recurrence_id=series_start.replace(microsecond=0).isoformat(),
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Should return the override, not the original occurrence
+    assert len(active_events) == 1
+    assert active_events[0].summary == "overridden_summary"
+    assert active_events[0].start == override_start.replace(microsecond=0)
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_with_exdates(hass: HomeAssistant) -> None:
+    """Test async_get_active_events respects EXDATE exclusions."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_exdates"
+    )
+
+    now = ha_now()
+    uid = "series_with_exdate"
+
+    # Create a series where current time should have an active occurrence
+    series_start = now - timedelta(minutes=20)
+    await cal.async_create_event(
+        uid=uid,
+        summary="excluded_today",
+        dtstart=series_start,
+        dtend=series_start + timedelta(hours=1),
+        rrule="FREQ=DAILY;COUNT=3",
+    )
+
+    # Delete today's occurrence (adds it to EXDATE)
+    await cal.async_delete_event(
+        uid=uid,
+        recurrence_id=series_start.replace(microsecond=0).isoformat(),
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Should be empty because today's occurrence is excluded
+    assert len(active_events) == 0
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_multiple_active(hass: HomeAssistant) -> None:
+    """Test async_get_active_events returns multiple overlapping active events."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_multiple"
+    )
+
+    now = ha_now()
+
+    # Two overlapping single events
+    await cal.async_create_event(
+        summary="event_1",
+        dtstart=now - timedelta(minutes=30),
+        dtend=now + timedelta(minutes=30),
+    )
+
+    await cal.async_create_event(
+        summary="event_2",
+        dtstart=now - timedelta(minutes=15),
+        dtend=now + timedelta(minutes=45),
+    )
+
+    # One recurring event with active occurrence
+    await cal.async_create_event(
+        uid="recurring_active",
+        summary="recurring_event",
+        dtstart=now - timedelta(minutes=10),
+        dtend=now + timedelta(minutes=20),
+        rrule="FREQ=DAILY;COUNT=2",
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Should return all 3 active events
+    assert len(active_events) == 3
+    summaries = {event.summary for event in active_events}
+    assert summaries == {"event_1", "event_2", "recurring_event"}
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_day_boundary_scenarios(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_active_events around day boundaries and timezone handling."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_boundaries"
+    )
+
+    # Get current time and day boundaries
+    now = ha_now()
+    today_start = start_of_local_day()
+
+    # Create an all-day event for today
+    await cal.async_create_event(
+        summary="all_day_today",
+        dtstart=today_start.date(),  # Pass as date for all-day
+        dtend=(today_start + timedelta(days=1)).date(),
+    )
+
+    # Create a recurring series that started days ago but has active occurrence today
+    old_start = today_start - timedelta(days=10, hours=2)  # 10 days ago
+
+    # Calculate when today's occurrence would be based on the old start
+    # For daily series, today's occurrence should be at the same time of day
+    daily_series_start = today_start.replace(
+        hour=old_start.hour,
+        minute=old_start.minute,
+        second=old_start.second,
+        microsecond=0,
+    )
+
+    await cal.async_create_event(
+        uid="old_daily_series",
+        summary="daily_from_past",
+        dtstart=old_start,
+        dtend=old_start + timedelta(hours=3),
+        rrule="FREQ=DAILY;COUNT=15",  # Enough to cover today
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Check if we have active events
+    # The all-day event should be active throughout the day
+    # The recurring event should be active if current time falls within its occurrence window
+    active_summaries = {event.summary for event in active_events}
+
+    # All-day event should always be active during the day
+    assert "all_day_today" in active_summaries
+
+    # Recurring event should be active if we're within its time window
+    if daily_series_start <= now < daily_series_start + timedelta(hours=3):
+        assert "daily_from_past" in active_summaries
+    else:
+        assert "daily_from_past" not in active_summaries
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_long_running_series(hass: HomeAssistant) -> None:
+    """Test async_get_active_events with series that started far in the past."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_long_running"
+    )
+
+    now = ha_now()
+
+    # Create a series that started 6 months ago, occurs weekly, and should have an active occurrence now
+    # Calculate a start time 6 months ago that would result in an active occurrence now
+    months_ago = now - timedelta(days=180)  # Approximately 6 months
+
+    # Adjust to create a weekly series where one occurrence is active right now
+    # Find the most recent weekly occurrence before now
+    weeks_since = (now - months_ago).days // 7
+
+    # Adjust so the occurrence spans the current time
+    adjusted_start = now - timedelta(minutes=30)  # Started 30 minutes ago
+    original_start = adjusted_start - timedelta(weeks=weeks_since)
+
+    await cal.async_create_event(
+        uid="long_running_weekly",
+        summary="weekly_from_months_ago",
+        dtstart=original_start,
+        dtend=original_start + timedelta(hours=2),  # 2-hour duration
+        rrule="FREQ=WEEKLY;COUNT=50",  # Enough occurrences to reach today
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Should find the active occurrence from the long-running series
+    assert len(active_events) == 1
+    assert active_events[0].summary == "weekly_from_months_ago"
+    assert active_events[0].recurrence_id is not None
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_no_active_events(hass: HomeAssistant) -> None:
+    """Test async_get_active_events returns empty list when no events are active."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(hass, device, CALENDAR_DESC, storage_key="test_active_none")
+
+    now = ha_now()
+
+    # Create events that are not currently active
+    await cal.async_create_event(
+        summary="future_event",
+        dtstart=now + timedelta(hours=1),
+        dtend=now + timedelta(hours=2),
+    )
+
+    await cal.async_create_event(
+        summary="past_event",
+        dtstart=now - timedelta(hours=2),
+        dtend=now - timedelta(hours=1),
+    )
+
+    # Recurring series with no current active occurrence
+    await cal.async_create_event(
+        uid="inactive_series",
+        summary="weekly_inactive",
+        dtstart=now - timedelta(days=7, hours=1),  # Last week, ended
+        dtend=now - timedelta(days=7),  # 1 hour duration, ended 7 days ago
+        rrule="FREQ=WEEKLY;COUNT=2",
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Should return empty list
+    assert active_events == []
+
+
+@pytest.mark.asyncio
+async def test_async_get_active_events_edge_case_exact_boundaries(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_active_events with events at exact start/end boundaries."""
+    device = FakeDevice(hass)
+    cal = DanthermCalendar(
+        hass, device, CALENDAR_DESC, storage_key="test_active_boundaries_exact"
+    )
+
+    now = ha_now()
+
+    # Event that starts exactly now
+    await cal.async_create_event(
+        summary="starts_now",
+        dtstart=now,
+        dtend=now + timedelta(hours=1),
+    )
+
+    # Event that ends exactly now (should not be active)
+    await cal.async_create_event(
+        summary="ends_now",
+        dtstart=now - timedelta(hours=1),
+        dtend=now,
+    )
+
+    active_events = await cal.async_get_active_events()
+
+    # Only the event that starts now should be active (start <= now < end)
+    assert len(active_events) == 1
+    assert active_events[0].summary == "starts_now"
