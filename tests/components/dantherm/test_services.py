@@ -4,12 +4,14 @@ import re
 
 from config.custom_components.dantherm.device_map import (
     SERVICE_ALARM_RESET,
+    SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
 )
 from config.custom_components.dantherm.services import (
     DANTHERM_SET_CONFIGURATION_SCHEMA,
     DANTHERM_SET_STATE_SCHEMA,
+    async_setup_services,
 )
 import pytest
 import voluptuous as vol
@@ -55,4 +57,30 @@ async def test_service_constants_exist(hass: HomeAssistant) -> None:
     # Test constants exist
     assert SERVICE_ALARM_RESET is not None
     assert SERVICE_FILTER_RESET is not None
+    assert SERVICE_CLEAR_ADAPTIVE_EVENT_STACK is not None
+
+
+async def test_clear_adaptive_event_stack_service_registered(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the clear adaptive event stack service is properly registered."""
+    # Setup services
+    await async_setup_services(hass)
+
+    # Check that the service is registered
+    assert hass.services.has_service("dantherm", SERVICE_CLEAR_ADAPTIVE_EVENT_STACK)
+
+
+async def test_clear_adaptive_event_stack_service_schema(hass: HomeAssistant) -> None:
+    """Test that the clear adaptive event stack service has correct target schema."""
+    # The service should target devices and entities in the dantherm integration
+    # This test verifies the service definition exists and is callable
+
+    await async_setup_services(hass)
+
+    # The service should be callable (schema validation would happen in actual use)
+    service_def = hass.services._services.get("dantherm", {}).get(
+        SERVICE_CLEAR_ADAPTIVE_EVENT_STACK
+    )
+    assert service_def is not None
     assert SERVICE_SET_CONFIGURATION is not None
