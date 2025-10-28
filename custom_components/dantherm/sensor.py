@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 
     async_add_entities(entities, update_before_add=True)
     return True
-    return True
 
 
 class DanthermSensor(SensorEntity, DanthermEntity):
