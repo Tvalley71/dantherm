@@ -1247,9 +1247,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
     async def clear_adaptive_event_stack(self):
         """Clear the adaptive event stack."""
-
-        if self.events:
-            await self.events.clear()
+        if hasattr(self, "events") and self.events:
+            removed_count = self.events.clear_all_events()
+            _LOGGER.info(
+                "Manually cleared %d events from adaptive event stack", removed_count
+            )
+            return removed_count
+        return 0
 
     async def async_get_humidity(self):
         """Get humidity."""

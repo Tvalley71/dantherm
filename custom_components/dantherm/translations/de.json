@@ -414,6 +414,10 @@
     "alarm_reset": {
       "name": "Alarm zurücksetzen",
       "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Adaptive Ereigniswarteschlange löschen",
+      "description": "Löschen Sie alle Ereignisse aus der adaptiven Ereigniswarteschlange. Dadurch werden alle aktiven adaptiven Ereignisse entfernt und der adaptive Zustand auf \"keiner\" zurückgesetzt."
     }
   },
   "exceptions": {

@@ -414,6 +414,10 @@
     "alarm_reset": {
       "name": "Réinitialisation de l'alarme",
       "description": "Réinitialisez la première alarme en attente."
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Effacer la pile d'événements adaptatifs",
+      "description": "Effacez tous les événements de la pile d'événements adaptatifs. Cela supprimera tous les événements adaptatifs actifs et réinitialisera l'état adaptatif à \"aucun\"."
     }
   },
   "exceptions": {

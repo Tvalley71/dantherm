@@ -415,6 +415,10 @@
     "alarm_reset": {
       "name": "Nulstil alarm",
       "description": "Nulstil første ventende alarm."
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Ryd adaptiv begivenhedsstak",
+      "description": "Ryd alle begivenheder fra den adaptive begivenhedsstak. Dette fjerner alle aktive adaptive begivenheder og nulstiller den adaptive tilstand til \"ingen\"."
     }
   },
   "exceptions": {

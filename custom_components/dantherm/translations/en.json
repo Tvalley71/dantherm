@@ -415,6 +415,10 @@
     "alarm_reset": {
       "name": "Alarm reset",
       "description": "Reset first pending alarm."
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Clear adaptive event stack",
+      "description": "Clear all events from the adaptive event stack. This will remove all active adaptive events and reset the adaptive state to \"none\"."
     }
   },
   "exceptions": {

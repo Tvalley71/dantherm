@@ -414,6 +414,10 @@
     "alarm_reset": {
       "name": "Foutmelding Resetten",
       "description": "Reset de eerste in behandeling zijnde foutmelding."
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Adaptive Ereigniswarteschlange löschen",
+      "description": "Verwijder alle gebeurtenissen uit de adaptieve gebeurteniswachtrij. Hierdoor worden alle actieve adaptieve gebeurtenissen verwijderd en wordt de adaptieve status teruggezet naar \"geen\"."
     }
   },
   "exceptions": {

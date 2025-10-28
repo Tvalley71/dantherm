@@ -171,3 +171,10 @@ alarm_reset:
       integration: dantherm
     entity:
       integration: dantherm
+
+clear_adaptive_event_stack:
+  target:
+    device:
+      integration: dantherm
+    entity:
+      integration: dantherm
