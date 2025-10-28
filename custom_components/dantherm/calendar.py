@@ -111,6 +111,10 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         await self._load_events()
         await super().async_added_to_hass()
 
+        # Register with adaptive manager for event validation
+        if hasattr(self._device, "events") and self._device.events:
+            self._device.events.set_calendar(self)
+
     def _find_override(self, uid: str, occ: datetime) -> DanthermCalendarEvent | None:
         """Return override matching UID + RECURRENCE-ID for a specific occurrence."""
         occ_norm = occ.replace(microsecond=0)

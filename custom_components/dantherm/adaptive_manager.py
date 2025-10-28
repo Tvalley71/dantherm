@@ -137,6 +137,63 @@ class DanthermAdaptiveManager:
             entry_data = domain_data.get(self._config_entry.entry_id, {}) or {}
             self._calendar = entry_data.get(ATTR_CALENDAR)
 
+        # Clean up stale events on startup
+        removed_count = self.cleanup_stale_events()
+        if removed_count > 0:
+            _LOGGER.info("Startup cleanup removed %d stale events", removed_count)
+
+    def _calculate_event_end_time(self, event: CalendarEvent) -> datetime:
+        """Calculate the proper end time for a calendar event.
+
+        For recurring events, we need to be careful not to use the end time of the
+        entire series, but rather the end time of this specific occurrence.
+
+        Args:
+            event: The calendar event
+
+        Returns:
+            The proper end time for this event occurrence
+        """
+        # Check if this is a recurring event by looking for rrule attribute
+        has_rrule = hasattr(event, "rrule") and event.rrule
+
+        if has_rrule:
+            # For recurring events, calculate the duration and apply it to this occurrence
+            duration = event.end - event.start
+            calculated_end = event.start + duration
+
+            # Sanity check: if calculated end is too far in the future (more than 1 year),
+            # limit it to a reasonable duration (max 24 hours)
+            max_end = event.start + timedelta(hours=24)
+            if calculated_end > event.start + timedelta(days=365):
+                _LOGGER.warning(
+                    "Recurring event %s has suspicious duration, limiting to 24 hours. "
+                    "Original end: %s, calculated: %s",
+                    event.summary,
+                    event.end,
+                    calculated_end,
+                )
+                calculated_end = max_end
+
+            _LOGGER.debug(
+                "Recurring event %s: original end=%s, calculated end=%s (duration: %s)",
+                event.summary,
+                event.end,
+                calculated_end,
+                duration,
+            )
+            return calculated_end
+
+        # For single events, use the end time directly, but with sanity check
+        if event.end > event.start + timedelta(days=365):
+            _LOGGER.warning(
+                "Single event %s has suspicious end time: %s, limiting to 24 hours",
+                event.summary,
+                event.end,
+            )
+            return event.start + timedelta(hours=24)
+        return event.end
+
     async def async_set_up_tracking_for_adaptive_triggers(self):
         """Set up tracking for adaptive triggers."""
 
@@ -348,7 +405,9 @@ class DanthermAdaptiveManager:
         if not operation:
             _LOGGER.debug("No valid operation found in event %s", event)
             return
-        event_end = event.end
+
+        # Calculate proper end_time for the event
+        event_end = self._calculate_event_end_time(event)
 
         current_operation = self.get_current_operation
 
@@ -513,9 +572,94 @@ class DanthermAdaptiveManager:
         _LOGGER.debug("Remove events: %s = %s", event, operation)
         return operation
 
+    def cleanup_stale_events(self) -> int:
+        """Clean up stale events from the event stack.
+
+        This method removes events that have event_ids that no longer exist in the calendar.
+
+        Returns:
+            Number of events removed
+        """
+        if not self.events:
+            return 0
+
+        removed_count = 0
+
+        # Create a list of events to remove to avoid modifying deque during iteration
+        events_to_remove = []
+
+        # Get all current calendar event IDs if calendar is available
+        valid_event_ids = set()
+        if self._calendar:
+            try:
+                # Get all stored events from calendar to check against
+                calendar_events = getattr(self._calendar, "_events", [])
+                valid_event_ids = {
+                    getattr(event, "uid", None)
+                    for event in calendar_events
+                    if hasattr(event, "uid")
+                }
+                _LOGGER.debug(
+                    "Found %d valid event IDs in calendar: %s",
+                    len(valid_event_ids),
+                    valid_event_ids,
+                )
+            except (AttributeError, TypeError) as ex:
+                _LOGGER.warning(
+                    "Could not retrieve calendar events for cleanup: %s", ex
+                )
+
+        for event in self.events:
+            event_id = event.get("event_id")
+            should_remove = False
+            reason = ""
+
+            # Check if event has an event_id and calendar is available
+            if event_id and self._calendar:
+                if event_id not in valid_event_ids:
+                    should_remove = True
+                    reason = f"event_id '{event_id}' no longer exists in calendar"
+
+            if should_remove:
+                events_to_remove.append(event)
+                _LOGGER.warning(
+                    "Removing stale event: %s, %s", event.get("event"), reason
+                )
+
+        # Remove the stale events
+        for event in events_to_remove:
+            self.events.remove(event)
+            removed_count += 1
+
+        if removed_count > 0:
+            _LOGGER.info(
+                "Cleanup removed %d stale events from event stack", removed_count
+            )
+
+        return removed_count
+
 
 class AdaptiveEventStack(deque):
     """Event Stack with priority and previous operation tracking."""
+
+    def __init__(self):
+        """Initialize the adaptive event stack."""
+        super().__init__()
+        self._calendar = None  # Will be set by the calendar entity
+
+    def set_calendar(self, calendar):
+        """Set the calendar reference for event validation."""
+        self._calendar = calendar
+
+    def clear_all_events(self) -> int:
+        """Clear all events from the stack.
+
+        Returns:
+            Number of events removed
+        """
+        removed_count = len(self)
+        self.clear()
+        return removed_count
 
     def push(
         self,
