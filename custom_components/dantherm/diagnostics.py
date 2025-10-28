@@ -87,6 +87,14 @@ async def _gather_runtime(
         # Avoid calling I/O in diagnostics; use readily available attributes only
         installed_components = getattr(device, "installed_components", None)
         features_map = getattr(device, "get_features_attrs", None)
+        # Get adaptive manager and event stack if available
+        event_stack_data = None
+        if hasattr(device, "events") and device.events:
+            try:
+                event_stack_data = device.events.to_list()
+            except (AttributeError, TypeError):
+                event_stack_data = "Error retrieving event stack"
+
         runtime["device"] = {
             "name": getattr(device, "get_device_name", None),
             "type": getattr(device, "get_device_type", None),
@@ -101,6 +109,7 @@ async def _gather_runtime(
                 else installed_components
             ),
             "features": features_map,
+            "adaptive_event_stack": event_stack_data,
         }
     return runtime
 
