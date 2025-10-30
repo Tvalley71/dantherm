@@ -2,8 +2,6 @@ set_state:
   target:
     device:
       integration: dantherm
-    entity:
-      integration: dantherm
   fields:
     operation_selection:
       selector:
@@ -43,8 +41,6 @@ set_state:
 set_configuration:
   target:
     device:
-      integration: dantherm
-    entity:
       integration: dantherm
   fields:
     filter_lifetime:
@@ -88,8 +84,6 @@ set_configuration:
 set_configuration_2:
   target:
     device:
-      integration: dantherm
-    entity:
       integration: dantherm
   fields:
     bypass_minimum_temperature:
@@ -163,18 +157,12 @@ filter_reset:
   target:
     device:
       integration: dantherm
-    entity:
-      integration: dantherm
 alarm_reset:
   target:
     device:
-      integration: dantherm
-    entity:
       integration: dantherm
 
 clear_adaptive_event_stack:
   target:
     device:
-      integration: dantherm
-    entity:
       integration: dantherm
