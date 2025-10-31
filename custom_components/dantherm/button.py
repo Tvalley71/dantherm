@@ -21,6 +21,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
         return False
 
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry is None for %s", config_entry.entry_id)
+        return False
+
     device = device_entry.get("device")
     if device is None:
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
