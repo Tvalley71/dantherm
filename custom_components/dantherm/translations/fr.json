@@ -311,6 +311,10 @@
       "name": "Définir l'état",
       "description": "Contrôlez l'état de l'unité de ventilation avec un appel d'action.",
       "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        },
         "operation_selection": {
           "name": "Sélection mode",
           "description": "Sélectionnez le mode d'opération souhaité. Le mode Arrêt sera réinitialisé au niveau manuel 3 après environ 4 heures."
@@ -341,6 +345,10 @@
       "name": "Définir la configuration",
       "description": "Ajustez les paramètres de configuration de l'appareil Dantherm.",
       "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        },
         "filter_lifetime": {
           "name": "Durée de vie du filtre",
           "description": "Définissez la durée de vie du filtre en jours."
@@ -367,6 +375,10 @@
       "name": "Définir la configuration 2",
       "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 2.70 ou supérieure.",
       "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass température minimale",
           "description": "Définissez la température minimale pour le fonctionnement de la bypass."
@@ -393,6 +405,10 @@
       "name": "Définir la configuration 3",
       "description": "Ajustez les paramètres de configuration de l'appareil Dantherm. Remarque : Les champs suivants ne sont pris en charge que sur les appareils avec une version du firmware 3.08 ou supérieure.",
       "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass température minimale (été)",
           "description": "Définissez la température minimale pour le fonctionnement de la bypass."
@@ -409,15 +425,33 @@
     },
     "filter_reset": {
       "name": "Réinitialisation du filtre",
-      "description": "Réinitialisez les jours restants du filtre à sa durée de vie."
+      "description": "Réinitialisez les jours restants du filtre à sa durée de vie.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Réinitialisation de l'alarme",
-      "description": "Réinitialisez la première alarme en attente."
+      "description": "Réinitialisez la première alarme en attente.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        }
+      }
     },
     "clear_adaptive_event_stack": {
       "name": "Effacer la pile d'événements adaptatifs",
-      "description": "Effacez tous les événements de la pile d'événements adaptatifs. Cela supprimera tous les événements adaptatifs actifs et réinitialisera l'état adaptatif à \"aucun\"."
+      "description": "Effacez tous les événements de la pile d'événements adaptatifs. Cela supprimera tous les événements adaptatifs actifs et réinitialisera l'état adaptatif à \"aucun\".",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Sélectionnez l'appareil Dantherm."
+        }
+      }
     }
   },
   "exceptions": {
@@ -440,7 +474,7 @@
       "message": "Le filtre a atteint la fin de sa durée de vie. Veuillez remplacer le filtre."
     },
     "invalid_adaptive_state": {
-      "message": "État adaptatif invalide : '{state}'. États disponibles : {available_states}"
+      "message": "État adaptatif invalide : {state}. États disponibles : {available_states}"
     },
     "rediscovery_notification": {
       "message": "Un appareil {domain} avec le numéro de série {serial_number} a été redécouvert à l'adresse IP {ip_address}."

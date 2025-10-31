@@ -312,6 +312,10 @@
       "name": "Set state",
       "description": "Control the state of the ventilation unit with an action call.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "operation_selection": {
           "name": "Operation Selection",
           "description": "Select the desired operation mode. Note: standby will be set back to manual level 3 after about 4 hours."
@@ -342,6 +346,10 @@
       "name": "Set configuration",
       "description": "Adjust the configuration settings for the Dantherm device.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "filter_lifetime": {
           "name": "Filter Lifetime",
           "description": "Set the lifetime of the filter in days."
@@ -368,6 +376,10 @@
       "name": "Set configuration 2",
       "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 2.70 or above.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass Minimum Temperature",
           "description": "Set the minimum temperature for bypass operation."
@@ -394,6 +406,10 @@
       "name": "Set configuration 3",
       "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 3.08 or above.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass Minimum Temperature (Summer)",
           "description": "Set the minimum temperature for bypass operation."
@@ -410,15 +426,33 @@
     },
     "filter_reset": {
       "name": "Filter reset",
-      "description": "Reset the filter remaining days to its filter lifetime."
+      "description": "Reset the filter remaining days to its filter lifetime.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Alarm reset",
-      "description": "Reset first pending alarm."
+      "description": "Reset first pending alarm.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
     },
     "clear_adaptive_event_stack": {
       "name": "Clear adaptive event stack",
-      "description": "Clear all events from the adaptive event stack. This will remove all active adaptive events and reset the adaptive state to \"none\"."
+      "description": "Clear all events from the adaptive event stack. This will remove all active adaptive events and reset the adaptive state to \"none\".",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
     }
   },
   "exceptions": {
@@ -441,7 +475,7 @@
       "message": "The filter has reached the end of it's lifetime. Please replace the filter."
     },
     "invalid_adaptive_state": {
-      "message": "Invalid adaptive state: '{state}'. Available states: {available_states}"
+      "message": "Invalid adaptive state: {state}. Available states: {available_states}"
     },
     "rediscovery_notification": {
       "message": "A {domain} device with serial number {serial_number} was rediscovered at ip-address: {ip_address}."

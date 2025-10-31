@@ -311,6 +311,10 @@
       "name": "Status Instellen",
       "description": "De status van de ventilatie-unit regelen met een actieoproep.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "operation_selection": {
           "name": "Bedieningsselectie",
           "description": "Selecteer de gewenste bedieningsmodus. De modus Standby wordt na ongeveer 4 uur teruggezet naar het handmatige niveau 3."
@@ -341,6 +345,10 @@
       "name": "Configuratie instellen",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "filter_lifetime": {
           "name": "Filter levensduur",
           "description": "Stel de levensduur van het filter in (dagen)."
@@ -367,6 +375,10 @@
       "name": "Configuratie instellen 2",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 2.70 of nieuwer.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass minimum temperatuur",
           "description": "Stel de minimale temperatuur in voor bypass-bediening."
@@ -393,6 +405,10 @@
       "name": "Configuratie instellen 3",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 3.08 of nieuwer.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass minimum temperatuur (zomer)",
           "description": "Stel de minimale temperatuur in voor bypass-bediening."
@@ -409,15 +425,33 @@
     },
     "filter_reset": {
       "name": "Filter Resetten",
-      "description": "Reset de resterende dagen van het filter naar de filterlevensduur."
+      "description": "Reset de resterende dagen van het filter naar de filterlevensduur.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Foutmelding Resetten",
-      "description": "Reset de eerste in behandeling zijnde foutmelding."
+      "description": "Reset de eerste in behandeling zijnde foutmelding.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
     },
     "clear_adaptive_event_stack": {
       "name": "Adaptive Ereigniswarteschlange löschen",
-      "description": "Verwijder alle gebeurtenissen uit de adaptieve gebeurteniswachtrij. Hierdoor worden alle actieve adaptieve gebeurtenissen verwijderd en wordt de adaptieve status teruggezet naar \"geen\"."
+      "description": "Verwijder alle gebeurtenissen uit de adaptieve gebeurteniswachtrij. Hierdoor worden alle actieve adaptieve gebeurtenissen verwijderd en wordt de adaptieve status teruggezet naar \"geen\".",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
     }
   },
   "exceptions": {
@@ -440,7 +474,7 @@
       "message": "Het filter heeft het einde van zijn levensduur bereikt. Vervang het filter alstublieft."
     },
     "invalid_adaptive_state": {
-      "message": "Ongeldige adaptieve status: '{state}'. Beschikbare statussen: {available_states}"
+      "message": "Ongeldige adaptieve status: {state}. Beschikbare statussen: {available_states}"
     },
     "rediscovery_notification": {
       "message": "Een {domain}-apparaat met serienummer {serial_number} is opnieuw ontdekt op IP-adres {ip_address}."

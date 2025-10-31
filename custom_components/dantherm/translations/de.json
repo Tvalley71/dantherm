@@ -311,6 +311,10 @@
       "name": "Zustand setzen",
       "description": "Steuern Sie den Zustand des Lüftungsgeräts mit einem Aktionsaufruf.",
       "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        },
         "operation_selection": {
           "name": "Betriebsauswahl",
           "description": "Wählen Sie den gewünschten Betriebsmodus aus. Standby wird nach ca. 4 Stunden Zeitspanne auf den manuellen Modus Stufe 3 zurückgesetzt."
@@ -341,6 +345,10 @@
       "name": "Konfiguration festlegen",
       "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an.",
       "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        },
         "filter_lifetime": {
           "name": "Filterlebensdauer",
           "description": "Legen Sie die Lebensdauer des Filters in Tagen fest."
@@ -367,6 +375,10 @@
       "name": "Konfiguration festlegen 2",
       "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
       "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        },
         "bypass_minimum_temperature": {
           "name": "Minimale Bypass-Temperatur",
           "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
@@ -393,6 +405,10 @@
       "name": "Konfiguration festlegen 3",
       "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 3.08 oder neuer unterstützt.",
       "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass-Minimaltemperatur (Sommer)",
           "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
@@ -409,15 +425,33 @@
     },
     "filter_reset": {
       "name": "Filter zurücksetzen",
-      "description": "Setzen Sie die verbleibenden Tage des Filters auf seine Lebensdauer zurück."
+      "description": "Setzen Sie die verbleibenden Tage des Filters auf seine Lebensdauer zurück.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Alarm zurücksetzen",
-      "description": "Setzen Sie den ersten ausstehenden Alarm zurück."
+      "description": "Setzen Sie den ersten ausstehenden Alarm zurück.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        }
+      }
     },
     "clear_adaptive_event_stack": {
       "name": "Adaptive Ereigniswarteschlange löschen",
-      "description": "Löschen Sie alle Ereignisse aus der adaptiven Ereigniswarteschlange. Dadurch werden alle aktiven adaptiven Ereignisse entfernt und der adaptive Zustand auf \"keiner\" zurückgesetzt."
+      "description": "Löschen Sie alle Ereignisse aus der adaptiven Ereigniswarteschlange. Dadurch werden alle aktiven adaptiven Ereignisse entfernt und der adaptive Zustand auf \"keiner\" zurückgesetzt.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Wählen Sie das Dantherm-Gerät aus."
+        }
+      }
     }
   },
   "exceptions": {
@@ -440,7 +474,7 @@
       "message": "Der Filter hat das Ende seiner Lebensdauer erreicht. Bitte wechseln Sie den Filter."
     },
     "invalid_adaptive_state": {
-      "message": "Ungültiger adaptiver Zustand: '{state}'. Verfügbare Zustände: {available_states}"
+      "message": "Ungültiger adaptiver Zustand: {state}. Verfügbare Zustände: {available_states}"
     },
     "rediscovery_notification": {
       "message": "Ein {domain}-Gerät mit der Seriennummer {serial_number} wurde unter der IP-Adresse {ip_address} erneut entdeckt."
