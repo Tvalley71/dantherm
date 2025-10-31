@@ -126,8 +126,6 @@ set_configuration_3:
   target:
     device:
       integration: dantherm
-    entity:
-      integration: dantherm
   fields:
     bypass_minimum_temperature_summer:
       example: 15
@@ -161,7 +159,6 @@ alarm_reset:
   target:
     device:
       integration: dantherm
-
 clear_adaptive_event_stack:
   target:
     device:
