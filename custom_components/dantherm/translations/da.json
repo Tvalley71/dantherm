@@ -440,6 +440,9 @@
     "filter_remain_notification": {
       "message": "Filteret har nået slutningen af dets levetid. Udskift venligst filteret."
     },
+    "invalid_adaptive_state": {
+      "message": "Ugyldig adaptiv tilstand: '{state}'. Tilgængelige tilstande: {available_states}"
+    },
     "rediscovery_notification": {
       "message": "En {domain}-enhed med serienummer {serial_number} blev genopdaget på ip-adresse {ip_address}."
     }

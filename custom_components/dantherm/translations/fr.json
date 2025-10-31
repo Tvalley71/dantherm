@@ -439,6 +439,9 @@
     "filter_remain_notification": {
       "message": "Le filtre a atteint la fin de sa durée de vie. Veuillez remplacer le filtre."
     },
+    "invalid_adaptive_state": {
+      "message": "État adaptatif invalide : '{state}'. États disponibles : {available_states}"
+    },
     "rediscovery_notification": {
       "message": "Un appareil {domain} avec le numéro de série {serial_number} a été redécouvert à l'adresse IP {ip_address}."
     }

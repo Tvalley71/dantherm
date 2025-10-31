@@ -439,6 +439,9 @@
     "filter_remain_notification": {
       "message": "Het filter heeft het einde van zijn levensduur bereikt. Vervang het filter alstublieft."
     },
+    "invalid_adaptive_state": {
+      "message": "Ongeldige adaptieve status: '{state}'. Beschikbare statussen: {available_states}"
+    },
     "rediscovery_notification": {
       "message": "Een {domain}-apparaat met serienummer {serial_number} is opnieuw ontdekt op IP-adres {ip_address}."
     }

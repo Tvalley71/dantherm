@@ -33,6 +33,22 @@ async def async_get_translated_state_text(
     return translations.get(full_key, state)
 
 
+async def async_get_available_adaptive_states(hass: HomeAssistant) -> dict[str, str]:
+    """Return all available adaptive states with their translated names, excluding 'none'."""
+    # Get current language
+    language = hass.config.language or "en"
+    # Fetch translations for the entity domain
+    translations = await async_get_translations(hass, language, "entity", [DOMAIN])
+    # Build the prefix for adaptive states
+    prefix = f"component.{DOMAIN}.entity.sensor.{ATTR_ADAPTIVE_STATE}.state."
+    # Filter translations for adaptive states, excluding 'none'
+    return {
+        key[len(prefix) :]: localized
+        for key, localized in translations.items()
+        if key.startswith(prefix) and not key.endswith(".none")
+    }
+
+
 async def async_get_adaptive_state_from_text(
     hass: HomeAssistant, text: str
 ) -> str | None:
@@ -41,18 +57,9 @@ async def async_get_adaptive_state_from_text(
     def normalize(s: str) -> str:
         return s.replace("-", "").replace("_", "").replace(" ", "").lower()
 
-    # Get current language
-    language = hass.config.language or "en"
-    # Fetch translations for the entity domain
-    translations = await async_get_translations(hass, language, "entity", [DOMAIN])
-    # Build the prefix for adaptive states
-    prefix = f"component.{DOMAIN}.entity.sensor.{ATTR_ADAPTIVE_STATE}.state."
-    # Filter translations for adaptive states
-    adaptive_states = {
-        key[len(prefix) :]: localized
-        for key, localized in translations.items()
-        if key.startswith(prefix)
-    }
+    # Get all available adaptive states
+    adaptive_states = await async_get_available_adaptive_states(hass)
+
     # Check if the text matches any localized state or the key itself
     text = normalize(text)
     for key, localized in adaptive_states.items():
