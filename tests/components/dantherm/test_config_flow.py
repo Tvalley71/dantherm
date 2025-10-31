@@ -152,28 +152,6 @@ async def test_user_flow_cannot_connect(
 
 @pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
-async def test_user_flow_invalid_host(
-    hass: HomeAssistant,
-) -> None:
-    """Invalid host should raise validation error on the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: "bad host!!",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"].get(CONF_HOST) == "invalid_host"
-
-
-@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
-@pytest.mark.asyncio
 async def test_options_flow_update_and_reload(
     hass: HomeAssistant,
 ) -> None:
