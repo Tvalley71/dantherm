@@ -12,6 +12,7 @@ from config.custom_components.dantherm import (
 )
 from config.custom_components.dantherm.calendar import DanthermCalendar
 from config.custom_components.dantherm.device_map import CALENDAR as CALENDAR_DESC
+from config.custom_components.dantherm.exceptions import InvalidAdaptiveState
 import pytest
 
 from homeassistant.components.calendar import CalendarEntity
@@ -1070,3 +1071,117 @@ async def test_async_get_active_events_edge_case_exact_boundaries(
     # Only the event that starts now should be active (start <= now < end)
     assert len(active_events) == 1
     assert active_events[0].summary == "starts_now"
+
+
+@pytest.mark.asyncio
+async def test_create_event_invalid_adaptive_state(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that create_event validates adaptive states and shows available states in error."""
+
+    # Patch to return None for invalid states
+    async def _invalid_adaptive_state(hass: HomeAssistant, text: str):
+        return None if text == "invalid_state" else str(text).lower()
+
+    # Patch to return mock available states
+    async def _mock_available_states(hass: HomeAssistant):
+        return {"auto": "Auto", "komfort": "Komfort", "øko": "Øko"}
+
+    monkeypatch.setattr(
+        translations_mod,
+        "async_get_adaptive_state_from_text",
+        _invalid_adaptive_state,
+    )
+    monkeypatch.setattr(
+        calendar_mod,
+        "async_get_adaptive_state_from_text",
+        _invalid_adaptive_state,
+    )
+    monkeypatch.setattr(
+        translations_mod,
+        "async_get_available_adaptive_states",
+        _mock_available_states,
+    )
+    monkeypatch.setattr(
+        calendar_mod,
+        "async_get_available_adaptive_states",
+        _mock_available_states,
+    )
+
+    device = FakeDevice(hass)
+    storage_key = "dantherm_calendar_test_invalid_state"
+    cal = DanthermCalendar(hass, device, CALENDAR_DESC, storage_key=storage_key)
+
+    now = ha_now()
+    start = now + timedelta(hours=1)
+    end = start + timedelta(hours=2)
+
+    # Try to create event with invalid adaptive state
+    with pytest.raises(InvalidAdaptiveState) as exc_info:
+        await cal.async_create_event(summary="invalid_state", dtstart=start, dtend=end)
+
+    # Check that the exception contains available states
+    assert "invalid_state" in str(exc_info.value.translation_placeholders["state"])
+    assert "Auto, Komfort, Øko" in str(
+        exc_info.value.translation_placeholders["available_states"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_event_invalid_adaptive_state(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that update_event validates adaptive states and shows available states in error."""
+
+    device = FakeDevice(hass)
+    storage_key = "dantherm_calendar_test_update_invalid_state"
+    cal = DanthermCalendar(hass, device, CALENDAR_DESC, storage_key=storage_key)
+
+    now = ha_now()
+    start = now + timedelta(hours=1)
+    end = start + timedelta(hours=2)
+
+    # First create a valid event
+    uid = "test-event-1"
+    await cal.async_create_event(uid=uid, summary="auto", dtstart=start, dtend=end)
+
+    # Now patch for invalid state during update
+    async def _invalid_adaptive_state(hass: HomeAssistant, text: str):
+        return None if text == "invalid_update_state" else str(text).lower()
+
+    # Patch to return mock available states
+    async def _mock_available_states(hass: HomeAssistant):
+        return {"auto": "Auto", "komfort": "Komfort", "øko": "Øko"}
+
+    monkeypatch.setattr(
+        translations_mod,
+        "async_get_adaptive_state_from_text",
+        _invalid_adaptive_state,
+    )
+    monkeypatch.setattr(
+        calendar_mod,
+        "async_get_adaptive_state_from_text",
+        _invalid_adaptive_state,
+    )
+    monkeypatch.setattr(
+        translations_mod,
+        "async_get_available_adaptive_states",
+        _mock_available_states,
+    )
+    monkeypatch.setattr(
+        calendar_mod,
+        "async_get_available_adaptive_states",
+        _mock_available_states,
+    )
+
+    # Try to update event with invalid adaptive state
+    with pytest.raises(InvalidAdaptiveState) as exc_info:
+        await cal.async_update_event(uid=uid, event={"summary": "invalid_update_state"})
+
+    # Check that the exception contains available states
+    assert "invalid_update_state" in str(
+        exc_info.value.translation_placeholders["state"]
+    )
+    assert "Auto, Komfort, Øko" in str(
+        exc_info.value.translation_placeholders["available_states"]
+    )

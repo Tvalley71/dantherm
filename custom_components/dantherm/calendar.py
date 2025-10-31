@@ -37,7 +37,10 @@ from .helpers import (
     parse_dt_or_date,
     rrule_trim_until,
 )
-from .translations import async_get_adaptive_state_from_text
+from .translations import (
+    async_get_adaptive_state_from_text,
+    async_get_available_adaptive_states,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +64,10 @@ async def async_setup_entry(
             return
 
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
+    if device_entry is None:
+        _LOGGER.error("Device entry is None for %s", config_entry.entry_id)
+        return
+
     device: DanthermDevice | None = device_entry.get("device")
     if device is None:
         _LOGGER.error("Device object is missing in entry %s", config_entry.entry_id)
@@ -246,7 +253,11 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         # Validate adaptive state inside the summary (domain-specific rule)
         if await async_get_adaptive_state_from_text(self._hass, summary) is None:
             _LOGGER.debug("Event summary '%s' is not a valid adaptive state", summary)
-            raise InvalidAdaptiveState(summary)
+            # Get available states for the error message
+            available_states = await async_get_available_adaptive_states(self._hass)
+            # Convert to list of translated names for display
+            state_names = list(available_states.values())
+            raise InvalidAdaptiveState(summary, state_names)
 
         # Basic time sanity check
         start = kwargs["dtstart"]
@@ -286,6 +297,20 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         if not master:
             _LOGGER.warning("No event found with UID %s", uid)
             return
+
+        # Validate adaptive state if summary is being updated
+        summary = event.get("summary")
+        if summary is not None:
+            if await async_get_adaptive_state_from_text(self._hass, summary) is None:
+                _LOGGER.debug(
+                    "Event summary '%s' is not a valid adaptive state", summary
+                )
+                # Get available states for the error message
+                available_states = await async_get_available_adaptive_states(self._hass)
+                # Convert to list of translated names for display
+                state_names = list(available_states.values())
+                # The exception itself will handle formatting with conjunction
+                raise InvalidAdaptiveState(summary, state_names)
 
         # Parse recurrence_id once for reuse
         rid_dt: datetime | None = None
