@@ -1,5 +1,7 @@
 """Translations implementation."""
 
+import re
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.translation import async_get_translations
 
@@ -49,20 +51,41 @@ async def async_get_available_adaptive_states(hass: HomeAssistant) -> dict[str, 
     }
 
 
-async def async_get_adaptive_state_from_text(
+async def async_get_adaptive_state_from_summary(
     hass: HomeAssistant, text: str
 ) -> str | None:
-    """Return the matching adaptive state key from translated text."""
-
-    def normalize(s: str) -> str:
-        return s.replace("-", "").replace("_", "").replace(" ", "").lower()
-
-    # Get all available adaptive states
+    """Get adaptive state from summary text."""
+    # Get all available adaptive states using the existing translation system
     adaptive_states = await async_get_available_adaptive_states(hass)
 
-    # Check if the text matches any localized state or the key itself
-    text = normalize(text)
-    for key, localized in adaptive_states.items():
-        if normalize(localized) == text or normalize(key) == text:
+    if not adaptive_states:
+        return None
+
+    def create_precise_pattern(word: str) -> str:
+        """Create a regex pattern that matches words precisely, handling _ and - correctly."""
+        # Escape special regex characters
+        escaped_word = re.escape(word)
+        # Use word boundaries, but be more specific about what constitutes a word boundary
+        # Allow word boundaries or start/end of string, but not within alphanumeric+underscore sequences
+        return rf"(?<!\w){escaped_word}(?!\w)"
+
+    # Look for state in text (precise word matching)
+    text_lower = text.lower()
+
+    # Sort by length (longest first) to match more specific terms first
+    sorted_states = sorted(
+        adaptive_states.items(), key=lambda x: len(x[1]), reverse=True
+    )
+
+    for key, translated_value in sorted_states:
+        # Check if the translated value appears as a precise word in the text
+        pattern = create_precise_pattern(translated_value.lower())
+        if re.search(pattern, text_lower):
             return key
+
+        # Also check if the key itself appears as a precise word (for cases like "level_2")
+        key_pattern = create_precise_pattern(key.lower())
+        if re.search(key_pattern, text_lower):
+            return key
+
     return None
