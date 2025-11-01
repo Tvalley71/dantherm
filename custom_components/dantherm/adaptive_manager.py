@@ -34,7 +34,7 @@ from .device_map import (
     STATE_PRIORITIES,
 )
 from .helpers import is_primary_entry, set_device_entities_enabled_by_suffix
-from .translations import async_get_adaptive_state_from_text
+from .translations import async_get_adaptive_state_from_summary
 
 # This is used to represent the minimum datetime value in the system.
 MIN_DATETIME = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
@@ -401,7 +401,9 @@ class DanthermAdaptiveManager:
 
         event_id = getattr(event, "uid", None)
         # Parse the event to get the target operation (use your translation/key lookup)
-        operation = await async_get_adaptive_state_from_text(self._hass, event.summary)
+        operation = await async_get_adaptive_state_from_summary(
+            self._hass, event.summary
+        )
         if not operation:
             _LOGGER.debug("No valid operation found in event %s", event)
             return

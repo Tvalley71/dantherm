@@ -38,7 +38,7 @@ from .helpers import (
     rrule_trim_until,
 )
 from .translations import (
-    async_get_adaptive_state_from_text,
+    async_get_adaptive_state_from_summary,
     async_get_available_adaptive_states,
 )
 
@@ -251,7 +251,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
             return
 
         # Validate adaptive state inside the summary (domain-specific rule)
-        if await async_get_adaptive_state_from_text(self._hass, summary) is None:
+        if await async_get_adaptive_state_from_summary(self._hass, summary) is None:
             _LOGGER.debug("Event summary '%s' is not a valid adaptive state", summary)
             # Get available states for the error message
             available_states = await async_get_available_adaptive_states(self._hass)
@@ -301,7 +301,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         # Validate adaptive state if summary is being updated
         summary = event.get("summary")
         if summary is not None:
-            if await async_get_adaptive_state_from_text(self._hass, summary) is None:
+            if await async_get_adaptive_state_from_summary(self._hass, summary) is None:
                 _LOGGER.debug(
                     "Event summary '%s' is not a valid adaptive state", summary
                 )
