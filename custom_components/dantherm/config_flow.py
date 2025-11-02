@@ -5,10 +5,12 @@ import ipaddress
 import logging
 import os
 import re
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -53,7 +55,7 @@ def host_valid(host: str) -> bool:
 
 
 @callback
-def dantherm_modbus_entries(hass: HomeAssistant):
+def dantherm_modbus_entries(hass: HomeAssistant) -> set[str]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
@@ -72,7 +74,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return False  # Allow duplicates in debug mode
         return host in dantherm_modbus_entries(self.hass)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -92,7 +96,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     device = DanthermDevice(
                         self.hass, name, host, port, 1, scan_interval, None
-                    )  # type: ignore[arg-type]
+                    )
                     await device.async_init_and_connect()
 
                     # Prefer serial as config entry unique id to avoid duplicates across IP changes
@@ -118,7 +122,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> "DanthermOptionsFlowHandler":
         """Create the options flow."""
         return DanthermOptionsFlowHandler(config_entry)
 
@@ -130,7 +136,9 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options for Dantherm."""
         errors: dict[str, str] = {}
 

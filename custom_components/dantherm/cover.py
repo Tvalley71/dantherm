@@ -4,8 +4,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DanthermDevice
@@ -15,7 +16,11 @@ from .entity import DanthermEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
     """Set up cover platform."""
     # Check if entry exists in hass.data
     if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
@@ -53,7 +58,7 @@ class DanthermCover(CoverEntity, DanthermEntity):
         """Init cover."""
         super().__init__(device, description)
         self._attr_has_entity_name = True
-        self._attr_supported_features = 0
+        self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(0)
         if description.supported_features:
             self._attr_supported_features = description.supported_features
         else:
@@ -74,42 +79,21 @@ class DanthermCover(CoverEntity, DanthermEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-
-        if self.entity_description.data_setinternal:
-            await getattr(
-                self._device, f"set_{self.entity_description.data_setinternal}"
-            )(CoverEntityFeature.OPEN)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description,
-                value=self.entity_description.state_open,
-            )
+        await self.coordinator.async_set_entity_state(
+            self, self.entity_description.state_open
+        )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-
-        if self.entity_description.data_setinternal:
-            await getattr(
-                self._device, f"set_{self.entity_description.data_setinternal}"
-            )(CoverEntityFeature.CLOSE)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description,
-                value=self.entity_description.state_close,
-            )
+        await self.coordinator.async_set_entity_state(
+            self, self.entity_description.state_close
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-
-        if self.entity_description.data_setinternal:
-            await getattr(
-                self._device, f"set_{self.entity_description.data_setinternal}"
-            )(CoverEntityFeature.STOP)
-        else:
-            await self._device.write_holding_registers(
-                description=self.entity_description,
-                value=self.entity_description.state_stop,
-            )
+        await self.coordinator.async_set_entity_state(
+            self, self.entity_description.state_stop
+        )
 
     def _coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -119,20 +103,18 @@ class DanthermCover(CoverEntity, DanthermEntity):
         if self._attr_changed:
             new_state = self._attr_new_state
             if new_state == self.entity_description.state_closed:
-                self._attr_state = STATE_CLOSED
                 self._attr_is_closed = True
                 self._attr_is_closing = False
                 self._attr_is_opening = False
             elif new_state == self.entity_description.state_closing:
-                self._attr_state = STATE_CLOSING
                 self._attr_is_closing = True
                 self._attr_is_opening = False
+                self._attr_is_closed = False
             elif new_state == self.entity_description.state_opening:
-                self._attr_state = STATE_OPENING
                 self._attr_is_opening = True
                 self._attr_is_closing = False
+                self._attr_is_closed = False
             elif new_state == self.entity_description.state_opened:
-                self._attr_state = STATE_OPEN
                 self._attr_is_closed = False
                 self._attr_is_closing = False
                 self._attr_is_opening = False

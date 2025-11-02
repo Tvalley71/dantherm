@@ -13,7 +13,9 @@ from homeassistant.util.dt import now as ha_now, parse_datetime
 from .const import DOMAIN
 
 
-async def async_get_device_id_from_entity(hass: HomeAssistant, entity_id):
+async def async_get_device_id_from_entity(
+    hass: HomeAssistant, entity_id: str
+) -> str | None:
     """Find device_id from entity_id."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -132,8 +134,8 @@ def get_device_entities_enabled_by_suffix(
 
 
 def __set_entity_disabled_by(
-    hass: HomeAssistant, entity_id, disabled_by: RegistryEntryDisabler
-):
+    hass: HomeAssistant, entity_id: str, disabled_by: RegistryEntryDisabler | None
+) -> None:
     """Set entity disabled by state."""
 
     entity_registry = er.async_get(hass)
@@ -175,8 +177,11 @@ def parse_dt_or_date(value: Any) -> datetime | date:
         if "T" not in value:
             return date.fromisoformat(value)
         # Datetime ISO → datetime (aware if includes TZ)
-        return parse_datetime(value)
-    return value
+        parsed = parse_datetime(value)
+        if parsed is None:
+            raise ValueError(f"Invalid datetime string: {value}")
+        return parsed
+    raise TypeError(f"Cannot parse {type(value)} to datetime or date: {value}")
 
 
 def _format_rrule_until(dt: datetime) -> str:

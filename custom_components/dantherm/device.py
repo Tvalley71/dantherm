@@ -1,13 +1,18 @@
 """Device implementation."""
 
+from __future__ import annotations
+
 from collections import deque
 import logging
+from types import MappingProxyType
+from typing import Any
+
+from propcache.api import cached_property
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import cached_property
 
 from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEVICE_TYPES
@@ -95,14 +100,39 @@ _LOGGER = logging.getLogger(__name__)
 class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     """Dantherm Device."""
 
+    # Type annotations for instance variables
+    _config_entry: ConfigEntry | None
+    _scan_interval: int
+    _device_name: str
+    _device_type: int
+    _device_fw_version: int
+    _device_serial_number: int
+    _device_ab_switch_position: ABSwitchPosition | None
+    _current_unit_mode: int | None
+    _active_unit_mode: int | None
+    _fan_level: int | None
+    _alarm: int | None
+    _sensor_filtering: bool
+    _bypass_damper: int | None
+    _bypass_maximum_temperature: float | None
+    _filter_lifetime: int | None
+    _filter_remain: int | None
+    _filter_remain_level: int | None
+    _last_current_operation: str | None
+    _coordinator: DanthermCoordinator | None
+    installed_components: int
+    _options: MappingProxyType[str, Any] | dict[str, Any]
+    _filtered_sensors: dict[str, dict[str, Any]]
+    # Note: coordinator property is overridden below
+
     def __init__(
         self,
         hass: HomeAssistant,
-        name,
-        host,
-        port,
-        unit_id,
-        scan_interval,
+        name: str,
+        host: str,
+        port: int,
+        unit_id: int,
+        scan_interval: int,
         config_entry: ConfigEntry | None,
     ) -> None:
         """Init device."""
@@ -112,18 +142,20 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             port,
             unit_id,
         )
-        DanthermAdaptiveManager.__init__(
-            self,
-            hass,
-            config_entry,  # May be None during config flow probing
-        )
-        self._config_entry = config_entry
+        # Only initialize adaptive manager if we have a config_entry
+        if config_entry is not None:
+            DanthermAdaptiveManager.__init__(
+                self,
+                hass,
+                config_entry,
+            )
+        self._config_entry: ConfigEntry | None = config_entry
         self._scan_interval = scan_interval
         self._device_name = name
         self._device_type = 0
         self._device_fw_version = 0
         self._device_serial_number = 0
-        self._device_ab_switch_position = None
+        self._device_ab_switch_position: ABSwitchPosition | None = None
         self._current_unit_mode = None
         self._active_unit_mode = None
         self._fan_level = None
@@ -135,7 +167,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._filter_remain = None
         self._filter_remain_level = None
         self._last_current_operation = None
-        self.coordinator = None
+        self._coordinator: DanthermCoordinator | None = None
         self.installed_components = 0
 
         # During config flow we may not have a ConfigEntry yet
@@ -183,6 +215,16 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             },
         }
 
+    @property
+    def coordinator(self) -> DanthermCoordinator | None:
+        """Override coordinator property from DanthermAdaptiveManager."""
+        return self._coordinator
+
+    @coordinator.setter
+    def coordinator(self, value: DanthermCoordinator | None) -> None:
+        """Set coordinator property."""
+        self._coordinator = value
+
     async def async_init_and_connect(self) -> DanthermCoordinator:
         """Set up modbus for Dantherm Device."""
 
@@ -195,18 +237,20 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Installed components (610) = %s", hex(self.installed_components))
 
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
-        self._device_type = system_id >> 24
-        _LOGGER.debug("Device type = %s", self.get_device_type)
-        _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
+        if system_id is not None:
+            self._device_type = system_id >> 24
+            _LOGGER.debug("Device type = %s", self.get_device_type)
+            _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
 
-        self._device_fw_version = await self._read_holding_uint32(
-            MODBUS_REGISTER_FIRMWARE_VERSION
-        )
-        _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
-        self._device_serial_number = await self._read_holding_uint64(
-            MODBUS_REGISTER_SERIAL_NUMBER
-        )
-        _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
+        fw_version = await self._read_holding_uint32(MODBUS_REGISTER_FIRMWARE_VERSION)
+        if fw_version is not None:
+            self._device_fw_version = fw_version
+            _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
+
+        serial_number = await self._read_holding_uint64(MODBUS_REGISTER_SERIAL_NUMBER)
+        if serial_number is not None:
+            self._device_serial_number = serial_number
+            _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
         self._device_ab_switch_position = await self.get_device_ab_switch_position()
 
@@ -215,7 +259,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         else:
             _LOGGER.debug("No HAC controller installed")
 
-        # Create coordinator
+        # Create coordinator - we know we have a config_entry at this point
+        if self._config_entry is None:
+            raise ValueError("Cannot create coordinator without config_entry")
+
         self.coordinator = DanthermCoordinator(
             self._hass,
             self._device_name,
@@ -225,18 +272,21 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         )
 
         # Load stored entities
-        await self.coordinator.async_load_entities()
+        if self.coordinator is not None:
+            await self.coordinator.async_load_entities()
 
         return self.coordinator
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start the integration."""
 
-        # Set up adaptive triggers
-        await self.async_set_up_adaptive_manager()
+        # Set up adaptive triggers - only if we have a config_entry
+        if self._config_entry is not None:
+            await self.async_set_up_adaptive_manager()
 
         # Do the first refresh of entities
-        await self.coordinator.async_config_entry_first_refresh()
+        if self.coordinator is not None:
+            await self.coordinator.async_config_entry_first_refresh()
 
         # Set up tracking for adaptive triggers if any
         if (
@@ -256,7 +306,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self.__dict__.pop("_get_eco_mode_trigger_available", None)
         self.__dict__.pop("_get_home_mode_trigger_available", None)
 
-    async def async_init_after_start(self):
+    async def async_init_after_start(self) -> None:
         """Initialize the device after a restart."""
         await self.async_initialize_adaptive_triggers()
 
@@ -283,25 +333,28 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 or description.data_exclude_if_below
                 or description.data_exclude_if is not None
             ):
-                entity_data = await self.coordinator.async_get_entity_data(description)
-                if entity_data:
-                    state = entity_data["state"]
+                if self.coordinator is not None:
+                    entity_data = await self.coordinator.async_get_entity_data(
+                        description
+                    )
+                    if entity_data:
+                        state = entity_data["state"]
 
-                    if (
-                        (
-                            description.data_exclude_if is not None
-                            and description.data_exclude_if == state
-                        )
-                        or (
-                            description.data_exclude_if_above is not None
-                            and state >= description.data_exclude_if_above
-                        )
-                        or (
-                            description.data_exclude_if_below is not None
-                            and state <= description.data_exclude_if_below
-                        )
-                    ):
-                        return True
+                        if (
+                            (
+                                description.data_exclude_if is not None
+                                and description.data_exclude_if == state
+                            )
+                            or (
+                                description.data_exclude_if_above is not None
+                                and state >= description.data_exclude_if_above
+                            )
+                            or (
+                                description.data_exclude_if_below is not None
+                                and state <= description.data_exclude_if_below
+                            )
+                        ):
+                            return True
             return False
 
         async def exclude_from_firmware_version(
@@ -326,8 +379,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    def get_device_entities(self) -> list:
+    def get_device_entities(self) -> list[er.RegistryEntry]:
         """Return all entities that belong to this integration's device."""
+        if self._config_entry is None:
+            return []
+
         entity_registry = er.async_get(self._hass)
         device_registry = dr.async_get(self._hass)
 
@@ -355,6 +411,9 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
     def get_device_id(self) -> str | None:
         """Return the device ID for this integration's device."""
+        if self._config_entry is None:
+            return None
+
         device_registry = dr.async_get(self._hass)
 
         # Find device_id that matches this config entry
@@ -374,8 +433,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return device_id
 
-    def get_entity_state_from_coordinator(self, entity: str, default=None):
+    def get_entity_state_from_coordinator(
+        self, entity: str, default: Any = None
+    ) -> Any:
         """Get entity state from coordinator."""
+        if self.coordinator is None:
+            return default
         states = self.coordinator.data.get(entity, None)
         if states:
             return states["state"]
@@ -422,19 +485,19 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return self._device_serial_number
 
     @property
-    def get_current_unit_mode(self):
+    def get_current_unit_mode(self) -> Any:
         """Get current unit mode."""
 
         return self._current_unit_mode
 
     @property
-    def get_active_unit_mode(self):
+    def get_active_unit_mode(self) -> Any:
         """Get active unit mode."""
 
         return self._active_unit_mode
 
     @property
-    def get_operation_selection(self):
+    def get_operation_selection(self) -> Any:
         """Get operation selection."""
 
         if self._active_unit_mode is None or self._current_unit_mode is None:
@@ -470,8 +533,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
         return STATE_MANUAL
 
-    @property
-    def get_current_operation(self):
+    def get_current_operation(self) -> str | None:
         """Get current operation."""
 
         if self._active_unit_mode is None:
@@ -528,9 +590,8 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return icons.get(result, "mdi:fan-plus")
 
     @property
-    def get_fan_level(self):
+    def get_fan_level(self) -> int | None:
         """Get fan level."""
-
         return self._fan_level
 
     @property
@@ -550,7 +611,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             CurrentUnitMode.Automatic: "mdi:fan-auto",
             CurrentUnitMode.WeekProgram: "mdi:fan-clock",
         }
-        if mode in mode_icons:
+        if mode is not None and mode in mode_icons:
             return mode_icons[mode]
 
         op = self.get_operation_selection
@@ -564,32 +625,41 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return "mdi:fan"
 
-    async def async_get_current_unit_mode(self):
+    async def async_get_current_unit_mode(self) -> int | None:
         """Get current unit mmode."""
-
         self._current_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_CURRENT_MODE
         )
-        _LOGGER.debug("Current unit mode = %s", self._to_hex(self._current_unit_mode))
+        _LOGGER.debug(
+            "Current unit mode = %s",
+            self._to_hex(self._current_unit_mode)
+            if self._current_unit_mode is not None
+            else None,
+        )
         return self._current_unit_mode
 
-    async def async_get_active_unit_mode(self):
+    async def async_get_active_unit_mode(self) -> int | None:
         """Get active unit mode."""
 
         self._active_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_ACTIVE_MODE
         )
-        _LOGGER.debug("Active unit mode = %s", self._to_hex(self._active_unit_mode))
+        _LOGGER.debug(
+            "Active unit mode = %s",
+            self._to_hex(self._active_unit_mode)
+            if self._active_unit_mode is not None
+            else None,
+        )
         return self._active_unit_mode
 
-    async def async_get_fan_level(self):
+    async def async_get_fan_level(self) -> int | None:
         """Get fan level."""
 
         self._fan_level = await self._read_holding_uint32(MODBUS_REGISTER_FAN_LEVEL)
         _LOGGER.debug("Fan level = %s", self._fan_level)
         return self._fan_level
 
-    async def async_get_alarm(self):
+    async def async_get_alarm(self) -> int | None:
         """Get alarm."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
@@ -597,14 +667,18 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             # Create persistent notification if alarm is not zero
             if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
-                    self._hass, self._device_name, "sensor", ATTR_ALARM, result
+                    self._hass,
+                    self._device_name,
+                    "sensor",
+                    ATTR_ALARM,
+                    result,
                 )
 
         self._alarm = result
         _LOGGER.debug("Alarm = %s", self._alarm)
         return self._alarm
 
-    async def async_get_sensor_filtering(self):
+    async def async_get_sensor_filtering(self) -> bool:
         """Get sensor filtering."""
 
         self._sensor_filtering = self.get_entity_state_from_coordinator(
@@ -612,20 +686,20 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         )
         return self._sensor_filtering
 
-    async def async_get_week_program_selection(self):
+    async def async_get_week_program_selection(self) -> int | None:
         """Get week program selection."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION)
         _LOGGER.debug("Week program selection = %s", result)
         return result
 
-    async def async_get_calendar(self):
+    async def async_get_calendar(self) -> None:
         """Get calendar."""
 
-        await self.async_update_adaptive_calendar()
+        await self.async_update_adaptive_calendar()  # type: ignore[no-untyped-call]
 
     @property
-    def get_alarm(self):
+    def get_alarm(self) -> int | None:
         """Get alarm."""
 
         return self._alarm
@@ -740,7 +814,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return False
 
     @property
-    def get_filter_remain_attrs(self):
+    def get_filter_remain_attrs(self) -> dict[str, int] | None:
         """Get filter remain attributes."""
 
         result = self._filter_remain_level
@@ -749,14 +823,14 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return None
 
     @property
-    def get_adaptive_state_attrs(self):
+    def get_adaptive_state_attrs(self) -> dict[str, Any] | None:
         """Get adaptive state attributes."""
         if self.events:
-            return {"events": self.events.to_list()}
+            return {"events": self.events.to_list()}  # type: ignore[no-untyped-call]
         return None
 
     @property
-    def get_features_attrs(self):
+    def get_features_attrs(self) -> dict[str, bool]:
         """Get feattures attributes."""
 
         return {
@@ -799,44 +873,54 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     @cached_property
     def _get_boost_mode_trigger_available(self) -> bool:
         """Get boost mode trigger available."""
-        return self._options.get(CONF_BOOST_MODE_TRIGGER, False)
+        return bool(self._options.get(CONF_BOOST_MODE_TRIGGER, False))
 
     @cached_property
     def _get_eco_mode_trigger_available(self) -> bool:
         """Get eco mode trigger available."""
-        return self._options.get(CONF_ECO_MODE_TRIGGER, False)
+        return bool(self._options.get(CONF_ECO_MODE_TRIGGER, False))
 
     @cached_property
     def _get_home_mode_trigger_available(self) -> bool:
         """Get home mode trigger available."""
-        return self._options.get(CONF_HOME_MODE_TRIGGER, False)
+        return bool(self._options.get(CONF_HOME_MODE_TRIGGER, False))
 
     @cached_property
     def _get_filter_lifetime_entity_installed(self) -> bool:
         """Check if the filter lifetime entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_LIFETIME)
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_LIFETIME
+        )
 
     @cached_property
     def _get_filter_remain_entity_installed(self) -> bool:
         """Check if the filter remain entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN)
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_REMAIN
+        )
 
     @cached_property
     def _get_filter_remain_level_entity_installed(self) -> bool:
         """Check if the filter remain level entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN_LEVEL)
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_REMAIN_LEVEL
+        )
 
     @cached_property
     def _get_humidity_entity_installed(self) -> bool:
         """Check if the humidity entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_HUMIDITY)
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_HUMIDITY
+        )
 
     @cached_property
     def _get_air_quality_entity_installed(self) -> bool:
         """Check if the air quality entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_AIR_QUALITY)
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_AIR_QUALITY
+        )
 
-    async def set_alarm_reset(self, value=None):
+    async def set_alarm_reset(self, value: int | None = None) -> None:
         """Set alarm reset."""
 
         # Dismiss persistent alarm notification if it exists
@@ -846,7 +930,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             value = self._alarm
         await self._write_holding_uint32(MODBUS_REGISTER_ALARM_RESET, value)
 
-    async def async_get_bypass_damper(self):
+    async def async_get_bypass_damper(self) -> int | None:
         """Get bypass damper."""
 
         self._bypass_damper = await self._read_holding_uint32(
@@ -855,7 +939,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
         return self._bypass_damper
 
-    async def async_get_filter_lifetime(self):
+    async def async_get_filter_lifetime(self) -> int | None:
         """Get filter lifetime."""
 
         self._filter_lifetime = await self._read_holding_uint32(
@@ -865,7 +949,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return self._filter_lifetime
 
-    async def async_get_filter_remain(self):
+    async def async_get_filter_remain(self) -> int | None:
         """Get filter remain."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
@@ -873,7 +957,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             # Create persistent notification if filter remain is zero
             if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
-                    self._hass, self._device_name, "sensor", ATTR_FILTER_REMAIN, result
+                    self._hass,
+                    self._device_name,
+                    "sensor",
+                    ATTR_FILTER_REMAIN,
+                    result,
                 )
 
         self._filter_remain = result
@@ -884,7 +972,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return self._filter_remain
 
-    async def async_get_filter_remain_level(self):
+    async def async_get_filter_remain_level(self) -> int | None:
         """Get filter remain level."""
 
         if self._get_filter_lifetime_entity_installed:
@@ -912,7 +1000,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
         return self._filter_remain_level
 
-    async def async_get_night_mode_start_time(self):
+    async def async_get_night_mode_start_time(self) -> str | None:
         """Get night mode start time."""
 
         hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_START_HOUR)
@@ -928,7 +1016,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Night mode start = %s", result)
         return result
 
-    async def async_get_night_mode_end_time(self):
+    async def async_get_night_mode_end_time(self) -> str | None:
         """Get night mode end time."""
 
         hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_HOUR)
@@ -942,14 +1030,14 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Night mode end = %s", result)
         return result
 
-    async def async_get_bypass_minimum_temperature(self):
+    async def async_get_bypass_minimum_temperature(self) -> float | None:
         """Get bypass minimum temperature."""
 
         result = await self._read_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, 1)
         _LOGGER.debug("Bypass minimum temperature = %.1f", result)
         return result
 
-    async def async_get_bypass_maximum_temperature(self):
+    async def async_get_bypass_maximum_temperature(self) -> float | None:
         """Get bypass maximum temperature."""
 
         self._bypass_maximum_temperature = await self._read_holding_float32(
@@ -960,14 +1048,14 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         )
         return self._bypass_maximum_temperature
 
-    async def async_get_manual_bypass_duration(self):
+    async def async_get_manual_bypass_duration(self) -> int | None:
         """Get manual bypass duration."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION)
         _LOGGER.debug("Manual bypass duration = %s", result)
         return result
 
-    async def async_get_bypass_minimum_temperature_summer(self):
+    async def async_get_bypass_minimum_temperature_summer(self) -> float | None:
         """Get bypass minimum temperature for summer."""
 
         result = await self._read_holding_float32(
@@ -976,7 +1064,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Bypass minimum temperature (summer) = %.1f", result)
         return result
 
-    async def async_get_bypass_maximum_temperature_summer(self):
+    async def async_get_bypass_maximum_temperature_summer(self) -> float | None:
         """Get bypass maximum temperature for summer."""
 
         result = await self._read_holding_float32(
@@ -985,7 +1073,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Bypass maximum temperature (summer) = %.1f", result)
         return result
 
-    async def set_filter_reset(self, value=None):
+    async def set_filter_reset(self, value: int | None = None) -> None:
         """Set filter reset."""
 
         # Dismiss persistent alarm notification if it exists
@@ -997,26 +1085,26 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             value = 1
         await self._write_holding_uint32(MODBUS_REGISTER_FILTER_RESET, value)
 
-    async def set_active_unit_mode(self, value):
+    async def set_active_unit_mode(self, value: int) -> None:
         """Set active unit mode."""
 
         await self._write_holding_uint32(MODBUS_REGISTER_ACTIVE_MODE, value)
 
-    async def set_operation_selection(self, oper):
+    async def set_operation_selection(self, operation: str | None) -> None:
         """Set operation selection."""
 
         current_operation = self.get_operation_selection
 
-        if oper is None:
+        if operation is None:
             return
 
-        if current_operation == oper:
-            _LOGGER.debug("Operation selection is already set to %s", oper)
+        if current_operation == operation:
+            _LOGGER.debug("Operation selection is already set to %s", operation)
             return
 
         async def apply_active_unit_mode(
-            current_mode, active_mode, selection: int | None = None
-        ):
+            current_mode: int | None, active_mode: int, selection: int | None = None
+        ) -> None:
             """Update the operation mode and fan level."""
             # End previous operation modes if needed
             special_modes = {
@@ -1105,34 +1193,36 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             ),
         }
 
-        um_tuple = unit_mode_map.get(oper)
+        um_tuple = unit_mode_map.get(operation)
         if um_tuple is None:
             return
 
         await apply_active_unit_mode(*um_tuple)
 
-    async def set_fan_level(self, value):
+    async def set_fan_level(self, value: int) -> None:
         """Set fan level."""
 
         # Write the level to the fan level register
         await self._write_holding_uint32(MODBUS_REGISTER_FAN_LEVEL, value)
 
-    async def set_week_program_selection(self, value):
+    async def set_week_program_selection(self, value: int) -> None:
         """Set week program selection."""
 
         # Write the program selection to the week program selection register
         await self._write_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION, value)
 
-    async def set_filter_lifetime(self, value):
+    async def set_filter_lifetime(self, value: int) -> None:
         """Set filter lifetime."""
 
         # Write the lifetime to filter lifetime register
         await self._write_holding_uint32(MODBUS_REGISTER_FILTER_LIFETIME, value)
 
-    async def set_bypass_damper(self, feature: CoverEntityFeature = None):
+    async def set_bypass_damper(
+        self, feature: CoverEntityFeature | None = None
+    ) -> None:
         """Set bypass damper."""
 
-        async def toggle_bypass_damper():
+        async def toggle_bypass_damper() -> None:
             """Toggle the bypass damper state."""
             if (
                 self.get_active_unit_mode & ActiveUnitMode.ManualBypass
@@ -1157,13 +1247,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             ):
                 await toggle_bypass_damper()
 
-    async def set_humidity_setpoint(self, value):
+    async def set_humidity_setpoint(self, value: int) -> None:
         """Set humidity setpoint."""
 
         # Write the setpoint to the humidity setpoint register
         await self._write_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT, value)
 
-    async def set_humidity_setpoint_summer(self, value):
+    async def set_humidity_setpoint_summer(self, value: int) -> None:
         """Set humidity setpoint for summer."""
 
         # Write the setpoint to the humidity setpoint summer register
@@ -1171,7 +1261,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER, value
         )
 
-    async def set_night_mode_start_time(self, value):
+    async def set_night_mode_start_time(self, value: str) -> None:
         """Set night mode start time."""
 
         # Split the time string into hours and minutes
@@ -1189,7 +1279,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             MODBUS_REGISTER_NIGHT_MODE_START_MINUTE, minutes
         )
 
-    async def set_night_mode_end_time(self, value):
+    async def set_night_mode_end_time(self, value: str) -> None:
         """Set night mode end time."""
 
         # Split the time string into hours and minutes
@@ -1205,37 +1295,37 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         # Write the minutes to the minute register
         await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_MINUTE, minutes)
 
-    async def set_bypass_minimum_temperature(self, value):
+    async def set_bypass_minimum_temperature(self, value: float) -> None:
         """Set bypass minimum temperature."""
 
         # Write the temperature to the minimum temperature register
         await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, value)
 
-    async def set_bypass_maximum_temperature(self, value):
+    async def set_bypass_maximum_temperature(self, value: float) -> None:
         """Set bypass maximum temperature."""
 
         # Write the temperature to the maximum temperature register
         await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP, value)
 
-    async def set_manual_bypass_duration(self, value):
+    async def set_manual_bypass_duration(self, value: int) -> None:
         """Set manual bypass duration."""
 
         # Write the duration to the manual bypass duration register
         await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
 
-    async def set_bypass_minimum_temperature_summer(self, value):
+    async def set_bypass_minimum_temperature_summer(self, value: float) -> None:
         """Set bypass minimum temperature for summer."""
 
         # Write the temperature to the minimum temperature summer register
         await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, value)
 
-    async def set_bypass_maximum_temperature_summer(self, value):
+    async def set_bypass_maximum_temperature_summer(self, value: float) -> None:
         """Set bypass maximum temperature for summer."""
 
         # Write the temperature to the maximum temperature summer register
         await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, value)
 
-    async def set_disable_bypass(self, value: bool):
+    async def set_disable_bypass(self, value: bool) -> None:
         """Set automatic bypass."""
 
         # If value is True, set the maximum temperature to 0.0 to disable automatic bypass
@@ -1245,26 +1335,25 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             # If value is False, set the maximum temperature to a non-zero value (e.g., 24.0)
             await self.set_bypass_maximum_temperature(24.0)
 
-    async def clear_adaptive_event_stack(self):
+    async def clear_adaptive_event_stack(self) -> None:
         """Clear the adaptive event stack."""
         if hasattr(self, "events") and self.events:
             removed_count = self.events.clear_all_events()
             _LOGGER.info(
                 "Manually cleared %d events from adaptive event stack", removed_count
             )
-            return removed_count
-        return 0
 
-    async def async_get_humidity(self):
+    async def async_get_humidity(self) -> int | None:
         """Get humidity."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
         _LOGGER.debug("Humidity = %s", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
-        return self._filter_sensor("humidity", result)
+        filtered_result = self._filter_sensor("humidity", float(result))
+        return int(filtered_result)
 
-    async def async_get_humidity_level(self):
+    async def async_get_humidity_level(self) -> str | None:
         """Get humidity level with hysteresis."""
 
         if self._get_humidity_entity_installed:
@@ -1307,16 +1396,16 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 level = 3
 
         _LOGGER.debug("Humidity Level = %s", level)
-        return level
+        return str(level)
 
-    async def async_get_humidity_setpoint(self):
+    async def async_get_humidity_setpoint(self) -> int | None:
         """Get humidity setpoint."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT)
         _LOGGER.debug("Humidity setpoint = %s", result)
         return result
 
-    async def async_get_humidity_setpoint_summer(self):
+    async def async_get_humidity_setpoint_summer(self) -> int | None:
         """Get humidity setpoint (summer)."""
 
         result = await self._read_holding_uint32(
@@ -1325,16 +1414,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Humidity setpoint (summer) = %s", result)
         return result
 
-    async def async_get_air_quality(self):
+    async def async_get_air_quality(self) -> int | None:
         """Get air quality."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
         _LOGGER.debug("Air quality = %s", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
-        return self._filter_sensor("air_quality", result)
+        filtered_result = self._filter_sensor("air_quality", float(result))
+        return int(filtered_result)
 
-    async def async_get_air_quality_level(self):
+    async def async_get_air_quality_level(self) -> str | None:
         """Get air quality level with hysteresis."""
 
         if self._get_air_quality_entity_installed:
@@ -1377,60 +1467,60 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 level = 3
 
         _LOGGER.debug("Air Quality Level = %s", level)
-        return level
+        return str(level)
 
-    async def async_get_exhaust_temperature(self):
+    async def async_get_exhaust_temperature(self) -> float | None:
         """Get exhaust temperature."""
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_EXHAUST_TEMP, precision=1
         )
         _LOGGER.debug("Exhaust temperature = %.1f", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
         return self._filter_sensor("exhaust", result)
 
-    async def async_get_extract_temperature(self):
+    async def async_get_extract_temperature(self) -> float | None:
         """Get extract temperature."""
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_EXTRACT_TEMP, precision=1
         )
         _LOGGER.debug("Extract temperature = %.1f", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
         return self._filter_sensor("extract", result)
 
-    async def async_get_supply_temperature(self):
+    async def async_get_supply_temperature(self) -> float | None:
         """Get supply temperature."""
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_SUPPLY_TEMP, precision=1
         )
         _LOGGER.debug("Supply temperature = %.1f", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
         return self._filter_sensor("supply", result)
 
-    async def async_get_outdoor_temperature(self):
+    async def async_get_outdoor_temperature(self) -> float | None:
         """Get outdoor temperature."""
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_OUTDOOR_TEMP, precision=1
         )
         _LOGGER.debug("Outdoor temperature = %.1f", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
         return self._filter_sensor("outdoor", result)
 
-    async def async_get_room_temperature(self):
+    async def async_get_room_temperature(self) -> float | None:
         """Get room temperature."""
 
         result = await self._read_holding_float32(
             MODBUS_REGISTER_ROOM_TEMP, precision=1
         )
         _LOGGER.debug("Room temperature = %.1f", result)
-        if not self._sensor_filtering:
+        if not self._sensor_filtering or result is None:
             return result
         return self._filter_sensor("room", result)
 
@@ -1438,17 +1528,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Get adaptive state."""
 
         # Get the top event
-        top = self.events.top()
+        top = self.events.top()  # type: ignore[no-untyped-call]
         result = STATE_NONE
         if top:
-            result = self.events.top()["event"]
+            result = self.events.top()["event"]  # type: ignore[no-untyped-call]
         _LOGGER.debug("Adaptive state = %s", result)
         return result
 
     async def async_get_features(self) -> str:
         """Get features."""
 
-        return self.installed_components
+        return str(self.installed_components)
 
     def _filter_sensor(self, sensor: str, new_value: float) -> float:
         """Filter a given sensor, ensuring smooth initialization and spike reduction."""
@@ -1458,13 +1548,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             raise ValueError(f"Invalid sensor: {sensor}")
 
         sensor_data = self._filtered_sensors[sensor]
-        history: deque = sensor_data["history"]
+        history: deque[float] = sensor_data["history"]
 
         # Collect initial samples and compute average until initialized
         if not sensor_data["initialized"]:
-            if len(history) < history.maxlen:
+            if history.maxlen is not None and len(history) < history.maxlen:
                 history.append(new_value)
-                return round(sum(history) / len(history), 1)
+                return float(round(sum(history) / len(history), 1))
             sensor_data["initialized"] = True
 
         # Compute rolling average
@@ -1472,7 +1562,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         # If new value is a spike, return rolling average (reject spike)
         if abs(new_value - rolling_average) > sensor_data["max_change"]:
-            return round(rolling_average, 1)
+            return float(round(rolling_average, 1))
 
         # Otherwise, accept new value and update history
         history.append(new_value)

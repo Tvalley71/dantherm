@@ -325,7 +325,7 @@ class BypassDamperState(int):
     Closed = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermEntityDescription(EntityDescription):
     """Dantherm Base Entity Description."""
 
@@ -349,24 +349,24 @@ class DanthermEntityDescription(EntityDescription):
     data_getavailable: str | None = None
     data_getunknown: str | None = None
 
-    component_class: ComponentClass | None = None
+    component_class: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermButtonEntityDescription(
     DanthermEntityDescription, ButtonEntityDescription
 ):
     """Dantherm Button Entity Description."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermCalendarEntityDescription(
     DanthermEntityDescription, CalendarEntityDescription
 ):
     """Dantherm Calendar Entity Description."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
@@ -382,7 +382,7 @@ class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescr
     state_closed: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermNumberEntityDescription(
     DanthermEntityDescription, NumberEntityDescription
 ):
@@ -391,7 +391,7 @@ class DanthermNumberEntityDescription(
     data_precision: float | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSelectEntityDescription(
     DanthermEntityDescription, SelectEntityDescription
 ):
@@ -400,7 +400,7 @@ class DanthermSelectEntityDescription(
     data_bitwise_and: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSensorEntityDescription(
     DanthermEntityDescription, SensorEntityDescription
 ):
@@ -409,7 +409,7 @@ class DanthermSensorEntityDescription(
     data_precision: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSwitchEntityDescription(
     DanthermEntityDescription, SwitchEntityDescription
 ):
@@ -424,7 +424,7 @@ class DanthermSwitchEntityDescription(
     icon_off: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermTimeTextEntityDescription(
     DanthermEntityDescription, TextEntityDescription
 ):

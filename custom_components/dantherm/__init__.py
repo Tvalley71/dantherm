@@ -1,7 +1,7 @@
 """Dantherm Integration."""
 
 import logging
-from typing import Final
+from typing import Any, Final
 
 from packaging import version
 import pymodbus
@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -105,7 +105,7 @@ def get_expected_serial_for_entry(
     return None
 
 
-async def async_setup(hass: HomeAssistant, config):
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Dantherm component."""
 
     hass.data[DOMAIN] = {}
@@ -189,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     # Match serial number read from the test device with the expected
                     # serial number from config entry
                     serial = test_device.get_device_serial_number
-                    if serial == expected_serial:
+                    if str(serial) == expected_serial:
                         _LOGGER.info("Found device at new IP %s", ip)
                         # Update config entry with new IP
                         new_data = dict(entry.data)
@@ -205,7 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                 name,
                                 "rediscovery",
                                 domain=DOMAIN.capitalize(),
-                                serial_number=serial,
+                                serial_number=str(serial),
                                 ip_address=ip,
                             )
                         break
@@ -248,7 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.exception("Failed to start device")
         return False
 
-    async def _init_after_start(event=None) -> None:
+    async def _init_after_start(event: Event | None = None) -> None:
         """Initialize the device after Home Assistant has started."""
         hass.async_create_task(device.async_init_after_start())
 
@@ -355,7 +355,9 @@ async def _async_migrate_unique_ids(
     changed: bool = False
 
     @callback
-    def _async_migrate_entity_entry(entry_to_migrate: er.RegistryEntry):
+    def _async_migrate_entity_entry(
+        entry_to_migrate: er.RegistryEntry,
+    ) -> dict[str, str] | None:
         uid = entry_to_migrate.unique_id
         # Already in the new format
         if uid.startswith(f"{serial}_"):

@@ -1,7 +1,10 @@
 """Adaptive management implementation."""
 
+from __future__ import annotations
+
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import Any
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -43,10 +46,17 @@ MIN_DATETIME = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
 MAX_DATETIME = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
 
 
+def _to_datetime(dt: date | datetime) -> datetime:
+    """Convert date or datetime to datetime."""
+    if isinstance(dt, datetime):
+        return dt
+    return datetime.combine(dt, datetime.min.time(), tzinfo=DEFAULT_TIME_ZONE)
+
+
 class DanthermAdaptiveManager:
     """Manage adaptive states and triggers for Dantherm devices."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry | None) -> None:
         """Init adaptive manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -61,7 +71,7 @@ class DanthermAdaptiveManager:
         # Stack to manage adaptive events
         self.events = AdaptiveEventStack()
 
-        self._adaptive_triggers = {
+        self._adaptive_triggers: dict[str, dict[str, Any]] = {
             CONF_BOOST_MODE_TRIGGER: {
                 "name": "boost",
                 "associated_entities": [
@@ -103,11 +113,48 @@ class DanthermAdaptiveManager:
             },
         }
 
-    async def async_set_up_adaptive_manager(self):
+    # Mixin methods - implemented in DanthermDevice class
+    def get_device_id(self) -> str | None:
+        """Get device ID - implemented in DanthermDevice."""
+        raise NotImplementedError("This method is implemented in DanthermDevice")
+
+    def get_entity_state_from_coordinator(
+        self, entity: str, default: Any = None
+    ) -> Any:
+        """Get entity state from coordinator - implemented in DanthermDevice."""
+        raise NotImplementedError("This method is implemented in DanthermDevice")
+
+    def get_current_operation(self) -> str | None:
+        """Get current operation - implemented in DanthermDevice."""
+        raise NotImplementedError("This method is implemented in DanthermDevice")
+
+    def get_device_entities(self) -> list[Any]:
+        """Get device entities - implemented in DanthermDevice."""
+        raise NotImplementedError("This method is implemented in DanthermDevice")
+
+    async def set_operation_selection(self, operation: str) -> None:
+        """Set operation selection - implemented in DanthermDevice."""
+        raise NotImplementedError("This method is implemented in DanthermDevice")
+
+    @property
+    def coordinator(self) -> Any:
+        """Coordinator property - implemented in DanthermDevice."""
+        raise NotImplementedError("This property is implemented in DanthermDevice")
+
+    @coordinator.setter
+    def coordinator(self, value: Any) -> None:
+        """Set coordinator - for testing purposes."""
+        # This setter is mainly for test mocking
+
+    async def async_set_up_adaptive_manager(self) -> None:
         """Enable/disable associated entities based on configured adaptive triggers."""
         device_id = self.get_device_id()
         if not device_id:
             _LOGGER.error("Cannot set up adaptive manager: no device ID found")
+            return
+
+        if self._config_entry is None:
+            _LOGGER.error("Cannot set up adaptive manager: no config entry")
             return
 
         # Enable/disable associated entities based on triggers
@@ -159,13 +206,13 @@ class DanthermAdaptiveManager:
 
         if has_rrule:
             # For recurring events, calculate the duration and apply it to this occurrence
-            duration = event.end - event.start
-            calculated_end = event.start + duration
+            duration = _to_datetime(event.end) - _to_datetime(event.start)
+            calculated_end = _to_datetime(event.start) + duration
 
             # Sanity check: if calculated end is too far in the future (more than 1 year),
             # limit it to a reasonable duration (max 24 hours)
-            max_end = event.start + timedelta(hours=24)
-            if calculated_end > event.start + timedelta(days=365):
+            max_end = _to_datetime(event.start) + timedelta(hours=24)
+            if calculated_end > _to_datetime(event.start) + timedelta(days=365):
                 _LOGGER.warning(
                     "Recurring event %s has suspicious duration, limiting to 24 hours. "
                     "Original end: %s, calculated: %s",
@@ -185,17 +232,20 @@ class DanthermAdaptiveManager:
             return calculated_end
 
         # For single events, use the end time directly, but with sanity check
-        if event.end > event.start + timedelta(days=365):
+        if _to_datetime(event.end) > _to_datetime(event.start) + timedelta(days=365):
             _LOGGER.warning(
                 "Single event %s has suspicious end time: %s, limiting to 24 hours",
                 event.summary,
                 event.end,
             )
-            return event.start + timedelta(hours=24)
-        return event.end
+            return _to_datetime(event.start) + timedelta(hours=24)
+        return _to_datetime(event.end)
 
-    async def async_set_up_tracking_for_adaptive_triggers(self):
+    async def async_set_up_tracking_for_adaptive_triggers(self) -> None:
         """Set up tracking for adaptive triggers."""
+        if self._config_entry is None:
+            _LOGGER.error("Cannot set up tracking: no config entry")
+            return
 
         for trigger in ADAPTIVE_TRIGGERS:
             trigger_entity = self._config_entry.options.get(trigger)
@@ -243,7 +293,7 @@ class DanthermAdaptiveManager:
                 mode_data["timeout"],
             )
 
-    async def _adaptive_trigger_changed(self, trigger: str, event):
+    async def _adaptive_trigger_changed(self, trigger: str, event: Any) -> None:
         """Mode trigger state change callback."""
 
         # Skip, if old state is None or Unknown
@@ -267,7 +317,7 @@ class DanthermAdaptiveManager:
             mode_data["undetected"] = ha_now()
             _LOGGER.debug("%s undetected!", trigger.capitalize())
 
-    async def async_update_adaptive_triggers(self):
+    async def async_update_adaptive_triggers(self) -> None:
         """Update adaptive triggers."""
 
         triggers_to_process = []
@@ -304,7 +354,7 @@ class DanthermAdaptiveManager:
         for _, trigger_name in triggers_to_process:
             await self._update_adaptive_trigger_state(trigger_name)
 
-    async def _update_adaptive_trigger_state(self, trigger_name: str):
+    async def _update_adaptive_trigger_state(self, trigger_name: str) -> None:
         """Update adaptive trigger state."""
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
@@ -324,7 +374,7 @@ class DanthermAdaptiveManager:
                 if ha_now() < self._operation_change_timeout:
                     return
 
-                current_operation = self.get_current_operation
+                current_operation = self.get_current_operation()
 
                 # Get the trigger target operation from it's selection entity
                 target_operation = self.get_entity_state_from_coordinator(
@@ -369,7 +419,7 @@ class DanthermAdaptiveManager:
             else:
                 mode_data["timeout"] = None
 
-    async def async_update_adaptive_calendar(self):
+    async def async_update_adaptive_calendar(self) -> None:
         """Update adaptive calendar events."""
 
         if self._calendar is None:
@@ -411,7 +461,7 @@ class DanthermAdaptiveManager:
         # Calculate proper end_time for the event
         event_end = self._calculate_event_end_time(event)
 
-        current_operation = self.get_current_operation
+        current_operation = self.get_current_operation()
 
         switch_map = {
             STATE_BOOST,
@@ -469,7 +519,7 @@ class DanthermAdaptiveManager:
         # Set the target operation if it is different from the current operation
         await self._set_adaptive_target_operation(target_operation, current_operation)
 
-    async def async_process_expired_events(self):
+    async def async_process_expired_events(self) -> None:
         """Process expired events."""
 
         while (event := self.expired_event()) is not None:
@@ -480,31 +530,31 @@ class DanthermAdaptiveManager:
             # Remove event from stack
             target_operation = self.remove_event(event)
             if target_operation:
-                current_operation = self.get_current_operation
+                current_operation = self.get_current_operation()
 
                 # Set the target operation if it is different from the current operation
                 await self._set_adaptive_target_operation(
                     target_operation, current_operation
                 )
 
-    async def _boost_mode_trigger_changed(self, event):
+    async def _boost_mode_trigger_changed(self, event: Any) -> None:
         """Boost trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_BOOST_MODE):
             await self._adaptive_trigger_changed(CONF_BOOST_MODE_TRIGGER, event)
 
-    async def _eco_mode_trigger_changed(self, event):
+    async def _eco_mode_trigger_changed(self, event: Any) -> None:
         """Eco trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_ECO_MODE):
             await self._adaptive_trigger_changed(CONF_ECO_MODE_TRIGGER, event)
 
-    async def _home_mode_trigger_changed(self, event):
+    async def _home_mode_trigger_changed(self, event: Any) -> None:
         """Home trigger state change callback."""
         if self.get_entity_state_from_coordinator(ATTR_HOME_MODE):
             await self._adaptive_trigger_changed(CONF_HOME_MODE_TRIGGER, event)
 
     async def _set_adaptive_target_operation(
         self, target_operation: str | None, current_operation: str | None
-    ):
+    ) -> None:
         """Set the adaptive target operation."""
         current_time = ha_now()
 
@@ -521,13 +571,18 @@ class DanthermAdaptiveManager:
 
         await self.set_operation_selection(target_operation)
 
-    def _get_adaptive_trigger_timeout(self, mode_name: str):
+    def _get_adaptive_trigger_timeout(self, mode_name: str) -> datetime:
         """Get adaptive trigger timeout."""
         minutes = self.get_entity_state_from_coordinator(f"{mode_name}_mode_timeout", 5)
         return ha_now() + timedelta(minutes=minutes)
 
     def push_event(
-        self, event_name, current_operation, new_operation, event_id=None, end_time=None
+        self,
+        event_name: str,
+        current_operation: str | None,
+        new_operation: str | None,
+        event_id: str | None = None,
+        end_time: datetime | None = None,
     ) -> bool:
         """Push event to event stack."""
         result = self.events.push(
@@ -540,37 +595,44 @@ class DanthermAdaptiveManager:
         _LOGGER.debug("Push events: %s", self.events)
         return result
 
-    def update_event(self, event_name, event_id=None, end_time=None):
+    def update_event(
+        self,
+        event_name: str,
+        event_id: str | None = None,
+        end_time: datetime | None = None,
+    ) -> bool:
         """Update event in event stack."""
         result = self.events.update(event_name, event_id=event_id, end_time=end_time)
         _LOGGER.debug("Update events: %s", self.events)
         return result
 
-    def pop_event(self, event_name, event_id=None):
+    def pop_event(self, event_name: str, event_id: str | None = None) -> str | None:
         """Pop event from event stack."""
-        operation = self.events.pop(event_name, event_id=event_id)
+        operation = self.events.pop_event(event_name, event_id=event_id)
         _LOGGER.debug("Pop events: %s = %s", event_name, operation)
         return operation
 
-    def lookup_event(self, event_name, event_id=None):
+    def lookup_event(
+        self, event_name: str, event_id: str | None = None
+    ) -> dict[str, Any] | None:
         """Lookup event in event stack."""
         event = self.events.lookup(event_name, event_id=event_id)
         _LOGGER.debug("Lookup events: %s = %s", event_name, event)
         return event
 
-    def expired_event(self):
+    def expired_event(self) -> dict[str, Any] | None:
         """Expire event in event stack."""
         result = self.events.expired()
         _LOGGER.debug("Expired event: %s", result)
         return result
 
-    def event_exists(self, event_name) -> bool:
+    def event_exists(self, event_name: str) -> bool:
         """Check if event exists."""
         return self.events.exists(event_name)
 
-    def remove_event(self, event):
+    def remove_event(self, event: dict[str, Any]) -> str | None:
         """Remove event from event stack."""
-        operation = self.events.remove(event)
+        operation = self.events.remove_item(event)
         _LOGGER.debug("Remove events: %s = %s", event, operation)
         return operation
 
@@ -591,7 +653,7 @@ class DanthermAdaptiveManager:
         events_to_remove = []
 
         # Get all current calendar event IDs if calendar is available
-        valid_event_ids = set()
+        valid_event_ids: set[str] = set()
         if self._calendar:
             try:
                 # Get all stored events from calendar to check against
@@ -630,7 +692,7 @@ class DanthermAdaptiveManager:
 
         # Remove the stale events
         for event in events_to_remove:
-            self.events.remove(event)
+            self.events.remove_item(event)
             removed_count += 1
 
         if removed_count > 0:
@@ -641,15 +703,15 @@ class DanthermAdaptiveManager:
         return removed_count
 
 
-class AdaptiveEventStack(deque):
+class AdaptiveEventStack(deque[dict[str, Any]]):
     """Event Stack with priority and previous operation tracking."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the adaptive event stack."""
         super().__init__()
         self._calendar = None  # Will be set by the calendar entity
 
-    def set_calendar(self, calendar):
+    def set_calendar(self, calendar: Any) -> None:
         """Set the calendar reference for event validation."""
         self._calendar = calendar
 
@@ -665,10 +727,10 @@ class AdaptiveEventStack(deque):
 
     def push(
         self,
-        event,
-        current_operation,
-        new_operation,
-        event_id=None,
+        event: str,
+        current_operation: str | None,
+        new_operation: str | None,
+        event_id: str | None = None,
         end_time: datetime | None = None,
     ) -> bool:
         """Push an event onto the stack based on priority.
@@ -678,7 +740,7 @@ class AdaptiveEventStack(deque):
         for item in self:
             if item["event"] == event and item.get("event_id", None) == event_id:
                 # Update operation and reposition in stack
-                self.remove(item)
+                super().remove(item)
                 break
 
         insert_at = len(self)
@@ -701,7 +763,9 @@ class AdaptiveEventStack(deque):
         self.insert(insert_at, self._make_item(event, previous_op, end_time, event_id))
         return False
 
-    def update(self, event, event_id=None, end_time=None):
+    def update(
+        self, event: str, event_id: str | None = None, end_time: datetime | None = None
+    ) -> bool:
         """Update the end_time for an existing event to given end_time."""
         for item in self:
             if item["event"] == event and item.get("event_id") == event_id:
@@ -709,7 +773,7 @@ class AdaptiveEventStack(deque):
                 return True
         return False
 
-    def pop(self, event, event_id=None):
+    def pop_event(self, event: str, event_id: str | None = None) -> str | None:
         """Remove an event (and optional ID) from the stack and adjust operation if needed.
 
         Returns the operation of the removed event if it was the top event, otherwise None.
@@ -717,31 +781,35 @@ class AdaptiveEventStack(deque):
         for idx, item in enumerate(self):
             if item["event"] == event and item.get("event_id", None) == event_id:
                 removed_item = item
-                self.remove(removed_item)
+                super().remove(removed_item)
 
                 if idx == 0:
-                    return removed_item["previous"]
+                    return (
+                        str(removed_item["previous"])
+                        if removed_item["previous"] is not None
+                        else None
+                    )
 
                 self[idx - 1]["previous"] = removed_item["previous"]
                 return None
 
         return None
 
-    def exists(self, event, event_id=None):
+    def exists(self, event: str, event_id: str | None = None) -> bool:
         """Check if an event with optional ID exists in the stack."""
         return any(
             item["event"] == event and item.get("event_id", None) == event_id
             for item in self
         )
 
-    def lookup(self, event, event_id=None):
+    def lookup(self, event: str, event_id: str | None = None) -> dict[str, Any] | None:
         """Look up the operation for a given event and optional ID in the stack."""
         for item in reversed(self):
             if item["event"] == event and item.get("event_id", None) == event_id:
-                return item
+                return dict(item)  # Cast to ensure proper type
         return None
 
-    def expired(self) -> dict | None:
+    def expired(self) -> dict[str, Any] | None:
         """Return the oldest expired event in the stack, or None if none are expired."""
         now = ha_now()
         expired_items = [
@@ -754,12 +822,14 @@ class AdaptiveEventStack(deque):
         if not expired_items:
             return None
         # Return the one with the earliest end_time
-        return min(
-            expired_items,
-            key=lambda item: item["end_time"],
+        return dict(
+            min(
+                expired_items,
+                key=lambda item: item["end_time"],
+            )
         )
 
-    def remove(self, value):
+    def remove_item(self, value: dict[str, Any]) -> str | None:
         """Remove an item from the stack.
 
         Returns the operation of the removed event if it was the top event, otherwise None.
@@ -771,11 +841,11 @@ class AdaptiveEventStack(deque):
             super().remove(value)
         return result
 
-    def top(self):
+    def top(self) -> dict[str, Any] | None:
         """Return the top event of the stack."""
         return self[0] if self else None
 
-    def is_top(self, event, event_id=None):
+    def is_top(self, event: str, event_id: str | None = None) -> bool:
         """Check if the given event (and optional ID) is the top event in the stack."""
         return (
             bool(self)
@@ -783,7 +853,7 @@ class AdaptiveEventStack(deque):
             and self[0].get("event_id", None) == event_id
         )
 
-    def to_list(self):
+    def to_list(self) -> list[dict[str, Any]]:
         """Convert the event stack to a list of items."""
         result = []
         for item in self:
@@ -794,7 +864,7 @@ class AdaptiveEventStack(deque):
         return result
 
     @classmethod
-    def from_list(cls, items):
+    def from_list(cls, items: list[dict[str, Any]]) -> AdaptiveEventStack:
         """Create an event stack from a list of items."""
         stack = cls()
         for item in items:
@@ -805,15 +875,19 @@ class AdaptiveEventStack(deque):
             stack.append(d)
         return stack
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the event stack."""
         return f"{self.to_list()}"
 
     def _make_item(
-        self, event, operation, end_time: datetime | None = None, event_id=None
-    ):
+        self,
+        event: str,
+        operation: str | None,
+        end_time: datetime | None = None,
+        event_id: str | None = None,
+    ) -> dict[str, Any]:
         """Create an item for the stack."""
-        item = {"event": event}
+        item: dict[str, Any] = {"event": event}
         if event_id is not None:
             item["event_id"] = event_id
         item["previous"] = operation

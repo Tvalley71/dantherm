@@ -89,6 +89,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
     """Dantherm calendar entity."""
 
     _storage_version = 1
+    entity_description: DanthermCalendarEntityDescription
 
     def __init__(
         self,
@@ -111,7 +112,9 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         )
         self.entity_description = description
         self._events: list[DanthermCalendarEvent] = []
-        self._store = Store(hass, self._storage_version, storage_key)
+        self._store: Store[list[dict[str, Any]]] = Store(
+            hass, self._storage_version, storage_key
+        )
 
     async def async_added_to_hass(self) -> None:
         """Load events from storage when entity is added."""
@@ -122,11 +125,17 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         if hasattr(self._device, "events") and self._device.events:
             self._device.events.set_calendar(self)
 
-    def _find_override(self, uid: str, occ: datetime) -> DanthermCalendarEvent | None:
+    def _find_override(
+        self, uid: str | None, occ: datetime
+    ) -> DanthermCalendarEvent | None:
         """Return override matching UID + RECURRENCE-ID for a specific occurrence."""
+        if uid is None:
+            return None
         occ_norm = occ.replace(microsecond=0)
         for e in self._events:
             if e.uid != uid or e.rrule or not getattr(e, "recurrence_id", None):
+                continue
+            if e.recurrence_id is None:
                 continue
             rid = parse_datetime(e.recurrence_id)
             if rid and rid.replace(microsecond=0) == occ_norm:
@@ -203,7 +212,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         hass: HomeAssistant,
         start_date: datetime,
         end_date: datetime,
-    ) -> list[DanthermCalendarEvent]:
+    ) -> list[CalendarEvent]:
         """Get events in window and prune storage first.
 
         Clamp start to today so past events are not returned.
@@ -225,6 +234,9 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         seen: set[tuple[str, str]] = set()
         unique: list[DanthermCalendarEvent] = []
         for evt in events:
+            # Skip events without uid
+            if evt.uid is None:
+                continue
             # Prefer using recurrence_id for instances; fall back to start/end
             rid = (
                 evt.recurrence_id
@@ -238,7 +250,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
 
         # Always return in chronological order for deterministic consumers/tests
         unique.sort(key=lambda e: as_dt(e.start))
-        return unique
+        return unique  # type: ignore[return-value]
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Create a new calendar event.
@@ -279,13 +291,13 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
         await self._save_events()
         self.async_write_ha_state()
 
-    async def async_update_event(
+    async def async_update_event(  # noqa: C901
         self,
         uid: str,
         event: dict[str, Any],
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Update an event or a single occurrence in a recurring series.
 
@@ -417,7 +429,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
                     summary=event.get("summary", master.summary),
                     description=event.get("description", master.description),
                     start=new_start,
-                    end=new_end,
+                    end=new_end,  # type: ignore[arg-type]
                     rrule=new_rrule,
                 )
                 self._events.append(new_master)
@@ -435,13 +447,28 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
 
             new_start = event.get("dtstart", rid_dt)
             if isinstance(new_start, str):
-                new_start = parse_datetime(new_start)
+                parsed_start = parse_datetime(new_start)
+                if parsed_start is None:
+                    _LOGGER.warning("Invalid dtstart when overriding %s", uid)
+                    return
+                new_start = parsed_start
+
+            if new_start is None:
+                new_start = rid_dt
+
             new_end = event.get(
                 "dtend",
-                as_dt(new_start) + duration if new_start else as_dt(rid_dt) + duration,
+                as_dt(new_start) + duration,
             )
             if isinstance(new_end, str):
-                new_end = parse_datetime(new_end)
+                parsed_end = parse_datetime(new_end)
+                if parsed_end is None:
+                    _LOGGER.warning("Invalid dtend when overriding %s", uid)
+                    return
+                new_end = parsed_end
+
+            if new_end is None:
+                new_end = as_dt(new_start) + duration
 
             if as_dt(new_end) <= as_dt(new_start):
                 _LOGGER.warning("End must be after start when overriding %s", uid)
@@ -542,9 +569,13 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
                         for e in self._events
                         if not (
                             e.uid == uid
-                            and getattr(e, "recurrence_id", None)
-                            and parse_datetime(e.recurrence_id).replace(microsecond=0)
-                            >= rid_dt
+                            and (
+                                recurrence_id_attr := getattr(e, "recurrence_id", None)
+                            )
+                            and recurrence_id_attr is not None
+                            and (parsed_dt := parse_datetime(recurrence_id_attr))
+                            is not None
+                            and parsed_dt.replace(microsecond=0) >= rid_dt
                         )
                     ]
                     _LOGGER.info(
@@ -566,8 +597,10 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
                 for e in self._events
                 if not (
                     e.uid == uid
-                    and getattr(e, "recurrence_id", None)
-                    and parse_datetime(e.recurrence_id).replace(microsecond=0) == rid_dt
+                    and (recurrence_id_attr := getattr(e, "recurrence_id", None))
+                    and recurrence_id_attr is not None
+                    and (parsed_dt := parse_datetime(recurrence_id_attr)) is not None
+                    and parsed_dt.replace(microsecond=0) == rid_dt
                 )
             ]
             removed = before - len(self._events)
@@ -599,8 +632,10 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
                 for e in self._events
                 if not (
                     e.uid == uid
-                    and getattr(e, "recurrence_id", None)
-                    and parse_datetime(e.recurrence_id).replace(microsecond=0) >= cutoff
+                    and (recurrence_id_attr := getattr(e, "recurrence_id", None))
+                    and recurrence_id_attr is not None
+                    and (parsed_dt := parse_datetime(recurrence_id_attr)) is not None
+                    and parsed_dt.replace(microsecond=0) >= cutoff
                 )
             ]
             _LOGGER.info(
@@ -825,7 +860,7 @@ class DanthermCalendar(DanthermEntity, CalendarEntity):
 
         Corrupt entries are skipped with a warning instead of breaking setup.
         """
-        raw = await self._store.async_load() or []
+        raw: list[dict[str, Any]] = await self._store.async_load() or []
         events: list[DanthermCalendarEvent] = []
         for idx, evt in enumerate(raw):
             try:
@@ -876,11 +911,11 @@ class DanthermCalendarEvent(CalendarEvent):
     def __init__(
         self,
         *,
-        uid: str,
+        uid: str | None,
         summary: str,
         start: datetime | date,
         end: datetime | date,
-        description: str = "",
+        description: str | None = None,
         rrule: str | None = None,
         recurrence_id: str | None = None,
         exdate: list[datetime | date | str] | None = None,

@@ -1,9 +1,13 @@
 """Button implementation."""
 
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DanthermDevice
@@ -13,7 +17,11 @@ from .entity import DanthermEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
     """Set up button platform."""
     # Check if entry exists in hass.data
     if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
@@ -55,11 +63,9 @@ class DanthermButton(ButtonEntity, DanthermEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-
         await self.coordinator.async_set_entity_state(self, None)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-
         return self.coordinator.last_update_success

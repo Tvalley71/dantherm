@@ -2,14 +2,15 @@
 
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.event import Template
 from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
 from .device_map import (
@@ -107,15 +108,15 @@ DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
 )
 
 
-async def async_setup_services(hass: HomeAssistant):  # noqa: C901
+async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up all services."""
 
-    def validate_time_format(time_str):
+    def validate_time_format(time_str: str) -> None:
         """Validate HH:MM format."""
         if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", time_str):
             raise InvalidTimeFormat
 
-    def render_template(value):
+    def render_template(value: Any) -> Any:
         """Render a value as a template if it's a string, otherwise return it directly."""
         return (
             Template(str(value), hass).async_render()
@@ -123,9 +124,9 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
             else value
         )
 
-    async def async_apply_device_function(call, apply_func):
+    async def async_apply_device_function(call: ServiceCall, apply_func: Any) -> None:
         """Extract config entries and apply function."""
-        config_entry_ids = await async_extract_config_entry_ids(hass, call)
+        config_entry_ids = await async_extract_config_entry_ids(call)
         for config_entry_id in config_entry_ids:
             config_entry = hass.config_entries.async_get_entry(config_entry_id)
             if config_entry and config_entry.domain == DOMAIN:
@@ -135,10 +136,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
                 else:
                     _LOGGER.error("Device %s not found", config_entry_id)
 
-    async def async_set_state(call):
+    async def async_set_state(call: ServiceCall) -> None:
         """Set state for Dantherm devices."""
 
-        async def apply_state(device, call):
+        async def apply_state(device: Any, call: ServiceCall) -> None:
             """Apply state."""
 
             # Apply away mode, summer mode, operation selectio, fan level selection,
@@ -197,10 +198,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_state)
 
-    async def async_set_configuration(call):
+    async def async_set_configuration(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config(device, call):
+        async def apply_config(device: Any, call: ServiceCall) -> None:
             """Apply configuration."""
 
             # Apply filter lifetime, night mode, night mode start and end time,
@@ -245,10 +246,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config)
 
-    async def async_set_configuration_2(call):
+    async def async_set_configuration_2(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config_2(device, call):
+        async def apply_config_2(device: Any, call: ServiceCall) -> None:
             """Apply configuration 2."""
 
             # Get firmware version, default to 0 if not available
@@ -299,10 +300,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config_2)
 
-    async def async_set_configuration_3(call):
+    async def async_set_configuration_3(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config_3(device, call):
+        async def apply_config_3(device: Any, call: ServiceCall) -> None:
             """Apply configuration 3."""
 
             # Get firmware version, default to 0 if not available
@@ -341,28 +342,28 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config_3)
 
-    async def async_filter_reset(call):
+    async def async_filter_reset(call: ServiceCall) -> None:
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
-        async def apply_reset(device, call):
+        async def apply_reset(device: Any, call: ServiceCall) -> None:
             # Schedule the reset via the coordinator's frontend queue
             device.coordinator.enqueue_frontend(device.set_filter_reset)
 
         await async_apply_device_function(call, apply_reset)
 
-    async def async_alarm_reset(call):
+    async def async_alarm_reset(call: ServiceCall) -> None:
         """Alarm reset, reset first pending alarm."""
 
-        async def apply_reset(device, call):
+        async def apply_reset(device: Any, call: ServiceCall) -> None:
             # Schedule the reset via the coordinator's frontend queue
             device.coordinator.enqueue_frontend(device.set_alarm_reset)
 
         await async_apply_device_function(call, apply_reset)
 
-    async def async_clear_adaptive_event_stack(call):
+    async def async_clear_adaptive_event_stack(call: ServiceCall) -> None:
         """Clear the adaptive event stack."""
 
-        async def apply_clear(device, call):
+        async def apply_clear(device: Any, call: ServiceCall) -> None:
             # Schedule clear via the coordinator's frontend queue
             device.coordinator.enqueue_frontend(device.clear_adaptive_event_stack)
 

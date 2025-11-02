@@ -1,18 +1,27 @@
 """Entity implementation."""
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
 from .device_map import DanthermEntityDescription
 
+if TYPE_CHECKING:
+    from .coordinator import DanthermCoordinator
 
-class DanthermEntity(CoordinatorEntity):
+
+class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
     """Dantherm Entity."""
 
-    def __init__(self, device, description: DanthermEntityDescription) -> None:
+    coordinator: DanthermCoordinator
+
+    def __init__(self, device: Any, description: DanthermEntityDescription) -> None:
         """Initialize the instance."""
         super().__init__(device.coordinator)
         self._device = device
@@ -33,11 +42,11 @@ class DanthermEntity(CoordinatorEntity):
         self._attr_available = False
         self._attr_new_state = None
         self._attr_icon = description.icon
-        self._attr_extra_state_attributes = None
+        self._attr_extra_state_attributes: dict[str, Any] | None = None
         self._added_to_coordinator = False
         self.entity_description: DanthermEntityDescription = description
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register entity in coordinator."""
         await super().async_added_to_hass()
         await self.coordinator.async_add_entity(self)
@@ -57,20 +66,18 @@ class DanthermEntity(CoordinatorEntity):
         return self.key
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Device Info."""
         unique_id = self._device.get_device_name
 
-        return {
-            "identifiers": {
-                (DOMAIN, unique_id),
-            },
-            "name": self._device.get_device_name,
-            "manufacturer": DEFAULT_NAME,
-            "model": self._device.get_device_type,
-            "sw_version": f"({self._device.get_device_fw_version})",
-            "serial_number": self._device.get_device_serial_number,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=self._device.get_device_name,
+            manufacturer=DEFAULT_NAME,
+            model=self._device.get_device_type,
+            sw_version=f"({self._device.get_device_fw_version})",
+            serial_number=self._device.get_device_serial_number,
+        )
 
     @property
     def available(self) -> bool:
@@ -118,7 +125,7 @@ class DanthermEntity(CoordinatorEntity):
                 self._attr_changed = True
                 # Making a deep-copy to avoid reference issues
                 self._attr_extra_state_attributes = (
-                    copy.deepcopy(new_attrs) if new_attrs is not None else None
+                    copy.deepcopy(new_attrs) if new_attrs is not None else {}
                 )
         elif self._attr_available:
             self._attr_changed = True
