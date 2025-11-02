@@ -225,7 +225,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Set coordinator property."""
         self._coordinator = value
 
-    async def async_init_and_connect(self) -> DanthermCoordinator:
+    async def async_init_and_connect(self) -> DanthermCoordinator | None:
         """Set up modbus for Dantherm Device."""
 
         _LOGGER.debug("Setup has started")
@@ -259,23 +259,22 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         else:
             _LOGGER.debug("No HAC controller installed")
 
-        # Create coordinator - we know we have a config_entry at this point
-        if self._config_entry is None:
-            raise ValueError("Cannot create coordinator without config_entry")
+        # Create coordinator only if we have a config_entry (not during config flow)
+        if self._config_entry is not None:
+            self.coordinator = DanthermCoordinator(
+                self._hass,
+                self._device_name,
+                self,
+                self._scan_interval,
+                self._config_entry,
+            )
 
-        self.coordinator = DanthermCoordinator(
-            self._hass,
-            self._device_name,
-            self,
-            self._scan_interval,
-            self._config_entry,
-        )
-
-        # Load stored entities
-        if self.coordinator is not None:
+            # Load stored entities
             await self.coordinator.async_load_entities()
+            return self.coordinator
 
-        return self.coordinator
+        # During config flow, we don't have a config_entry yet, so return None
+        return None
 
     async def async_start(self) -> None:
         """Start the integration."""

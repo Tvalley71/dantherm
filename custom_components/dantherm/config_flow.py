@@ -5,6 +5,7 @@ import ipaddress
 import logging
 import os
 import re
+import time
 from typing import Any
 
 import voluptuous as vol
@@ -15,12 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
-from .const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ADAPTIVE_TRIGGERS,
@@ -30,6 +26,7 @@ from .device_map import (
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
     CONF_LINK_TO_PRIMARY_CALENDAR,
+    CONF_POLLING_SPEED,
     POLLING_OPTIONS,
     POLLING_OPTIONS_LIST,
 )
@@ -45,7 +42,13 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
-# This is used to determine if the debug mode is enabled.
+# Debug mode configuration
+# Set environment variable DANTHERM_DEBUG=1 to enable debug mode.
+# In debug mode:
+# - Multiple instances of the same device (same IP) can be created
+# - Unique IDs are timestamped to avoid conflicts
+# - Config entry titles include debug timestamp for identification
+# This is useful for testing with only one physical device.
 IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +113,11 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await device.async_init_and_connect()
 
                     # Prefer serial as config entry unique id to avoid duplicates across IP changes
-                    unique = host if IS_DEBUG else str(device.get_device_serial_number)
+                    if IS_DEBUG:
+                        # In debug mode, allow multiple instances by making unique ID more unique
+                        unique = f"{host}_{int(time.time() * 1000) % 100000}"  # Add timestamp suffix
+                    else:
+                        unique = str(device.get_device_serial_number)
                     await self.async_set_unique_id(unique)
                     self._abort_if_unique_id_configured()
                 except Exception:
@@ -129,7 +136,13 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: port,
                         CONF_SCAN_INTERVAL: scan_interval,  # Store as numeric value
                     }
-                    return self.async_create_entry(title=name, data=data)
+
+                    # In debug mode, add timestamp to title to distinguish between instances
+                    title = name
+                    if IS_DEBUG:
+                        title = f"{name} (Debug {int(time.time() * 1000) % 100000})"
+
+                    return self.async_create_entry(title=title, data=data)
         # Show the form on initial load or when there are errors
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -234,7 +247,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Required(CONF_HOST, default=data.get(CONF_HOST, "")): str,
                 vol.Required(CONF_PORT, default=data.get(CONF_PORT, DEFAULT_PORT)): int,
-                vol.Optional("polling_speed", default=current_polling_speed): vol.In(
+                vol.Optional(CONF_POLLING_SPEED, default=current_polling_speed): vol.In(
                     available_options
                 ),
             }

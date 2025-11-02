@@ -45,6 +45,7 @@ SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installati
 SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
 
 # For config flow options
+CONF_POLLING_SPEED: Final = "polling_speed"
 POLLING_OPTIONS = {
     "fast": SCAN_INTERVAL_FAST,
     "normal": SCAN_INTERVAL_NORMAL,

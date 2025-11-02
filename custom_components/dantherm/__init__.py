@@ -23,11 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 
-from .const import (
-    DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ATTR_CALENDAR,
@@ -173,6 +169,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
     try:
         coordinator = await device.async_init_and_connect()
+        if coordinator is None:
+            raise ConfigEntryNotReady("Failed to create coordinator")
     except ValueError as ex:
         if entry_data[ATTR_SETUP_ATTEMPTS] <= DISCOVERY_TRIGGER_ATTEMPT:
             entry_data[ATTR_SETUP_ATTEMPTS] += 1
@@ -202,6 +200,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                 try:
                     coordinator = await test_device.async_init_and_connect()
+                    if coordinator is None:
+                        _LOGGER.warning(
+                            "Failed to create coordinator for device at %s", ip
+                        )
+                        continue
 
                     # Match serial number read from the test device with the expected
                     # serial number from config entry
