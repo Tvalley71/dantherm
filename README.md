@@ -84,7 +84,6 @@ A user has reported that the integration also works with the **Bosch Vent 5000 C
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
 | `boost_operation_selection` | Defines which mode to apply when Boost Mode is triggered [[3]](#entity-notes) |
-| ~~`default_operation_selection`~~ | ~~Fallback mode used when no other mode is active~~ |
 | `eco_operation_selection`   | Defines which mode to apply when Eco Mode is triggered [[3]](#entity-notes) |
 | `fan_level_selection`       | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
 | `home_operation_selection`  | Defines which mode to apply when Home Mode is triggered [[3]](#entity-notes) |
@@ -182,8 +181,8 @@ After installation, add the Dantherm integration to your Home Assistant configur
 3. Search for "Dantherm" and select it from the list of available integrations.
 4. Follow the on-screen instructions to complete the integration setup.
 
-![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
-![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
+<img width="400" height="460" alt="Skærmbillede 02-11-2025 kl  12 24 10 PM" src="https://github.com/user-attachments/assets/2812e63a-9976-4ea7-9bad-58fb14dc1b03" />
+<img width="400" height="364" alt="Skærmbillede 02-11-2025 kl  12 56 47 PM" src="https://github.com/user-attachments/assets/4f68ae3b-c719-4d3f-bdc7-304424b5ec62" />
 
 <!-- END:shared-section -->
 
@@ -558,7 +557,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 
 4. **Configure the Action:**
    - Use the options provided to control the Dantherm ventilation unit:
-     - **Targets:** Choose the area, device, or entity to apply the action.
+     - **Device:** Select the Dantherm device.
      - **Operation Selection:** Set the desired operating mode (e.g., Standby, Automatic, Manual, or Week Program).
      - **Fan Selection:** Choose the desired fan level (Level 0–4).
      - **Modes:** Toggle special modes like:
@@ -566,8 +565,8 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Summer Mode**: Turn summer mode on or off.
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
-       - 
-<img width="904" height="1140" alt="Skærmbillede 20-09-2025 kl  10 58 20 AM" src="https://github.com/user-attachments/assets/a4b9ceca-fcd9-4d45-a265-640ea7a0624d" />
+
+<img width="1200" height="1100" alt="Skærmbillede 02-11-2025 kl  12 04 07 PM" src="https://github.com/user-attachments/assets/bd26f5f3-cc82-44e5-8e6f-0bf67afe25e7" />
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
@@ -582,11 +581,12 @@ Starting from version _0.4.17_ of the integration, the actions have been reorgan
 | Set configuration 2  | 2.70 and newer             |
 | Set configuration 3  | 3.14 and newer             |
 
-<img width="904" height="731" alt="Skærmbillede 20-09-2025 kl  10 57 31 AM" src="https://github.com/user-attachments/assets/0745d303-76c2-4a40-a4a4-f965220553d7" />
+<img width="1200" height="691" alt="Skærmbillede 02-11-2025 kl  12 04 30 PM" src="https://github.com/user-attachments/assets/4d1648bd-0ee2-4e77-89d2-ad827e336df4" />
 
-<img width="904" height="754" alt="Skærmbillede 20-09-2025 kl  10 57 09 AM" src="https://github.com/user-attachments/assets/6cd4fb0e-9c3e-4377-827f-5002062eb2c5" />
+<img width="1200" height="691" alt="Skærmbillede 02-11-2025 kl  12 04 43 PM" src="https://github.com/user-attachments/assets/ca4e8d39-523f-49b6-bb3a-d3c8ab703dfe" />
 
-<img width="904" height="576" alt="Skærmbillede 20-09-2025 kl  10 56 38 AM" src="https://github.com/user-attachments/assets/a5fdbf02-7633-4e88-a3f4-8a14d10d5541" />
+<img width="1200" height="513" alt="Skærmbillede 02-11-2025 kl  12 05 09 PM" src="https://github.com/user-attachments/assets/852e221d-5e8e-4dcb-9b15-632eaee4e9b9" />
+
 
 ## Integration enhancements
 
@@ -672,39 +672,49 @@ To change settings such as disabling temperature unknown values, disabling notif
 
 1. Go to Home Assistant → Settings → Devices & Services → Integrations.
 2. Find the Dantherm integration in the list.
-![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
 3. Click the Configure button (gear icon) for your Dantherm integration instance.
-4. The options dialog will open, where you can adjust the available settings.
-<img width="588" height="691" alt="Skærmbillede 27-08-2025 kl  14 33 15 PM" src="https://github.com/user-attachments/assets/20ab43d5-1384-4fc7-b72a-5f68307910ac" />
 
-#### Changing IP address and Port
+<img width="707" height="306" alt="Skærmbillede 02-11-2025 kl  12 06 31 PM" src="https://github.com/user-attachments/assets/6e8ab25f-7ba3-45eb-9f21-7978d2a27acd" />
+
+4. The options dialog will open, where you can adjust the available settings.
+
+#### Network Settings
 
 If device discovery does not find your unit, you can manually update the IP address and Port in the integration options dialog.
 
-Ip-address should be set to the unit’s current IP address.
+1. The Device IP address should be set to the unit’s current IP address.
+2. The TCP port number  is typically the Modbus port used by your unit (default: 502).
 
-Port is typically the Modbus port used by your unit (default: 502).
+<img width="421" height="552" alt="Skærmbillede 02-11-2025 kl  12 06 59 PM" src="https://github.com/user-attachments/assets/3599bc8a-c701-4f4d-8a0f-5ebb4cdfedd2" />
 
-This allows you to keep the integration connected even if discovery is unavailable or the network configuration changes, without having to remove and re-add the integration.
-
-#### How to Set Up an Adaptive Trigger
+#### Adaptive Triggers & Scheduling
 
 1. Enter the trigger entity in the appropriate field.  
 Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).  
 Example values:  
 `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
-2. Click Submit to save your configuration.
-3. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
+2. If you have more than one Dantherm unit, you can choose whether each device should share the same calendar as your primary unit or use its own.  
+The primary calendar is automatically created for the first configured device. For any additional units, an option appears to link to the primary calendar.  
+This option defaults to enabled, which is recommended — it ensures consistent scheduling across all units and keeps configuration simple.  
+If you disable this option, the unit will instead create its own separate calendar, allowing fully independent scheduling.
+3. Click Submit to save your configuration.
+4. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
+
+<img width="596" height="522" alt="Skærmbillede 02-11-2025 kl  13 12 04 PM" src="https://github.com/user-attachments/assets/8ca96468-8d26-40be-b19e-e37ae7d2dd9f" />
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
-#### Disabling "Unknown" Temperatures in Bypass and Summer Mode
+#### Advandced Options
+
+1. Disabling "Unknown" Temperatures in Bypass and Summer Mode.  
 To prevent temperature sensors from being set to unknown during bypass or summer mode, enable the option "Disable setting temperatures to unknown in bypass/summer modes".
 When this option is enabled, temperature sensors will always report their current value, even when the device is in bypass or summer mode.
 
-#### Disabling Notifications
+2. Disabling Notifications.
 To disable all persistent notifications from the Dantherm integration, enable "Disable notifications".
 When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
+
+<img width="584" height="362" alt="Skærmbillede 02-11-2025 kl  12 07 14 PM" src="https://github.com/user-attachments/assets/4643bd4f-f2de-4f8a-b9dc-4102012dcb1e" />
 
 
 ## ⏳ Advanced Scheduling Features
@@ -728,33 +738,33 @@ The Calendar Function allows precise scheduling of different operation modes, pr
    - **Eco Mode** - Activates eco mode for the event duration
    - **Week Program** - Follows the selected week program
 
-4. **Language Support**: Keywords are automatically translated based on your Home Assistant language settings (if supported by the integration).
+4. **Language Support**: Keywords are automatically translated based on your Home Assistant language settings (if the language is supported by the integration).
 
 #### Example Calendar Usage
 
 ```
-Event: "Boost Mode"
+Summary: "Boost Mode"
 Start: Today 07:00
 End: Today 09:00
 Result: Boost mode active from 7 AM to 9 AM
 ```
 
 ```
-Event: "Level 3" 
+Summary: "Level 3" 
 Start: Today 19:00
 End: Today 22:00
 Result: Manual mode Level 3 from 7 PM to 10 PM
 ```
 
 ```
-Event: "Away Mode"
+Summary: "Away Mode"
 Start: Friday 08:00  
 End: Sunday 18:00
 Result: Away mode active for the weekend
 ```  
 
 - **Integration - Calendar Events**:  
-  Calendar events control the ventilation system automatically. When an event starts, the system switches to the specified operation mode. When the event ends, it reverts to the previous active mode or the default operation.
+  Calendar events control the ventilation system automatically. When an event starts, the system switches to the specified operation mode. When the event ends, it reverts to the previous active mode.
 
 - **Event Behavior**:
   - **Manual Levels (Level 1-3)**: Unit runs in Manual mode at the specified fan level
