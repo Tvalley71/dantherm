@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connexion Modbus",
+        "title": "Dantherm Configuration",
+        "description": "Configurez les paramètres de connexion de l'appareil.",
         "data": {
-          "host": "Adresse IP de la VMC",
+          "host": "Adresse IP de l'appareil",
           "name": "Préfixe à utiliser pour les entités",
-          "port": "Port TCP de de la VMC",
-          "scan_interval": "Fréquence d'interrogation des registres modbus (secondes)"
+          "port": "Numéro de port TCP"
         }
       }
     },
@@ -24,16 +24,37 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configuration de l'intégration Dantherm",
+        "title": "Configuration Dantherm",
+        "description": "Bienvenue dans l'intégration Dantherm! 🏡\n\nCette intégration a été créée par Tvalley71 pour la communauté Home Assistant. Vous êtes sur le point de configurer les options avancées de votre unité de ventilation Dantherm.\n\n⚠️ Clause de non-responsabilité: Je ne suis pas affilié à Dantherm, sauf en tant que propriétaire d'une unité Dantherm HCV400 P2. L'auteur ne garantit pas la fonctionnalité et n'est pas responsable des dommages.\n\n☕ Si cette intégration vous aide, j'apprécierais vraiment la reconnaissance ou une étoile ⭐ sur l'intégration GitHub:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nVous serez guidé à travers 3 étapes de configuration.",
         "data": {
-          "host": "Adresse IP de la VMC",
-          "port": "Port TCP de de la VMC",
+          "continue": "Continuer"
+        }
+      },
+      "network": {
+        "title": "Paramètres Réseau",
+        "description": "Configurez la connexion de l'appareil et la fréquence de mise à jour des données.",
+        "data": {
+          "host": "Adresse IP de l'appareil",
+          "port": "Numéro de port TCP",
+          "polling_speed": "Fréquence de mise à jour des données"
+        }
+      },
+      "triggers": {
+        "title": "Déclencheurs Adaptatifs & Planification",
+        "description": "Configurez les entités qui déclenchent différents modes de ventilation et la planification de calendrier.",
+        "data": {
           "boost_mode_trigger": "Entité de déclenchement du mode Boost",
           "eco_mode_trigger": "Entité de déclenchement du mode Eco",
           "home_mode_trigger": "Entité de déclenchement du mode Maison",
-          "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été.",
-          "disable_notifications": "Désactiver les notifications",
-          "link_calendar_to_primary": "Lier le calendrier à l'appareil principal."
+          "link_calendar_to_primary": "Lier le calendrier à l'appareil principal"
+        }
+      },
+      "advanced": {
+        "title": "Options Avancées",
+        "description": "Configurez le comportement avancé et les options d'affichage.",
+        "data": {
+          "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été",
+          "disable_notifications": "Désactiver les notifications"
         }
       }
     },
@@ -273,6 +294,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Rapide (10 secondes)",
+        "normal": "Normal (30 secondes)",
+        "slow": "Lent (60 secondes)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Arrêt",

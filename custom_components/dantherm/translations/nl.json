@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus Connectie",
+        "title": "Dantherm Configuration",
+        "description": "Configureer apparaatverbindingsinstellingen.",
         "data": {
-          "host": "Voer het ip-adres in van uw apparaat",
+          "host": "Apparaat IP-adres",
           "name": "Voer prefix in voor de apparaat entiteiten",
-          "port": "Voer de TCP poort in waarop verbinding moet worden gemaakt met het apparaat",
-          "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in"
+          "port": "TCP-poortnummer"
         }
       }
     },
@@ -24,16 +24,37 @@
   "options": {
     "step": {
       "init": {
-        "title": "Dantherm Integratie Configuratie",
+        "title": "Dantherm Configuratie",
+        "description": "Welkom bij de Dantherm Integratie! 🏡\n\nDeze integratie is gemaakt door Tvalley71 voor de Home Assistant gemeenschap. U staat op het punt geavanceerde opties te configureren voor uw Dantherm ventilatieunit.\n\n⚠️ Disclaimer: Ik ben niet gelieerd aan Dantherm, behalve als eigenaar van een Dantherm HCV400 P2 unit. De auteur garandeert geen functionaliteit en is niet verantwoordelijk voor schade.\n\n☕ Als deze integratie u helpt, zou ik de erkenning of een ster ⭐ op de GitHub integratie echt waarderen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nU wordt door 3 configuratiestappen geleid.",
         "data": {
-          "host": "Voer het ip-adres in van uw apparaat",
-          "port": "Voer de TCP-poort in waarop verbinding moet worden gemaakt met het apparaat",
+          "continue": "Doorgaan"
+        }
+      },
+      "network": {
+        "title": "Netwerkinstellingen",
+        "description": "Configureer apparaatverbinding en data-updatefrequentie.",
+        "data": {
+          "host": "Apparaat IP-adres",
+          "port": "TCP-poortnummer",
+          "polling_speed": "Data-updatefrequentie"
+        }
+      },
+      "triggers": {
+        "title": "Adaptieve Triggers & Planning",
+        "description": "Configureer entiteiten die verschillende ventilatiemodi activeren en kalenderplanning.",
+        "data": {
           "boost_mode_trigger": "Boost-modus Trigger Entiteit",
           "eco_mode_trigger": "Eco-modus Trigger Entiteit",
           "home_mode_trigger": "Thuis-modus Trigger Entiteit",
-          "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
-          "disable_notifications": "Melding uitschakelen.",
-          "link_calendar_to_primary": "Koppel kalender aan primair apparaat."
+          "link_calendar_to_primary": "Kalender koppelen aan primair apparaat"
+        }
+      },
+      "advanced": {
+        "title": "Geavanceerde Opties",
+        "description": "Configureer geavanceerd gedrag en weergaveopties.",
+        "data": {
+          "disable_temperature_unknown": "Temperatuursensoren niet onbekend maken in bypass/zomer modi",
+          "disable_notifications": "Meldingen uitschakelen"
         }
       }
     },
@@ -273,6 +294,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Snel (10 seconden)",
+        "normal": "Normaal (30 seconden)",
+        "slow": "Langzaam (60 seconden)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",

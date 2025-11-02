@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus forbindelse",
+        "title": "Dantherm Configuration",
+        "description": "Konfigurer enhedens forbindelsesindstillinger.",
         "data": {
-          "host": "Indtast ip-adresse til din enhed",
+          "host": "Enhedens IP-adresse",
           "name": "Indtast prefix til din enheds entiteter",
-          "port": "Indtast TCP port der skal forbindes til på din enhed",
-          "scan_interval": "Indtast opdateringsfrekvens for modbus registere i sekunder"
+          "port": "TCP-portnummer"
         }
       }
     },
@@ -24,16 +24,37 @@
   "options": {
     "step": {
       "init": {
-      "title": "Indstillinger for Dantherm-integration",
+        "title": "Dantherm Konfiguration",
+        "description": "Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n⚠️ Ansvarsfraskrivelse: Jeg er ikke tilknyttet Dantherm, undtagen som ejer af en Dantherm HCV400 P2 enhed. Forfatteren garanterer ikke funktionalitet og er ikke ansvarlig for skader.\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen eller en stjerne ⭐ på GitHub integrationen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nDu vil blive guidet gennem 3 konfigurationstrin.",
         "data": {
-          "host": "Indtast ip-adresse til din enhed",
-          "port": "Indtast TCP-port der skal forbindes til på din enhed",
+          "continue": "Fortsæt"
+        }
+      },
+      "network": {
+        "title": "Netværksindstillinger",
+        "description": "Konfigurer enhedsforbindelse og dataopdateringsfrekvens.",
+        "data": {
+          "host": "Enhedens IP-adresse",
+          "port": "TCP-portnummer",
+          "polling_speed": "Dataopdateringsfrekvens"
+        }
+      },
+      "triggers": {
+        "title": "Adaptive Udløsere & Planlægning",
+        "description": "Konfigurer entiteter der udløser forskellige ventilationstilstande og kalenderplanlægning.",
+        "data": {
           "boost_mode_trigger": "Boost-tilstand udløser entitet",
           "eco_mode_trigger": "Eco-tilstand udløser entitet",
           "home_mode_trigger": "Hjemmetilstand udløser entitet",
-          "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-          "disable_notifications": "Deaktiver notifikationer.",
-          "link_calendar_to_primary": "Link kalender til primært enhed."
+          "link_calendar_to_primary": "Link kalender til primær enhed"
+        }
+      },
+      "advanced": {
+        "title": "Avancerede Muligheder",
+        "description": "Konfigurer avanceret adfærd og visningsindstillinger.",
+        "data": {
+          "disable_temperature_unknown": "Deaktiver temperaturføler til ukendt i bypass/sommer tilstande",
+          "disable_notifications": "Deaktiver notifikationer"
         }
       }
     },
@@ -274,6 +295,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Hurtig (10 sekunder)",
+        "normal": "Normal (30 sekunder)",
+        "slow": "Langsom (60 sekunder)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",

@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus-Verbindung",
+        "title": "Dantherm Configuration",
+        "description": "Konfigurieren Sie Geräteverbindungseinstellungen.",
         "data": {
-          "host": "Geben Sie die IP-Adresse Ihres Geräts ein",
+          "host": "Geräte-IP-Adresse",
           "name": "Geben Sie ein Präfix für die Geräteeinheiten ein",
-          "port": "Geben Sie den TCP-Port ein, über den die Verbindung zum Gerät hergestellt wird",
-          "scan_interval": "Geben Sie die Abfragefrequenz der Modbus-Register in Sekunden ein"
+          "port": "TCP-Portnummer"
         }
       }
     },
@@ -24,16 +24,37 @@
   "options": {
     "step": {
       "init": {
-        "title": "Dantherm Integration Konfiguration",
+        "title": "Dantherm Configuration",
+        "description": "Willkommen zur Dantherm Integration! 🏡\n\nDiese Integration wurde von Tvalley71 für die Home Assistant Community erstellt. Sie sind dabei, erweiterte Optionen für Ihr Dantherm-Lüftungsgerät zu konfigurieren.\n\n⚠️ Haftungsausschluss: Ich bin nicht mit Dantherm verbunden, außer als Besitzer eines Dantherm HCV400 P2 Geräts. Der Autor garantiert keine Funktionalität und ist nicht für Schäden verantwortlich.\n\n☕ Wenn Ihnen diese Integration hilft, würde ich die Anerkennung oder einen Stern ⭐ auf der GitHub Integration wirklich schätzen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nSie werden durch 3 Konfigurationsschritte geführt.",
         "data": {
-          "host": "Geben Sie die IP-Adresse Ihres Geräts ein",
-          "port": "Geben Sie den TCP-Port ein, über den die Verbindung zum Gerät hergestellt wird",
+          "continue": "Weiter"
+        }
+      },
+      "network": {
+        "title": "Netzwerkeinstellungen",
+        "description": "Konfigurieren Sie Geräteverbindung und Datenaktualisierungsfrequenz.",
+        "data": {
+          "host": "Geräte-IP-Adresse",
+          "port": "TCP-Portnummer",
+          "polling_speed": "Datenaktualisierungsfrequenz"
+        }
+      },
+      "triggers": {
+        "title": "Adaptive Trigger & Terminplanung",
+        "description": "Konfigurieren Sie Entitäten, die verschiedene Lüftungsmodi auslösen und Kalenderterminplanung.",
+        "data": {
           "boost_mode_trigger": "Boost-Modus Auslöser Entität",
           "eco_mode_trigger": "Eco-Modus Auslöser Entität",
           "home_mode_trigger": "Heim-Modus Auslöser Entität",
-          "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus.",
-          "disable_notifications": "Benachrichtigung deaktivieren.",
-          "link_calendar_to_primary": "Kalender mit primärem Gerät verknüpfen."
+          "link_calendar_to_primary": "Kalender mit primärem Gerät verknüpfen"
+        }
+      },
+      "advanced": {
+        "title": "Erweiterte Optionen",
+        "description": "Konfigurieren Sie erweiterte Verhalten und Anzeigeoptionen.",
+        "data": {
+          "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus",
+          "disable_notifications": "Benachrichtigungen deaktivieren"
         }
       }
     },
@@ -273,6 +294,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Schnell (10 Sekunden)",
+        "normal": "Normal (30 Sekunden)",
+        "slow": "Langsam (60 Sekunden)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",

@@ -39,6 +39,20 @@ REQUIRED_PYMODBUS_VERSION = "3.7.4"
 REQUIRED_FIRMWARE_2 = 2.70
 REQUIRED_FIRMWARE_3 = 3.08
 
+# Polling interval constants
+SCAN_INTERVAL_FAST = 10  # Fast polling - legacy default, good for real-time monitoring
+SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installations
+SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
+
+# For config flow options
+POLLING_OPTIONS = {
+    "fast": SCAN_INTERVAL_FAST,
+    "normal": SCAN_INTERVAL_NORMAL,
+    "slow": SCAN_INTERVAL_SLOW,
+}
+
+POLLING_OPTIONS_LIST = ["fast", "normal", "slow"]
+
 SERVICE_SET_STATE = "set_state"
 SERVICE_SET_CONFIGURATION = "set_configuration"
 SERVICE_SET_CONFIGURATION_2 = "set_configuration_2"

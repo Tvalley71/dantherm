@@ -23,7 +23,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from .device import DanthermDevice
 from .device_map import (
     ATTR_CALENDAR,
@@ -148,7 +152,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+
+    # Migration: Handle old scan_interval values for existing users
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
+    _LOGGER.debug("Current scan_interval: %s", scan_interval)
+
+    # Ensure scan_interval is reasonable (between 5 and 300 seconds)
+    if scan_interval < 5:
+        _LOGGER.warning("Scan interval %s too low, setting to 5 seconds", scan_interval)
+        scan_interval = 5
+    elif scan_interval > 300:
+        _LOGGER.warning(
+            "Scan interval %s too high, setting to 300 seconds", scan_interval
+        )
+        scan_interval = 300
 
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 

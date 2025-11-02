@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus connection",
+        "title": "Dantherm Configuration",
+        "description": "Configure device connection settings.",
         "data": {
-          "host": "Enter ip-address of your device",
+          "host": "Device IP address",
           "name": "Enter prefix for the device entities",
-          "port": "Enter TCP port on which to connect to the device",
-          "scan_interval": "Enter polling frequency of the modbus registers in seconds"
+          "port": "TCP port number"
         }
       }
     },
@@ -24,16 +24,37 @@
   "options": {
     "step": {
       "init": {
-        "title": "Dantherm Integration Options",
+        "title": "Dantherm Configuration",
+        "description": "Welcome to the Dantherm Integration! 🏡\n\nThis integration was created by Tvalley71 for the Home Assistant community. You're about to configure advanced options for your Dantherm ventilation unit.\n\n⚠️ Disclaimer: I am not affiliated with Dantherm, except as an owner of a Dantherm HCV400 P2 unit. The author does not guarantee functionality and is not responsible for any damage.\n\n☕ If this integration helps you, I would really appreciate the acknowledgement or a star ⭐ on the GitHub integration:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nYou will be guided through 3 configuration steps.",
         "data": {
-          "host": "Enter ip-address of your device",
-          "port": "Enter TCP port on which to connect to the device",
+          "continue": "Continue"
+        }
+      },
+      "network": {
+        "title": "Network Settings",
+        "description": "Configure device connection and data update frequency.",
+        "data": {
+          "host": "Device IP address",
+          "port": "TCP port number",
+          "polling_speed": "Data update frequency"
+        }
+      },
+      "triggers": {
+        "title": "Adaptive Triggers & Scheduling",
+        "description": "Configure entities that trigger different ventilation modes and calendar scheduling.",
+        "data": {
           "boost_mode_trigger": "Boost mode trigger entity",
           "eco_mode_trigger": "Eco mode trigger entity",
           "home_mode_trigger": "Home mode trigger entity",
-          "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-          "disable_notifications": "Disable notifications.",
-          "link_calendar_to_primary": "Link calendar to primary device."
+          "link_calendar_to_primary": "Link calendar to primary device"
+        }
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "description": "Configure advanced behavior and display options.",
+        "data": {
+          "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes",
+          "disable_notifications": "Disable notifications"
         }
       }
     },
@@ -274,6 +295,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Fast (10 seconds)",
+        "normal": "Normal (30 seconds)",
+        "slow": "Slow (60 seconds)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",
