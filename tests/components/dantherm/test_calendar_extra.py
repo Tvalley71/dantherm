@@ -30,18 +30,20 @@ from homeassistant.util.dt import now as ha_now, start_of_local_day
 def _patch_adaptive_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch adaptive state resolution to a permissive stub for tests."""
 
-    async def _fake_async_get_adaptive_state_from_text(hass: HomeAssistant, text: str):
+    async def _fake_async_get_adaptive_state_from_summary(
+        hass: HomeAssistant, text: str
+    ):
         return str(text).lower()
 
     monkeypatch.setattr(
         translations_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
     monkeypatch.setattr(
         calendar_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
 
 
@@ -117,18 +119,20 @@ async def test_create_event_invalid_adaptive_state_raises(
     """Creating an event with invalid adaptive state should raise and not store the event."""
 
     # Force translation helper to return None so InvalidAdaptiveState is raised
-    async def _fake_async_get_adaptive_state_from_text(_hass: HomeAssistant, text: str):
+    async def _fake_async_get_adaptive_state_from_summary(
+        _hass: HomeAssistant, text: str
+    ):
         return None
 
     monkeypatch.setattr(
         translations_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
     monkeypatch.setattr(
         calendar_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
 
     cal = DanthermCalendar(

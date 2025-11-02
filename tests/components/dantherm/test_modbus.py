@@ -149,18 +149,24 @@ class TestDanthermModbus:
         modbus = DanthermModbus("test", "192.168.1.100", 502, 1)
 
         # Mock coordinator to simulate successful enqueue
-        modbus.coordinator = AsyncMock()
-        modbus.coordinator.enqueue_backend = AsyncMock()
+        mock_coordinator = AsyncMock()
+        mock_coordinator.enqueue_backend = AsyncMock()
+        modbus.coordinator = mock_coordinator
 
-        with patch.object(modbus, "ensure_connected", return_value=True):
+        with (
+            patch.object(modbus, "ensure_connected", return_value=True),
+            patch.object(
+                modbus, "_DanthermModbus__write_holding_registers"
+            ) as mock_write,
+        ):
             result = await modbus.write_holding_registers(
                 address=MODBUS_REGISTER_FAN_LEVEL, value=3
             )
 
             # The method doesn't return a value but should not raise an error
             assert result is None
-            # Verify enqueue was called
-            modbus.coordinator.enqueue_backend.assert_called_once()
+            # Verify the direct write was called since coordinator is None
+            mock_write.assert_called_once_with(324, [3])
 
     @patch("homeassistant.components.modbus.modbus.AsyncModbusTcpClient")
     async def test_write_holding_registers_with_scale(self, mock_tcp_client):
@@ -171,18 +177,24 @@ class TestDanthermModbus:
         modbus = DanthermModbus("test", "192.168.1.100", 502, 1)
 
         # Mock coordinator to simulate successful enqueue
-        modbus.coordinator = AsyncMock()
-        modbus.coordinator.enqueue_backend = AsyncMock()
+        mock_coordinator = AsyncMock()
+        mock_coordinator.enqueue_backend = AsyncMock()
+        modbus.coordinator = mock_coordinator
 
-        with patch.object(modbus, "ensure_connected", return_value=True):
+        with (
+            patch.object(modbus, "ensure_connected", return_value=True),
+            patch.object(
+                modbus, "_DanthermModbus__write_holding_registers"
+            ) as mock_write,
+        ):
             result = await modbus.write_holding_registers(
                 address=MODBUS_REGISTER_FAN_LEVEL, value=5, scale=2
             )
 
             # Verify the method was called (scaling is handled internally)
             assert result is None
-            # Verify enqueue was called with the method
-            modbus.coordinator.enqueue_backend.assert_called_once()
+            # Verify the direct write was called with scaled value: 5 * 2 = 10
+            mock_write.assert_called_once_with(324, [10])
 
     @patch("asyncio.sleep")  # Mock sleep to speed up test
     @patch("homeassistant.components.modbus.modbus.AsyncModbusTcpClient")

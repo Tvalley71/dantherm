@@ -25,6 +25,24 @@ from homeassistant.components.calendar import CalendarEvent
 from homeassistant.util.dt import now as ha_now
 
 
+@pytest.fixture(autouse=True)
+def mock_coordinator_for_all_tests():
+    """Automatically mock coordinator for all tests in this file."""
+    mock_coordinator = Mock()
+    mock_coordinator.async_set_entity_state_from_entity_id = AsyncMock()
+
+    # Store original coordinator property
+    original_coordinator = DanthermAdaptiveManager.coordinator
+
+    try:
+        # Override the coordinator property for all tests
+        DanthermAdaptiveManager.coordinator = property(lambda self: mock_coordinator)
+        yield mock_coordinator
+    finally:
+        # Restore original coordinator property
+        DanthermAdaptiveManager.coordinator = original_coordinator
+
+
 class TestComprehensiveCalendarTriggerIntegration:
     """Comprehensive integration tests for complete calendar and trigger flows.
 
@@ -106,8 +124,22 @@ class TestComprehensiveCalendarTriggerIntegration:
         adaptive_manager.get_current_operation = Mock(return_value=STATE_HOME)
         adaptive_manager._operation_change_timeout = now - timedelta(minutes=1)
 
+        # Mock that triggers start undetected (no active events to trigger rollback)
+        adaptive_manager._adaptive_triggers = {
+            "eco_mode_trigger": {
+                "detected": None,
+                "undetected": None,
+                "timeout": None,
+            },
+            "boost_mode_trigger": {
+                "detected": None,
+                "undetected": None,
+                "timeout": None,
+            },
+        }
+
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             # Set up translation responses
             def translate_side_effect(hass, text):
@@ -167,7 +199,7 @@ class TestComprehensiveCalendarTriggerIntegration:
 
             # Act 5: Simulate away event expiration and processing
             # Away should be removed and boost should become top again
-            adaptive_manager.events.pop(STATE_AWAY, event_id="away_calendar_1")
+            adaptive_manager.events.pop_event(STATE_AWAY, event_id="away_calendar_1")
 
             # Verify rollback to boost
             if len(adaptive_manager.events) > 0:
@@ -189,7 +221,7 @@ class TestComprehensiveCalendarTriggerIntegration:
             await adaptive_manager._update_adaptive_trigger_state("boost_mode_trigger")
 
             # Remove boost from stack (trigger events have no event_id)
-            adaptive_manager.events.pop(STATE_BOOST, event_id=None)
+            adaptive_manager.events.pop_event(STATE_BOOST, event_id=None)
 
             # Verify rollback to eco
             top_event = adaptive_manager.events.top()
@@ -292,7 +324,7 @@ class TestComprehensiveCalendarTriggerIntegration:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             for summary, state, entity_id, uid in events:
                 mock_translate.return_value = state
@@ -361,12 +393,10 @@ def adaptive_manager(mock_coordinator, mock_calendar):
     manager = DanthermAdaptiveManager(hass, config_entry)
     manager._calendar = mock_calendar
     manager._active_calendar_events = []
-    # Mock the coordinator reference
-    manager.coordinator = mock_coordinator
     # Initialize events stack
     manager.events = AdaptiveEventStack()
     # Mock missing methods for testing
-    manager.get_current_operation = STATE_HOME
+    manager.get_current_operation = Mock(return_value=STATE_HOME)
     manager.push_event = Mock(return_value=True)
     manager.pop_event = Mock(return_value=STATE_ECO)
     manager._set_adaptive_target_operation = AsyncMock()
@@ -445,7 +475,7 @@ class TestAdaptiveEventStack:
         event_stack.push(STATE_BOOST, STATE_ECO, STATE_BOOST)
 
         # Act
-        restored_op = event_stack.pop(STATE_BOOST)
+        restored_op = event_stack.pop_event(STATE_BOOST)
 
         # Assert
         assert restored_op == STATE_ECO
@@ -461,7 +491,7 @@ class TestAdaptiveEventStack:
         event_stack.push(STATE_BOOST, STATE_NIGHT, STATE_BOOST)
 
         # Act - Remove middle event (NIGHT)
-        restored_op = event_stack.pop(STATE_NIGHT)
+        restored_op = event_stack.pop_event(STATE_NIGHT)
 
         # Assert
         assert restored_op is None  # Middle event, so no operation change
@@ -480,7 +510,7 @@ class TestAdaptiveEventStack:
         event_stack.push(STATE_BOOST, STATE_ECO, STATE_BOOST)
 
         # Act - Remove bottom event
-        restored_op = event_stack.pop(STATE_ECO)
+        restored_op = event_stack.pop_event(STATE_ECO)
 
         # Assert
         assert restored_op is None  # Not top event
@@ -572,7 +602,7 @@ class TestCalendarNestedEvents:
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 
@@ -610,10 +640,10 @@ class TestCalendarNestedEvents:
         adaptive_manager._operation_change_timeout = ha_now() - timedelta(minutes=1)
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = "custom_mode"  # Not in switch_map
-            adaptive_manager.get_current_operation = STATE_HOME
+            adaptive_manager.get_current_operation = Mock(return_value=STATE_HOME)
 
             # Act
             await adaptive_manager._update_adaptive_calendar_state("start", event)
@@ -644,7 +674,7 @@ class TestCalendarNestedEvents:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 
@@ -673,7 +703,7 @@ class TestCalendarNestedEvents:
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 
@@ -706,10 +736,10 @@ class TestCalendarNestedEvents:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = "week_program"
-            adaptive_manager.get_current_operation = "week_program"
+            adaptive_manager.get_current_operation = Mock(return_value="week_program")
             # Ensure timeout check doesn't block us
             adaptive_manager._operation_change_timeout = ha_now() - timedelta(minutes=1)
 
@@ -740,7 +770,7 @@ class TestCalendarNestedEvents:
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_FIREPLACE
 
@@ -773,7 +803,7 @@ class TestCalendarNestedEvents:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             # Mock translation responses
             def translate_side_effect(hass, text):
@@ -784,7 +814,7 @@ class TestCalendarNestedEvents:
                 return None
 
             mock_translate.side_effect = translate_side_effect
-            adaptive_manager.get_current_operation = STATE_HOME
+            adaptive_manager.get_current_operation = Mock(return_value=STATE_HOME)
 
             # Mock entities for switch operations
             mock_eco_entity = Mock()
@@ -821,13 +851,15 @@ class TestCalendarNestedEvents:
             STATE_BOOST, STATE_NIGHT, STATE_BOOST, event_id="boost_1"
         )
 
-        adaptive_manager.get_current_operation = STATE_BOOST
+        adaptive_manager.get_current_operation = Mock(return_value=STATE_BOOST)
 
         # Act - Simulate boost event expiring
         with patch.object(
             adaptive_manager, "_set_adaptive_target_operation"
         ) as mock_set_op:
-            target_op = adaptive_manager.events.pop(STATE_BOOST, event_id="boost_1")
+            target_op = adaptive_manager.events.pop_event(
+                STATE_BOOST, event_id="boost_1"
+            )
             await adaptive_manager._set_adaptive_target_operation(
                 target_op, STATE_BOOST
             )
@@ -852,7 +884,7 @@ class TestCalendarNestedEvents:
             STATE_BOOST, STATE_NIGHT, STATE_BOOST, event_id="boost_1"
         )
 
-        adaptive_manager.get_current_operation = STATE_BOOST
+        adaptive_manager.get_current_operation = Mock(return_value=STATE_BOOST)
         adaptive_manager._operation_change_timeout = now - timedelta(minutes=1)
 
         with patch.object(adaptive_manager, "_set_adaptive_target_operation"):
@@ -890,7 +922,7 @@ class TestCalendarTriggerIntegration:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_text"
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 

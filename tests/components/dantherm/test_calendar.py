@@ -6,6 +6,8 @@ from datetime import timedelta
 from types import SimpleNamespace
 from typing import Any
 
+from freezegun import freeze_time
+
 from config.custom_components.dantherm import (
     calendar as calendar_mod,
     translations as translations_mod,
@@ -38,19 +40,21 @@ class FakeCoordinator:
 def _patch_adaptive_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch adaptive state resolution to avoid translation dependency in tests."""
 
-    async def _fake_async_get_adaptive_state_from_text(hass: HomeAssistant, text: str):
+    async def _fake_async_get_adaptive_state_from_summary(
+        hass: HomeAssistant, text: str
+    ):
         return str(text).lower()
 
     monkeypatch.setattr(
         translations_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
     # Also patch the direct import in calendar module
     monkeypatch.setattr(
         calendar_mod,
-        "async_get_adaptive_state_from_text",
-        _fake_async_get_adaptive_state_from_text,
+        "async_get_adaptive_state_from_summary",
+        _fake_async_get_adaptive_state_from_summary,
     )
 
 
@@ -909,6 +913,9 @@ async def test_async_get_active_events_multiple_active(hass: HomeAssistant) -> N
 
 
 @pytest.mark.asyncio
+@freeze_time(
+    "2025-11-02 12:00:00"
+)  # Freeze time to midday to ensure all-day event is active
 async def test_async_get_active_events_day_boundary_scenarios(
     hass: HomeAssistant,
 ) -> None:
@@ -1089,12 +1096,12 @@ async def test_create_event_invalid_adaptive_state(
 
     monkeypatch.setattr(
         translations_mod,
-        "async_get_adaptive_state_from_text",
+        "async_get_adaptive_state_from_summary",
         _invalid_adaptive_state,
     )
     monkeypatch.setattr(
         calendar_mod,
-        "async_get_adaptive_state_from_text",
+        "async_get_adaptive_state_from_summary",
         _invalid_adaptive_state,
     )
     monkeypatch.setattr(
@@ -1155,12 +1162,12 @@ async def test_update_event_invalid_adaptive_state(
 
     monkeypatch.setattr(
         translations_mod,
-        "async_get_adaptive_state_from_text",
+        "async_get_adaptive_state_from_summary",
         _invalid_adaptive_state,
     )
     monkeypatch.setattr(
         calendar_mod,
-        "async_get_adaptive_state_from_text",
+        "async_get_adaptive_state_from_summary",
         _invalid_adaptive_state,
     )
     monkeypatch.setattr(
