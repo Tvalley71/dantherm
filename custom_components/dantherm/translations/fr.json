@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "title": "Configuration Dantherm",
-        "description": "Bienvenue dans l'intégration Dantherm! 🏡\n\nCette intégration a été créée par Tvalley71 pour la communauté Home Assistant. Vous êtes sur le point de configurer les options avancées de votre unité de ventilation Dantherm.\n\n⚠️ Clause de non-responsabilité: Je ne suis pas affilié à Dantherm, sauf en tant que propriétaire d'une unité Dantherm HCV400 P2. L'auteur ne garantit pas la fonctionnalité et n'est pas responsable des dommages.\n\n☕ Si cette intégration vous aide, j'apprécierais vraiment la reconnaissance ou une étoile ⭐ sur l'intégration GitHub:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\nVous serez guidé à travers 3 étapes de configuration.",
+        "description": "## Bienvenue dans l'intégration Dantherm! 🏡\n\nCette intégration a été créée par Tvalley71 pour la communauté Home Assistant. Vous êtes sur le point de configurer les options avancées de votre unité de ventilation Dantherm.\n\n\n☕ Si cette intégration vous aide, j'apprécierais vraiment la reconnaissance ou une étoile ⭐ sur l'intégration GitHub:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nVous serez guidé à travers 3 étapes de configuration.",
         "data": {
           "continue": "Continuer"
         }
