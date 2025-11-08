@@ -104,5 +104,5 @@ class AdaptiveStateSensor(DanthermSensor, RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None:
             events_list = state.attributes.get("events", [])
-            self.device.events = AdaptiveEventStack.from_list(events_list)  # type: ignore[no-untyped-call]
+            self.device.events = AdaptiveEventStack.from_list(events_list)
             self._attr_extra_state_attributes = state.attributes

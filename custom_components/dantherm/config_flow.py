@@ -297,7 +297,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         options = dict(self.config_entry.options)
 
-        schema_dict = {
+        schema_dict: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_BOOST_MODE_TRIGGER,
                 default=options.get(CONF_BOOST_MODE_TRIGGER, ""),
@@ -317,7 +317,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_LINK_TO_PRIMARY_CALENDAR,
                     default=options.get(CONF_LINK_TO_PRIMARY_CALENDAR, True),
                 )
-            ] = bool
+            ] = vol.Coerce(bool)
 
         schema = vol.Schema(schema_dict)
 

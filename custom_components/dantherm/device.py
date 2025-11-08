@@ -670,7 +670,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                     self._device_name,
                     "sensor",
                     ATTR_ALARM,
-                    result,
+                    str(result) if result is not None else None,
                 )
 
         self._alarm = result
@@ -695,7 +695,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     async def async_get_calendar(self) -> None:
         """Get calendar."""
 
-        await self.async_update_adaptive_calendar()  # type: ignore[no-untyped-call]
+        await self.async_update_adaptive_calendar()
 
     @property
     def get_alarm(self) -> int | None:
@@ -825,7 +825,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def get_adaptive_state_attrs(self) -> dict[str, Any] | None:
         """Get adaptive state attributes."""
         if self.events:
-            return {"events": self.events.to_list()}  # type: ignore[no-untyped-call]
+            return {"events": self.events.to_list()}
         return None
 
     @property
@@ -960,7 +960,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                     self._device_name,
                     "sensor",
                     ATTR_FILTER_REMAIN,
-                    result,
+                    str(result),
                 )
 
         self._filter_remain = result
@@ -1527,10 +1527,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Get adaptive state."""
 
         # Get the top event
-        top = self.events.top()  # type: ignore[no-untyped-call]
+        top = self.events.top()
         result = STATE_NONE
         if top:
-            result = self.events.top()["event"]  # type: ignore[no-untyped-call]
+            result = top["event"]
         _LOGGER.debug("Adaptive state = %s", result)
         return result
 
