@@ -5,6 +5,7 @@ set_state:
       selector:
         device:
           integration: dantherm
+          multiple: true
     operation_selection:
       selector:
         select:
@@ -47,6 +48,7 @@ set_configuration:
       selector:
         device:
           integration: dantherm
+          multiple: true
     filter_lifetime:
       example: "180"
       selector:
@@ -92,6 +94,7 @@ set_configuration_2:
       selector:
         device:
           integration: dantherm
+          multiple: true
     bypass_minimum_temperature:
       example: 15
       selector:
@@ -135,6 +138,7 @@ set_configuration_3:
       selector:
         device:
           integration: dantherm
+          multiple: true
     bypass_minimum_temperature_summer:
       example: 15
       selector:
@@ -166,6 +170,7 @@ filter_reset:
       selector:
         device:
           integration: dantherm
+          multiple: true
 alarm_reset:
   fields:
     device_id:
@@ -173,6 +178,7 @@ alarm_reset:
       selector:
         device:
           integration: dantherm
+          multiple: true
 clear_adaptive_event_stack:
   fields:
     device_id:
@@ -180,3 +186,4 @@ clear_adaptive_event_stack:
       selector:
         device:
           integration: dantherm
+          multiple: true

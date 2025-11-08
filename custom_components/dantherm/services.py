@@ -7,9 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
@@ -52,8 +50,9 @@ from .exceptions import InvalidTimeFormat, UnsupportedByFirmware
 _LOGGER = logging.getLogger(__name__)
 
 
-DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_STATE_SCHEMA = vol.Schema(
     {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_OPERATION_SELECTION): vol.In(OPERATION_SELECTIONS),
         vol.Optional(ATTR_FAN_LEVEL_SELECTION): vol.In(FAN_LEVEL_SELECTIONS),
         vol.Optional(ATTR_AWAY_MODE): cv.boolean,
@@ -63,8 +62,9 @@ DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_SCHEMA = vol.Schema(
     {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=360)
         ),
@@ -75,8 +75,9 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_2_SCHEMA = vol.Schema(
     {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=15)
         ),
@@ -93,8 +94,9 @@ DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_3_SCHEMA = vol.Schema(
     {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=17)
         ),
@@ -104,6 +106,24 @@ DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
         vol.Optional(ATTR_HUMIDITY_SETPOINT_SUMMER): vol.All(
             vol.Coerce(float), vol.Range(min=35, max=65)
         ),
+    }
+)
+
+DANTHERM_FILTER_RESET_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+DANTHERM_ALARM_RESET_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -125,16 +145,43 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
 
     async def async_apply_device_function(call: ServiceCall, apply_func: Any) -> None:
-        """Extract config entries and apply function."""
-        config_entry_ids = await async_extract_config_entry_ids(call)
-        for config_entry_id in config_entry_ids:
-            config_entry = hass.config_entries.async_get_entry(config_entry_id)
-            if config_entry and config_entry.domain == DOMAIN:
-                entry_data = hass.data[DOMAIN].get(config_entry_id)
-                if entry_data and (device := entry_data.get("device")):
-                    await apply_func(device, call)
-                else:
-                    _LOGGER.error("Device %s not found", config_entry_id)
+        """Extract devices and apply function to each device."""
+        processed_config_entries = set()
+
+        # Get device_ids from call
+        device_ids = call.data.get("device_id", [])
+        if not device_ids:
+            _LOGGER.error("Device_id must be specified")
+            return
+
+        if isinstance(device_ids, str):
+            device_ids = [device_ids]
+
+        device_registry = dr.async_get(hass)
+
+        for device_id in device_ids:
+            device_entry = device_registry.async_get(device_id)
+            if device_entry and device_entry.config_entries:
+                for config_entry_id in device_entry.config_entries:
+                    if config_entry_id not in processed_config_entries:
+                        processed_config_entries.add(config_entry_id)
+                        config_entry = hass.config_entries.async_get_entry(
+                            config_entry_id
+                        )
+                        if config_entry and config_entry.domain == DOMAIN:
+                            entry_data = hass.data[DOMAIN].get(config_entry.entry_id)
+                            if entry_data and (device := entry_data.get("device")):
+                                await apply_func(device, call)
+                            else:
+                                _LOGGER.error(
+                                    "Device for device_id %s not found", device_id
+                                )
+                        else:
+                            _LOGGER.debug(
+                                "Device %s not from domain %s", device_id, DOMAIN
+                            )
+            else:
+                _LOGGER.error("Device %s not found in registry", device_id)
 
     async def async_set_state(call: ServiceCall) -> None:
         """Set state for Dantherm devices."""
@@ -390,9 +437,22 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         async_set_configuration_3,
         schema=DANTHERM_SET_CONFIGURATION_3_SCHEMA,
     )
-    hass.services.async_register(DOMAIN, SERVICE_FILTER_RESET, async_filter_reset)
-    hass.services.async_register(DOMAIN, SERVICE_ALARM_RESET, async_alarm_reset)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_FILTER_RESET,
+        async_filter_reset,
+        schema=DANTHERM_FILTER_RESET_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ALARM_RESET,
+        async_alarm_reset,
+        schema=DANTHERM_ALARM_RESET_SCHEMA,
+    )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR_ADAPTIVE_EVENT_STACK, async_clear_adaptive_event_stack
+        DOMAIN,
+        SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
+        async_clear_adaptive_event_stack,
+        schema=DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA,
     )
