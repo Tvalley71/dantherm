@@ -36,7 +36,7 @@ from .device_map import (
     STATE_NIGHT,
     STATE_PRIORITIES,
 )
-from .helpers import is_primary_entry, set_device_entities_enabled_by_suffix
+from .helpers import is_primary_entry, set_device_entities_enabled_from_key
 from .translations import async_get_adaptive_state_from_summary
 
 # This is used to represent the minimum datetime value in the system.
@@ -169,9 +169,9 @@ class DanthermAdaptiveManager:
                 _LOGGER.debug("No data for trigger: %s", trigger)
                 continue
 
-            for entity_name in trigger_data["associated_entities"]:
-                set_device_entities_enabled_by_suffix(
-                    self._hass, device_id, entity_name, enabled
+            for entity_key in trigger_data["associated_entities"]:
+                set_device_entities_enabled_from_key(
+                    self._hass, device_id, entity_key, enabled
                 )
 
         # Resolve calendar reference:

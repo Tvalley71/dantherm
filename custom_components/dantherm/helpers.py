@@ -31,18 +31,15 @@ async def async_get_device_id_from_entity(
     return device_entry.id
 
 
-def get_entities_by_device_and_suffix(
-    hass: HomeAssistant, device_id: str, name_suffix: str, domain: str | None = None
+def get_entities_by_device_and_key(
+    hass: HomeAssistant, device_id: str, key: str, domain: str | None = None
 ) -> list[er.RegistryEntry]:
-    """Safely get entities by device ID and name suffix.
-
-    This is much safer than pattern matching on unique_id alone,
-    as it ensures we only affect entities from the specific device.
+    """Get entities by device ID and key.
 
     Args:
         hass: Home Assistant instance
         device_id: Device ID to scope the search to
-        name_suffix: Suffix to match in unique_id (e.g., "temperature")
+        key: Key to match in unique_id (e.g., "temperature")
         domain: Optional domain filter (e.g., "sensor", "switch")
 
     Returns:
@@ -58,8 +55,8 @@ def get_entities_by_device_and_suffix(
         device_entities = [e for e in device_entities if e.domain == domain]
 
     # Pattern match on unique_id within device scope
-    # Match suffix at end of unique_id, with optional numeric suffix
-    pattern = re.compile(rf"{re.escape(name_suffix)}(_\d+)?$")
+    # Match key at end of unique_id, with optional numeric suffix
+    pattern = re.compile(rf"{re.escape(key)}(_\d+)?$")
     return [
         entry
         for entry in device_entities
@@ -67,30 +64,26 @@ def get_entities_by_device_and_suffix(
     ]
 
 
-def set_device_entities_enabled_by_suffix(
+def set_device_entities_enabled_from_key(
     hass: HomeAssistant,
     device_id: str,
-    name_suffix: str,
+    key: str,
     enable: bool,
     domain: str | None = None,
 ) -> int:
-    """Enable/disable entities for a specific device by suffix.
-
-    This is the SAFE version that only affects entities from the specified device.
+    """Enable/disable entities for a specific device from key.
 
     Args:
         hass: Home Assistant instance
         device_id: Device ID to scope the operation to
-        name_suffix: Suffix to match in unique_id
+        key: Key to match in unique_id
         enable: True to enable, False to disable
         domain: Optional domain filter
 
     Returns:
         Number of entities affected
     """
-    matched_entities = get_entities_by_device_and_suffix(
-        hass, device_id, name_suffix, domain
-    )
+    matched_entities = get_entities_by_device_and_key(hass, device_id, key, domain)
 
     count = 0
     for entry in matched_entities:
@@ -110,25 +103,21 @@ def set_device_entities_enabled_by_suffix(
     return count
 
 
-def get_device_entities_enabled_by_suffix(
-    hass: HomeAssistant, device_id: str, name_suffix: str, domain: str | None = None
+def get_device_entities_enabled_from_key(
+    hass: HomeAssistant, device_id: str, key: str, domain: str | None = None
 ) -> bool:
-    """Check if any entities for device with suffix are enabled.
-
-    This is the SAFE version that only checks entities from the specified device.
+    """Check if any entities for device with key are enabled.
 
     Args:
         hass: Home Assistant instance
         device_id: Device ID to scope the check to
-        name_suffix: Suffix to match in unique_id
+        key: Key to match in unique_id
         domain: Optional domain filter
 
     Returns:
         True if any matching entities are enabled
     """
-    matched_entities = get_entities_by_device_and_suffix(
-        hass, device_id, name_suffix, domain
-    )
+    matched_entities = get_entities_by_device_and_key(hass, device_id, key, domain)
 
     return any(not entry.disabled for entry in matched_entities)
 
