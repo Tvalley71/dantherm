@@ -76,7 +76,7 @@ def dantherm_modbus_entries(hass: HomeAssistant) -> set[str]:
 class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Dantherm Modbus configflow."""
 
-    VERSION = 2
+    VERSION = 3  # Current version of the config flow
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host: str) -> bool:

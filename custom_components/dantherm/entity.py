@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-import os
+import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
@@ -16,6 +16,8 @@ from .device_map import DanthermEntityDescription
 if TYPE_CHECKING:
     from .coordinator import DanthermCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
     """Dantherm Entity."""
@@ -27,29 +29,12 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
         super().__init__(device.coordinator)
         self._device = device
 
-        # Prefer hardware serial number for a stable, unique id; fallback to entry id
-        # In debug mode, always use config entry ID to avoid conflicts between instances
-        IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
-
-        if IS_DEBUG:
-            # Use config entry ID in debug mode to ensure unique IDs for each instance
-            config_entry = getattr(self._device, "_config_entry", None)
-            serial = (
-                getattr(config_entry, "entry_id", "unknown")
-                if config_entry
-                else "unknown"
-            )
-        else:
-            # Use hardware serial number in normal mode
-            try:
-                serial = self._device.get_device_serial_number
-            except Exception:  # noqa: BLE001
-                serial = None
-            if not serial:
-                serial = getattr(
-                    getattr(self._device, "_config_entry", None), "entry_id", "unknown"
-                )
-        self._attr_unique_id = f"{serial}_{description.key}"
+        # Always use config entry ID as unique_id prefix for consistency
+        config_entry = getattr(self._device, "_config_entry", None)
+        unique_id_prefix = (
+            getattr(config_entry, "entry_id", "unknown") if config_entry else "unknown"
+        )
+        self._attr_unique_id = f"{unique_id_prefix}_{description.key}"
 
         self._attr_should_poll = False
         self._attr_changed = False

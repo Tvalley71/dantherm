@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -27,20 +27,12 @@ from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ATTR_CALENDAR,
-    BUTTONS,
-    CALENDAR,
     CONF_BOOST_MODE_TRIGGER,
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
-    COVERS,
-    NUMBERS,
     REQUIRED_PYMODBUS_VERSION,
-    SELECTS,
-    SENSORS,
-    SWITCHES,
-    TIMETEXTS,
 )
 from .discovery import async_discover
 from .helpers import get_primary_entry_id, is_primary_entry
@@ -105,6 +97,134 @@ def get_expected_serial_for_entry(
     return None
 
 
+async def _migrate_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate entity unique IDs from device_name format to config_entry format."""
+    ent_reg = er.async_get(hass)
+
+    # Get device info for migration context
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+    if not devices:
+        _LOGGER.warning("🔄 MIGRATION: No devices found for config entry")
+        return False
+
+    device = devices[0]  # Should only be one device
+    device_name = config_entry.data.get(CONF_NAME, "Dantherm").replace(" ", "_").lower()
+
+    _LOGGER.warning(
+        "🔄 MIGRATION: Starting entity migration for device %s (name: %s)",
+        device.id,
+        device_name,
+    )
+
+    # Find ALL entities for this config entry
+    all_entities = [
+        entry
+        for entry in ent_reg.entities.values()
+        if entry.config_entry_id == config_entry.entry_id and entry.platform == DOMAIN
+    ]
+
+    _LOGGER.warning(
+        "🔄 MIGRATION: Found %d entities to check for migration", len(all_entities)
+    )
+
+    # Log existing entities BEFORE migration
+    for entry in all_entities:
+        _LOGGER.warning(
+            "BEFORE MIGRATION: %s → unique_id: %s", entry.entity_id, entry.unique_id
+        )
+
+    changed = False
+
+    def migrate_entity_callback(
+        entry_to_migrate: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        nonlocal changed
+
+        uid = entry_to_migrate.unique_id
+        if not uid:
+            return None
+
+        # Strategy: Use translation_key for language-independent migration
+        translation_key = entry_to_migrate.translation_key
+
+        if not translation_key:
+            _LOGGER.warning(
+                "Entity %s has no translation_key - this should not happen in modern integrations",
+                entry_to_migrate.entity_id,
+            )
+            return None
+
+        # Build new unique_id using config_entry_id + translation_key
+        new_uid = f"{config_entry.entry_id}_{translation_key}"
+
+        # Only migrate if unique_id actually needs to change
+        if new_uid == uid:
+            _LOGGER.debug(
+                "SKIP: Entity %s already has correct unique_id format: %s",
+                entry_to_migrate.entity_id,
+                uid,
+            )
+            return None
+
+        # Check for conflicts BEFORE migration
+        conflict_entity_id = ent_reg.async_get_entity_id(
+            entry_to_migrate.domain, DOMAIN, new_uid
+        )
+        if conflict_entity_id and conflict_entity_id != entry_to_migrate.entity_id:
+            _LOGGER.warning(
+                "CONFLICT: Target unique_id %s already exists for entity %s (current entity: %s)",
+                new_uid,
+                conflict_entity_id,
+                entry_to_migrate.entity_id,
+            )
+            return None
+
+        _LOGGER.warning(
+            "✅ MIGRATE: %s unique_id %s → %s (translation_key: %s)",
+            entry_to_migrate.entity_id,
+            uid,
+            new_uid,
+            translation_key,
+        )
+        changed = True
+        return {"new_unique_id": new_uid}
+
+    # Perform migration for all matching entities
+    for entry_to_migrate in all_entities:
+        migration_result = migrate_entity_callback(entry_to_migrate)
+        if migration_result and "new_unique_id" in migration_result:
+            # Use the official API to update the unique_id
+            ent_reg.async_update_entity(
+                entry_to_migrate.entity_id,
+                new_unique_id=migration_result["new_unique_id"],
+            )
+
+    if changed:
+        _LOGGER.warning(
+            "🔄 MIGRATION: Entity unique_id migration completed successfully"
+        )
+
+        # Log entities AFTER migration
+        updated_entities = [
+            entry
+            for entry in ent_reg.entities.values()
+            if entry.config_entry_id == config_entry.entry_id
+            and entry.platform == DOMAIN
+        ]
+        for entry in updated_entities:
+            _LOGGER.warning(
+                "AFTER MIGRATION: %s → unique_id: %s", entry.entity_id, entry.unique_id
+            )
+    else:
+        _LOGGER.warning("🔄 MIGRATION: No entities needed migration")
+
+    return changed
+
+
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Dantherm component."""
 
@@ -115,6 +235,13 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Dantherm from a config entry."""
+
+    _LOGGER.warning(
+        "🏁 SETUP DEBUG: async_setup_entry called for entry %s", entry.entry_id
+    )
+    _LOGGER.warning(
+        "🏁 SETUP DEBUG: Version = %s, title = %s", entry.version, entry.title
+    )
 
     if version.parse(pymodbus.__version__) < version.parse(REQUIRED_PYMODBUS_VERSION):
         translations = await async_get_translations(
@@ -250,15 +377,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_DISABLE_NOTIFICATIONS: options.get(CONF_DISABLE_NOTIFICATIONS, False),
     }
 
-    # Execute migration of entity unique_ids (backwards compatibility) only once
-    if not entry.data.get("uids_migrated", False):
-        migrated = await _async_migrate_unique_ids(hass, entry, device)
-        if migrated:
-            # Persist that we've migrated to avoid re-running on every startup
-            new_data = dict(entry.data)
-            new_data["uids_migrated"] = True
-            hass.config_entries.async_update_entry(entry, data=new_data)
-
     # Forward setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -285,19 +403,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.info("Migrating config entry from version %s", config_entry.version)
     options = dict(config_entry.options)
+    data = dict(config_entry.data)
 
-    # Migration: Move disable_alarm_notifications to disable_notifications
-    if (
-        CONF_DISABLE_NOTIFICATIONS not in options
-        and ATTR_DISABLE_ALARM_NOTIFICATIONS in options
-    ):
-        options[CONF_DISABLE_NOTIFICATIONS] = options.pop(
-            ATTR_DISABLE_ALARM_NOTIFICATIONS
+    # Version 1: Move disable_alarm_notifications to disable_notifications
+    if config_entry.version == 1:
+        if (
+            CONF_DISABLE_NOTIFICATIONS not in options
+            and ATTR_DISABLE_ALARM_NOTIFICATIONS in options
+        ):
+            options[CONF_DISABLE_NOTIFICATIONS] = options.pop(
+                ATTR_DISABLE_ALARM_NOTIFICATIONS
+            )
+            hass.config_entries.async_update_entry(
+                config_entry, options=options, version=2
+            )
+            _LOGGER.info(
+                "Migrated disable_alarm_notifications to disable_notifications"
+            )
+
+    # Version 2: Enhanced unique_id migration logic
+    if config_entry.version == 2:
+        # Perform entity unique_id migration here in migration function
+        await _migrate_entities_unique_ids(hass, config_entry)
+        hass.config_entries.async_update_entry(config_entry, version=3)
+        _LOGGER.info(
+            "Upgrading config entry from version %s to 3 (enhanced unique_id migration)",
+            config_entry.version,
         )
-        hass.config_entries.async_update_entry(config_entry, options=options)
-        _LOGGER.debug("Migrated disable_alarm_notifications to disable_notifications")
+
+        # Clean up deprecated uids_migrated flag (no longer needed with version-based migration)
+        if "uids_migrated" in data:
+            data.pop("uids_migrated")
+            _LOGGER.debug(
+                "Removed deprecated uids_migrated flag from config entry data"
+            )
 
     return True
 
@@ -339,104 +480,3 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 owner_id = None
             if owner_id == entry.entry_id:
                 domain_data.pop(ATTR_CALENDAR, None)
-
-
-async def _async_migrate_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, device: DanthermDevice
-) -> bool:
-    """Migrate entity registry unique_ids to serial-based format.
-
-    - Old format: often <name>_<key> or other prefixes
-    - New format: <serial>_<key>
-    Handles collisions by preferring canonical entities (without numeric suffix)
-    and removing duplicate entities with numeric suffix that belong to the same
-    config entry.
-    """
-
-    # Using module-level imports for callback, er and entity descriptions
-
-    # Gather all known keys from entity descriptions
-    keys: set[str] = set()
-    try:
-        keys.update(desc.key for desc in BUTTONS)
-        keys.add(CALENDAR.key)
-        keys.update(desc.key for desc in COVERS)
-        keys.update(desc.key for desc in NUMBERS)
-        keys.update(desc.key for desc in SELECTS)
-        keys.update(desc.key for desc in SENSORS)
-        keys.update(desc.key for desc in SWITCHES)
-        keys.update(desc.key for desc in TIMETEXTS)
-    except Exception:  # noqa: BLE001
-        keys = set()
-
-    serial = str(device.get_device_serial_number)
-    ent_reg = er.async_get(hass)
-
-    changed: bool = False
-
-    @callback
-    def _async_migrate_entity_entry(
-        entry_to_migrate: er.RegistryEntry,
-    ) -> dict[str, str] | None:
-        uid = entry_to_migrate.unique_id
-        # Already in the new format
-        if uid.startswith(f"{serial}_"):
-            return None
-
-        for key in keys:
-            suffix = f"_{key}"
-            if uid.endswith(suffix):
-                new_uid = f"{serial}_{key}"
-                if new_uid != uid:
-                    # Check for conflicts and resolve in favor of the canonical entity (without numeric suffix)
-                    conflict_entity_id = ent_reg.async_get_entity_id(
-                        entry_to_migrate.domain, DOMAIN, new_uid
-                    )
-                    if (
-                        conflict_entity_id
-                        and conflict_entity_id != entry_to_migrate.entity_id
-                    ):
-                        # Prefer keeping the entity without a numeric suffix. If the conflicting entity_id
-                        # ends with a numeric suffix (e.g. _2, _3), remove it and proceed with migration.
-                        try:
-                            tail = conflict_entity_id.rsplit("_", 1)[-1]
-                            has_numeric_tail = tail.isdigit()
-                        except Exception:  # noqa: BLE001
-                            has_numeric_tail = False
-
-                        if has_numeric_tail:
-                            conflict_entry = ent_reg.async_get(conflict_entity_id)
-                            # Only remove if the conflicting entity belongs to the same config entry
-                            if (
-                                conflict_entry
-                                and conflict_entry.config_entry_id == entry.entry_id
-                            ):
-                                _LOGGER.debug(
-                                    "Removing duplicate entity %s to resolve unique_id conflict with %s",
-                                    conflict_entity_id,
-                                    entry_to_migrate.entity_id,
-                                )
-                                ent_reg.async_remove(conflict_entity_id)
-                            else:
-                                # Do not touch entities from other config entries
-                                return None
-                        else:
-                            # A non-suffixed entity already has the target unique_id; skip migrating this one
-                            return None
-
-                    _LOGGER.debug(
-                        "Migrating entity %s unique_id from %s to %s",
-                        entry_to_migrate.entity_id,
-                        uid,
-                        new_uid,
-                    )
-                    nonlocal changed
-                    changed = True
-                    return {"new_unique_id": new_uid}
-                break
-
-        # No migration needed
-        return None
-
-    await er.async_migrate_entries(hass, entry.entry_id, _async_migrate_entity_entry)
-    return changed
