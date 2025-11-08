@@ -11,11 +11,14 @@ from homeassistant.core import HomeAssistant
 class TestDanthermEntity:
     """Test DanthermEntity class."""
 
-    def test_entity_initialization_with_serial(self, hass: HomeAssistant) -> None:
-        """Test entity initialization when device has serial number."""
+    def test_entity_initialization_with_config_entry(self, hass: HomeAssistant) -> None:
+        """Test entity initialization when device has config entry."""
+        mock_config_entry = MagicMock()
+        mock_config_entry.entry_id = "test_entry_123"
+
         mock_device = MagicMock()
         mock_device.coordinator = MagicMock()
-        mock_device.get_device_serial_number = "ABC12345"
+        mock_device._config_entry = mock_config_entry
 
         description = DanthermEntityDescription(
             key="test_sensor", name="Test Sensor", icon="mdi:thermometer"
@@ -23,7 +26,7 @@ class TestDanthermEntity:
 
         entity = DanthermEntity(mock_device, description)
 
-        assert entity._attr_unique_id == "ABC12345_test_sensor"
+        assert entity._attr_unique_id == "test_entry_123_test_sensor"
         assert entity._attr_should_poll is False
         assert entity._attr_icon == "mdi:thermometer"
         assert entity.entity_description is description

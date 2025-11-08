@@ -117,7 +117,7 @@ async def test_alarm_notification(hass: HomeAssistant) -> None:
         assert args[1] == "TestDevice"
         assert args[2] == "sensor"
         assert args[3] == "alarm"
-        assert args[4] == 5
+        assert args[4] == "5"
 
 
 @pytest.mark.asyncio
@@ -159,7 +159,7 @@ async def test_filter_remain_notification(hass: HomeAssistant) -> None:
         assert args[1] == "TestDevice"
         assert args[2] == "sensor"
         assert args[3] == "filter_remain"
-        assert args[4] == 0
+        assert args[4] == "0"
 
 
 @pytest.mark.asyncio
