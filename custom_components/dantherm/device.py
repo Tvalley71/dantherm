@@ -1,55 +1,43 @@
 """Device implementation."""
 
+from __future__ import annotations
+
 from collections import deque
-from datetime import datetime, timedelta
 import logging
-import os
-import re
+from types import MappingProxyType
+from typing import Any
+
+from propcache.api import cached_property
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import cached_property
-from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.translation import async_get_translations
-from homeassistant.util.dt import DEFAULT_TIME_ZONE, now as ha_now, parse_datetime
 
-from .const import DEVICE_TYPES, DOMAIN
+from .adaptive_manager import DanthermAdaptiveManager
+from .const import DEVICE_TYPES
 from .coordinator import DanthermCoordinator
 from .device_map import (
-    ADAPTIVE_TRIGGERS,
-    ATTR_ADAPTIVE_STATE,
     ATTR_AIR_QUALITY,
     ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
-    ATTR_BOOST_MODE,
-    ATTR_BOOST_MODE_TIMEOUT,
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_BOOST_OPERATION_SELECTION,
     ATTR_BYPASS_DAMPER,
-    ATTR_DISABLE_NOTIFICATIONS,
-    ATTR_DISABLE_TEMPERATURE_UNKNOWN,
-    ATTR_ECO_MODE,
-    ATTR_ECO_MODE_TIMEOUT,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_ECO_OPERATION_SELECTION,
     ATTR_FILTER_LIFETIME,
     ATTR_FILTER_REMAIN,
     ATTR_FILTER_REMAIN_LEVEL,
-    ATTR_HOME_MODE,
-    ATTR_HOME_MODE_TIMEOUT,
-    ATTR_HOME_MODE_TRIGGER,
-    ATTR_HOME_OPERATION_SELECTION,
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
     ATTR_SENSOR_FILTERING,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_DISABLE_NOTIFICATIONS,
+    CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
+    STATE_LEVEL_0,
     STATE_LEVEL_1,
     STATE_LEVEL_2,
     STATE_LEVEL_3,
@@ -57,11 +45,9 @@ from .device_map import (
     STATE_MANUAL,
     STATE_NIGHT,
     STATE_NONE,
-    STATE_PRIORITIES,
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
-    ABSwitchPosition,
     ActiveUnitMode,
     BypassDamperState,
     ComponentClass,
@@ -69,8 +55,6 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
-    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT,
-    MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_ALARM,
@@ -102,32 +86,54 @@ from .modbus import (
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
+    ABSwitchPosition,
     DanthermModbus,
+)
+from .notifications import (
+    async_create_key_value_notification,
+    async_dismiss_notification,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
-# This is used to represent the minimum datetime value in the system.
-MIN_DT = datetime.min.replace(tzinfo=DEFAULT_TIME_ZONE)
-
-# This is used to represent the maximum datetime value in the system.
-MAX_DT = datetime.max.replace(tzinfo=DEFAULT_TIME_ZONE)
-
-
-class DanthermDevice(DanthermModbus):
+class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     """Dantherm Device."""
+
+    # Type annotations for instance variables
+    _config_entry: ConfigEntry | None
+    _scan_interval: int
+    _device_name: str
+    _device_type: int
+    _device_fw_version: int
+    _device_serial_number: int
+    _device_ab_switch_position: ABSwitchPosition | None
+    _current_unit_mode: int | None
+    _active_unit_mode: int | None
+    _fan_level: int | None
+    _alarm: int | None
+    _sensor_filtering: bool
+    _bypass_damper: int | None
+    _bypass_maximum_temperature: float | None
+    _filter_lifetime: int | None
+    _filter_remain: int | None
+    _filter_remain_level: int | None
+    _last_current_operation: str | None
+    _coordinator: DanthermCoordinator | None
+    installed_components: int
+    _options: MappingProxyType[str, Any] | dict[str, Any]
+    _filtered_sensors: dict[str, dict[str, Any]]
+    # Note: coordinator property is overridden below
 
     def __init__(
         self,
         hass: HomeAssistant,
-        name,
-        host,
-        port,
-        unit_id,
-        scan_interval,
-        config_entry: ConfigEntry,
+        name: str,
+        host: str,
+        port: int,
+        unit_id: int,
+        scan_interval: int,
+        config_entry: ConfigEntry | None,
     ) -> None:
         """Init device."""
         super().__init__(
@@ -136,15 +142,20 @@ class DanthermDevice(DanthermModbus):
             port,
             unit_id,
         )
-        self._hass = hass
-        self._config_entry = config_entry
-        self._options = config_entry.options
+        # Only initialize adaptive manager if we have a config_entry
+        if config_entry is not None:
+            DanthermAdaptiveManager.__init__(
+                self,
+                hass,
+                config_entry,
+            )
+        self._config_entry: ConfigEntry | None = config_entry
         self._scan_interval = scan_interval
         self._device_name = name
         self._device_type = 0
         self._device_fw_version = 0
         self._device_serial_number = 0
-        self._device_ab_switch_position = None
+        self._device_ab_switch_position: ABSwitchPosition | None = None
         self._current_unit_mode = None
         self._active_unit_mode = None
         self._fan_level = None
@@ -156,10 +167,14 @@ class DanthermDevice(DanthermModbus):
         self._filter_remain = None
         self._filter_remain_level = None
         self._last_current_operation = None
-        self._operation_change_timeout = MIN_DT
-        self.events = EventStack()
-        self.coordinator = None
+        self._coordinator: DanthermCoordinator | None = None
         self.installed_components = 0
+
+        # During config flow we may not have a ConfigEntry yet
+        if config_entry is not None:
+            self._options = config_entry.options
+        else:
+            self._options = {}
 
         # Initialize filtered sensors
         self._filtered_sensors = {
@@ -200,49 +215,17 @@ class DanthermDevice(DanthermModbus):
             },
         }
 
-        self._adaptive_triggers = {
-            ATTR_BOOST_MODE_TRIGGER: {
-                "name": "boost",
-                "associated_entities": [
-                    ATTR_BOOST_MODE,
-                    ATTR_BOOST_MODE_TIMEOUT,
-                    ATTR_BOOST_OPERATION_SELECTION,
-                ],
-                "detected": None,
-                "undetected": None,
-                "timeout": None,
-                "trigger": None,
-                "unsub": None,
-            },
-            ATTR_ECO_MODE_TRIGGER: {
-                "name": "eco",
-                "associated_entities": [
-                    ATTR_ECO_MODE,
-                    ATTR_ECO_MODE_TIMEOUT,
-                    ATTR_ECO_OPERATION_SELECTION,
-                ],
-                "detected": None,
-                "undetected": None,
-                "timeout": None,
-                "trigger": None,
-                "unsub": None,
-            },
-            ATTR_HOME_MODE_TRIGGER: {
-                "name": "home",
-                "associated_entities": [
-                    ATTR_HOME_MODE,
-                    ATTR_HOME_MODE_TIMEOUT,
-                    ATTR_HOME_OPERATION_SELECTION,
-                ],
-                "detected": None,
-                "undetected": None,
-                "timeout": None,
-                "trigger": None,
-                "unsub": None,
-            },
-        }
+    @property
+    def coordinator(self) -> DanthermCoordinator | None:
+        """Override coordinator property from DanthermAdaptiveManager."""
+        return self._coordinator
 
-    async def async_init_and_connect(self) -> DanthermCoordinator:
+    @coordinator.setter
+    def coordinator(self, value: DanthermCoordinator | None) -> None:
+        """Set coordinator property."""
+        self._coordinator = value
+
+    async def async_init_and_connect(self) -> DanthermCoordinator | None:
         """Set up modbus for Dantherm Device."""
 
         _LOGGER.debug("Setup has started")
@@ -254,18 +237,20 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Installed components (610) = %s", hex(self.installed_components))
 
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
-        self._device_type = system_id >> 24
-        _LOGGER.debug("Device type = %s", self.get_device_type)
-        _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
+        if system_id is not None:
+            self._device_type = system_id >> 24
+            _LOGGER.debug("Device type = %s", self.get_device_type)
+            _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
 
-        self._device_fw_version = await self._read_holding_uint32(
-            MODBUS_REGISTER_FIRMWARE_VERSION
-        )
-        _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
-        self._device_serial_number = await self._read_holding_uint64(
-            MODBUS_REGISTER_SERIAL_NUMBER
-        )
-        _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
+        fw_version = await self._read_holding_uint32(MODBUS_REGISTER_FIRMWARE_VERSION)
+        if fw_version is not None:
+            self._device_fw_version = fw_version
+            _LOGGER.debug("Firmware version = %s", self.get_device_fw_version)
+
+        serial_number = await self._read_holding_uint64(MODBUS_REGISTER_SERIAL_NUMBER)
+        if serial_number is not None:
+            self._device_serial_number = serial_number
+            _LOGGER.debug("Serial number = %d", self.get_device_serial_number)
 
         self._device_ab_switch_position = await self.get_device_ab_switch_position()
 
@@ -274,36 +259,41 @@ class DanthermDevice(DanthermModbus):
         else:
             _LOGGER.debug("No HAC controller installed")
 
-        # Create coordinator
-        self.coordinator = DanthermCoordinator(
-            self._hass,
-            self._device_name,
-            self,
-            self._scan_interval,
-            self._config_entry,
-        )
+        # Create coordinator only if we have a config_entry (not during config flow)
+        if self._config_entry is not None:
+            self.coordinator = DanthermCoordinator(
+                self._hass,
+                self._device_name,
+                self,
+                self._scan_interval,
+                self._config_entry,
+            )
 
-        # Load stored entities
-        await self.coordinator.async_load_entities()
+            # Load stored entities
+            await self.coordinator.async_load_entities()
+            return self.coordinator
 
-        return self.coordinator
+        # During config flow, we don't have a config_entry yet, so return None
+        return None
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start the integration."""
 
-        # Set up adaptive triggers
-        await self.set_up_adaptive_triggers(self._options)
+        # Set up adaptive triggers - only if we have a config_entry
+        if self._config_entry is not None:
+            await self.async_set_up_adaptive_manager()
 
         # Do the first refresh of entities
-        await self.coordinator.async_config_entry_first_refresh()
+        if self.coordinator is not None:
+            await self.coordinator.async_config_entry_first_refresh()
 
         # Set up tracking for adaptive triggers if any
         if (
-            self.get_boost_mode_trigger_available
-            or self.get_eco_mode_trigger_available
-            or self.get_home_mode_trigger_available
+            self._get_boost_mode_trigger_available
+            or self._get_eco_mode_trigger_available
+            or self._get_home_mode_trigger_available
         ):
-            await self._set_up_tracking_for_adaptive_triggers(self._options)
+            await self.async_set_up_tracking_for_adaptive_triggers()
 
         # Remove chached properties
         self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
@@ -311,13 +301,13 @@ class DanthermDevice(DanthermModbus):
         self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
         self.__dict__.pop("_get_humidity_entity_installed", None)
         self.__dict__.pop("_get_air_quality_entity_installed", None)
-        self.__dict__.pop("get_boost_mode_trigger_available", None)
-        self.__dict__.pop("get_eco_mode_trigger_available", None)
-        self.__dict__.pop("get_home_mode_trigger_available", None)
+        self.__dict__.pop("_get_boost_mode_trigger_available", None)
+        self.__dict__.pop("_get_eco_mode_trigger_available", None)
+        self.__dict__.pop("_get_home_mode_trigger_available", None)
 
-    async def async_initialize_after_restart(self):
+    async def async_init_after_start(self) -> None:
         """Initialize the device after a restart."""
-        await self._initialize_adaptive_triggers()
+        await self.async_initialize_adaptive_triggers()
 
     async def async_install_entity(
         self, description: DanthermEntityDescription
@@ -342,25 +332,28 @@ class DanthermDevice(DanthermModbus):
                 or description.data_exclude_if_below
                 or description.data_exclude_if is not None
             ):
-                entity_data = await self.coordinator.async_get_entity_data(description)
-                if entity_data:
-                    state = entity_data["state"]
+                if self.coordinator is not None:
+                    entity_data = await self.coordinator.async_get_entity_data(
+                        description
+                    )
+                    if entity_data:
+                        state = entity_data["state"]
 
-                    if (
-                        (
-                            description.data_exclude_if is not None
-                            and description.data_exclude_if == state
-                        )
-                        or (
-                            description.data_exclude_if_above is not None
-                            and state >= description.data_exclude_if_above
-                        )
-                        or (
-                            description.data_exclude_if_below is not None
-                            and state <= description.data_exclude_if_below
-                        )
-                    ):
-                        return True
+                        if (
+                            (
+                                description.data_exclude_if is not None
+                                and description.data_exclude_if == state
+                            )
+                            or (
+                                description.data_exclude_if_above is not None
+                                and state >= description.data_exclude_if_above
+                            )
+                            or (
+                                description.data_exclude_if_below is not None
+                                and state <= description.data_exclude_if_below
+                            )
+                        ):
+                            return True
             return False
 
         async def exclude_from_firmware_version(
@@ -385,8 +378,66 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Excluding an entity=%s", description.key)
         return False
 
-    def _get_entity_state_from_coordinator(self, entity: str, default=None):
+    def get_device_entities(self) -> list[er.RegistryEntry]:
+        """Return all entities that belong to this integration's device."""
+        if self._config_entry is None:
+            return []
+
+        entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
+
+        # Find device_id der matcher denne config entry
+        device_id = next(
+            (
+                d.id
+                for d in device_registry.devices.values()
+                if self._config_entry.entry_id in d.config_entries
+            ),
+            None,
+        )
+
+        if not device_id:
+            _LOGGER.warning(
+                "No device found for config entry: %s", self._config_entry.entry_id
+            )
+            return []
+
+        return [
+            entry
+            for entry in entity_registry.entities.values()
+            if entry.device_id == device_id
+        ]
+
+    def get_device_id(self) -> str | None:
+        """Return the device ID for this integration's device."""
+        if self._config_entry is None:
+            return None
+
+        device_registry = dr.async_get(self._hass)
+
+        # Find device_id that matches this config entry
+        device_id = next(
+            (
+                d.id
+                for d in device_registry.devices.values()
+                if self._config_entry.entry_id in d.config_entries
+            ),
+            None,
+        )
+
+        if not device_id:
+            _LOGGER.warning(
+                "No device found for config entry: %s", self._config_entry.entry_id
+            )
+
+        return device_id
+
+    def get_entity_state_from_coordinator(
+        self, entity: str, default: Any = None
+    ) -> Any:
         """Get entity state from coordinator."""
+        if self.coordinator is None:
+            return default
         states = self.coordinator.data.get(entity, None)
         if states:
             return states["state"]
@@ -398,19 +449,54 @@ class DanthermDevice(DanthermModbus):
         return self._attr_available
 
     @property
-    def get_current_unit_mode(self):
+    def get_device_name(self) -> str:
+        """Device name."""
+
+        return self._device_name
+
+    @property
+    def get_device_type(self) -> str:
+        """Device type."""
+
+        device_type = DEVICE_TYPES.get(self._device_type, None)
+        if device_type is None:
+            device_type = f"UNKNOWN {self._device_type}"
+        device_mode = None
+        if self._device_ab_switch_position == ABSwitchPosition.A:
+            device_mode = "Mode A"
+        elif self._device_ab_switch_position == ABSwitchPosition.B:
+            device_mode = "Mode B"
+        if device_mode is None:
+            return device_type
+        return f"{device_type} ({device_mode})"
+
+    @property
+    def get_device_fw_version(self) -> float:
+        """Device firmware version."""
+
+        major = (self._device_fw_version >> 8) & 0xFF
+        minor = self._device_fw_version & 0xFF
+        return float(f"{major}.{minor:02}")
+
+    @property
+    def get_device_serial_number(self) -> int:
+        """Device serial number."""
+        return self._device_serial_number
+
+    @property
+    def get_current_unit_mode(self) -> Any:
         """Get current unit mode."""
 
         return self._current_unit_mode
 
     @property
-    def get_active_unit_mode(self):
+    def get_active_unit_mode(self) -> Any:
         """Get active unit mode."""
 
         return self._active_unit_mode
 
     @property
-    def get_operation_selection(self):
+    def get_operation_selection(self) -> Any:
         """Get operation selection."""
 
         if self._active_unit_mode is None or self._current_unit_mode is None:
@@ -446,8 +532,7 @@ class DanthermDevice(DanthermModbus):
         _LOGGER.debug("Unknown mode of operation=%s", self._active_unit_mode)
         return STATE_MANUAL
 
-    @property
-    def get_current_operation(self):
+    def get_current_operation(self) -> str | None:
         """Get current operation."""
 
         if self._active_unit_mode is None:
@@ -504,9 +589,8 @@ class DanthermDevice(DanthermModbus):
         return icons.get(result, "mdi:fan-plus")
 
     @property
-    def get_fan_level(self):
+    def get_fan_level(self) -> int | None:
         """Get fan level."""
-
         return self._fan_level
 
     @property
@@ -526,7 +610,7 @@ class DanthermDevice(DanthermModbus):
             CurrentUnitMode.Automatic: "mdi:fan-auto",
             CurrentUnitMode.WeekProgram: "mdi:fan-clock",
         }
-        if mode in mode_icons:
+        if mode is not None and mode in mode_icons:
             return mode_icons[mode]
 
         op = self.get_operation_selection
@@ -540,83 +624,84 @@ class DanthermDevice(DanthermModbus):
 
         return "mdi:fan"
 
-    async def async_get_current_unit_mode(self):
+    async def async_get_current_unit_mode(self) -> int | None:
         """Get current unit mmode."""
-
         self._current_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_CURRENT_MODE
         )
-        _LOGGER.debug("Current unit mode = %s", self._to_hex(self._current_unit_mode))
+        _LOGGER.debug(
+            "Current unit mode = %s",
+            self._to_hex(self._current_unit_mode)
+            if self._current_unit_mode is not None
+            else None,
+        )
         return self._current_unit_mode
 
-    async def async_get_active_unit_mode(self):
+    async def async_get_active_unit_mode(self) -> int | None:
         """Get active unit mode."""
 
         self._active_unit_mode = await self._read_holding_uint32(
             MODBUS_REGISTER_ACTIVE_MODE
         )
-        _LOGGER.debug("Active unit mode = %s", self._to_hex(self._active_unit_mode))
+        _LOGGER.debug(
+            "Active unit mode = %s",
+            self._to_hex(self._active_unit_mode)
+            if self._active_unit_mode is not None
+            else None,
+        )
         return self._active_unit_mode
 
-    async def async_get_fan_level(self):
+    async def async_get_fan_level(self) -> int | None:
         """Get fan level."""
 
         self._fan_level = await self._read_holding_uint32(MODBUS_REGISTER_FAN_LEVEL)
         _LOGGER.debug("Fan level = %s", self._fan_level)
         return self._fan_level
 
-    async def async_get_alarm(self):
+    async def async_get_alarm(self) -> int | None:
         """Get alarm."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
         if result not in (None, 0, self._alarm):
             # Create persistent notification if alarm is not zero
-            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
-                await self._create_notification("sensor", ATTR_ALARM, result)
+            if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
+                await async_create_key_value_notification(
+                    self._hass,
+                    self._device_name,
+                    "sensor",
+                    ATTR_ALARM,
+                    str(result) if result is not None else None,
+                )
 
         self._alarm = result
         _LOGGER.debug("Alarm = %s", self._alarm)
         return self._alarm
 
-    async def async_get_sensor_filtering(self):
+    async def async_get_sensor_filtering(self) -> bool:
         """Get sensor filtering."""
 
-        self._sensor_filtering = self._get_entity_state_from_coordinator(
+        self._sensor_filtering = self.get_entity_state_from_coordinator(
             ATTR_SENSOR_FILTERING, False
         )
         return self._sensor_filtering
 
-    async def async_get_week_program_selection(self):
+    async def async_get_week_program_selection(self) -> int | None:
         """Get week program selection."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION)
         _LOGGER.debug("Week program selection = %s", result)
         return result
 
+    async def async_get_calendar(self) -> None:
+        """Get calendar."""
+
+        await self.async_update_adaptive_calendar()
+
     @property
-    def get_alarm(self):
+    def get_alarm(self) -> int | None:
         """Get alarm."""
 
         return self._alarm
-
-    async def set_alarm_reset(self, value=None):
-        """Reset alarm."""
-
-        # Dismiss persistent alarm notification if it exists
-        self._dismiss_notification(ATTR_ALARM)
-
-        if value is None:
-            value = self._alarm
-        await self._write_holding_uint32(MODBUS_REGISTER_ALARM_RESET, value)
-
-    async def async_get_bypass_damper(self):
-        """Get bypass damper."""
-
-        self._bypass_damper = await self._read_holding_uint32(
-            MODBUS_REGISTER_BYPASS_DAMPER
-        )
-        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
-        return self._bypass_damper
 
     @property
     def get_bypass_damper_icon(self) -> str:
@@ -671,88 +756,64 @@ class DanthermDevice(DanthermModbus):
             return True
         return False
 
-    @cached_property
-    def _get_filter_lifetime_entity_installed(self) -> bool:
-        """Check if the filter lifetime entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_LIFETIME)
-
-    @cached_property
-    def _get_filter_remain_entity_installed(self) -> bool:
-        """Check if the filter remain entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN)
-
-    @cached_property
-    def _get_filter_remain_level_entity_installed(self) -> bool:
-        """Check if the filter remain level entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_FILTER_REMAIN_LEVEL)
-
-    @cached_property
-    def _get_humidity_entity_installed(self) -> bool:
-        """Check if the humidity entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_HUMIDITY)
-
-    @cached_property
-    def _get_air_quality_entity_installed(self) -> bool:
-        """Check if the air quality entity is installed (cached)."""
-        return self.coordinator.is_entity_installed(ATTR_AIR_QUALITY)
-
-    async def async_get_filter_lifetime(self):
-        """Get filter lifetime."""
-
-        self._filter_lifetime = await self._read_holding_uint32(
-            MODBUS_REGISTER_FILTER_LIFETIME
-        )
-        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
-
-        return self._filter_lifetime
-
-    async def async_get_filter_remain(self):
-        """Get filter remain."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
-        if result == 0 and result != self._filter_remain:
-            # Create persistent notification if filter remain is zero
-            if not self._options.get(ATTR_DISABLE_NOTIFICATIONS, False):
-                await self._create_notification("sensor", ATTR_FILTER_REMAIN, result)
-
-        self._filter_remain = result
-        _LOGGER.debug("Filter remain = %s", self._filter_remain)
-
-        if not self._get_filter_remain_level_entity_installed:
-            await self.async_get_filter_remain_level()
-
-        return self._filter_remain
-
-    async def async_get_filter_remain_level(self):
-        """Get filter remain level."""
-
-        if self._get_filter_lifetime_entity_installed:
-            filter_lifetime = self._filter_lifetime
-        else:
-            filter_lifetime = await self._read_holding_uint32(
-                MODBUS_REGISTER_FILTER_LIFETIME
-            )
-
-        if self._get_filter_remain_entity_installed:
-            filter_remain = self._filter_remain
-        else:
-            filter_remain = await self._read_holding_uint32(
-                MODBUS_REGISTER_FILTER_REMAIN
-            )
-
-        if filter_lifetime is None or filter_remain is None:
-            return None
-
-        self._filter_remain_level = 0
-        if filter_remain <= filter_lifetime:
-            self._filter_remain_level = int(
-                (filter_lifetime - filter_remain) / (filter_lifetime / 3)
-            )
-        _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
-        return self._filter_remain_level
+    @property
+    def get_bypass_available(self) -> bool:
+        """Get bypass available."""
+        return self._bypass_maximum_temperature != 0.0
 
     @property
-    def get_filter_remain_attrs(self):
+    def get_disable_bypass(self) -> bool:
+        """Get disable bypass."""
+        return self._bypass_maximum_temperature == 0.0
+
+    @property
+    def get_exhaust_temperature_unknown(self) -> bool:
+        """Check if exhaust temperature is not applicable."""
+
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
+
+        if self.get_bypass_available and self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
+
+    @property
+    def get_supply_temperature_unknown(self) -> bool:
+        """Check if supply temperature is not applicable."""
+
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+
+        if self.get_bypass_available and self._bypass_damper in (
+            BypassDamperState.InProgress,
+            BypassDamperState.Opening,
+            BypassDamperState.Opened,
+            BypassDamperState.Closing,
+        ):
+            return True
+        return False
+
+    @property
+    def get_outdoor_temperature_unknown(self) -> bool:
+        """Check if outdoor temperature is not applicable."""
+
+        if self._options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False):
+            return False
+
+        if self._current_unit_mode == CurrentUnitMode.Summer:
+            return True
+        return False
+
+    @property
+    def get_filter_remain_attrs(self) -> dict[str, int] | None:
         """Get filter remain attributes."""
 
         result = self._filter_remain_level
@@ -760,577 +821,15 @@ class DanthermDevice(DanthermModbus):
             return {"level": result}
         return None
 
-    async def async_get_night_mode_start_time(self):
-        """Get night mode start time."""
-
-        hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_START_HOUR)
-        if hour is None:
-            return None
-        minute = await self._read_holding_uint32(
-            MODBUS_REGISTER_NIGHT_MODE_START_MINUTE
-        )
-        if minute is None:
-            return None
-
-        result = f"{hour:02}:{minute:02}"
-        _LOGGER.debug("Night mode start = %s", result)
-        return result
-
-    async def async_get_night_mode_end_time(self):
-        """Get night mode end time."""
-
-        hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_HOUR)
-        if hour is None:
-            return None
-        minute = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_MINUTE)
-        if minute is None:
-            return None
-
-        result = f"{hour:02}:{minute:02}"
-        _LOGGER.debug("Night mode end = %s", result)
-        return result
-
     @property
-    def get_bypass_available(self) -> bool:
-        """Get bypass available."""
-        return self._bypass_maximum_temperature != 0.0
-
-    async def async_get_bypass_minimum_temperature(self):
-        """Get bypass minimum temperature."""
-
-        result = await self._read_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, 1)
-        _LOGGER.debug("Bypass minimum temperature = %.1f", result)
-        return result
-
-    async def async_get_bypass_maximum_temperature(self):
-        """Get bypass maximum temperature."""
-
-        self._bypass_maximum_temperature = await self._read_holding_float32(
-            MODBUS_REGISTER_BYPASS_MAX_TEMP, 1
-        )
-        _LOGGER.debug(
-            "Bypass maximum temperature = %.1f", self._bypass_maximum_temperature
-        )
-        return self._bypass_maximum_temperature
-
-    async def async_get_manual_bypass_duration(self):
-        """Get manual bypass duration."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION)
-        _LOGGER.debug("Manual bypass duration = %s", result)
-        return result
-
-    async def async_get_bypass_minimum_temperature_summer(self):
-        """Get bypass minimum temperature for summer."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, 1
-        )
-        _LOGGER.debug("Bypass minimum temperature (summer) = %.1f", result)
-        return result
-
-    async def async_get_bypass_maximum_temperature_summer(self):
-        """Get bypass maximum temperature for summer."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, 1
-        )
-        _LOGGER.debug("Bypass maximum temperature (summer) = %.1f", result)
-        return result
-
-    @property
-    def get_disable_bypass(self) -> bool:
-        """Get disable bypass."""
-        return self._bypass_maximum_temperature == 0.0
-
-    async def set_filter_reset(self, value=None):
-        """Reset filter."""
-
-        # Dismiss persistent alarm notification if it exists
-        self._dismiss_notification(ATTR_FILTER_REMAIN)
-
-        if value is None:
-            value = 1
-        await self._write_holding_uint32(MODBUS_REGISTER_FILTER_RESET, value)
-
-    async def set_active_unit_mode(self, value):
-        """Set active unit mode."""
-
-        await self._write_holding_uint32(MODBUS_REGISTER_ACTIVE_MODE, value)
-
-    async def set_operation_selection(self, value):
-        """Set operation selection."""
-
-        current_operation = self.get_operation_selection
-
-        if value is None:
-            return
-
-        if current_operation == value:
-            _LOGGER.debug("Operation selection is already set to %s", value)
-            return
-
-        async def update_operation(
-            current_mode, active_mode, fan_level: int | None = None
-        ):
-            """Update the operation mode and fan level."""
-
-            if current_operation == STATE_AWAY and current_mode != CurrentUnitMode.Away:
-                await update_operation(CurrentUnitMode.Away, ActiveUnitMode.EndAway)
-            elif (
-                current_operation == STATE_FIREPLACE
-                and current_mode != CurrentUnitMode.Fireplace
-            ):
-                await update_operation(
-                    CurrentUnitMode.Fireplace, ActiveUnitMode.EndFireplace
-                )
-            elif (
-                current_operation == STATE_SUMMER
-                and current_mode != CurrentUnitMode.Summer
-            ):
-                await update_operation(CurrentUnitMode.Summer, ActiveUnitMode.EndSummer)
-
-            _LOGGER.debug(
-                "Setting operation mode to %s and active mode to %s with fan level %s",
-                current_mode,
-                active_mode,
-                fan_level,
-            )
-
-            # Update the current unit mode
-            await self.set_active_unit_mode(active_mode)
-
-            # Always set the fan level even if it's the same as before, as it may
-            # change after setting the operation mode.
-            if fan_level is not None:
-                await self.set_fan_level(fan_level)
-
-        if value == STATE_AUTOMATIC:
-            await update_operation(CurrentUnitMode.Automatic, ActiveUnitMode.Automatic)
-        elif value == STATE_AWAY:
-            # For away mode, check if the last operation was not away before updating
-            if self._last_current_operation != STATE_AWAY:
-                await update_operation(CurrentUnitMode.Away, ActiveUnitMode.StartAway)
-        elif value == STATE_FIREPLACE:
-            # For fireplace mode, check if the last operation was not fireplace before updating
-            if self._last_current_operation != STATE_FIREPLACE:
-                await update_operation(
-                    CurrentUnitMode.Fireplace, ActiveUnitMode.StartFireplace
-                )
-        elif value == STATE_SUMMER:
-            # For summer mode, check if the last operation was not summer before updating
-            if self._last_current_operation != STATE_SUMMER:
-                await update_operation(
-                    CurrentUnitMode.Summer, ActiveUnitMode.StartSummer
-                )
-        elif value == STATE_LEVEL_1:
-            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 1)
-        elif value == STATE_LEVEL_2:
-            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 2)
-        elif value == STATE_LEVEL_3:
-            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 3)
-        elif value == STATE_LEVEL_4:
-            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 4)
-        elif value == STATE_MANUAL:
-            # If in manual mode and the fan level is 0, change it to 1; otherwise leave it as is.
-            fan_level = 1 if self._fan_level == 0 else None
-            await update_operation(
-                CurrentUnitMode.Manual, ActiveUnitMode.Manual, fan_level
-            )
-        elif value == STATE_STANDBY:
-            # Standby means the fan should be off (0)
-            await update_operation(CurrentUnitMode.Manual, ActiveUnitMode.Manual, 0)
-        elif value == STATE_WEEKPROGRAM:
-            await update_operation(
-                CurrentUnitMode.WeekProgram, ActiveUnitMode.WeekProgram
-            )
-
-    async def set_fan_level(self, value):
-        """Set fan level."""
-
-        # Write the level to the fan level register
-        await self._write_holding_uint32(MODBUS_REGISTER_FAN_LEVEL, value)
-
-    async def set_week_program_selection(self, value):
-        """Set week program selection."""
-
-        # Write the program selection to the week program selection register
-        await self._write_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION, value)
-
-    async def set_filter_lifetime(self, value):
-        """Set filter lifetime."""
-
-        # Write the lifetime to filter lifetime register
-        await self._write_holding_uint32(MODBUS_REGISTER_FILTER_LIFETIME, value)
-
-    async def set_bypass_damper(self, feature: CoverEntityFeature = None):
-        """Set bypass damper."""
-
-        async def toggle_bypass_damper():
-            """Toggle the bypass damper state."""
-            if (
-                self.get_active_unit_mode & ActiveUnitMode.ManualBypass
-                == ActiveUnitMode.ManualBypass
-            ):
-                await self.set_active_unit_mode(ActiveUnitMode.DeselectManualBypass)
-            else:
-                await self.set_active_unit_mode(ActiveUnitMode.SelectManualBypass)
-
-        if feature is CoverEntityFeature.OPEN:
-            if self._bypass_damper not in (
-                BypassDamperState.InProgress,
-                BypassDamperState.Opened,
-                BypassDamperState.Opening,
-            ):
-                await toggle_bypass_damper()
-        elif feature is CoverEntityFeature.CLOSE:
-            if self._bypass_damper not in (
-                BypassDamperState.InProgress,
-                BypassDamperState.Closed,
-                BypassDamperState.Closing,
-            ):
-                await toggle_bypass_damper()
-
-    async def set_humidity_setpoint(self, value):
-        """Set humidity setpoint."""
-
-        # Write the setpoint to the humidity setpoint register
-        await self._write_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT, value)
-
-    async def set_humidity_setpoint_summer(self, value):
-        """Set humidity setpoint for summer."""
-
-        # Write the setpoint to the humidity setpoint summer register
-        await self._write_holding_uint32(
-            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER, value
-        )
-
-    async def set_night_mode_start_time(self, value):
-        """Set night mode start time."""
-
-        # Split the time string into hours and minutes
-        hours, minutes = map(int, value.split(":"))
-
-        if not (0 <= hours < 24 and 0 <= minutes < 60):
-            _LOGGER.error("Invalid time format: %s", value)
-            return
-
-        # Write the hours to the hour register
-        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_START_HOUR, hours)
-
-        # Write the minutes to the minute register
-        await self._write_holding_uint32(
-            MODBUS_REGISTER_NIGHT_MODE_START_MINUTE, minutes
-        )
-
-    async def set_night_mode_end_time(self, value):
-        """Set night mode end time."""
-
-        # Split the time string into hours and minutes
-        hours, minutes = map(int, value.split(":"))
-
-        if not (0 <= hours < 24 and 0 <= minutes < 60):
-            _LOGGER.error("Invalid time format: %s", value)
-            return
-
-        # Write the hours to the hour register
-        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_HOUR, hours)
-
-        # Write the minutes to the minute register
-        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_MINUTE, minutes)
-
-    async def set_bypass_minimum_temperature(self, value):
-        """Set bypass minimum temperature."""
-
-        # Write the temperature to the minimum temperature register
-        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, value)
-
-    async def set_bypass_maximum_temperature(self, value):
-        """Set bypass maximum temperature."""
-
-        # Write the temperature to the maximum temperature register
-        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP, value)
-
-    async def set_manual_bypass_duration(self, value):
-        """Set manual bypass duration."""
-
-        # Write the duration to the manual bypass duration register
-        await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
-
-    async def set_bypass_minimum_temperature_summer(self, value):
-        """Set bypass minimum temperature for summer."""
-
-        # Write the temperature to the minimum temperature summer register
-        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, value)
-
-    async def set_bypass_maximum_temperature_summer(self, value):
-        """Set bypass maximum temperature for summer."""
-
-        # Write the temperature to the maximum temperature summer register
-        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, value)
-
-    async def set_disable_bypass(self, value: bool):
-        """Set automatic bypass."""
-
-        # If value is True, set the maximum temperature to 0.0 to disable automatic bypass
-        if value:
-            await self.set_bypass_maximum_temperature(0.0)
-        else:
-            # If value is False, set the maximum temperature to a non-zero value (e.g., 24.0)
-            await self.set_bypass_maximum_temperature(24.0)
-
-    async def async_get_humidity(self):
-        """Get humidity."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
-        _LOGGER.debug("Humidity = %s", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("humidity", result)
-
-    async def async_get_humidity_level(self):
-        """Get humidity level with hysteresis."""
-
-        if self._get_humidity_entity_installed:
-            humidity = self._get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
-        else:
-            humidity = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
-
-        if humidity is None:
-            _LOGGER.debug("Humidity Level is not available")
-            return None
-
-        previous = self._get_entity_state_from_coordinator(ATTR_HUMIDITY_LEVEL, None)
-
-        if previous == 0 and humidity > 32:
-            level = 1
-        elif previous == 1:
-            if humidity <= 28:
-                level = 0
-            elif humidity > 42:
-                level = 2
-            else:
-                level = 1
-        elif previous == 2:
-            if humidity <= 38:
-                level = 1
-            elif humidity > 62:
-                level = 3
-            else:
-                level = 2
-        elif previous == 3 and humidity <= 58:
-            level = 2
-        else:  # noqa: PLR5501
-            if humidity <= 30:
-                level = 0
-            elif humidity <= 40:
-                level = 1
-            elif humidity <= 60:
-                level = 2
-            else:
-                level = 3
-
-        _LOGGER.debug("Humidity Level = %s", level)
-        return level
-
-    async def async_get_humidity_setpoint(self):
-        """Get humidity setpoint."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT)
-        _LOGGER.debug("Humidity setpoint = %s", result)
-        return result
-
-    async def async_get_humidity_setpoint_summer(self):
-        """Get humidity setpoint (summer)."""
-
-        result = await self._read_holding_uint32(
-            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER
-        )
-        _LOGGER.debug("Humidity setpoint (summer) = %s", result)
-        return result
-
-    async def async_get_air_quality(self):
-        """Get air quality."""
-
-        result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
-        _LOGGER.debug("Air quality = %s", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("air_quality", result)
-
-    async def async_get_air_quality_level(self):
-        """Get air quality level with hysteresis."""
-
-        if self._get_air_quality_entity_installed:
-            air_quality = self._get_entity_state_from_coordinator(
-                ATTR_AIR_QUALITY, None
-            )
-        else:
-            air_quality = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
-
-        if air_quality is None:
-            _LOGGER.debug("Air Quality Level is not available")
-            return None
-
-        previous = self._get_entity_state_from_coordinator(ATTR_AIR_QUALITY_LEVEL, None)
-
-        if previous == 0 and air_quality > 650:
-            level = 1
-        elif previous == 1:
-            if air_quality <= 550:
-                level = 0
-            elif air_quality > 1050:
-                level = 2
-            else:
-                level = 1
-        elif previous == 2:
-            if air_quality <= 950:
-                level = 1
-            elif air_quality > 1450:
-                level = 3
-            else:
-                level = 2
-        elif previous == 3 and air_quality <= 1350:
-            level = 2
-        else:  # noqa: PLR5501
-            if air_quality <= 600:
-                level = 0
-            elif air_quality <= 1000:
-                level = 1
-            elif air_quality <= 1400:
-                level = 2
-            else:
-                level = 3
-
-        _LOGGER.debug("Air Quality Level = %s", level)
-        return level
-
-    @property
-    def get_exhaust_temperature_unknown(self) -> bool:
-        """Check if exhaust temperature is not applicable."""
-
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
-            return False
-
-        if self.get_bypass_available and self._bypass_damper in (
-            BypassDamperState.InProgress,
-            BypassDamperState.Opening,
-            BypassDamperState.Opened,
-            BypassDamperState.Closing,
-        ):
-            return True
-        return False
-
-    async def async_get_exhaust_temperature(self):
-        """Get exhaust temperature."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_EXHAUST_TEMP, precision=1
-        )
-        _LOGGER.debug("Exhaust temperature = %.1f", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("exhaust", result)
-
-    async def async_get_extract_temperature(self):
-        """Get extract temperature."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_EXTRACT_TEMP, precision=1
-        )
-        _LOGGER.debug("Extract temperature = %.1f", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("extract", result)
-
-    @property
-    def get_supply_temperature_unknown(self) -> bool:
-        """Check if supply temperature is not applicable."""
-
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
-            return False
-
-        if self._current_unit_mode == CurrentUnitMode.Summer:
-            return True
-
-        if self.get_bypass_available and self._bypass_damper in (
-            BypassDamperState.InProgress,
-            BypassDamperState.Opening,
-            BypassDamperState.Opened,
-            BypassDamperState.Closing,
-        ):
-            return True
-        return False
-
-    async def async_get_supply_temperature(self):
-        """Get supply temperature."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_SUPPLY_TEMP, precision=1
-        )
-        _LOGGER.debug("Supply temperature = %.1f", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("supply", result)
-
-    @property
-    def get_outdoor_temperature_unknown(self) -> bool:
-        """Check if outdoor temperature is not applicable."""
-
-        if self._options.get(ATTR_DISABLE_TEMPERATURE_UNKNOWN, False):
-            return False
-
-        if self._current_unit_mode == CurrentUnitMode.Summer:
-            return True
-        return False
-
-    async def async_get_outdoor_temperature(self):
-        """Get outdoor temperature."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_OUTDOOR_TEMP, precision=1
-        )
-        _LOGGER.debug("Outdoor temperature = %.1f", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("outdoor", result)
-
-    async def async_get_room_temperature(self):
-        """Get room temperature."""
-
-        result = await self._read_holding_float32(
-            MODBUS_REGISTER_ROOM_TEMP, precision=1
-        )
-        _LOGGER.debug("Room temperature = %.1f", result)
-        if not self._sensor_filtering:
-            return result
-        return self._filter_sensor("room", result)
-
-    async def async_get_adaptive_state(self) -> str:
-        """Get adaptive state."""
-
-        # Get the top event
-        top = self.events.top()
-        result = STATE_NONE
-        if top:
-            result = self.events.top()["event"]
-        _LOGGER.debug("Adaptive state = %s", result)
-        return result
-
-    @property
-    def get_adaptive_state_attrs(self):
+    def get_adaptive_state_attrs(self) -> dict[str, Any] | None:
         """Get adaptive state attributes."""
         if self.events:
             return {"events": self.events.to_list()}
         return None
 
-    async def async_get_features(self) -> str:
-        """Get features."""
-
-        return self.installed_components
-
     @property
-    def get_features_attrs(self):
+    def get_features_attrs(self) -> dict[str, bool]:
         """Get feattures attributes."""
 
         return {
@@ -1370,6 +869,676 @@ class DanthermDevice(DanthermModbus):
             == ComponentClass.DI2_Override,
         }
 
+    @cached_property
+    def _get_boost_mode_trigger_available(self) -> bool:
+        """Get boost mode trigger available."""
+        return bool(self._options.get(CONF_BOOST_MODE_TRIGGER, False))
+
+    @cached_property
+    def _get_eco_mode_trigger_available(self) -> bool:
+        """Get eco mode trigger available."""
+        return bool(self._options.get(CONF_ECO_MODE_TRIGGER, False))
+
+    @cached_property
+    def _get_home_mode_trigger_available(self) -> bool:
+        """Get home mode trigger available."""
+        return bool(self._options.get(CONF_HOME_MODE_TRIGGER, False))
+
+    @cached_property
+    def _get_filter_lifetime_entity_installed(self) -> bool:
+        """Check if the filter lifetime entity is installed (cached)."""
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_LIFETIME
+        )
+
+    @cached_property
+    def _get_filter_remain_entity_installed(self) -> bool:
+        """Check if the filter remain entity is installed (cached)."""
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_REMAIN
+        )
+
+    @cached_property
+    def _get_filter_remain_level_entity_installed(self) -> bool:
+        """Check if the filter remain level entity is installed (cached)."""
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_FILTER_REMAIN_LEVEL
+        )
+
+    @cached_property
+    def _get_humidity_entity_installed(self) -> bool:
+        """Check if the humidity entity is installed (cached)."""
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_HUMIDITY
+        )
+
+    @cached_property
+    def _get_air_quality_entity_installed(self) -> bool:
+        """Check if the air quality entity is installed (cached)."""
+        return self.coordinator is not None and self.coordinator.is_entity_installed(
+            ATTR_AIR_QUALITY
+        )
+
+    async def set_alarm_reset(self, value: int | None = None) -> None:
+        """Set alarm reset."""
+
+        # Dismiss persistent alarm notification if it exists
+        await async_dismiss_notification(self._hass, self._device_name, ATTR_ALARM)
+
+        if value is None:
+            value = self._alarm
+        await self._write_holding_uint32(MODBUS_REGISTER_ALARM_RESET, value)
+
+    async def async_get_bypass_damper(self) -> int | None:
+        """Get bypass damper."""
+
+        self._bypass_damper = await self._read_holding_uint32(
+            MODBUS_REGISTER_BYPASS_DAMPER
+        )
+        _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
+        return self._bypass_damper
+
+    async def async_get_filter_lifetime(self) -> int | None:
+        """Get filter lifetime."""
+
+        self._filter_lifetime = await self._read_holding_uint32(
+            MODBUS_REGISTER_FILTER_LIFETIME
+        )
+        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+
+        return self._filter_lifetime
+
+    async def async_get_filter_remain(self) -> int | None:
+        """Get filter remain."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
+        if result == 0 and result != self._filter_remain:
+            # Create persistent notification if filter remain is zero
+            if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
+                await async_create_key_value_notification(
+                    self._hass,
+                    self._device_name,
+                    "sensor",
+                    ATTR_FILTER_REMAIN,
+                    str(result),
+                )
+
+        self._filter_remain = result
+        _LOGGER.debug("Filter remain = %s", self._filter_remain)
+
+        if not self._get_filter_remain_level_entity_installed:
+            await self.async_get_filter_remain_level()
+
+        return self._filter_remain
+
+    async def async_get_filter_remain_level(self) -> int | None:
+        """Get filter remain level."""
+
+        if self._get_filter_lifetime_entity_installed:
+            filter_lifetime = self._filter_lifetime
+        else:
+            filter_lifetime = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_LIFETIME
+            )
+
+        if self._get_filter_remain_entity_installed:
+            filter_remain = self._filter_remain
+        else:
+            filter_remain = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_REMAIN
+            )
+
+        if filter_lifetime is None or filter_remain is None:
+            return None
+
+        self._filter_remain_level = 0
+        if filter_remain <= filter_lifetime:
+            self._filter_remain_level = int(
+                (filter_lifetime - filter_remain) / (filter_lifetime / 3)
+            )
+        _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
+        return self._filter_remain_level
+
+    async def async_get_night_mode_start_time(self) -> str | None:
+        """Get night mode start time."""
+
+        hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_START_HOUR)
+        if hour is None:
+            return None
+        minute = await self._read_holding_uint32(
+            MODBUS_REGISTER_NIGHT_MODE_START_MINUTE
+        )
+        if minute is None:
+            return None
+
+        result = f"{hour:02}:{minute:02}"
+        _LOGGER.debug("Night mode start = %s", result)
+        return result
+
+    async def async_get_night_mode_end_time(self) -> str | None:
+        """Get night mode end time."""
+
+        hour = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_HOUR)
+        if hour is None:
+            return None
+        minute = await self._read_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_MINUTE)
+        if minute is None:
+            return None
+
+        result = f"{hour:02}:{minute:02}"
+        _LOGGER.debug("Night mode end = %s", result)
+        return result
+
+    async def async_get_bypass_minimum_temperature(self) -> float | None:
+        """Get bypass minimum temperature."""
+
+        result = await self._read_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, 1)
+        _LOGGER.debug("Bypass minimum temperature = %.1f", result)
+        return result
+
+    async def async_get_bypass_maximum_temperature(self) -> float | None:
+        """Get bypass maximum temperature."""
+
+        self._bypass_maximum_temperature = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MAX_TEMP, 1
+        )
+        _LOGGER.debug(
+            "Bypass maximum temperature = %.1f", self._bypass_maximum_temperature
+        )
+        return self._bypass_maximum_temperature
+
+    async def async_get_manual_bypass_duration(self) -> int | None:
+        """Get manual bypass duration."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION)
+        _LOGGER.debug("Manual bypass duration = %s", result)
+        return result
+
+    async def async_get_bypass_minimum_temperature_summer(self) -> float | None:
+        """Get bypass minimum temperature for summer."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, 1
+        )
+        _LOGGER.debug("Bypass minimum temperature (summer) = %.1f", result)
+        return result
+
+    async def async_get_bypass_maximum_temperature_summer(self) -> float | None:
+        """Get bypass maximum temperature for summer."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, 1
+        )
+        _LOGGER.debug("Bypass maximum temperature (summer) = %.1f", result)
+        return result
+
+    async def set_filter_reset(self, value: int | None = None) -> None:
+        """Set filter reset."""
+
+        # Dismiss persistent alarm notification if it exists
+        await async_dismiss_notification(
+            self._hass, self._device_name, ATTR_FILTER_REMAIN
+        )
+
+        if value is None:
+            value = 1
+        await self._write_holding_uint32(MODBUS_REGISTER_FILTER_RESET, value)
+
+    async def set_active_unit_mode(self, value: int) -> None:
+        """Set active unit mode."""
+
+        await self._write_holding_uint32(MODBUS_REGISTER_ACTIVE_MODE, value)
+
+    async def set_operation_selection(self, operation: str | None) -> None:
+        """Set operation selection."""
+
+        current_operation = self.get_operation_selection
+
+        if operation is None:
+            return
+
+        if current_operation == operation:
+            _LOGGER.debug("Operation selection is already set to %s", operation)
+            return
+
+        async def apply_active_unit_mode(
+            current_mode: int | None, active_mode: int, selection: int | None = None
+        ) -> None:
+            """Update the operation mode and fan level."""
+            # End previous operation modes if needed
+            special_modes = {
+                STATE_AWAY: (CurrentUnitMode.Away, ActiveUnitMode.EndAway),
+                STATE_FIREPLACE: (
+                    CurrentUnitMode.Fireplace,
+                    ActiveUnitMode.EndFireplace,
+                ),
+                STATE_SUMMER: (CurrentUnitMode.Summer, ActiveUnitMode.EndSummer),
+            }
+            for state, (mode, end_mode) in special_modes.items():
+                # Only update if last operation was not the same
+                if current_operation == state and current_mode != mode:
+                    if self._last_current_operation == state:
+                        continue
+                    await apply_active_unit_mode(mode, end_mode)
+
+            # Update the current unit mode
+            await self.set_active_unit_mode(active_mode)
+
+            # Update selection if provided
+            if current_mode == CurrentUnitMode.Manual and selection is not None:
+                await self.set_fan_level(selection)
+
+        # Map operation to mode, active_mode, and selection
+        unit_mode_map = {
+            STATE_AUTOMATIC: (
+                CurrentUnitMode.Automatic,
+                ActiveUnitMode.Automatic,
+                None,
+            ),
+            STATE_MANUAL: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                1 if self._fan_level == 0 else 3 if self._fan_level == 4 else None,
+            ),
+            STATE_STANDBY: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                0,
+            ),
+            STATE_LEVEL_0: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                0,
+            ),
+            STATE_LEVEL_1: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                1,
+            ),
+            STATE_LEVEL_2: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                2,
+            ),
+            STATE_LEVEL_3: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                3,
+            ),
+            STATE_LEVEL_4: (
+                CurrentUnitMode.Manual,
+                ActiveUnitMode.Manual,
+                4,
+            ),
+            STATE_WEEKPROGRAM: (
+                CurrentUnitMode.WeekProgram,
+                ActiveUnitMode.WeekProgram,
+                None,
+            ),
+            STATE_AWAY: (
+                CurrentUnitMode.Away,
+                ActiveUnitMode.StartAway,
+                None,
+            ),
+            STATE_FIREPLACE: (
+                CurrentUnitMode.Fireplace,
+                ActiveUnitMode.StartFireplace,
+                None,
+            ),
+            STATE_SUMMER: (
+                CurrentUnitMode.Summer,
+                ActiveUnitMode.StartSummer,
+                None,
+            ),
+        }
+
+        um_tuple = unit_mode_map.get(operation)
+        if um_tuple is None:
+            return
+
+        await apply_active_unit_mode(*um_tuple)
+
+    async def set_fan_level(self, value: int) -> None:
+        """Set fan level."""
+
+        # Write the level to the fan level register
+        await self._write_holding_uint32(MODBUS_REGISTER_FAN_LEVEL, value)
+
+    async def set_week_program_selection(self, value: int) -> None:
+        """Set week program selection."""
+
+        # Write the program selection to the week program selection register
+        await self._write_holding_uint32(MODBUS_REGISTER_WEEK_PROGRAM_SELECTION, value)
+
+    async def set_filter_lifetime(self, value: int) -> None:
+        """Set filter lifetime."""
+
+        # Write the lifetime to filter lifetime register
+        await self._write_holding_uint32(MODBUS_REGISTER_FILTER_LIFETIME, value)
+
+    async def set_bypass_damper(
+        self, feature: CoverEntityFeature | None = None
+    ) -> None:
+        """Set bypass damper."""
+
+        async def toggle_bypass_damper() -> None:
+            """Toggle the bypass damper state."""
+            if (
+                self.get_active_unit_mode & ActiveUnitMode.ManualBypass
+                == ActiveUnitMode.ManualBypass
+            ):
+                await self.set_active_unit_mode(ActiveUnitMode.DeselectManualBypass)
+            else:
+                await self.set_active_unit_mode(ActiveUnitMode.SelectManualBypass)
+
+        if feature is CoverEntityFeature.OPEN:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Opened,
+                BypassDamperState.Opening,
+            ):
+                await toggle_bypass_damper()
+        elif feature is CoverEntityFeature.CLOSE:
+            if self._bypass_damper not in (
+                BypassDamperState.InProgress,
+                BypassDamperState.Closed,
+                BypassDamperState.Closing,
+            ):
+                await toggle_bypass_damper()
+
+    async def set_humidity_setpoint(self, value: int) -> None:
+        """Set humidity setpoint."""
+
+        # Write the setpoint to the humidity setpoint register
+        await self._write_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT, value)
+
+    async def set_humidity_setpoint_summer(self, value: int) -> None:
+        """Set humidity setpoint for summer."""
+
+        # Write the setpoint to the humidity setpoint summer register
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER, value
+        )
+
+    async def set_night_mode_start_time(self, value: str) -> None:
+        """Set night mode start time."""
+
+        # Split the time string into hours and minutes
+        hours, minutes = map(int, value.split(":"))
+
+        if not (0 <= hours < 24 and 0 <= minutes < 60):
+            _LOGGER.error("Invalid time format: %s", value)
+            return
+
+        # Write the hours to the hour register
+        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_START_HOUR, hours)
+
+        # Write the minutes to the minute register
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_NIGHT_MODE_START_MINUTE, minutes
+        )
+
+    async def set_night_mode_end_time(self, value: str) -> None:
+        """Set night mode end time."""
+
+        # Split the time string into hours and minutes
+        hours, minutes = map(int, value.split(":"))
+
+        if not (0 <= hours < 24 and 0 <= minutes < 60):
+            _LOGGER.error("Invalid time format: %s", value)
+            return
+
+        # Write the hours to the hour register
+        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_HOUR, hours)
+
+        # Write the minutes to the minute register
+        await self._write_holding_uint32(MODBUS_REGISTER_NIGHT_MODE_END_MINUTE, minutes)
+
+    async def set_bypass_minimum_temperature(self, value: float) -> None:
+        """Set bypass minimum temperature."""
+
+        # Write the temperature to the minimum temperature register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP, value)
+
+    async def set_bypass_maximum_temperature(self, value: float) -> None:
+        """Set bypass maximum temperature."""
+
+        # Write the temperature to the maximum temperature register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP, value)
+
+    async def set_manual_bypass_duration(self, value: int) -> None:
+        """Set manual bypass duration."""
+
+        # Write the duration to the manual bypass duration register
+        await self._write_holding_uint32(MODBUS_REGISTER_MANUAL_BYPASS_DURATION, value)
+
+    async def set_bypass_minimum_temperature_summer(self, value: float) -> None:
+        """Set bypass minimum temperature for summer."""
+
+        # Write the temperature to the minimum temperature summer register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER, value)
+
+    async def set_bypass_maximum_temperature_summer(self, value: float) -> None:
+        """Set bypass maximum temperature for summer."""
+
+        # Write the temperature to the maximum temperature summer register
+        await self._write_holding_float32(MODBUS_REGISTER_BYPASS_MAX_TEMP_SUMMER, value)
+
+    async def set_disable_bypass(self, value: bool) -> None:
+        """Set automatic bypass."""
+
+        # If value is True, set the maximum temperature to 0.0 to disable automatic bypass
+        if value:
+            await self.set_bypass_maximum_temperature(0.0)
+        else:
+            # If value is False, set the maximum temperature to a non-zero value (e.g., 24.0)
+            await self.set_bypass_maximum_temperature(24.0)
+
+    async def clear_adaptive_event_stack(self) -> None:
+        """Clear the adaptive event stack."""
+        if hasattr(self, "events") and self.events:
+            removed_count = self.events.clear_all_events()
+            _LOGGER.info(
+                "Manually cleared %d events from adaptive event stack", removed_count
+            )
+
+    async def async_get_humidity(self) -> int | None:
+        """Get humidity."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
+        _LOGGER.debug("Humidity = %s", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        filtered_result = self._filter_sensor("humidity", float(result))
+        return int(filtered_result)
+
+    async def async_get_humidity_level(self) -> str | None:
+        """Get humidity level with hysteresis."""
+
+        if self._get_humidity_entity_installed:
+            humidity = self.get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
+        else:
+            humidity = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
+
+        if humidity is None:
+            _LOGGER.debug("Humidity Level is not available")
+            return None
+
+        previous = self.get_entity_state_from_coordinator(ATTR_HUMIDITY_LEVEL, None)
+
+        if previous == 0 and humidity > 32:
+            level = 1
+        elif previous == 1:
+            if humidity <= 28:
+                level = 0
+            elif humidity > 42:
+                level = 2
+            else:
+                level = 1
+        elif previous == 2:
+            if humidity <= 38:
+                level = 1
+            elif humidity > 62:
+                level = 3
+            else:
+                level = 2
+        elif previous == 3 and humidity <= 58:
+            level = 2
+        else:  # noqa: PLR5501
+            if humidity <= 30:
+                level = 0
+            elif humidity <= 40:
+                level = 1
+            elif humidity <= 60:
+                level = 2
+            else:
+                level = 3
+
+        _LOGGER.debug("Humidity Level = %s", level)
+        return str(level)
+
+    async def async_get_humidity_setpoint(self) -> int | None:
+        """Get humidity setpoint."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY_SETPOINT)
+        _LOGGER.debug("Humidity setpoint = %s", result)
+        return result
+
+    async def async_get_humidity_setpoint_summer(self) -> int | None:
+        """Get humidity setpoint (summer)."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER
+        )
+        _LOGGER.debug("Humidity setpoint (summer) = %s", result)
+        return result
+
+    async def async_get_air_quality(self) -> int | None:
+        """Get air quality."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
+        _LOGGER.debug("Air quality = %s", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        filtered_result = self._filter_sensor("air_quality", float(result))
+        return int(filtered_result)
+
+    async def async_get_air_quality_level(self) -> str | None:
+        """Get air quality level with hysteresis."""
+
+        if self._get_air_quality_entity_installed:
+            air_quality = self.get_entity_state_from_coordinator(ATTR_AIR_QUALITY, None)
+        else:
+            air_quality = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
+
+        if air_quality is None:
+            _LOGGER.debug("Air Quality Level is not available")
+            return None
+
+        previous = self.get_entity_state_from_coordinator(ATTR_AIR_QUALITY_LEVEL, None)
+
+        if previous == 0 and air_quality > 650:
+            level = 1
+        elif previous == 1:
+            if air_quality <= 550:
+                level = 0
+            elif air_quality > 1050:
+                level = 2
+            else:
+                level = 1
+        elif previous == 2:
+            if air_quality <= 950:
+                level = 1
+            elif air_quality > 1450:
+                level = 3
+            else:
+                level = 2
+        elif previous == 3 and air_quality <= 1350:
+            level = 2
+        else:  # noqa: PLR5501
+            if air_quality <= 600:
+                level = 0
+            elif air_quality <= 1000:
+                level = 1
+            elif air_quality <= 1400:
+                level = 2
+            else:
+                level = 3
+
+        _LOGGER.debug("Air Quality Level = %s", level)
+        return str(level)
+
+    async def async_get_exhaust_temperature(self) -> float | None:
+        """Get exhaust temperature."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_EXHAUST_TEMP, precision=1
+        )
+        _LOGGER.debug("Exhaust temperature = %.1f", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        return self._filter_sensor("exhaust", result)
+
+    async def async_get_extract_temperature(self) -> float | None:
+        """Get extract temperature."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_EXTRACT_TEMP, precision=1
+        )
+        _LOGGER.debug("Extract temperature = %.1f", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        return self._filter_sensor("extract", result)
+
+    async def async_get_supply_temperature(self) -> float | None:
+        """Get supply temperature."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_SUPPLY_TEMP, precision=1
+        )
+        _LOGGER.debug("Supply temperature = %.1f", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        return self._filter_sensor("supply", result)
+
+    async def async_get_outdoor_temperature(self) -> float | None:
+        """Get outdoor temperature."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_OUTDOOR_TEMP, precision=1
+        )
+        _LOGGER.debug("Outdoor temperature = %.1f", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        return self._filter_sensor("outdoor", result)
+
+    async def async_get_room_temperature(self) -> float | None:
+        """Get room temperature."""
+
+        result = await self._read_holding_float32(
+            MODBUS_REGISTER_ROOM_TEMP, precision=1
+        )
+        _LOGGER.debug("Room temperature = %.1f", result)
+        if not self._sensor_filtering or result is None:
+            return result
+        return self._filter_sensor("room", result)
+
+    async def async_get_adaptive_state(self) -> str:
+        """Get adaptive state."""
+
+        # Get the top event
+        top = self.events.top()
+        result = STATE_NONE
+        if top:
+            result = top["event"]
+        _LOGGER.debug("Adaptive state = %s", result)
+        return result
+
+    async def async_get_features(self) -> str:
+        """Get features."""
+
+        return str(self.installed_components)
+
     def _filter_sensor(self, sensor: str, new_value: float) -> float:
         """Filter a given sensor, ensuring smooth initialization and spike reduction."""
 
@@ -1378,13 +1547,13 @@ class DanthermDevice(DanthermModbus):
             raise ValueError(f"Invalid sensor: {sensor}")
 
         sensor_data = self._filtered_sensors[sensor]
-        history: deque = sensor_data["history"]
+        history: deque[float] = sensor_data["history"]
 
         # Collect initial samples and compute average until initialized
         if not sensor_data["initialized"]:
-            if len(history) < history.maxlen:
+            if history.maxlen is not None and len(history) < history.maxlen:
                 history.append(new_value)
-                return round(sum(history) / len(history), 1)
+                return float(round(sum(history) / len(history), 1))
             sensor_data["initialized"] = True
 
         # Compute rolling average
@@ -1392,611 +1561,8 @@ class DanthermDevice(DanthermModbus):
 
         # If new value is a spike, return rolling average (reject spike)
         if abs(new_value - rolling_average) > sensor_data["max_change"]:
-            return round(rolling_average, 1)
+            return float(round(rolling_average, 1))
 
         # Otherwise, accept new value and update history
         history.append(new_value)
         return new_value
-
-    @cached_property
-    def get_boost_mode_trigger_available(self) -> bool:
-        """Get boost mode trigger available."""
-        return self._options.get(ATTR_BOOST_MODE_TRIGGER, False)
-
-    @cached_property
-    def get_eco_mode_trigger_available(self) -> bool:
-        """Get eco mode trigger available."""
-        return self._options.get(ATTR_ECO_MODE_TRIGGER, False)
-
-    @cached_property
-    def get_home_mode_trigger_available(self) -> bool:
-        """Get home mode trigger available."""
-        return self._options.get(ATTR_HOME_MODE_TRIGGER, False)
-
-    async def set_up_adaptive_triggers(self, options: dict):
-        """Enable/disable associated entities based on configured adaptive triggers."""
-        entities = self._get_device_entities()
-
-        any_trigger_available = False
-
-        for trigger in ADAPTIVE_TRIGGERS:
-            trigger_entity = options.get(trigger)
-
-            enabled = bool(trigger_entity)
-            if enabled:
-                any_trigger_available = True
-
-            trigger_data = self._adaptive_triggers.get(trigger)
-            if not trigger_data:
-                _LOGGER.debug("No data for trigger: %s", trigger)
-                continue
-
-            for entity_name in trigger_data["associated_entities"]:
-                self._set_entity_enabled_by_suffix(entities, entity_name, enabled)
-
-        # The adaptive_state entity should be enabled or disabled if any triggers are available.
-        self._set_entity_enabled_by_suffix(
-            entities, ATTR_ADAPTIVE_STATE, any_trigger_available
-        )
-
-    async def _set_up_tracking_for_adaptive_triggers(self, options: dict):
-        """Set up tracking for adaptive triggers."""
-
-        for trigger in ADAPTIVE_TRIGGERS:
-            trigger_entity = options.get(trigger)
-            if trigger_entity:
-                trigger_data = self._adaptive_triggers[trigger]
-
-                if trigger_entity != trigger_data["trigger"]:
-                    if trigger_data["unsub"]:
-                        trigger_data["unsub"]()  # remove previous listener
-                    trigger_data["trigger"] = trigger_entity
-                    if trigger_data["trigger"]:
-                        trigger_data["unsub"] = async_track_state_change_event(
-                            self._hass,
-                            [trigger_data["trigger"]],
-                            getattr(
-                                self, f"_{trigger_data['name']}_mode_trigger_changed"
-                            ),
-                        )
-
-    async def _initialize_adaptive_triggers(self) -> None:
-        """Initialize adaptive triggers."""
-
-        for trigger_name, trigger_data in self._adaptive_triggers.items():
-            # Get trigger entity and skip if not available
-            trigger_entity = trigger_data["trigger"]
-            if not trigger_entity:
-                continue
-
-            # Get the trigger entity state
-            state = self._hass.states.get(trigger_entity)
-            if state is None:
-                continue
-
-            # Look up the event for this trigger
-            event = self._lookup_event(trigger_data["name"])
-            if event is None:
-                continue
-
-            trigger_data["timeout"] = event["timeout"]
-
-            _LOGGER.debug(
-                "Adaptive trigger '%s': timeout=%s",
-                trigger_name,
-                trigger_data["timeout"],
-            )
-
-    async def _boost_mode_trigger_changed(self, event):
-        """Boost trigger state change callback."""
-        if self._get_entity_state_from_coordinator(ATTR_BOOST_MODE):
-            await self._mode_trigger_changed(ATTR_BOOST_MODE_TRIGGER, event)
-
-    async def _eco_mode_trigger_changed(self, event):
-        """Eco trigger state change callback."""
-        if self._get_entity_state_from_coordinator(ATTR_ECO_MODE):
-            await self._mode_trigger_changed(ATTR_ECO_MODE_TRIGGER, event)
-
-    async def _home_mode_trigger_changed(self, event):
-        """Home trigger state change callback."""
-        if self._get_entity_state_from_coordinator(ATTR_HOME_MODE):
-            await self._mode_trigger_changed(ATTR_HOME_MODE_TRIGGER, event)
-
-    async def _mode_trigger_changed(self, trigger: str, event):
-        """Mode trigger state change callback."""
-
-        # Skip, if old state is None or Unknown
-        old_state = event.data.get("old_state")
-        if old_state is None or old_state.state == STATE_UNKNOWN:
-            return
-
-        # Skip, if new state is None
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-
-        # Check if state is detected
-        mode_data = self._adaptive_triggers[trigger]
-        if new_state.state == STATE_ON:
-            mode_data["detected"] = ha_now()
-            _LOGGER.debug("%s detected!", trigger.capitalize())
-
-        # Check if state is undetected
-        elif new_state.state == STATE_OFF:
-            mode_data["undetected"] = ha_now()
-            _LOGGER.debug("%s undetected!", trigger.capitalize())
-
-    async def async_update_adaptive_triggers(self):
-        """Update adaptive triggers."""
-
-        adaptive_trigger = None
-        earliest = MAX_DT
-
-        for trigger_name, mode_data in self._adaptive_triggers.items():
-            # Skip if there is no trigger
-            if not mode_data.get("trigger"):
-                continue
-
-            detected_time = mode_data["detected"]
-            undetected_time = mode_data["undetected"]
-            timeout_time = mode_data["timeout"]
-
-            if detected_time:
-                if undetected_time:
-                    # If 'undetected' is older than 'detected',
-                    # reset 'undetected'
-                    if undetected_time < detected_time:
-                        mode_data["undetected"] = None
-
-                if detected_time < earliest:
-                    earliest = detected_time
-                    adaptive_trigger = trigger_name
-
-            elif undetected_time:
-                if undetected_time < earliest:
-                    earliest = undetected_time
-                    adaptive_trigger = trigger_name
-
-            elif timeout_time and timeout_time < ha_now():
-                if timeout_time < earliest:
-                    earliest = timeout_time
-                    adaptive_trigger = trigger_name
-
-        if adaptive_trigger:
-            await self._update_adaptive_trigger_state(adaptive_trigger)
-
-    async def _update_adaptive_trigger_state(self, trigger_name: str):
-        """Update adaptive trigger state."""
-
-        mode_name = trigger_name.split("_", maxsplit=1)[0]
-        # Check if mode is switch on
-        if not self._get_entity_state_from_coordinator(f"{mode_name}_mode", False):
-            return
-
-        mode_data = self._adaptive_triggers[trigger_name]
-        current_time = ha_now()
-
-        # Check if operation mode change timeout has passed
-        if current_time < self._operation_change_timeout:
-            return
-
-        current_operation = self.get_current_operation
-        target_operation = None
-
-        def get_trigger_timeout():  # Get the trigger timeout from it's number entity
-            minutes = (
-                3
-                if IS_DEBUG
-                else self._get_entity_state_from_coordinator(
-                    f"{mode_name}_mode_timeout", 5
-                )
-            )
-            return current_time + timedelta(minutes=minutes)
-
-        if mode_data["detected"]:  # Check if the trigger is detected
-            # Set new trigger timeout
-            mode_data["timeout"] = get_trigger_timeout()
-
-            # Check if this is not a repeated detection
-            if not self._event_exists(mode_name):
-                # Get the trigger target operation from it's selection entity
-                possible_target = self._get_entity_state_from_coordinator(
-                    f"{mode_name}_operation_selection", None
-                )
-
-                # Push the new event to the stack
-                if self._push_event(
-                    mode_name,
-                    current_operation,
-                    possible_target,
-                    timeout=mode_data["timeout"],
-                ):
-                    target_operation = possible_target
-            else:
-                # Update the event with the new timeout
-                self._update_event(mode_name, timeout=mode_data["timeout"])
-
-            mode_data["detected"] = None
-
-        elif mode_data["undetected"]:  # Check if the trigger is undetected
-            # Set new trigger timeout
-            mode_data["timeout"] = get_trigger_timeout()
-
-            # Update the event with the new timeout
-            self._update_event(mode_name, timeout=mode_data["timeout"])
-
-            mode_data["undetected"] = None
-
-        # Check if the trigger has timed out
-        elif mode_data["timeout"] and mode_data["timeout"] < current_time:
-            # If the trigger is still on extend the timeout
-            state = self._hass.states.get(mode_data["trigger"])
-            if state is not None and state.state == STATE_ON:
-                # Set new trigger timeout
-                mode_data["timeout"] = get_trigger_timeout()
-
-                # Update the event with the new timeout
-                self._update_event(mode_name, timeout=mode_data["timeout"])
-
-                _LOGGER.debug("%s timeout extended!", trigger_name.capitalize())
-                return
-
-            # Remove event from stack
-            target_operation = self._pop_event(mode_name)
-
-            mode_data["timeout"] = None
-
-        # Change the operation mode if any and different from the current operation
-        if not target_operation or target_operation == current_operation:
-            return
-
-        # Set the operation change timeout
-        self._operation_change_timeout = current_time + (
-            timedelta(seconds=30)  # Default timeout for debug mode
-            if IS_DEBUG
-            else timedelta(minutes=2)  # Default timeout
-        )
-
-        _LOGGER.debug("Target operation = %s", target_operation)
-
-        await self.set_operation_selection(target_operation)
-
-    async def _create_notification(self, platform: str, key: str, state):
-        """Create a persistent notification."""
-
-        # Get the message and state text for the notification
-        message = await self.get_translated_exception_text(f"{key}_notification", "")
-        if message != "":
-            message += "\n\n"
-        message += await self.get_translated_exception_text(ATTR_DISABLE_NOTIFICATIONS)
-        state_text = await self.get_translated_state_text(platform, key, state)
-
-        # Generate a unique notification id based on the device name and key
-        notification_id = f"{self._device_name}_{key}_notification"
-
-        # Create a persistent notification in Home Assistant
-        self._hass.async_create_task(
-            self._hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "title": f"{self._device_name}: {state_text}",
-                    "message": f"{message}",
-                    "notification_id": f"{notification_id}",
-                },
-            )
-        )
-
-    async def _dismiss_notification(self, key: str):
-        """Dismiss a persistent notification."""
-
-        # Generate the notification id based on the device name and key
-        notification_id = f"{self._device_name}_{key}_notification"
-
-        # Dismiss the persistent notification in Home Assistant
-        self._hass.async_create_task(
-            self._hass.services.async_call(
-                "persistent_notification",
-                "dismiss",
-                {"notification_id": notification_id},
-            )
-        )
-
-    def _push_event(
-        self, mode_name, current_operation, new_operation, timeout=None
-    ) -> bool:
-        """Push event to event stack."""
-        result = self.events.push(
-            mode_name, current_operation, new_operation, timeout=timeout
-        )
-        _LOGGER.debug("Push events: %s", self.events)
-        return result
-
-    def _update_event(self, mode_name, timeout=None):
-        """Update event in event stack."""
-        result = self.events.update(mode_name, timeout=timeout)
-        _LOGGER.debug("Update events: %s", self.events)
-        return result
-
-    def _pop_event(self, mode_name):
-        """Pop event from event stack."""
-        operation = self.events.pop(mode_name)
-        _LOGGER.debug("Pop events: %s = %s", mode_name, operation)
-        return operation
-
-    def _lookup_event(self, mode_name):
-        """Lookup event in event stack."""
-        event = self.events.lookup(mode_name)
-        _LOGGER.debug("Lookup events: %s = %s", mode_name, event)
-        return event
-
-    def _event_exists(self, mode_name) -> bool:
-        """Check if event exists."""
-        return self.events.exists(mode_name)
-
-    @property
-    def get_device_name(self) -> str:
-        """Device name."""
-
-        return self._device_name
-
-    @property
-    def get_device_type(self) -> str:
-        """Device type."""
-
-        device_type = DEVICE_TYPES.get(self._device_type, None)
-        if device_type is None:
-            device_type = f"UNKNOWN {self._device_type}"
-        device_mode = None
-        if self._device_ab_switch_position == ABSwitchPosition.A:
-            device_mode = "Mode A"
-        elif self._device_ab_switch_position == ABSwitchPosition.B:
-            device_mode = "Mode B"
-        if device_mode is None:
-            return device_type
-        return f"{device_type} ({device_mode})"
-
-    @property
-    def get_device_fw_version(self) -> str:
-        """Device firmware version."""
-
-        major = (self._device_fw_version >> 8) & 0xFF
-        minor = self._device_fw_version & 0xFF
-        return float(f"{major}.{minor:02}")
-
-    @property
-    def get_device_serial_number(self) -> int:
-        """Device serial number."""
-        return self._device_serial_number
-
-    async def get_device_ab_switch_position(self) -> ABSwitchPosition | None:
-        """Get device A/B switch position."""
-
-        HALLeft = await self._read_holding_uint32(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
-        )
-        _LOGGER.debug("HALLeft = %s", HALLeft)
-        HALRight = await self._read_holding_uint32(
-            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
-        )
-        _LOGGER.debug("HALRight = %s", HALRight)
-
-        if HALRight == 1 and HALLeft == 0:
-            self._device_ab_switch_position = ABSwitchPosition.A
-        elif HALRight == 0 and HALLeft == 1:
-            self._device_ab_switch_position = ABSwitchPosition.B
-        else:
-            self._device_ab_switch_position = ABSwitchPosition.Unknown
-        _LOGGER.debug(
-            "Device A/B switch position = %s", self._device_ab_switch_position.name
-        )
-        return self._device_ab_switch_position
-
-    async def get_device_id_from_entity(self, hass: HomeAssistant, entity_id):
-        """Find device_id from entity_id."""
-        entity_registry = er.async_get(hass)
-        device_registry = dr.async_get(hass)
-
-        entity = entity_registry.async_get(entity_id)
-        if entity is None or entity.device_id is None:
-            return None
-
-        device_entry = device_registry.async_get(entity.device_id)
-        if device_entry is None:
-            return None
-
-        return device_entry.id
-
-    def _get_device_entities(self) -> list:
-        """Return all entities that belong to this integration's device."""
-        entity_registry = er.async_get(self._hass)
-        device_registry = dr.async_get(self._hass)
-
-        # Find device_id der matcher denne config entry
-        device_id = next(
-            (
-                d.id
-                for d in device_registry.devices.values()
-                if self._config_entry.entry_id in d.config_entries
-            ),
-            None,
-        )
-
-        if not device_id:
-            _LOGGER.warning(
-                "No device found for config entry: %s", self._config_entry_id
-            )
-            return []
-
-        return [
-            entry
-            for entry in entity_registry.entities.values()
-            if entry.device_id == device_id
-        ]
-
-    def _set_entity_enabled_by_suffix(
-        self, entities: list, name_suffix: str, enable: bool
-    ):
-        """Enable/disable entities that match a name suffix (with optional _#)."""
-        pattern = re.compile(rf"_{name_suffix}(_\d+)?$")
-        for entry in entities:
-            if pattern.search(entry.unique_id):
-                _LOGGER.debug(
-                    "Updating entity: %s, enable: %s", entry.entity_id, enable
-                )
-                if enable:
-                    self._set_entity_disabled_by(entry.entity_id, None)
-                else:
-                    self._set_entity_disabled_by(
-                        entry.entity_id, RegistryEntryDisabler.INTEGRATION
-                    )
-
-    def _set_entity_disabled_by(self, entity_id, disabled_by: RegistryEntryDisabler):
-        """Set entity disabled by state."""
-
-        entity_registry = er.async_get(self._hass)
-
-        entity_registry.async_update_entity(
-            entity_id,
-            disabled_by=disabled_by,
-        )
-
-    async def get_translated_exception_text(
-        self, key: str, default=None, message="message"
-    ) -> str:
-        """Return a translated exception message."""
-        lang = self._hass.config.language
-        translations = await async_get_translations(
-            self._hass, language=lang, category="exceptions", integrations=[DOMAIN]
-        )
-        full_key = f"component.{DOMAIN}.exceptions.{key}.{message}"
-
-        return translations.get(full_key, default)
-
-    async def get_translated_state_text(self, platform: str, key: str, state) -> str:
-        """Return a translated state text for the current language."""
-        lang = self._hass.config.language
-        translations = await async_get_translations(
-            self._hass, language=lang, category="entity", integrations=[DOMAIN]
-        )
-        full_key = f"component.{DOMAIN}.entity.{platform}.{key}.state.{state}"
-
-        return translations.get(full_key, state)
-
-
-class EventStack(deque):
-    """Event Stack with priority and previous operation tracking."""
-
-    def push(
-        self, event, current_operation, new_operation, event_id=None, timeout=None
-    ) -> bool:
-        """Push an event onto the stack based on priority.
-
-        Returns True if the event becomes the top event, otherwise False.
-        """
-        for item in self:
-            if item["event"] == event and item.get("event_id", None) == event_id:
-                # Update operation and reposition in stack
-                self.remove(item)
-                break
-
-        insert_at = len(self)
-        for idx, item in enumerate(self):
-            if STATE_PRIORITIES.get(event, 0) > STATE_PRIORITIES.get(item["event"], 0):
-                insert_at = idx
-                break
-            if item["event"] == event and item.get("event_id", None) != event_id:
-                insert_at = idx
-                break
-
-        now = timeout if timeout is not None else ha_now()
-        if insert_at == 0:
-            self.appendleft(self._make_item(event, current_operation, now, event_id))
-            return True
-
-        previous_op = self[insert_at - 1]["previous"]
-        self[insert_at - 1]["previous"] = new_operation
-        self.insert(insert_at, self._make_item(event, previous_op, now, event_id))
-        return False
-
-    def update(self, event, event_id=None, timeout=None):
-        """Update the timeout for an existing event to given timeout or now."""
-        now = timeout.isoformat() if timeout is not None else ha_now().isoformat()
-        for item in self:
-            if item["event"] == event and item.get("event_id") == event_id:
-                item["timeout"] = now
-                return True
-        return False
-
-    def pop(self, event, event_id=None):
-        """Remove an event (and optional ID) from the stack and adjust operation if needed.
-
-        Returns the operation of the removed event if it was the top event, otherwise None.
-        """
-        for idx, item in enumerate(self):
-            if item["event"] == event and item.get("event_id", None) == event_id:
-                removed_item = item
-                self.remove(removed_item)
-
-                if idx == 0:
-                    return removed_item["previous"]
-
-                self[idx - 1]["previous"] = removed_item["previous"]
-                return None
-
-        return None
-
-    def exists(self, event, event_id=None):
-        """Check if an event with optional ID exists in the stack."""
-        return any(
-            item["event"] == event and item.get("event_id", None) == event_id
-            for item in self
-        )
-
-    def lookup(self, event, event_id=None):
-        """Look up the operation for a given event and optional ID in the stack."""
-        for item in reversed(self):
-            if item["event"] == event and item.get("event_id", None) == event_id:
-                return item
-        return None
-
-    def top(self):
-        """Return the top event of the stack."""
-        return self[0] if self else None
-
-    def is_top(self, event, event_id=None):
-        """Check if the given event (and optional ID) is the top event in the stack."""
-        return (
-            bool(self)
-            and self[0]["event"] == event
-            and self[0].get("event_id", None) == event_id
-        )
-
-    def to_list(self):
-        """Convert the event stack to a list of items."""
-        return list(self)
-
-    @classmethod
-    def from_list(cls, items):
-        """Create an event stack from a list of items."""
-        stack = cls()
-        for item in items:
-            d = dict(item)
-            if "timeout" in d and isinstance(d["timeout"], str):
-                dt = parse_datetime(d["timeout"])
-                d["timeout"] = dt if dt is not None else d["timeout"]
-            stack.append(d)
-        return stack
-
-    def __repr__(self):
-        """Return a string representation of the event stack."""
-        return f"{self.to_list()}"
-
-    def _make_item(self, event, operation, timeout: datetime, event_id=None):
-        """Create an item for the stack."""
-        item = {"event": event}
-        if event_id is not None:
-            item["event_id"] = event_id
-        item["previous"] = operation
-        item["timeout"] = timeout.isoformat()
-        return item

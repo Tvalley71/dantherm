@@ -87,7 +87,7 @@ class _UdpProto(asyncio.DatagramProtocol):
         self.local_ips = local_ips
         self.by_ip: dict[str, dict[str, Any]] = {}
 
-    def datagram_received(self, data: bytes, addr) -> None:
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         ip, port = addr
         # Ignore own packets
         if ip in self.local_ips:
@@ -150,7 +150,7 @@ async def _discover_unicast_sweep(
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(("0.0.0.0", 0))
     transport, proto = await loop.create_datagram_endpoint(
-        lambda: _UdpProto("0.0.0.0"), sock=sock
+        lambda: _UdpProto(["0.0.0.0"]), sock=sock
     )
     try:
         for host in range(1, 255):

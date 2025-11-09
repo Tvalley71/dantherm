@@ -1,14 +1,19 @@
 """Modbus implementation."""
 
+from __future__ import annotations
+
 import asyncio
+from enum import IntEnum
 import logging
 import re
+from typing import TYPE_CHECKING, Any
 
 from pymodbus import ModbusException
-from voluptuous import Enum
 
 from homeassistant.components.modbus import modbus
-from homeassistant.helpers.entity import EntityDescription
+
+if TYPE_CHECKING:
+    from .device_map import DanthermEntityDescription
 
 # Modbus Register Constants
 MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT = 84
@@ -51,13 +56,21 @@ MODBUS_REGISTER_WEEK_PROGRAM_SELECTION = 466
 MODBUS_REGISTER_WORK_TIME = 624
 
 
-class DataClass(Enum):
+class DataClass(IntEnum):
     """Dantherm modbus data class."""
 
     Int32 = 1
     UInt32 = 2
     UInt64 = 3
     Float32 = 4
+
+
+class ABSwitchPosition(IntEnum):
+    """Dantherm A/B switch position class."""
+
+    Unknown = 0
+    A = 1
+    B = 2
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,12 +90,23 @@ class DanthermModbus:
         self._host = host
         self._port = port
         self._unit_id = int(unit_id)
-        self._client = modbus.AsyncModbusTcpClient(
+        self._client: modbus.AsyncModbusTcpClient | None = modbus.AsyncModbusTcpClient(
             host=self._host, port=self._port, name=name, timeout=10
         )
         self._attr_available = False
         self._read_errors = 0
-        self.coordinator = None
+        # coordinator will be set by subclass
+
+    @property
+    def coordinator(self) -> Any:
+        """Coordinator property - to be implemented by subclass."""
+        # This will be overridden in DanthermDevice
+        return None
+
+    @coordinator.setter
+    def coordinator(self, value: Any) -> None:
+        """Set coordinator - for testing purposes."""
+        # This setter is mainly for test mocking
 
     async def ensure_connected(self) -> bool:
         """Ensure Modbus client is connected."""
@@ -99,10 +123,12 @@ class DanthermModbus:
         self._attr_available = True
         return True
 
-    async def connect_and_verify(self):
+    async def connect_and_verify(self) -> int | bool:
         """Connect to Modbus and verify connection with retries."""
 
         _LOGGER.debug("Attempting Modbus connection for %s", self._host)
+        if self._client is None:
+            return False
         if not await self._client.connect():
             _LOGGER.error("Modbus setup was unsuccessful for %s", self._host)
             raise ValueError("Modbus setup failed")
@@ -122,7 +148,7 @@ class DanthermModbus:
         self._client.close()
         raise ValueError("Modbus client failed to respond")
 
-    async def disconnect_and_close(self):
+    async def disconnect_and_close(self) -> None:
         """Disconnect from Modbus and close connection."""
 
         if self._client is None:
@@ -139,32 +165,33 @@ class DanthermModbus:
 
     async def read_holding_registers(
         self,
-        description: EntityDescription | None = None,
+        description: DanthermEntityDescription | None = None,
         address: int | None = None,
         count: int = 1,
         precision: int | None = None,
         scale: int = 1,
-    ):
+    ) -> int | float | str | list[bool] | list[int] | list[float] | None:
         """Read modbus holding registers."""
         if not await self.ensure_connected():
             _LOGGER.debug("Cannot read, Modbus client unavailable")
             return None
 
-        result = None
+        result: int | float | str | list[bool] | list[int] | list[float] | None = None
         if description:
             if address is None:
                 address = description.data_address
-            match description.data_class:
-                case DataClass.Int32:
-                    result = await self._read_holding_int32(address)
-                case DataClass.UInt32:
-                    result = await self._read_holding_uint32(address)
-                case DataClass.UInt64:
-                    result = await self._read_holding_uint64(address)
-                case DataClass.Float32:
-                    if precision is None:
-                        precision = description.data_precision
-                    result = await self._read_holding_float32(address, precision)
+            if address is not None:
+                match description.data_class:
+                    case DataClass.Int32:
+                        result = await self._read_holding_int32(address)
+                    case DataClass.UInt32:
+                        result = await self._read_holding_uint32(address)
+                    case DataClass.UInt64:
+                        result = await self._read_holding_uint64(address)
+                    case DataClass.Float32:
+                        if precision is None:
+                            precision = getattr(description, "data_precision", None)
+                        result = await self._read_holding_float32(address, precision)
         elif address:
             match count:
                 case 1:
@@ -182,11 +209,11 @@ class DanthermModbus:
 
     async def write_holding_registers(
         self,
-        description: EntityDescription | None = None,
+        description: DanthermEntityDescription | None = None,
         address: int | None = None,
         value: int = 0,
         scale: int = 1,
-    ):
+    ) -> None:
         """Write modbus holding registers."""
         value *= scale
         if description:
@@ -195,17 +222,48 @@ class DanthermModbus:
             data_class = description.data_setclass or description.data_class
             match data_class:
                 case DataClass.UInt32:
-                    await self._write_holding_uint32(address, value)
+                    if address is not None:
+                        # Note: coordinator queue handling is done internally in _write_holding_uint32
+                        await self._write_holding_uint32(address, value)
                 case DataClass.Float32:
-                    await self._write_holding_float32(address, value)
+                    if address is not None:
+                        # Note: coordinator queue handling is done internally in _write_holding_float32
+                        await self._write_holding_float32(address, value)
         else:
-            self.coordinator.enqueue_backend(
-                self.__write_holding_registers, address, value
-            )
+            if self._client is None:
+                _LOGGER.error("Cannot write, Modbus client is None")
+                return
+            if address is not None:
+                if self.coordinator is not None:
+                    self.coordinator.enqueue_backend(
+                        self.__write_holding_registers, address, [value]
+                    )
+                else:
+                    await self.__write_holding_registers(address, [value])
+
+    async def get_device_ab_switch_position(self) -> ABSwitchPosition:
+        """Get device A/B switch position."""
+
+        HALLeft = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT
+        )
+        _LOGGER.debug("HALLeft = %s", HALLeft)
+        HALRight = await self._read_holding_uint32(
+            MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_RIGHT
+        )
+        _LOGGER.debug("HALRight = %s", HALRight)
+
+        result = ABSwitchPosition.Unknown
+        if HALRight == 1 and HALLeft == 0:
+            result = ABSwitchPosition.A
+        elif HALRight == 0 and HALLeft == 1:
+            result = ABSwitchPosition.B
+        _LOGGER.debug("Device A/B switch position = %s", result.name)
+        return result
 
     async def __read_holding_registers_with_retry(
         self, address: int, count: int, retries: int = 3, initial_delay: float = 0.5
-    ):
+    ) -> list[int] | None:
         """Read holding registers with retry using exponential backoff."""
         delay = initial_delay
         for _ in range(retries):
@@ -219,11 +277,15 @@ class DanthermModbus:
         _LOGGER.error("Failed to read holding registers for address %s", address)
         return None
 
-    async def __read_holding_registers(self, address: int, count: int):
+    async def __read_holding_registers(
+        self, address: int, count: int
+    ) -> list[int] | None:
         """Read holding registers."""
         if not await self.ensure_connected():
             return None
         try:
+            if self._client is None:
+                return None
             response = await self._client.read_holding_registers(address, count=count)
             if not response.isError():
                 self._read_errors = 0
@@ -234,93 +296,115 @@ class DanthermModbus:
         self._read_errors += 1
         return None
 
-    async def __write_holding_registers(self, address: int, values):
+    async def __write_holding_registers(self, address: int, values: list[int]) -> None:
         """Write holding registers."""
         if not await self.ensure_connected():
             _LOGGER.debug("Modbus client is not available, cannot write")
             return
         try:
+            if self._client is None:
+                _LOGGER.error("Modbus client is None, cannot write")
+                return
             await self._client.write_registers(address, values)
             _LOGGER.debug("Written %s to register address %d", values, address)
         except ModbusException as err:
             _LOGGER.warning("Write holding registers failed: %s", err)
             self._attr_available = False
 
-    async def _read_holding_uint16(self, address):
+    async def _read_holding_uint16(self, address: int) -> int | None:
         result = await self._read_holding_uint32(address)
-        return result & 0xFFFF
+        return result & 0xFFFF if result is not None else None
 
-    async def _read_holding_int32(self, address):
+    async def _read_holding_int32(self, address: int) -> int | None:
         result = await self.__read_holding_registers_with_retry(address, 2)
-        if result is None:
+        if result is None or self._client is None:
             return None
-        return self._client.convert_from_registers(
+        converted = self._client.convert_from_registers(
             result, self._client.DATATYPE.INT32, "little"
         )
+        if converted is not None and isinstance(converted, (int, float)):
+            return int(converted)
+        return None
 
-    async def _read_holding_uint32(self, address):
+    async def _read_holding_uint32(self, address: int) -> int | None:
         result = await self.__read_holding_registers_with_retry(address, 2)
-        if result is None:
+        if result is None or self._client is None:
             return None
-        return self._client.convert_from_registers(
+        converted = self._client.convert_from_registers(
             result, self._client.DATATYPE.UINT32, "little"
         )
+        if converted is not None and isinstance(converted, (int, float)):
+            return int(converted)
+        return None
 
-    async def _write_holding_uint32(self, address, value):
-        if value is None:
+    async def _write_holding_uint32(self, address: int, value: int | None) -> None:
+        if value is None or self._client is None:
             return
         payload = self._client.convert_to_registers(
             int(value), self._client.DATATYPE.UINT32, "little"
         )
-        self.coordinator.enqueue_backend(
-            self.__write_holding_registers, address, payload
-        )
+        if self.coordinator is not None:
+            self.coordinator.enqueue_backend(
+                self.__write_holding_registers, address, payload
+            )
+        else:
+            await self.__write_holding_registers(address, payload)
 
-    async def _read_holding_uint64(self, address):
+    async def _read_holding_uint64(self, address: int) -> int | None:
         result = await self.__read_holding_registers_with_retry(address, 4)
-        if result is None:
+        if result is None or self._client is None:
             return None
-        return self._client.convert_from_registers(
+        converted = self._client.convert_from_registers(
             result, self._client.DATATYPE.UINT64, "little"
         )
+        if converted is not None and isinstance(converted, (int, float)):
+            return int(converted)
+        return None
 
-    async def _read_holding_float32(self, address, precision):
+    async def _read_holding_float32(
+        self, address: int, precision: int | None
+    ) -> float | None:
         result = await self.__read_holding_registers_with_retry(address, 2)
-        if result is None:
+        if result is None or self._client is None:
             return None
-        value = self._client.convert_from_registers(
+        converted = self._client.convert_from_registers(
             result, self._client.DATATYPE.FLOAT32, "little"
         )
-        if value:
-            if precision >= 0:
-                value = round(value, precision)
-            if precision == 0:
-                value = int(value)
-        return value
+        if converted is not None and isinstance(converted, (int, float)):
+            value = float(converted)
+            if precision is not None:
+                if precision >= 0:
+                    value = round(value, precision)
+                if precision == 0:
+                    value = int(value)
+            return value
+        return None
 
-    async def _write_holding_float32(self, address, value: float):
-        if value is None:
+    async def _write_holding_float32(self, address: int, value: float | None) -> None:
+        if value is None or self._client is None:
             return
         payload = self._client.convert_to_registers(
-            float(value), self._client.DATATYPE.FLOAT32, "little"
+            value, self._client.DATATYPE.FLOAT32, "little"
         )
-        self.coordinator.enqueue_backend(
-            self.__write_holding_registers, address, payload
-        )
+        if self.coordinator is not None:
+            self.coordinator.enqueue_backend(
+                self.__write_holding_registers, address, payload
+            )
+        else:
+            await self.__write_holding_registers(address, payload)
 
-    def _to_hex(self, value):
+    def _to_hex(self, value: int | str) -> str:
         """Convert value to hex string."""
         if isinstance(value, int):
             return hex(value)
-        if isinstance(value, str):
-            # Check if the string is a valid hexadecimal number
-            if re.match(r"^0x[0-9a-fA-F]+$", value):
-                return value
-            # If not, convert it to an integer and then to hex
-            return hex(int(value))
-        return value
+        # value must be str at this point
+        # Check if the string is a valid hexadecimal number
+        if re.match(r"^0x[0-9a-fA-F]+$", value):
+            return value
+        # If not, convert it to an integer and then to hex
+        return hex(int(value))
 
-    async def _read_hac_controller(self):
+    async def _read_hac_controller(self) -> None:
         """Read HAC controller data."""
 
         class HacComponentClass(int):
@@ -346,19 +430,21 @@ class DanthermModbus:
         result = await self._read_holding_uint32(572)
         _LOGGER.debug("High Threshold of CO2 = %s ppm (572)", result)
         result = await self._read_holding_uint32(244)
-        _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
-        if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
-            _LOGGER.debug("CO2 sensor found")
-        if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
-            _LOGGER.debug("Pre-heater found")
-        if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
-            _LOGGER.debug("Pre-cooler found")
-        if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
-            _LOGGER.debug("After-heater found")
-        if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
-            _LOGGER.debug("After-cooler found")
+        if result is not None:
+            _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
+            if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
+                _LOGGER.debug("CO2 sensor found")
+            if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
+                _LOGGER.debug("Pre-heater found")
+            if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
+                _LOGGER.debug("Pre-cooler found")
+            if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
+                _LOGGER.debug("After-heater found")
+            if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
+                _LOGGER.debug("After-cooler found")
         result = await self._read_holding_uint32(300)
-        _LOGGER.debug("Hac active component = %s (300)", hex(result))
+        if result is not None:
+            _LOGGER.debug("Hac active component = %s (300)", hex(result))
         result = await self._read_holding_int32(344)
         _LOGGER.debug("Setpoint of the T2 = %s °C (344)", result)
         result = await self._read_holding_int32(346)

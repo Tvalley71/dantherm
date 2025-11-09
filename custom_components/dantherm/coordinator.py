@@ -1,5 +1,7 @@
 """Coordinator implementation."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -7,12 +9,13 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now as ha_now
 
-from .device_map import DanthermEntityDescription
+from .device_map import DanthermEntityDescription, DanthermSwitchEntityDescription
 from .store import DanthermStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,9 +27,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     def __init__(
         self,
         hass: HomeAssistant,
-        name,
-        hub,
-        scan_interval,
+        name: str,
+        hub: Any,  # DanthermDevice - avoiding circular import
+        scan_interval: int,
         config_entry: ConfigEntry,
         write_delay: float = 0.3,
     ) -> None:
@@ -36,8 +39,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             hass,
             _LOGGER,
             name=f"{name}Coordinator",
-            update_method=self._async_update_data,
+            update_method=self._update_data,
             update_interval=timedelta(seconds=scan_interval),
+            config_entry=config_entry,
         )
         DanthermStore.__init__(
             self,
@@ -49,15 +53,19 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         self._config_entry = config_entry
         self._write_delay = write_delay
         self._attr_available = True
-        self._entities = []
+        self._entities: list[Entity] = []
 
         # Flag to reload the integration on next update
         self._reload_on_update = False
 
         # High-level queue "frontend" actions
-        self._frontend_queue: asyncio.Queue = asyncio.Queue()
+        self._frontend_queue: asyncio.Queue[
+            tuple[Any, tuple[Any, ...], dict[str, Any], asyncio.Future[Any]]
+        ] = asyncio.Queue()
         # Low-level "backend" (modbus)
-        self._backend_queue: deque = deque()
+        self._backend_queue: deque[
+            tuple[Any, tuple[Any, ...], dict[str, Any], asyncio.Future[Any]]
+        ] = deque()
         # Lock to prevent reads/writes overlapping
         self._rw_lock = asyncio.Lock()
         # Event to wake backend processor
@@ -67,11 +75,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         hass.loop.create_task(self._process_frontend())
         hass.loop.create_task(self._process_backend())
 
-    def schedule_reload(self):
+    def schedule_reload(self) -> None:
         """Flag the integration to reload on the next update."""
         self._reload_on_update = True
 
-    async def _async_update_data(self) -> dict:
+    async def _update_data(self) -> dict:
         """Read all entities."""
 
         # Check if any entities is installed
@@ -107,10 +115,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read bypass maximum temperature
             await self.hub.async_get_bypass_maximum_temperature()
 
-            # Update adaptive triggers
+            # Update adaptive state
             await self.hub.async_update_adaptive_triggers()
 
-            data = {}
+            data: dict[str, Any] = {}
             for entity in self._entities:
                 await self.async_update_entity(entity, data)
 
@@ -128,19 +136,24 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 # Reset the flag
                 self._reload_on_update = False
 
+            # Process expired events
+            await self.hub.async_process_expired_events()
+
             _LOGGER.debug("<<< UPDATE END - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
         return data
 
     # ────────────── FRONTEND ─────────────────
 
-    def enqueue_frontend(self, coro_func, *args, **kwargs) -> asyncio.Future:
-        """Schedule a high-level coroutine to run “one at a time.
+    def enqueue_frontend(
+        self, coro_func: Any, *args: Any, **kwargs: Any
+    ) -> asyncio.Future[Any]:
+        """Schedule a high-level coroutine to run "one at a time.
 
         Returns a Future you can await, or ignore if you want fire-and-forget.
         """
         loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        fut: asyncio.Future[Any] = loop.create_future()
         # enqueue with its own future
         self._frontend_queue.put_nowait((coro_func, args, kwargs, fut))
         return fut
@@ -162,7 +175,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             finally:
                 self._frontend_queue.task_done()
 
-    async def _wait_for_backend_drain(self):
+    async def _wait_for_backend_drain(self) -> None:
         """Pause until the backend queue is fully empty."""
         while self._backend_queue:
             # Sleep a fraction of write_delay to poll the queue
@@ -170,7 +183,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
     # ────────────── BACKEND ──────────────────
 
-    async def _process_backend(self):
+    async def _process_backend(self) -> None:
         """Sequentially execute raw Modbus writes with locking + delay."""
         while True:
             # Wait until at least one write is enqueued
@@ -191,28 +204,31 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                         fut.set_exception(exc)
                 await asyncio.sleep(self._write_delay)
 
-    def enqueue_backend(self, func, *args, **kwargs):
+    def enqueue_backend(
+        self, func: Any, *args: Any, **kwargs: Any
+    ) -> asyncio.Future[Any]:
         """Enqueue a low‐level corotine with locking + delay.
 
         Returns a Future you can await if you need to know when it completes,
         """
         loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        fut: asyncio.Future[Any] = loop.create_future()
         self._backend_queue.append((func, args, kwargs, fut))
         self._backend_event.set()
         return fut
 
-    async def async_add_entity(self, entity):
+    async def async_add_entity(self, entity: Entity) -> None:
         """Add entity for update."""
 
-        _LOGGER.debug("Adding entity=%s", entity.key)
+        _LOGGER.debug("Adding entity=%s", getattr(entity, "key", entity.entity_id))
         self._entities.append(entity)
 
-    async def async_remove_entity(self, entity):
+    async def async_remove_entity(self, entity: Entity) -> None:
         """Remove entity from update."""
 
-        if entity.key in self.data:
-            self.data.pop(entity.key)
+        entity_key = getattr(entity, "key", entity.entity_id)
+        if entity_key in self.data:
+            self.data.pop(entity_key)
         if entity in self._entities:
             self._entities.remove(entity)
 
@@ -221,14 +237,28 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         ):  # disconnect and close modbus connection if no more entities
             await self.hub.disconnect_and_close()
 
+    def get_entity(self, entity_id: str) -> Entity | None:
+        """Get entity by key."""
+
+        for entity in self._entities:
+            if entity.entity_id == entity_id:
+                return entity
+        return None
+
     def is_entity_installed(self, key: str) -> bool:
         """Check if the entity with the key is installed."""
-        return any(entity.key == key for entity in self._entities)
+        return any(
+            getattr(entity, "key", entity.entity_id) == key for entity in self._entities
+        )
 
-    async def async_update_entity(self, entity: Entity, data):
+    async def async_update_entity(
+        self, entity: Entity, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Update the entity."""
 
-        description: DanthermEntityDescription = entity.entity_description
+        description = getattr(entity, "entity_description", None)
+        if not isinstance(description, DanthermEntityDescription):
+            return data
 
         entity_data = await self.async_get_entity_data(description)
         if entity_data is not None:
@@ -239,28 +269,47 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     async def async_restore_entity_state(self, entity: Entity, last_state: Any) -> None:
         """Restore the entity."""
 
-        description: DanthermEntityDescription = entity.entity_description
+        description = getattr(entity, "entity_description", None)
+        if not isinstance(description, DanthermEntityDescription):
+            return
 
         if last_state is None:
             return
         self.data.update({description.key: {"state": last_state}})
         entity.async_write_ha_state()
 
-    async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
-        """Schedule a write via the internal queue and update the cached data immediately."""
+    async def async_set_entity_state_from_entity_id(
+        self, entity_id: str, state: Any
+    ) -> Any:
+        """Schedule a set entity state from entity id via the internal queue and update the cached data immediately."""
 
-        description: DanthermEntityDescription = entity.entity_description
+        entity = self.get_entity(entity_id)
+        if entity:
+            await self.async_set_entity_state(entity, state)
+
+    async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
+        """Schedule a set entity state via the internal queue and update the cached data immediately."""
+
+        description = getattr(entity, "entity_description", None)
+        if not isinstance(description, DanthermEntityDescription):
+            return None
+
+        _LOGGER.debug(
+            "Schedule set entity state for entity_id=%s to state=%s",
+            entity.entity_id,
+            state,
+        )
 
         # Enqueue frontent corotine
-        fut = self.enqueue_frontend(self._async_set_entity_state, entity, state)
+        fut = self.enqueue_frontend(self._set_entity_state, entity, state)
 
         # Update the in-memory cache
         self.data.update(
             {
                 description.key: {
                     "state": state,
-                    "icon": entity.icon,
-                    "attrs": entity.extra_state_attributes,
+                    "icon": getattr(entity, "icon", None),
+                    "attrs": getattr(entity, "extra_state_attributes", None),
                 }
             }
         )
@@ -317,16 +366,31 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         return {"state": state, "icon": icon, "attrs": attrs}
 
-    async def _async_set_entity_state(self, entity: Entity, state):
+    async def _set_entity_state(self, entity: Entity, state: Any) -> None:
         """Set entity state."""
 
-        description: DanthermEntityDescription = entity.entity_description
+        description = getattr(entity, "entity_description", None)
+        if not isinstance(description, DanthermEntityDescription):
+            return
+
+        if isinstance(description, DanthermSwitchEntityDescription):
+            if state == STATE_ON:
+                state = True
+            elif state == STATE_OFF:
+                state = False
+
+            if isinstance(state, bool):
+                if state:
+                    state = description.state_seton or description.state_on
+                else:
+                    state = description.state_setoff or description.state_off
 
         if description.data_setinternal:
             await getattr(self.hub, f"set_{description.data_setinternal}")(state)
         elif description.data_address and description.data_setaddress:
             await self.hub.write_holding_registers(description=description, value=state)
         else:
-            await self.async_store_entity_state(entity.key, state)
+            entity_key = getattr(entity, "key", entity.entity_id)
+            await self.async_store_entity_state(entity_key, state)
 
         entity.async_write_ha_state()

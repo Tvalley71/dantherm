@@ -1,9 +1,12 @@
 """Switch implementation."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DanthermDevice
@@ -13,11 +16,20 @@ from .entity import DanthermEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
+    """Set up switch platform."""
+    # Check if entry exists in hass.data
+    if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
     if device_entry is None:
-        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        _LOGGER.error("Device entry is None for %s", config_entry.entry_id)
         return False
 
     device = device_entry.get("device")
@@ -50,47 +62,49 @@ class DanthermSwitch(SwitchEntity, DanthermEntity):
         self._attr_icon = description.icon_off or description.icon
         self.entity_description: DanthermSwitchEntityDescription = description
 
-    async def _async_turn_state(self, state):
+    async def _turn_state(self, state: bool) -> None:
         """Turn the entity state on or off."""
         desc = self.entity_description
 
         self._attr_is_on = state
         self._attr_icon = desc.icon_on if state else desc.icon_off
 
-        value = None
-        if state:
-            value = desc.state_seton or desc.state_on
-        else:
-            value = desc.state_setoff or desc.state_off
-
-        await self.coordinator.async_set_entity_state(self, value)
+        await self.coordinator.async_set_entity_state(self, state)
 
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_turn_state(False)
+        await self._turn_state(False)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_turn_state(True)
+        await self._turn_state(True)
+
+    def _determine_switch_state(self, new_state: Any) -> bool:
+        """Determine switch state from coordinator data."""
+        if isinstance(new_state, bool):
+            return new_state
+
+        if new_state is None:
+            return False
+
+        # Handle numeric state with bitwise operation
+        state_on = self.entity_description.state_on
+        if state_on is not None and isinstance(new_state, int):
+            return (new_state & state_on) == state_on
+
+        # Default to boolean conversion
+        return bool(new_state)
 
     def _coordinator_update(self) -> None:
         """Update data from the coordinator."""
-
         super()._coordinator_update()
 
         if self._attr_changed:
-            new_state = self._attr_new_state
-            if isinstance(new_state, bool):
-                self._attr_is_on = new_state
-            elif (
-                new_state is not None and new_state & self.entity_description.state_on
-            ) == self.entity_description.state_on:
-                self._attr_is_on = True
-            else:
-                self._attr_is_on = False
+            self._attr_is_on = self._determine_switch_state(self._attr_new_state)
 
+            # Update icon based on state
             if self._attr_is_on:
                 self._attr_icon = self.entity_description.icon_on
             else:

@@ -5,7 +5,9 @@ import re
 
 from homeassistant.components.sensor import HomeAssistantError
 from homeassistant.components.text import TextEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DanthermDevice
@@ -15,11 +17,20 @@ from .entity import DanthermEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
+    """Set up text platform."""
+    # Check if entry exists in hass.data
+    if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
     if device_entry is None:
-        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        _LOGGER.error("Device entry is None for %s", config_entry.entry_id)
         return False
 
     device = device_entry.get("device")
@@ -53,13 +64,8 @@ class DanthermTimeText(TextEntity, DanthermEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
-
         if re.match(r"^(?:[01]\d|2[0-3]):[0-5]\d$", value):  # Validates HH:MM format
-            if self.entity_description.data_setinternal:
-                await getattr(
-                    self._device,
-                    f"set_{self.entity_description.data_setinternal}",
-                )(value)
+            await self.coordinator.async_set_entity_state(self, value)
         else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="invalid_timeformat"

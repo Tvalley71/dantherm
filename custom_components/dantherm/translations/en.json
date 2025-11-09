@@ -1,39 +1,62 @@
 {
   "config": {
     "step": {
-        "user": {
-            "title": "Modbus connection",
-            "data": {
-                "host": "Enter ip-address of your device",
-                "name": "Enter prefix for the device entities",
-                "port": "Enter TCP port on which to connect to the device",
-                "scan_interval": "Enter polling frequency of the modbus registers in seconds"
-            }
+      "user": {
+        "title": "Dantherm Configuration",
+        "description": "Configure device connection settings.",
+        "data": {
+          "host": "Device IP address",
+          "name": "Enter prefix for the device entities",
+          "port": "TCP port number"
         }
+      }
     },
     "error": {
-        "invalid_host": "Invalid host or IP address.",
-        "already_configured": "Device is already configured."
+      "invalid_host": "Invalid host or IP address.",
+      "cannot_connect": "Cannot connect to the device.",
+      "already_configured": "Device is already configured."
     },
     "abort": {
-        "invalid_host": "Invalid host or IP address.",
-        "already_configured": "Device is already configured."
+      "invalid_host": "Invalid host or IP address.",
+      "already_configured": "Device is already configured."
     }
   },
   "options": {
     "step": {
-        "init": {
-            "title": "Dantherm Integration Options",
-            "data": {
-                "host": "Enter ip-address of your device",
-                "port": "Enter TCP port on which to connect to the device",
-                "boost_mode_trigger": "Boost mode trigger entity",
-                "eco_mode_trigger": "Eco mode trigger entity",
-                "home_mode_trigger": "Home mode trigger entity",
-                "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes.",
-                "disable_notifications": "Disable notifications."
-            }
+      "init": {
+        "title": "Dantherm Configuration",
+        "description": "## Welcome to the Dantherm Integration! 🏡\n\nThis integration is created by Tvalley71 for the Home Assistant community. You are about to configure advanced settings for your Dantherm ventilation unit.\n\n\n☕ If this integration helps you, I would really appreciate the recognition in the form of a star ⭐ on the integration on GitHub or maybe a cup of coffee at:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nYou will be guided through 3 configuration steps.",
+        "data": {
+          "continue": "Continue"
         }
+      },
+      "network": {
+        "title": "Network Settings",
+        "description": "Configure device connection and data update frequency.",
+        "data": {
+          "host": "Device IP address",
+          "port": "TCP port number",
+          "polling_speed": "Data update frequency"
+        }
+      },
+      "triggers": {
+        "title": "Adaptive Triggers & Scheduling",
+        "description": "Configure entities that trigger different ventilation modes and calendar scheduling.",
+        "data": {
+          "boost_mode_trigger": "Boost mode trigger entity",
+          "eco_mode_trigger": "Eco mode trigger entity",
+          "home_mode_trigger": "Home mode trigger entity",
+          "link_calendar_to_primary": "Link calendar to primary device"
+        }
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "description": "Configure advanced behavior and display options.",
+        "data": {
+          "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes",
+          "disable_notifications": "Disable notifications"
+        }
+      }
     },
     "error": {
         "invalid_host": "Invalid host or IP address.",
@@ -44,6 +67,9 @@
     "button": {
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }
+    },
+    "calendar": {
+      "calendar": { "name": "Calendar" }
     },
     "cover": {
       "bypass_damper": { "name": "Bypass Damper" }
@@ -145,7 +171,7 @@
           "0": "Standby",
           "1": "Manual",
           "2": "Automatic",
-          "3": "Week program",
+          "3": "Week Program",
           "4": "Servoflow",
           "5": "Away Mode",
           "6": "Summer Mode",
@@ -192,6 +218,7 @@
           "boost": "Boost Mode",
           "eco": "Eco Mode",
           "home": "Home Mode",
+          "level_0": "Level 0",
           "level_1": "Level 1",
           "level_2": "Level 2",
           "level_3": "Level 3",
@@ -200,7 +227,7 @@
           "night": "Night Mode",
           "standby": "Standby",
           "summer": "Summer Mode",
-          "week_program": "Week program"
+          "week_program": "Week Program"
         }
       },
       "fan_level": { "name": "Fan Level" },
@@ -268,6 +295,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Fast (10 seconds)",
+        "normal": "Normal (30 seconds)",
+        "slow": "Slow (60 seconds)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",
@@ -306,6 +340,10 @@
       "name": "Set state",
       "description": "Control the state of the ventilation unit with an action call.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "operation_selection": {
           "name": "Operation Selection",
           "description": "Select the desired operation mode. Note: standby will be set back to manual level 3 after about 4 hours."
@@ -336,6 +374,10 @@
       "name": "Set configuration",
       "description": "Adjust the configuration settings for the Dantherm device.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "filter_lifetime": {
           "name": "Filter Lifetime",
           "description": "Set the lifetime of the filter in days."
@@ -362,6 +404,10 @@
       "name": "Set configuration 2",
       "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 2.70 or above.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass Minimum Temperature",
           "description": "Set the minimum temperature for bypass operation."
@@ -388,6 +434,10 @@
       "name": "Set configuration 3",
       "description": "Adjust the configuration settings for the Dantherm device. Note: The following fields are only supported on device's with firmware version 3.08 or above.",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass Minimum Temperature (Summer)",
           "description": "Set the minimum temperature for bypass operation."
@@ -404,11 +454,33 @@
     },
     "filter_reset": {
       "name": "Filter reset",
-      "description": "Reset the filter remaining days to its filter lifetime."
+      "description": "Reset the filter remaining days to its filter lifetime.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Alarm reset",
-      "description": "Reset first pending alarm."
+      "description": "Reset first pending alarm.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Clear adaptive event stack",
+      "description": "Clear all events from the adaptive event stack. This will remove all active adaptive events and reset the adaptive state to \"none\".",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "Select the Dantherm device."
+        }
+      }
     }
   },
   "exceptions": {
@@ -429,6 +501,12 @@
     },
     "filter_remain_notification": {
       "message": "The filter has reached the end of it's lifetime. Please replace the filter."
+    },
+    "invalid_adaptive_state": {
+      "message": "Invalid adaptive state: {state}. Available states: {available_states}"
+    },
+    "rediscovery_notification": {
+      "message": "A {domain} device with serial number {serial_number} was rediscovered at ip-address: {ip_address}."
     }
   }
 }

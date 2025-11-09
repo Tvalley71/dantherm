@@ -3,7 +3,9 @@
 import logging
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DanthermDevice
@@ -13,11 +15,20 @@ from .entity import DanthermEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> bool:
+    """Set up select platform."""
+    # Check if entry exists in hass.data
+    if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
+        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        return False
+
     device_entry = hass.data[DOMAIN][config_entry.entry_id]
     if device_entry is None:
-        _LOGGER.error("Device entry not found for %s", config_entry.entry_id)
+        _LOGGER.error("Device entry is None for %s", config_entry.entry_id)
         return False
 
     device = device_entry.get("device")
@@ -54,17 +65,20 @@ class DanthermSelect(SelectEntity, DanthermEntity):
 
         await self.coordinator.async_set_entity_state(self, option)
 
+    def _process_state_value(self, state: int | None) -> str | None:
+        """Process raw state value and apply bitwise operations."""
+        if state is None:
+            return None
+
+        # Apply bitwise AND if specified
+        if self.entity_description.data_bitwise_and is not None:
+            state &= self.entity_description.data_bitwise_and
+
+        return str(state)
+
     def _coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
         super()._coordinator_update()
 
         if self._attr_changed:
-            new_state = self._attr_new_state
-            if new_state is None:
-                self._attr_current_option = None
-            else:
-                if self.entity_description.data_bitwise_and:
-                    new_state &= self.entity_description.data_bitwise_and
-
-                self._attr_current_option = str(new_state)
+            self._attr_current_option = self._process_state_value(self._attr_new_state)

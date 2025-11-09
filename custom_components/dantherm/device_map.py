@@ -1,10 +1,10 @@
 """The device mapping."""
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.components.calendar import CalendarEntityDescription
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityDescription,
@@ -39,14 +39,34 @@ REQUIRED_PYMODBUS_VERSION = "3.7.4"
 REQUIRED_FIRMWARE_2 = 2.70
 REQUIRED_FIRMWARE_3 = 3.08
 
-SERVICE_SET_STATE = "set_state"
-SERVICE_SET_CONFIGURATION = "set_configuration"
-SERVICE_SET_CONFIGURATION_2 = "set_configuration_2"
-SERVICE_SET_CONFIGURATION_3 = "set_configuration_3"
-SERVICE_FILTER_RESET = "filter_reset"
-SERVICE_ALARM_RESET = "alarm_reset"
+# Polling interval constants
+SCAN_INTERVAL_FAST = 10  # Fast polling - legacy default, good for real-time monitoring
+SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installations
+SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
+
+# For config flow options
+CONF_POLLING_SPEED: Final = "polling_speed"
+POLLING_OPTIONS = {
+    "fast": SCAN_INTERVAL_FAST,
+    "normal": SCAN_INTERVAL_NORMAL,
+    "slow": SCAN_INTERVAL_SLOW,
+}
+
+POLLING_OPTIONS_LIST = ["fast", "normal", "slow"]
+
+SERVICE_SET_STATE: Final = "set_state"
+SERVICE_SET_CONFIGURATION: Final = "set_configuration"
+SERVICE_SET_CONFIGURATION_2: Final = "set_configuration_2"
+SERVICE_SET_CONFIGURATION_3: Final = "set_configuration_3"
+SERVICE_FILTER_RESET: Final = "filter_reset"
+SERVICE_ALARM_RESET: Final = "alarm_reset"
+SERVICE_CLEAR_ADAPTIVE_EVENT_STACK: Final = "clear_adaptive_event_stack"
+ATTR_DEVICE_ID: Final = "device_id"
 
 ATTR_BYPASS_DAMPER: Final = "bypass_damper"
+
+ATTR_CALENDAR: Final = "calendar"
+CONF_LINK_TO_PRIMARY_CALENDAR: Final = "link_calendar_to_primary"
 
 ATTR_OPERATION_SELECTION: Final = "operation_selection"
 STATE_STANDBY: Final = "standby"
@@ -69,28 +89,30 @@ STATE_FAN_LEVEL_2: Final = "2"
 STATE_FAN_LEVEL_3: Final = "3"
 STATE_FAN_LEVEL_4: Final = "4"
 
-ATTR_WEEK_PROGRAM_SELECTION: Final = "week_program_selection"
-STATE_WEEKPROGRAM_1: Final = "0"
-STATE_WEEKPROGRAM_2: Final = "1"
-STATE_WEEKPROGRAM_3: Final = "2"
-STATE_WEEKPROGRAM_4: Final = "3"
-STATE_WEEKPROGRAM_5: Final = "4"
-STATE_WEEKPROGRAM_6: Final = "5"
-STATE_WEEKPROGRAM_7: Final = "6"
-STATE_WEEKPROGRAM_8: Final = "7"
-STATE_WEEKPROGRAM_9: Final = "8"
-STATE_WEEKPROGRAM_10: Final = "9"
-STATE_WEEKPROGRAM_11: Final = "10"
-
-ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
+STATE_LEVEL_0: Final = "level_0"
+STATE_LEVEL_1: Final = "level_1"
+STATE_LEVEL_2: Final = "level_2"
 STATE_LEVEL_3: Final = "level_3"
 STATE_LEVEL_4: Final = "level_4"
+
+ATTR_WEEK_PROGRAM_SELECTION: Final = "week_program_selection"
+STATE_WEEK_PROGRAM_1: Final = "0"
+STATE_WEEK_PROGRAM_2: Final = "1"
+STATE_WEEK_PROGRAM_3: Final = "2"
+STATE_WEEK_PROGRAM_4: Final = "3"
+STATE_WEEK_PROGRAM_5: Final = "4"
+STATE_WEEK_PROGRAM_6: Final = "5"
+STATE_WEEK_PROGRAM_7: Final = "6"
+STATE_WEEK_PROGRAM_8: Final = "7"
+STATE_WEEK_PROGRAM_9: Final = "8"
+STATE_WEEK_PROGRAM_10: Final = "9"
+STATE_WEEK_PROGRAM_11: Final = "10"
+
+ATTR_BOOST_OPERATION_SELECTION: Final = "boost_operation_selection"
 
 ATTR_ECO_OPERATION_SELECTION: Final = "eco_operation_selection"
 
 ATTR_HOME_OPERATION_SELECTION: Final = "home_operation_selection"
-STATE_LEVEL_1: Final = "level_1"
-STATE_LEVEL_2: Final = "level_2"
 
 ATTR_DEFAULT_OPERATION_SELECTION: Final = "default_operation_selection"
 
@@ -119,21 +141,21 @@ ATTR_OUTDOOR_TEMPERATURE: Final = "outdoor_temperature"
 
 ATTR_ROOM_TEMPERATURE: Final = "room_temperature"
 
-ATTR_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
+CONF_DISABLE_TEMPERATURE_UNKNOWN: Final = "disable_temperature_unknown"
 
 ATTR_AWAY_MODE: Final = "away_mode"
 
 ATTR_SUMMER_MODE: Final = "summer_mode"
 
-ATTR_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
+CONF_BOOST_MODE_TRIGGER: Final = "boost_mode_trigger"
 ATTR_BOOST_MODE: Final = "boost_mode"
 ATTR_BOOST_MODE_TIMEOUT: Final = "boost_mode_timeout"
 
-ATTR_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
+CONF_ECO_MODE_TRIGGER: Final = "eco_mode_trigger"
 ATTR_ECO_MODE: Final = "eco_mode"
 ATTR_ECO_MODE_TIMEOUT: Final = "eco_mode_timeout"
 
-ATTR_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
+CONF_HOME_MODE_TRIGGER: Final = "home_mode_trigger"
 ATTR_HOME_MODE: Final = "home_mode"
 ATTR_HOME_MODE_TIMEOUT: Final = "home_mode_timeout"
 
@@ -172,7 +194,7 @@ ATTR_ALARM_RESET: Final = "alarm_reset"
 
 ATTR_FEATURES: Final = "features"
 
-ATTR_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
+CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,
@@ -194,23 +216,23 @@ FAN_LEVEL_SELECTIONS = [
 ]
 
 WEEK_PROGRAM_SELECTIONS = [
-    STATE_WEEKPROGRAM_1,
-    STATE_WEEKPROGRAM_2,
-    STATE_WEEKPROGRAM_3,
-    STATE_WEEKPROGRAM_4,
-    STATE_WEEKPROGRAM_5,
-    STATE_WEEKPROGRAM_6,
-    STATE_WEEKPROGRAM_7,
-    STATE_WEEKPROGRAM_8,
-    STATE_WEEKPROGRAM_9,
-    STATE_WEEKPROGRAM_10,
-    STATE_WEEKPROGRAM_11,
+    STATE_WEEK_PROGRAM_1,
+    STATE_WEEK_PROGRAM_2,
+    STATE_WEEK_PROGRAM_3,
+    STATE_WEEK_PROGRAM_4,
+    STATE_WEEK_PROGRAM_5,
+    STATE_WEEK_PROGRAM_6,
+    STATE_WEEK_PROGRAM_7,
+    STATE_WEEK_PROGRAM_8,
+    STATE_WEEK_PROGRAM_9,
+    STATE_WEEK_PROGRAM_10,
+    STATE_WEEK_PROGRAM_11,
 ]
 
 ADAPTIVE_TRIGGERS = [
-    ATTR_BOOST_MODE_TRIGGER,
-    ATTR_ECO_MODE_TRIGGER,
-    ATTR_HOME_MODE_TRIGGER,
+    CONF_BOOST_MODE_TRIGGER,
+    CONF_ECO_MODE_TRIGGER,
+    CONF_HOME_MODE_TRIGGER,
 ]
 
 BOOST_OPERATION_SELECTIONS = [STATE_LEVEL_2, STATE_LEVEL_3, STATE_LEVEL_4]
@@ -237,6 +259,7 @@ STATE_PRIORITIES = {
     STATE_WEEKPROGRAM: 0,
     STATE_AUTOMATIC: 1,
     STATE_STANDBY: 2,
+    STATE_LEVEL_0: 2,
     STATE_LEVEL_1: 3,
     STATE_LEVEL_2: 4,
     STATE_LEVEL_3: 5,
@@ -318,15 +341,7 @@ class BypassDamperState(int):
     Closed = 0
 
 
-class ABSwitchPosition(Enum):
-    """Dantherm A/B switch position class."""
-
-    Unknown = 0
-    A = 1
-    B = 2
-
-
-@dataclass
+@dataclass(frozen=True)
 class DanthermEntityDescription(EntityDescription):
     """Dantherm Base Entity Description."""
 
@@ -350,17 +365,24 @@ class DanthermEntityDescription(EntityDescription):
     data_getavailable: str | None = None
     data_getunknown: str | None = None
 
-    component_class: ComponentClass | None = None
+    component_class: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermButtonEntityDescription(
     DanthermEntityDescription, ButtonEntityDescription
 ):
     """Dantherm Button Entity Description."""
 
 
-@dataclass
+@dataclass(frozen=True)
+class DanthermCalendarEntityDescription(
+    DanthermEntityDescription, CalendarEntityDescription
+):
+    """Dantherm Calendar Entity Description."""
+
+
+@dataclass(frozen=True)
 class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescription):
     """Dantherm Cover Entity Description."""
 
@@ -376,7 +398,7 @@ class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescr
     state_closed: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermNumberEntityDescription(
     DanthermEntityDescription, NumberEntityDescription
 ):
@@ -385,7 +407,7 @@ class DanthermNumberEntityDescription(
     data_precision: float | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSelectEntityDescription(
     DanthermEntityDescription, SelectEntityDescription
 ):
@@ -394,7 +416,7 @@ class DanthermSelectEntityDescription(
     data_bitwise_and: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSensorEntityDescription(
     DanthermEntityDescription, SensorEntityDescription
 ):
@@ -403,7 +425,7 @@ class DanthermSensorEntityDescription(
     data_precision: int | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermSwitchEntityDescription(
     DanthermEntityDescription, SwitchEntityDescription
 ):
@@ -418,7 +440,7 @@ class DanthermSwitchEntityDescription(
     icon_off: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DanthermTimeTextEntityDescription(
     DanthermEntityDescription, TextEntityDescription
 ):
@@ -438,6 +460,12 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
         data_setinternal="alarm_reset",
         data_class=DataClass.UInt32,
     ),
+)
+
+CALENDAR: DanthermCalendarEntityDescription = DanthermCalendarEntityDescription(
+    key=ATTR_CALENDAR,
+    icon="mdi:calendar",
+    data_getinternal=ATTR_CALENDAR,
 )
 
 COVERS: tuple[DanthermCoverEntityDescription, ...] = (
@@ -845,8 +873,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:information",
         data_getinternal=ATTR_ADAPTIVE_STATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=False,
     ),
     # DanthermSensorEntityDescription(
     #    key=ATTR_FEATURES,

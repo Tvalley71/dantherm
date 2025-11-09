@@ -2,17 +2,18 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus Connectie",
+        "title": "Dantherm Configuration",
+        "description": "Configureer apparaatverbindingsinstellingen.",
         "data": {
-          "host": "Voer het ip-address in van uw apparaat",
+          "host": "Apparaat IP-adres",
           "name": "Voer prefix in voor de apparaat entiteiten",
-          "port": "Voer de TCP poort in waarop verbinding moet worden gemaakt met het apparaat",
-          "scan_interval": "Voer de pollingfrequentie van de modbus-registers in seconden in"
+          "port": "TCP-poortnummer"
         }
       }
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
+      "cannot_connect": "Kan geen verbinding maken.",
       "already_configured": "Apparaat is al geconfigureerd."
     },
     "abort": {
@@ -22,18 +23,40 @@
   },
   "options": {
     "step": {
-        "init": {
-            "title": "Dantherm Integratie Configuratie",
-            "data": {
-                "host": "Voer het ip-adres in van uw apparaat",
-                "port": "Voer de TCP-poort in waarop verbinding moet worden gemaakt met het apparaat",
-                "boost_mode_trigger": "Boost-modus Trigger Entiteit",
-                "eco_mode_trigger": "Eco-modus Trigger Entiteit",
-                "home_mode_trigger": "Thuis-modus Trigger Entiteit",
-                "disable_temperature_unknown": "Schakel het instellen van temperatuursensoren op onbekend uit in bypass-/zomermodi.",
-                "disable_notifications": "Melding uitschakelen."
-            }
+      "init": {
+        "title": "Dantherm Configuratie",
+        "description": "## Welkom bij de Dantherm Integratie! 🏡\n\nDeze integratie is gemaakt door Tvalley71 voor de Home Assistant gemeenschap. U staat op het punt geavanceerde instellingen te configureren voor uw Dantherm ventilatieunit.\n\n\n☕ Als deze integratie u helpt, zou ik de erkenning in de vorm van een ster ⭐ op de integratie op GitHub of misschien een kopje koffie op echt waarderen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nU wordt door 3 configuratiestappen geleid.",
+        "data": {
+          "continue": "Doorgaan"
         }
+      },
+      "network": {
+        "title": "Netwerkinstellingen",
+        "description": "Configureer apparaatverbinding en data-updatefrequentie.",
+        "data": {
+          "host": "Apparaat IP-adres",
+          "port": "TCP-poortnummer",
+          "polling_speed": "Data-updatefrequentie"
+        }
+      },
+      "triggers": {
+        "title": "Adaptieve Triggers & Planning",
+        "description": "Configureer entiteiten die verschillende ventilatiemodi activeren en kalenderplanning.",
+        "data": {
+          "boost_mode_trigger": "Boost-modus Trigger Entiteit",
+          "eco_mode_trigger": "Eco-modus Trigger Entiteit",
+          "home_mode_trigger": "Thuis-modus Trigger Entiteit",
+          "link_calendar_to_primary": "Kalender koppelen aan primair apparaat"
+        }
+      },
+      "advanced": {
+        "title": "Geavanceerde Opties",
+        "description": "Configureer geavanceerd gedrag en weergaveopties.",
+        "data": {
+          "disable_temperature_unknown": "Temperatuursensoren niet onbekend maken in bypass/zomer modi",
+          "disable_notifications": "Meldingen uitschakelen"
+        }
+      }
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
@@ -44,6 +67,9 @@
     "button": {
       "filter_reset": { "name": "Filter Resetten" },
       "alarm_reset": { "name": "Foutmelding Resetten" }
+    },
+    "calendar": {
+      "calendar": { "name": "Kalender" }
     },
     "cover": {
       "bypass_damper": { "name": "Demper Bypass" }
@@ -191,6 +217,7 @@
           "boost": "Boost-modus",
           "eco": "Eco-modus",
           "home": "Thuis-modus",
+          "level_0": "Niveau 0",
           "level_1": "Niveau 1",
           "level_2": "Niveau 2",
           "level_3": "Niveau 3",
@@ -267,6 +294,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Snel (10 seconden)",
+        "normal": "Normaal (30 seconden)",
+        "slow": "Langzaam (60 seconden)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",
@@ -305,6 +339,10 @@
       "name": "Status Instellen",
       "description": "De status van de ventilatie-unit regelen met een actieoproep.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "operation_selection": {
           "name": "Bedieningsselectie",
           "description": "Selecteer de gewenste bedieningsmodus. De modus Standby wordt na ongeveer 4 uur teruggezet naar het handmatige niveau 3."
@@ -335,6 +373,10 @@
       "name": "Configuratie instellen",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "filter_lifetime": {
           "name": "Filter levensduur",
           "description": "Stel de levensduur van het filter in (dagen)."
@@ -361,6 +403,10 @@
       "name": "Configuratie instellen 2",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 2.70 of nieuwer.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass minimum temperatuur",
           "description": "Stel de minimale temperatuur in voor bypass-bediening."
@@ -387,6 +433,10 @@
       "name": "Configuratie instellen 3",
       "description": "Pas de configuratie-instellingen van het Dantherm-apparaat aan. Opmerking: De volgende velden worden alleen ondersteund op apparaten met firmwareversie 3.08 of nieuwer.",
       "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass minimum temperatuur (zomer)",
           "description": "Stel de minimale temperatuur in voor bypass-bediening."
@@ -403,11 +453,33 @@
     },
     "filter_reset": {
       "name": "Filter Resetten",
-      "description": "Reset de resterende dagen van het filter naar de filterlevensduur."
+      "description": "Reset de resterende dagen van het filter naar de filterlevensduur.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Foutmelding Resetten",
-      "description": "Reset de eerste in behandeling zijnde foutmelding."
+      "description": "Reset de eerste in behandeling zijnde foutmelding.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Adaptive Ereigniswarteschlange löschen",
+      "description": "Verwijder alle gebeurtenissen uit de adaptieve gebeurteniswachtrij. Hierdoor worden alle actieve adaptieve gebeurtenissen verwijderd en wordt de adaptieve status teruggezet naar \"geen\".",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Selecteer het Dantherm-apparaat."
+        }
+      }
     }
   },
   "exceptions": {
@@ -428,6 +500,12 @@
     },
     "filter_remain_notification": {
       "message": "Het filter heeft het einde van zijn levensduur bereikt. Vervang het filter alstublieft."
+    },
+    "invalid_adaptive_state": {
+      "message": "Ongeldige adaptieve status: {state}. Beschikbare statussen: {available_states}"
+    },
+    "rediscovery_notification": {
+      "message": "Een {domain}-apparaat met serienummer {serial_number} is opnieuw ontdekt op IP-adres {ip_address}."
     }
   }
 }

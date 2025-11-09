@@ -2,17 +2,18 @@
   "config": {
     "step": {
       "user": {
-        "title": "Modbus forbindelse",
+        "title": "Dantherm Configuration",
+        "description": "Konfigurer enhedens forbindelsesindstillinger.",
         "data": {
-          "host": "Indtast ip-adresse til din enhed",
+          "host": "Enhedens IP-adresse",
           "name": "Indtast prefix til din enheds entiteter",
-          "port": "Indtast TCP port der skal forbindes til på din enhed",
-          "scan_interval": "Indtast opdateringsfrekvens for modbus registere i sekunder"
+          "port": "TCP-portnummer"
         }
       }
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
+      "cannot_connect": "Kan ikke oprette forbindelse.",
       "already_configured": "Enhed er allerede konfigureret."
     },
     "abort": {
@@ -22,18 +23,40 @@
   },
   "options": {
     "step": {
-        "init": {
-        "title": "Indstillinger for Dantherm-integration",
-            "data": {
-                "host": "Indtast ip-adresse til din enhed",
-                "port": "Indtast TCP-port der skal forbindes til på din enhed",
-                "boost_mode_trigger": "Boost-tilstand udløser entitet",
-                "eco_mode_trigger": "Eco-tilstand udløser entitet",
-                "home_mode_trigger": "Hjemmetilstand udløser entitet",
-                "disable_temperature_unknown": "Deaktiver, at temperatursensorer sættes til ukendt i bypass-/sommertilstand.",
-                "disable_notifications": "Deaktiver notifikationer."
-            }
+      "init": {
+        "title": "Dantherm Konfiguration",
+        "description": "## Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen i form af en stjerne ⭐ på integrationen på GitHub eller måske en kop kaffe på:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nDu vil blive guidet gennem 3 konfigurationstrin.",
+        "data": {
+          "continue": "Fortsæt"
         }
+      },
+      "network": {
+        "title": "Netværksindstillinger",
+        "description": "Konfigurer enhedsforbindelse og dataopdateringsfrekvens.",
+        "data": {
+          "host": "Enhedens IP-adresse",
+          "port": "TCP-portnummer",
+          "polling_speed": "Dataopdateringsfrekvens"
+        }
+      },
+      "triggers": {
+        "title": "Adaptive Udløsere & Planlægning",
+        "description": "Konfigurer entiteter der udløser forskellige ventilationstilstande og kalenderplanlægning.",
+        "data": {
+          "boost_mode_trigger": "Boost-tilstand udløser entitet",
+          "eco_mode_trigger": "Eco-tilstand udløser entitet",
+          "home_mode_trigger": "Hjemmetilstand udløser entitet",
+          "link_calendar_to_primary": "Link kalender til primær enhed"
+        }
+      },
+      "advanced": {
+        "title": "Avancerede Muligheder",
+        "description": "Konfigurer avanceret adfærd og visningsindstillinger.",
+        "data": {
+          "disable_temperature_unknown": "Deaktiver temperaturføler til ukendt i bypass/sommer tilstande",
+          "disable_notifications": "Deaktiver notifikationer"
+        }
+      }
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
@@ -44,6 +67,9 @@
     "button": {
       "filter_reset": { "name": "Nulstil filter" },
       "alarm_reset": { "name": "Nulstil alarm" }
+    },
+    "calendar": {
+      "calendar": { "name": "Kalender" }
     },
     "cover": {
       "bypass_damper": { "name": "Bypass-spjæld"}
@@ -192,6 +218,7 @@
           "boost": "Boost-tilstand",
           "eco": "Eco-tilstand",
           "home": "Hjemmetilstand",
+          "level_0": "Niveau 0",
           "level_1": "Niveau 1",
           "level_2": "Niveau 2",
           "level_3": "Niveau 3",
@@ -268,6 +295,13 @@
     }
   },
   "selector": {
+    "polling_speed": {
+      "options": {
+        "fast": "Hurtig (10 sekunder)",
+        "normal": "Normal (30 sekunder)",
+        "slow": "Langsom (60 sekunder)"
+      }
+    },
     "operations": {
       "options": {
         "standby": "Standby",
@@ -306,6 +340,10 @@
       "name": "Sæt tilstand",
       "description": "Kontroller tilstande på ventilationsenheden med en handling.",
       "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        },
         "operation_selection": {
           "name": "Driftindstilling",
           "description": "Vælg den ønskede drifttilstand. Bemærk: standby vil blive ændret tilbage til manuel niveau 3 efter cirka 4 timer."
@@ -336,6 +374,10 @@
       "name": "Sæt konfiguration",
       "description": "Juster konfigurationsindstillingerne for Dantherm-enheden.",
       "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        },
         "filter_lifetime": {
           "name": "Filterlevetid",
           "description": "Indstil filterets levetid i dage."
@@ -362,6 +404,10 @@
       "name": "Sæt konfiguration 2",
       "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 2.70 eller nyere.",
       "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        },
         "bypass_minimum_temperature": {
           "name": "Bypass minimum temperatur",
           "description": "Indstil den minimale temperatur for bypasstilstand."
@@ -388,6 +434,10 @@
       "name": "Sæt konfiguration 3",
       "description": "Juster konfigurationsindstillingerne for Dantherm-enheden. Bemærk: Følgende felter understøttes kun på enheder med firmwareversion 3.08 eller nyere.",
       "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass minimum temperatur (sommer)",
           "description": "Indstil den minimale temperatur for bypasstilstand."
@@ -404,11 +454,33 @@
     },
     "filter_reset": {
       "name": "Nulstil filter",
-      "description": "Nulstil filterets resterende dage til dets filterlevetid."
+      "description": "Nulstil filterets resterende dage til dets filterlevetid.",
+      "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        }
+      }
     },
     "alarm_reset": {
       "name": "Nulstil alarm",
-      "description": "Nulstil første ventende alarm."
+      "description": "Nulstil første ventende alarm.",
+      "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        }
+      }
+    },
+    "clear_adaptive_event_stack": {
+      "name": "Ryd adaptiv begivenhedsstak",
+      "description": "Ryd alle begivenheder fra den adaptive begivenhedsstak. Dette fjerner alle aktive adaptive begivenheder og nulstiller den adaptive tilstand til \"ingen\".",
+      "fields": {
+        "device_id": {
+          "name": "Enhed",
+          "description": "Vælg Dantherm-enheden."
+        }
+      }
     }
   },
   "exceptions": {
@@ -429,6 +501,12 @@
     },
     "filter_remain_notification": {
       "message": "Filteret har nået slutningen af dets levetid. Udskift venligst filteret."
+    },
+    "invalid_adaptive_state": {
+      "message": "Ugyldig adaptiv tilstand: {state}. Tilgængelige tilstande: {available_states}"
+    },
+    "rediscovery_notification": {
+      "message": "En {domain}-enhed med serienummer {serial_number} blev genopdaget på ip-adresse {ip_address}."
     }
   }
 }

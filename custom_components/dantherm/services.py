@@ -2,14 +2,13 @@
 
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.event import Template
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
 from .device_map import (
@@ -18,6 +17,7 @@ from .device_map import (
     ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
     ATTR_BYPASS_MINIMUM_TEMPERATURE,
     ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER,
+    ATTR_DEVICE_ID,
     ATTR_DISABLE_BYPASS,
     ATTR_FAN_LEVEL_SELECTION,
     ATTR_FILTER_LIFETIME,
@@ -37,6 +37,7 @@ from .device_map import (
     REQUIRED_FIRMWARE_2,
     REQUIRED_FIRMWARE_3,
     SERVICE_ALARM_RESET,
+    SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
     SERVICE_SET_CONFIGURATION_2,
@@ -50,8 +51,9 @@ from .exceptions import InvalidTimeFormat, UnsupportedByFirmware
 _LOGGER = logging.getLogger(__name__)
 
 
-DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_STATE_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): [cv.string],
         vol.Optional(ATTR_OPERATION_SELECTION): vol.In(OPERATION_SELECTIONS),
         vol.Optional(ATTR_FAN_LEVEL_SELECTION): vol.In(FAN_LEVEL_SELECTIONS),
         vol.Optional(ATTR_AWAY_MODE): cv.boolean,
@@ -61,8 +63,9 @@ DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): [cv.string],
         vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=360)
         ),
@@ -73,8 +76,9 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_2_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): [cv.string],
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=15)
         ),
@@ -91,8 +95,9 @@ DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
+DANTHERM_SET_CONFIGURATION_3_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): [cv.string],
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=17)
         ),
@@ -105,16 +110,26 @@ DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
     }
 )
 
+DANTHERM_FILTER_RESET_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): [cv.string]})
 
-async def async_setup_services(hass: HomeAssistant):  # noqa: C901
+DANTHERM_FILTER_RESET_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): [cv.string]})
+
+DANTHERM_ALARM_RESET_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): [cv.string]})
+
+DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): [cv.string]}
+)
+
+
+async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up all services."""
 
-    def validate_time_format(time_str):
+    def validate_time_format(time_str: str) -> None:
         """Validate HH:MM format."""
         if not re.match(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", time_str):
             raise InvalidTimeFormat
 
-    def render_template(value):
+    def render_template(value: Any) -> Any:
         """Render a value as a template if it's a string, otherwise return it directly."""
         return (
             Template(str(value), hass).async_render()
@@ -122,22 +137,47 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
             else value
         )
 
-    async def async_apply_device_function(call, apply_func):
-        """Extract config entries and apply function."""
-        config_entry_ids = await async_extract_config_entry_ids(hass, call)
-        for config_entry_id in config_entry_ids:
-            config_entry = hass.config_entries.async_get_entry(config_entry_id)
-            if config_entry and config_entry.domain == DOMAIN:
-                entry_data = hass.data[DOMAIN].get(config_entry_id)
-                if entry_data and (device := entry_data.get("device")):
-                    await apply_func(device, call)
-                else:
-                    _LOGGER.error("Device %s not found", config_entry_id)
+    async def async_apply_device_function(call: ServiceCall, apply_func: Any) -> None:
+        """Extract devices and apply function to each device."""
+        processed_config_entries = set()
 
-    async def async_set_state(call):
+        # Get device_ids from call data
+        device_ids = call.data.get("device_id", [])
+
+        if not device_ids:
+            _LOGGER.error("Device_id must be specified")
+            return
+
+        device_registry = dr.async_get(hass)
+
+        for device_id in device_ids:
+            device_entry = device_registry.async_get(device_id)
+            if device_entry and device_entry.config_entries:
+                for config_entry_id in device_entry.config_entries:
+                    if config_entry_id not in processed_config_entries:
+                        processed_config_entries.add(config_entry_id)
+                        config_entry = hass.config_entries.async_get_entry(
+                            config_entry_id
+                        )
+                        if config_entry and config_entry.domain == DOMAIN:
+                            entry_data = hass.data[DOMAIN].get(config_entry.entry_id)
+                            if entry_data and (device := entry_data.get("device")):
+                                await apply_func(device, call)
+                            else:
+                                _LOGGER.error(
+                                    "Device for device_id %s not found", device_id
+                                )
+                        else:
+                            _LOGGER.debug(
+                                "Device %s not from domain %s", device_id, DOMAIN
+                            )
+            else:
+                _LOGGER.error("Device %s not found in registry", device_id)
+
+    async def async_set_state(call: ServiceCall) -> None:
         """Set state for Dantherm devices."""
 
-        async def apply_state(device, call):
+        async def apply_state(device: Any, call: ServiceCall) -> None:
             """Apply state."""
 
             # Apply away mode, summer mode, operation selectio, fan level selection,
@@ -196,10 +236,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_state)
 
-    async def async_set_configuration(call):
+    async def async_set_configuration(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config(device, call):
+        async def apply_config(device: Any, call: ServiceCall) -> None:
             """Apply configuration."""
 
             # Apply filter lifetime, night mode, night mode start and end time,
@@ -244,10 +284,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config)
 
-    async def async_set_configuration_2(call):
+    async def async_set_configuration_2(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config_2(device, call):
+        async def apply_config_2(device: Any, call: ServiceCall) -> None:
             """Apply configuration 2."""
 
             # Get firmware version, default to 0 if not available
@@ -298,10 +338,10 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config_2)
 
-    async def async_set_configuration_3(call):
+    async def async_set_configuration_3(call: ServiceCall) -> None:
         """Set configuration for Dantherm devices."""
 
-        async def apply_config_3(device, call):
+        async def apply_config_3(device: Any, call: ServiceCall) -> None:
             """Apply configuration 3."""
 
             # Get firmware version, default to 0 if not available
@@ -340,21 +380,32 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
         await async_apply_device_function(call, apply_config_3)
 
-    async def async_filter_reset(call):
+    async def async_filter_reset(call: ServiceCall) -> None:
         """Filter reset, reset the filter remaining days to its filter lifetime."""
 
-        async def apply_reset(device, call):
-            device.coordinator.write(device.filter_reset)
+        async def apply_reset(device: Any, call: ServiceCall) -> None:
+            # Schedule the reset via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.set_filter_reset)
 
         await async_apply_device_function(call, apply_reset)
 
-    async def async_alarm_reset(call):
+    async def async_alarm_reset(call: ServiceCall) -> None:
         """Alarm reset, reset first pending alarm."""
 
-        async def apply_reset(device, call):
-            device.coordinator.write(device.alarm_reset)
+        async def apply_reset(device: Any, call: ServiceCall) -> None:
+            # Schedule the reset via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.set_alarm_reset)
 
         await async_apply_device_function(call, apply_reset)
+
+    async def async_clear_adaptive_event_stack(call: ServiceCall) -> None:
+        """Clear the adaptive event stack."""
+
+        async def apply_clear(device: Any, call: ServiceCall) -> None:
+            # Schedule clear via the coordinator's frontend queue
+            device.coordinator.enqueue_frontend(device.clear_adaptive_event_stack)
+
+        await async_apply_device_function(call, apply_clear)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_STATE, async_set_state, schema=DANTHERM_SET_STATE_SCHEMA
@@ -377,5 +428,22 @@ async def async_setup_services(hass: HomeAssistant):  # noqa: C901
         async_set_configuration_3,
         schema=DANTHERM_SET_CONFIGURATION_3_SCHEMA,
     )
-    hass.services.async_register(DOMAIN, SERVICE_FILTER_RESET, async_filter_reset)
-    hass.services.async_register(DOMAIN, SERVICE_ALARM_RESET, async_alarm_reset)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_FILTER_RESET,
+        async_filter_reset,
+        schema=DANTHERM_FILTER_RESET_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ALARM_RESET,
+        async_alarm_reset,
+        schema=DANTHERM_ALARM_RESET_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
+        async_clear_adaptive_event_stack,
+        schema=DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA,
+    )

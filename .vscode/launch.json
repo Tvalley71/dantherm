@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Home Assistant (debugpy:5678)",
+      "type": "python",
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "justMyCode": false
+    },
+    {
+      "name": "Run Home Assistant (core cwd)",
+      "type": "python",
+      "request": "launch",
+      "module": "homeassistant",
+      "cwd": "/workspaces/core",
+      "args": ["-c", "/workspaces/core/config"],
+      "env": { "PYTHONPATH": "/workspaces/core" },
+      "justMyCode": false
+    }
+  ]
+}

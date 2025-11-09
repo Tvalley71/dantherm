@@ -53,9 +53,9 @@ A user has reported that the integration also works with the **Bosch Vent 5000 C
 
 #### Calendar Entity
 
-| Entity         | Description              |
-|----------------|--------------------------|
-| ~~`calendar`~~ | ~~Controls scheduled operations based on Home Assistant calendar events~~  |
+| Entity    | Description              |
+|-----------|--------------------------|
+| `calendar`| Controls scheduled operations based on Home Assistant calendar events |
 
 #### Cover Entity
 
@@ -84,7 +84,6 @@ A user has reported that the integration also works with the **Bosch Vent 5000 C
 | Entity                      | Description                        |
 |-----------------------------|------------------------------------|
 | `boost_operation_selection` | Defines which mode to apply when Boost Mode is triggered [[3]](#entity-notes) |
-| ~~`default_operation_selection`~~ | ~~Fallback mode used when no other mode is active~~ |
 | `eco_operation_selection`   | Defines which mode to apply when Eco Mode is triggered [[3]](#entity-notes) |
 | `fan_level_selection`       | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
 | `home_operation_selection`  | Defines which mode to apply when Home Mode is triggered [[3]](#entity-notes) |
@@ -182,8 +181,8 @@ After installation, add the Dantherm integration to your Home Assistant configur
 3. Search for "Dantherm" and select it from the list of available integrations.
 4. Follow the on-screen instructions to complete the integration setup.
 
-![Skærmbillede 2024-05-04 090018](https://github.com/user-attachments/assets/a5c2faad-2b96-438b-a761-4e24075efbf3)
-![Skærmbillede 2024-05-04 090125](https://github.com/user-attachments/assets/7869346c-04e0-4980-9536-bf2cdd27cbc0)
+<img width="400" height="460" alt="Skærmbillede 02-11-2025 kl  12 24 10 PM" src="https://github.com/user-attachments/assets/2812e63a-9976-4ea7-9bad-58fb14dc1b03" />
+<img width="400" height="364" alt="Skærmbillede 02-11-2025 kl  12 56 47 PM" src="https://github.com/user-attachments/assets/4f68ae3b-c719-4d3f-bdc7-304424b5ec62" />
 
 <!-- END:shared-section -->
 
@@ -558,7 +557,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 
 4. **Configure the Action:**
    - Use the options provided to control the Dantherm ventilation unit:
-     - **Targets:** Choose the area, device, or entity to apply the action.
+     - **Device:** Select the Dantherm device.
      - **Operation Selection:** Set the desired operating mode (e.g., Standby, Automatic, Manual, or Week Program).
      - **Fan Selection:** Choose the desired fan level (Level 0–4).
      - **Modes:** Toggle special modes like:
@@ -567,7 +566,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
        - **Fireplace Mode**: Activate fireplace mode for a limited period.
        - **Manual Bypass Mode**: Enable or disable manual bypass.
 
-<img width="904" height="1140" alt="Skærmbillede 20-09-2025 kl  10 58 20 AM" src="https://github.com/user-attachments/assets/a4b9ceca-fcd9-4d45-a265-640ea7a0624d" />
+<img width="1200" height="1100" alt="Skærmbillede 02-11-2025 kl  12 04 07 PM" src="https://github.com/user-attachments/assets/bd26f5f3-cc82-44e5-8e6f-0bf67afe25e7" />
 
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
@@ -582,13 +581,16 @@ Starting from version _0.4.17_ of the integration, the actions have been reorgan
 | Set configuration 2  | 2.70 and newer             |
 | Set configuration 3  | 3.14 and newer             |
 
-<img width="904" height="731" alt="Skærmbillede 20-09-2025 kl  10 57 31 AM" src="https://github.com/user-attachments/assets/0745d303-76c2-4a40-a4a4-f965220553d7" />
+<img width="1200" height="691" alt="Skærmbillede 02-11-2025 kl  12 04 30 PM" src="https://github.com/user-attachments/assets/4d1648bd-0ee2-4e77-89d2-ad827e336df4" />
 
-<img width="904" height="754" alt="Skærmbillede 20-09-2025 kl  10 57 09 AM" src="https://github.com/user-attachments/assets/6cd4fb0e-9c3e-4377-827f-5002062eb2c5" />
+<img width="1200" height="691" alt="Skærmbillede 02-11-2025 kl  12 04 43 PM" src="https://github.com/user-attachments/assets/ca4e8d39-523f-49b6-bb3a-d3c8ab703dfe" />
 
-<img width="904" height="576" alt="Skærmbillede 20-09-2025 kl  10 56 38 AM" src="https://github.com/user-attachments/assets/a5fdbf02-7633-4e88-a3f4-8a14d10d5541" />
+<img width="1200" height="513" alt="Skærmbillede 02-11-2025 kl  12 05 09 PM" src="https://github.com/user-attachments/assets/852e221d-5e8e-4dcb-9b15-632eaee4e9b9" />
+
 
 ## Integration enhancements
+
+## Advanced Features 🚀
 
 The integration enhances the control of Dantherm ventilation units by introducing **Boost Mode**, **Eco Mode**, **Home Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
@@ -670,73 +672,182 @@ To change settings such as disabling temperature unknown values, disabling notif
 
 1. Go to Home Assistant → Settings → Devices & Services → Integrations.
 2. Find the Dantherm integration in the list.
-![Skærmbillede 23-04-2025 kl  07 04 48 AM](https://github.com/user-attachments/assets/185aca8c-7d31-4f1b-925e-4088829e9e13)
 3. Click the Configure button (gear icon) for your Dantherm integration instance.
-4. The options dialog will open, where you can adjust the available settings.
-<img width="588" height="691" alt="Skærmbillede 27-08-2025 kl  14 33 15 PM" src="https://github.com/user-attachments/assets/20ab43d5-1384-4fc7-b72a-5f68307910ac" />
 
-#### Changing IP address and Port
+<img width="707" height="306" alt="Skærmbillede 02-11-2025 kl  12 06 31 PM" src="https://github.com/user-attachments/assets/6e8ab25f-7ba3-45eb-9f21-7978d2a27acd" />
+
+4. The options dialog will open, where you can adjust the available settings.
+
+#### Network Settings
 
 If device discovery does not find your unit, you can manually update the IP address and Port in the integration options dialog.
 
-Ip-address should be set to the unit’s current IP address.
+1. The Device IP address should be set to the unit’s current IP address.
+2. The TCP port number  is typically the Modbus port used by your unit (default: 502).
 
-Port is typically the Modbus port used by your unit (default: 502).
+<img width="421" height="552" alt="Skærmbillede 02-11-2025 kl  12 06 59 PM" src="https://github.com/user-attachments/assets/3599bc8a-c701-4f4d-8a0f-5ebb4cdfedd2" />
 
-This allows you to keep the integration connected even if discovery is unavailable or the network configuration changes, without having to remove and re-add the integration.
-
-#### How to Set Up an Adaptive Trigger
+#### Adaptive Triggers & Scheduling
 
 1. Enter the trigger entity in the appropriate field.  
 Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).  
 Example values:  
 `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
-2. Click Submit to save your configuration.
-3. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
+2. If you have more than one Dantherm unit, you can choose whether each device should share the same calendar as your primary unit or use its own.  
+The primary calendar is automatically created for the first configured device. For any additional units, an option appears to link to the primary calendar.  
+This option defaults to enabled, which is recommended — it ensures consistent scheduling across all units and keeps configuration simple.  
+If you disable this option, the unit will instead create its own separate calendar, allowing fully independent scheduling.
+3. Click Submit to save your configuration.
+4. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
+
+<img width="596" height="522" alt="Skærmbillede 02-11-2025 kl  13 12 04 PM" src="https://github.com/user-attachments/assets/8ca96468-8d26-40be-b19e-e37ae7d2dd9f" />
 
 Once configured, the Dantherm unit will automatically switch to the selected **operation mode** whenever the **Adaptive Trigger** becomes active. ⚡
 
-#### Disabling "Unknown" Temperatures in Bypass and Summer Mode
+#### Advandced Options
+
+1. Disabling "Unknown" Temperatures in Bypass and Summer Mode.  
 To prevent temperature sensors from being set to unknown during bypass or summer mode, enable the option "Disable setting temperatures to unknown in bypass/summer modes".
 When this option is enabled, temperature sensors will always report their current value, even when the device is in bypass or summer mode.
 
-#### Disabling Notifications
+2. Disabling Notifications.
 To disable all persistent notifications from the Dantherm integration, enable "Disable notifications".
 When this option is enabled, the integration will not send any persistent notifications to Home Assistant’s notification area.
 
+<img width="584" height="362" alt="Skærmbillede 02-11-2025 kl  12 07 14 PM" src="https://github.com/user-attachments/assets/4643bd4f-f2de-4f8a-b9dc-4102012dcb1e" />
 
-## ⏳ The following sections are a work in progress  
-These features are planned for version **1.0.0**. The calendar function is currently still under development.
 
+## ⏳ Advanced Scheduling Features
 
 ### Calendar Function 📅  
-The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.  
+The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.
+
+#### How to Use the Calendar Function
+
+1. **Enable Calendar Entity**: In your Home Assistant, go to **Settings > Devices & Services > Dantherm** and ensure the calendar entity is enabled.
+
+2. **Create Calendar Events**: Use the Dantherm calendar entity to create events with specific keywords in the event **summary** (title).
+
+3. **Supported Event Keywords**: Use these exact words in your calendar event summaries:
+   - **Level 1**, **Level 2**, **Level 3** - Sets manual fan levels
+   - **Automatic** - Switches to automatic demand mode  
+   - **Away Mode** - Activates away mode for the event duration
+   - **Night Mode** - Activates night mode for the event duration
+   - **Boost Mode** - Activates boost mode for the event duration
+   - **Home Mode** - Activates home mode for the event duration
+   - **Eco Mode** - Activates eco mode for the event duration
+   - **Week Program** - Follows the selected week program
+
+4. **Language Support**: Keywords are automatically translated based on your Home Assistant language settings (if the language is supported by the integration).
+
+#### Example Calendar Usage
+
+```
+Summary: "Boost Mode"
+Start: Today 07:00
+End: Today 09:00
+Result: Boost mode active from 7 AM to 9 AM
+```
+
+```
+Summary: "Level 3" 
+Start: Today 19:00
+End: Today 22:00
+Result: Manual mode Level 3 from 7 PM to 10 PM
+```
+
+```
+Summary: "Away Mode"
+Start: Friday 08:00  
+End: Sunday 18:00
+Result: Away mode active for the weekend
+```  
 
 - **Integration - Calendar Events**:  
-  By entering an event word into the **summary** of a calendar event, the selected operation will take effect when the event starts, assuming it has a **higher priority** event words than an ongoing event. When the event ends, the system will revert to the **previously active event**. If no underlying event exists, the unit will revert to the **Default Operation Selection**.
+  Calendar events control the ventilation system automatically. When an event starts, the system switches to the specified operation mode. When the event ends, it reverts to the previous active mode.
 
-- **Event Words**: You can schedule "**Level 1**", "**Level 2**", "**Level 3**", "**Automatic**", "**Away Mode**", "**Night Mode**", "**Boost Mode**", "**Home Mode**", "**Eco Mode**", and "**Week Program**". These terms will be translated according to the selected language in Home Assistant, assuming your language is supported by the integration.
+- **Event Behavior**:
+  - **Manual Levels (Level 1-3)**: Unit runs in Manual mode at the specified fan level
+  - **Automatic**: Unit operates in Demand Mode with automatic fan speed control
+  - **Mode Toggles (Away, Night, Boost, Home, Eco)**: These modes are **enabled at event start** and **disabled at event end**
+  - **Week Program**: Unit follows the predefined week program selected in **Week Program Selection**
+
+- **Smart Scheduling**: The calendar respects the priority system below, so higher priority events override lower priority ones when they overlap.
+
+#### Calendar Configuration Options
+
+In the integration's **Configure** menu, you can find several calendar-related options:
+
+- **Link to Primary Calendar**: When multiple Dantherm units are installed, link all calendar functions to the primary unit's calendar for centralized control.
+
+#### Recurring Events and Advanced Scheduling
+
+The calendar supports:
+- **Single Events**: One-time scheduled operations
+- **Recurring Events**: Daily, weekly, or custom recurring patterns
+- **All-Day Events**: Events without specific times
+- **Overlapping Events**: Higher priority events override lower priority ones
+
+#### Troubleshooting Calendar Function
+
+- **Events Not Working**: Ensure event keywords match exactly (case-sensitive)
+- **Language Issues**: Check that your Home Assistant language is supported
+- **Priority Conflicts**: Higher priority events will override lower ones
+- **Night Mode Timing**: Built-in Night Mode times may conflict with scheduled events
   
   - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
   - If **Night Mode** is scheduled, Night Mode will be **enabled at the start** and **disabled at the end** of the event.
-  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode’s trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
+  - If **Boost Mode**, **Home Mode**, or **Eco Mode** is scheduled, the respective mode's trigger will be **enabled at the start** and **disabled at the end**, allowing the unit to switch modes dynamically.
   - If **Week Program** is scheduled, the unit will follow the selected program in **Week Program Selection**.
 
-- **Priority System**: The following is the **priority order** for calendar scheduling:  
-  1. **Away Mode** (highest priority)  
-  2. **Boost Mode**  
-  3. **Night Mode**  
-  4. **Home Mode**  
-  5. **Eco Mode**  
-  6. **Level 3**  
-  7. **Level 2**  
-  8. **Level 1**  
-  9. **Automatic**  
-  10. **Week Program** (lowest priority)  
+#### Event Priority System
 
-The available operations in **Default Operation Selection** are **Automatic**, **Level 3**, **Level 2**, **Level 1**, or **Week Program**.
+When multiple calendar events overlap, the system follows this priority order (highest to lowest):
+
+- **Priority System**: The following is the **priority order** for calendar scheduling:  
+  1. 🚨 **Away Mode** (highest priority) - For vacation/extended absence
+  2. ⚡ **Boost Mode** - For high ventilation needs
+  3. 🌙 **Night Mode** - For quiet nighttime operation  
+  4. 🏠 **Home Mode** - For normal occupied periods
+  5. 🍃 **Eco Mode** - For energy-saving operation
+  6. 💨 **Level 3** - Maximum manual fan speed
+  7. 💨 **Level 2** - Medium manual fan speed  
+  8. 💨 **Level 1** - Minimum manual fan speed
+  9. 🤖 **Automatic** - Demand-based automatic control
+  10. 📅 **Week Program** (lowest priority) - Predefined weekly schedules
+
+**Example**: If you have "Eco Mode" scheduled from 8 AM-6 PM and "Boost Mode" from 12 PM-1 PM, Boost Mode will take priority during the lunch hour, then revert back to Eco Mode.
+
+#### Step-by-Step: Creating Your First Calendar Event
+
+1. **Access the Calendar**: 
+   - Go to **Calendar** in Home Assistant's sidebar
+   - Find your "Dantherm Calendar" entity
+
+2. **Create New Event**:
+   - Click the **+** button or a time slot
+   - Enter a **Title/Summary** with one of the supported keywords (e.g., "Boost Mode")
+   - Set **Start** and **End** times
+   - Save the event
+
+3. **Verify Operation**:
+   - Check that the event appears in the calendar
+   - Monitor the ventilation unit at the scheduled time
+   - Verify mode changes occur as expected
+
+#### Best Practices for Calendar Scheduling
+
+- **Morning Routine**: Schedule "Boost Mode" during morning activities (7-9 AM)
+- **Work Hours**: Use "Eco Mode" when away during work hours (9 AM-5 PM) 
+- **Evening Comfort**: Schedule "Home Mode" for family time (6-10 PM)
+- **Night Rest**: Use "Night Mode" for quiet overnight operation (10 PM-7 AM)
+- **Weekend Away**: Schedule "Away Mode" for entire weekends when traveling
+- **Cooking Events**: Create "Level 3" events during cooking times for extra ventilation
+
+> [!TIP]
+> Start with simple single events before creating complex recurring schedules. Test each event type to understand how your system responds.
 
 > [!IMPORTANT]
 > The Dantherm unit has built-in **Night Mode Start Time** and **Night Mode End Time**. Scheduling Night Mode outside of these times may not function as expected.
