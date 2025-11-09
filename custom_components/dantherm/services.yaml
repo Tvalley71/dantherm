@@ -1,8 +1,11 @@
 set_state:
-  target:
-    device:
-      integration: dantherm
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
     operation_selection:
       selector:
         select:
@@ -39,10 +42,13 @@ set_state:
       selector:
         boolean:
 set_configuration:
-  target:
-    device:
-      integration: dantherm
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
     filter_lifetime:
       example: "180"
       selector:
@@ -82,10 +88,13 @@ set_configuration:
             - "9"
             - "10"
 set_configuration_2:
-  target:
-    device:
-      integration: dantherm
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
     bypass_minimum_temperature:
       example: 15
       selector:
@@ -123,10 +132,13 @@ set_configuration_2:
       selector:
         boolean:
 set_configuration_3:
-  target:
-    device:
-      integration: dantherm
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
     bypass_minimum_temperature_summer:
       example: 15
       selector:
@@ -152,14 +164,26 @@ set_configuration_3:
           step: 1
           unit_of_measurement: "%"
 filter_reset:
-  target:
-    device:
-      integration: dantherm
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
 alarm_reset:
-  target:
-    device:
-      integration: dantherm
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true
 clear_adaptive_event_stack:
-  target:
-    device:
-      integration: dantherm
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: dantherm
+          multiple: true

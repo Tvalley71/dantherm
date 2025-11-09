@@ -54,13 +54,14 @@ POLLING_OPTIONS = {
 
 POLLING_OPTIONS_LIST = ["fast", "normal", "slow"]
 
-SERVICE_SET_STATE = "set_state"
-SERVICE_SET_CONFIGURATION = "set_configuration"
-SERVICE_SET_CONFIGURATION_2 = "set_configuration_2"
-SERVICE_SET_CONFIGURATION_3 = "set_configuration_3"
-SERVICE_FILTER_RESET = "filter_reset"
-SERVICE_ALARM_RESET = "alarm_reset"
-SERVICE_CLEAR_ADAPTIVE_EVENT_STACK = "clear_adaptive_event_stack"
+SERVICE_SET_STATE: Final = "set_state"
+SERVICE_SET_CONFIGURATION: Final = "set_configuration"
+SERVICE_SET_CONFIGURATION_2: Final = "set_configuration_2"
+SERVICE_SET_CONFIGURATION_3: Final = "set_configuration_3"
+SERVICE_FILTER_RESET: Final = "filter_reset"
+SERVICE_ALARM_RESET: Final = "alarm_reset"
+SERVICE_CLEAR_ADAPTIVE_EVENT_STACK: Final = "clear_adaptive_event_stack"
+ATTR_DEVICE_ID: Final = "device_id"
 
 ATTR_BYPASS_DAMPER: Final = "bypass_damper"
 
