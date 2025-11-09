@@ -137,12 +137,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SCAN_INTERVAL: scan_interval,  # Store as numeric value
                     }
 
-                    # In debug mode, add timestamp to title to distinguish between instances
-                    title = name
-                    if IS_DEBUG:
-                        title = f"{name} (Debug {int(time.time() * 1000) % 100000})"
-
-                    return self.async_create_entry(title=title, data=data)
+                    return self.async_create_entry(title=name, data=data)
         # Show the form on initial load or when there are errors
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
