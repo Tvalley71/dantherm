@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
@@ -50,9 +51,8 @@ from .exceptions import InvalidTimeFormat, UnsupportedByFirmware
 _LOGGER = logging.getLogger(__name__)
 
 
-DANTHERM_SET_STATE_SCHEMA = vol.Schema(
+DANTHERM_SET_STATE_SCHEMA = make_entity_service_schema(
     {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_OPERATION_SELECTION): vol.In(OPERATION_SELECTIONS),
         vol.Optional(ATTR_FAN_LEVEL_SELECTION): vol.In(FAN_LEVEL_SELECTIONS),
         vol.Optional(ATTR_AWAY_MODE): cv.boolean,
@@ -62,9 +62,8 @@ DANTHERM_SET_STATE_SCHEMA = vol.Schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_SCHEMA = vol.Schema(
+DANTHERM_SET_CONFIGURATION_SCHEMA = make_entity_service_schema(
     {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_FILTER_LIFETIME): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=360)
         ),
@@ -75,9 +74,8 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = vol.Schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_2_SCHEMA = vol.Schema(
+DANTHERM_SET_CONFIGURATION_2_SCHEMA = make_entity_service_schema(
     {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=15)
         ),
@@ -94,9 +92,8 @@ DANTHERM_SET_CONFIGURATION_2_SCHEMA = vol.Schema(
     }
 )
 
-DANTHERM_SET_CONFIGURATION_3_SCHEMA = vol.Schema(
+DANTHERM_SET_CONFIGURATION_3_SCHEMA = make_entity_service_schema(
     {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_BYPASS_MINIMUM_TEMPERATURE_SUMMER): vol.All(
             vol.Coerce(float), vol.Range(min=12, max=17)
         ),
@@ -109,23 +106,11 @@ DANTHERM_SET_CONFIGURATION_3_SCHEMA = vol.Schema(
     }
 )
 
-DANTHERM_FILTER_RESET_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+DANTHERM_FILTER_RESET_SCHEMA = make_entity_service_schema({})
 
-DANTHERM_ALARM_RESET_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+DANTHERM_ALARM_RESET_SCHEMA = make_entity_service_schema({})
 
-DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+DANTHERM_CLEAR_ADAPTIVE_EVENT_STACK_SCHEMA = make_entity_service_schema({})
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
@@ -153,9 +138,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         if not device_ids:
             _LOGGER.error("Device_id must be specified")
             return
-
-        if isinstance(device_ids, str):
-            device_ids = [device_ids]
 
         device_registry = dr.async_get(hass)
 
