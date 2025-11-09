@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "title": "Dantherm Konfiguration",
-        "description": "## Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen eller en stjerne ⭐ på GitHub integrationen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nDu vil blive guidet gennem 3 konfigurationstrin.",
+        "description": "## Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen i form af en stjerne ⭐ på integrationen på GitHub eller måske en kop kaffe på:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nDu vil blive guidet gennem 3 konfigurationstrin.",
         "data": {
           "continue": "Fortsæt"
         }
