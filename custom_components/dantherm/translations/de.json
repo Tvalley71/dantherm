@@ -61,6 +61,9 @@
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
       "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
+    },
+    "abort": {
+      "aborted_by_user": "Konfiguration vom Benutzer abgebrochen."
     }
   },
   "entity": {

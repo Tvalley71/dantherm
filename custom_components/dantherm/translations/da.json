@@ -61,6 +61,9 @@
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
       "invalid_entity": "Ugyldigt enheds-ID. Indtast venligst en gyldig binær sensor eller input boolean."
+    },
+    "abort": {
+      "aborted_by_user": "Konfiguration afbrudt af bruger."
     }
   },
   "entity": {

@@ -61,6 +61,9 @@
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
       "invalid_entity": "Ongeldige entiteit-ID. Voer een geldige binaire sensor of invoer-boolean in."
+    },
+    "abort": {
+      "aborted_by_user": "Configuratie geannuleerd door gebruiker."
     }
   },
   "entity": {

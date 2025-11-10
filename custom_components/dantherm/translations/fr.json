@@ -61,6 +61,9 @@
     "error": {
       "invalid_host": "Hôte ou adresse IP invalide.",
       "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
+    },
+    "abort": {
+      "aborted_by_user": "Configuration annulée par l'utilisateur."
     }
   },
   "entity": {
