@@ -157,7 +157,6 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
 
     def _get_polling_speed_from_interval(self, interval: int) -> str:
         """Convert scan interval to polling speed option."""
