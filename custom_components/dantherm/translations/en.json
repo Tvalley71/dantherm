@@ -61,6 +61,9 @@
     "error": {
         "invalid_host": "Invalid host or IP address.",
         "invalid_entity": "Invalid entity ID. Please enter a valid binary sensor or input boolean."
+    },
+    "abort": {
+      "aborted_by_user": "Configuration aborted by user."
     }
   },
   "entity": {

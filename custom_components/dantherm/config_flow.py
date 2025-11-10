@@ -191,21 +191,13 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the initial welcome screen with configuration overview."""
-        # Check if user has already accepted disclaimer
-        disclaimer_accepted = self.config_entry.options.get(
-            "disclaimer_accepted", False
-        )
-
-        if disclaimer_accepted:
-            # Skip init and go directly to network configuration
-            return await self.async_step_network()
-
         if user_input is not None:
-            # User accepted disclaimer, mark it and proceed to network configuration
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                options={**self.config_entry.options, "disclaimer_accepted": True},
-            )
+            # Check if user wants to continue
+            if not user_input.get("continue", False):
+                # User unchecked continue, abort the options flow
+                return self.async_abort(reason="aborted_by_user")
+
+            # User wants to continue, proceed to network configuration
             return await self.async_step_network()
 
         # Create a schema with a read-only information field
