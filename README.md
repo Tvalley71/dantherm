@@ -41,6 +41,13 @@ A user has reported that the integration also works with the **Bosch Vent 5000 C
 > If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
 > The number can be found in the **Device Info** section on the integration page; if the unit is not recognized, it will be listed as "Unknown" followed by the number.
 
+### Guide
+
+If you prefer a video walkthrough, I recommend:
+
+[Pluggit Lüftungsanlage 💨 mit Home Assistant smart machen 😍](https://www.youtube.com/watch?v=e4oRw25Emlo) — in German, up to date with version 1.0
+
+Thanks to _Smartzeug_
 
 ### Controls and sensors
 
