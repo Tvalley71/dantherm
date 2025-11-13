@@ -807,7 +807,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
         data_getinternal=ATTR_AIR_QUALITY,
-        icon="mdi:molecule-co2",
+        icon="mdi:molecule",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.CO2,
@@ -817,7 +817,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY_LEVEL,
         data_getinternal=ATTR_AIR_QUALITY_LEVEL,
-        icon="mdi:molecule-co2",
+        icon="mdi:molecule",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
