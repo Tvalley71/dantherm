@@ -624,6 +624,47 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return "mdi:fan"
 
+    @property
+    def get_ventilation_icon(self) -> str:
+        """Get ventilation icon."""
+
+        result = self.get_fan_level
+        if not result:
+            return "mdi:fan-off"
+        icons = {1: "mdi:fan-speed-1", 2: "mdi:fan-speed-2", 3: "mdi:fan-speed-3"}
+        return icons.get(result, "mdi:fan-plus")
+
+    @property
+    def get_ventilation(self) -> dict[int, str] | None:
+        """Get ventilation."""
+
+        preset_mode = None
+        if self._active_unit_mode is None or self._current_unit_mode is None:
+            preset_mode = None
+        elif self._current_unit_mode == CurrentUnitMode.Away:
+            preset_mode = STATE_AWAY
+        elif self._current_unit_mode == CurrentUnitMode.Summer:
+            preset_mode = STATE_SUMMER
+        elif self._current_unit_mode == CurrentUnitMode.Fireplace:
+            preset_mode = STATE_FIREPLACE
+        elif (
+            self._active_unit_mode & ActiveUnitMode.Automatic
+            == ActiveUnitMode.Automatic
+        ):
+            preset_mode = STATE_AUTOMATIC
+        elif self._active_unit_mode & ActiveUnitMode.Manual == ActiveUnitMode.Manual:
+            preset_mode = STATE_MANUAL
+        elif (
+            self._active_unit_mode & ActiveUnitMode.WeekProgram
+            == ActiveUnitMode.WeekProgram
+        ):
+            preset_mode = STATE_WEEKPROGRAM
+
+        return {
+            "fan_level": self._fan_level,
+            "preset_mode": preset_mode,
+        }
+
     async def async_get_current_unit_mode(self) -> int | None:
         """Get current unit mmode."""
         self._current_unit_mode = await self._read_holding_uint32(
@@ -1203,6 +1244,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         # Write the level to the fan level register
         await self._write_holding_uint32(MODBUS_REGISTER_FAN_LEVEL, value)
+
+    async def set_ventilation(self, value: dict[int, str]) -> None:
+        """Set ventilation."""
+
+        operation = value.get("preset_mode")
+        if operation is not None:
+            await self.set_operation_selection(operation)
+
+        fan_level = value.get("fan_level")
+        if fan_level is not None:
+            await self.set_fan_level(fan_level)
 
     async def set_week_program_selection(self, value: int) -> None:
         """Set week program selection."""
