@@ -70,6 +70,11 @@ Thanks to _Smartzeug_
 |------------------|--------------------------|
 | `bypass_damper`  | Indicates and controls the manual bypass state of the bypass damper [[1]](#entity-notes) |
 
+#### Fan Entity
+| Entity           | Description              |
+|------------------|--------------------------|
+| `ventilation`    | Indicates and controls the operation and fan level of the ventilation unit |
+
 #### Number Entities
 
 | Entity                              | Description                        |

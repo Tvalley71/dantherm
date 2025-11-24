@@ -77,6 +77,23 @@
     "cover": {
       "bypass_damper": { "name": "Bypass-Klappe" }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Lüftung",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "Automatisch",
+              "manual": "Manuell",
+              "week_program": "Wochenprogramm",
+              "away": "Abwesend",
+              "summer": "Sommer",
+              "fireplace": "Kamin"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },

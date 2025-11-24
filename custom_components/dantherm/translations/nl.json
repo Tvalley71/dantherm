@@ -77,6 +77,23 @@
     "cover": {
       "bypass_damper": { "name": "Demper Bypass" }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilatie",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "Automatisch",
+              "manual": "Manueel",
+              "week_program": "Weekprogramma",
+              "away": "Afwezig",
+              "summer": "Zomer",
+              "fireplace": "Open Haard"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "filter_lifetime": { "name": "Levensduur Filter" },
       "humidity_setpoint": { "name": "Vochtigheidsinstelwaarde" },

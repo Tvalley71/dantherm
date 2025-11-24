@@ -77,6 +77,23 @@
     "cover": {
       "bypass_damper": { "name": "Bypass" }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "Auto",
+              "manual": "Manuel",
+              "week_program": "Programme hebdo",
+              "away": "Absent",
+              "summer": "Été",
+              "fireplace": "Cheminée"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "filter_lifetime": { "name": "Durée de vie filtre" },
       "humidity_setpoint": { "name": "Consigne d'humidité" },

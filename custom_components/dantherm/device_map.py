@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
+from homeassistant.components.fan import FanEntityDescription, FanEntityFeature
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntityDescription,
@@ -80,6 +81,8 @@ STATE_NIGHT: Final = "night"
 STATE_BOOST: Final = "boost"
 STATE_ECO: Final = "eco"
 STATE_HOME: Final = "home"
+
+ATTR_VENTILATION: Final = "ventilation"
 
 ATTR_FAN_LEVEL_SELECTION: Final = "fan_level_selection"
 ATTR_FAN_LEVEL: Final = "fan_level"
@@ -205,6 +208,15 @@ OPERATION_SELECTIONS = [
     STATE_SUMMER,
     STATE_FIREPLACE,
     STATE_NIGHT,
+]
+
+PRESET_MODES = [
+    STATE_AUTOMATIC,
+    STATE_MANUAL,
+    STATE_WEEKPROGRAM,
+    STATE_AWAY,
+    STATE_SUMMER,
+    STATE_FIREPLACE,
 ]
 
 FAN_LEVEL_SELECTIONS = [
@@ -399,6 +411,17 @@ class DanthermCoverEntityDescription(DanthermEntityDescription, CoverEntityDescr
 
 
 @dataclass(frozen=True)
+class DanthermFanEntityDescription(DanthermEntityDescription, FanEntityDescription):
+    """Dantherm Fan Entity Description."""
+
+    supported_features: FanEntityFeature | None = None
+
+    speed_range: tuple[int, int] | None = None
+    speed_on: int | None = None
+    preset_modes: list[str] | None = None
+
+
+@dataclass(frozen=True)
 class DanthermNumberEntityDescription(
     DanthermEntityDescription, NumberEntityDescription
 ):
@@ -482,6 +505,22 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
         state_closed=BypassDamperState.Closed,
         component_class=ComponentClass.Bypass,
         device_class=CoverDeviceClass.DAMPER,
+    ),
+)
+
+FANS: tuple[DanthermFanEntityDescription, ...] = (
+    DanthermFanEntityDescription(
+        key=ATTR_VENTILATION,
+        icon="mdi:fan",
+        supported_features=FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON,
+        data_setinternal=ATTR_VENTILATION,
+        data_getinternal=ATTR_VENTILATION,
+        speed_range=(1, 4),
+        speed_on=2,
+        preset_modes=PRESET_MODES,
     ),
 )
 
@@ -768,7 +807,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY,
         data_getinternal=ATTR_AIR_QUALITY,
-        icon="mdi:molecule-co2",
+        icon="mdi:molecule",
         data_exclude_if=0,
         native_unit_of_measurement="ppm",
         device_class=SensorDeviceClass.CO2,
@@ -778,7 +817,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
     DanthermSensorEntityDescription(
         key=ATTR_AIR_QUALITY_LEVEL,
         data_getinternal=ATTR_AIR_QUALITY_LEVEL,
-        icon="mdi:molecule-co2",
+        icon="mdi:molecule",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,

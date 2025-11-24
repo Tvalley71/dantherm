@@ -68,6 +68,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CALENDAR,
     Platform.COVER,
+    Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

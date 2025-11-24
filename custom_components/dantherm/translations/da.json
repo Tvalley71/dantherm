@@ -77,6 +77,23 @@
     "cover": {
       "bypass_damper": { "name": "Bypass-spjæld"}
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "Automatik",
+              "manual": "Manuel",
+              "week_program": "Ugeprogram",
+              "away": "Rejsetilstand",
+              "summer": "Sommertilstand",
+              "fireplace": "Brændeovnstilstand"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "filter_lifetime": { "name": "Filterlevetid" },
       "humidity_setpoint": { "name": "Luftfugtighedssætpunkt" },
