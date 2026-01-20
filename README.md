@@ -22,6 +22,7 @@ Only support for Modbus over TCP/IP.
 Known supported units:
 
 - HCV300 ALU
+- HCV500 ALU
 - HCV700 ALU
 - HCV400 P2
 - HCV460 P2/E1
