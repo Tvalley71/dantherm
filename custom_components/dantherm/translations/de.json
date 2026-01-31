@@ -25,9 +25,21 @@
     "step": {
       "init": {
         "title": "Dantherm Configuration",
-        "description": "## Willkommen zur Dantherm Integration! 🏡\n\nDiese Integration ist von Tvalley71 für die Home Assistant Community erstellt. Sie sind dabei, erweiterte Einstellungen für Ihr Dantherm-Lüftungsgerät zu konfigurieren.\n\n\n☕ Wenn Ihnen diese Integration hilft, würde ich die Anerkennung in Form eines Sterns ⭐ auf der Integration auf GitHub oder vielleicht einer Tasse Kaffee unter wirklich schätzen:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nSie werden durch 3 Konfigurationsschritte geführt.",
+        "description": "## Willkommen zur Dantherm Integration! 🏡\n\nDiese Integration ist von Tvalley71 für die Home Assistant Community erstellt. Sie sind dabei, erweiterte Einstellungen für Ihr Dantherm-Lüftungsgerät zu konfigurieren.\n\n\n☕ Wenn Ihnen diese Integration hilft, würde ich die Anerkennung in Form eines Sterns ⭐ auf der Integration auf GitHub oder vielleicht einer Tasse Kaffee unter wirklich schätzen:\n[Buy Me a Coffee]({buymeacoffee_url})\n[GitHub Repository]({github_url})\n\n\n\nSie werden durch 3 Konfigurationsschritte geführt.",
         "data": {
           "continue": "Weiter"
+        },
+        "data_description": {
+          "placeholders": {
+            "buymeacoffee_url": {
+              "name": "Buy Me a Coffee",
+              "url": "https://www.buymeacoffee.com/tvalley71"
+            },
+            "github_url": {
+              "name": "GitHub Repository",
+              "url": "https://github.com/Tvalley71/dantherm"
+            }
+          }
         }
       },
       "network": {

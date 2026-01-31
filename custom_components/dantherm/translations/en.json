@@ -25,9 +25,21 @@
     "step": {
       "init": {
         "title": "Dantherm Configuration",
-        "description": "## Welcome to the Dantherm Integration! 🏡\n\nThis integration is created by Tvalley71 for the Home Assistant community. You are about to configure advanced settings for your Dantherm ventilation unit.\n\n\n☕ If this integration helps you, I would really appreciate the recognition in the form of a star ⭐ on the integration on GitHub or maybe a cup of coffee at:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nYou will be guided through 3 configuration steps.",
+        "description": "## Welcome to the Dantherm Integration! 🏡\n\nThis integration is created by Tvalley71 for the Home Assistant community. You are about to configure advanced settings for your Dantherm ventilation unit.\n\n\n☕ If this integration helps you, I would really appreciate the recognition in the form of a star ⭐ on the integration on GitHub or maybe a cup of coffee at:\n[Buy Me a Coffee]({buymeacoffee_url})\n[GitHub Repository]({github_url})\n\n\n\nYou will be guided through 3 configuration steps.",
         "data": {
           "continue": "Continue"
+        },
+        "data_description": {
+          "placeholders": {
+            "buymeacoffee_url": {
+              "name": "Buy Me a Coffee",
+              "url": "https://www.buymeacoffee.com/tvalley71"
+            },
+            "github_url": {
+              "name": "GitHub Repository",
+              "url": "https://github.com/Tvalley71/dantherm"
+            }
+          }
         }
       },
       "network": {

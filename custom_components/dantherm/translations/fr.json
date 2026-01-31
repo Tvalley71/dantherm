@@ -25,9 +25,21 @@
     "step": {
       "init": {
         "title": "Configuration Dantherm",
-        "description": "## Bienvenue dans l'intégration Dantherm! 🏡\n\nCette intégration est créée par Tvalley71 pour la communauté Home Assistant. Vous êtes sur le point de configurer les paramètres avancés de votre unité de ventilation Dantherm.\n\n\n☕ Si cette intégration vous aide, j'apprécierais vraiment la reconnaissance sous forme d'une étoile ⭐ sur l'intégration sur GitHub ou peut-être une tasse de café à:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nVous serez guidé à travers 3 étapes de configuration.",
+        "description": "## Bienvenue dans l'intégration Dantherm! 🏡\n\nCette intégration est créée par Tvalley71 pour la communauté Home Assistant. Vous êtes sur le point de configurer les paramètres avancés de votre unité de ventilation Dantherm.\n\n\n☕ Si cette intégration vous aide, j'apprécierais vraiment la reconnaissance sous forme d'une étoile ⭐ sur l'intégration sur GitHub ou peut-être une tasse de café à:\n[Buy Me a Coffee]({buymeacoffee_url})\n[GitHub Repository]({github_url})\n\n\n\nVous serez guidé à travers 3 étapes de configuration.",
         "data": {
           "continue": "Continuer"
+        },
+        "data_description": {
+          "placeholders": {
+            "buymeacoffee_url": {
+              "name": "Buy Me a Coffee",
+              "url": "https://www.buymeacoffee.com/tvalley71"
+            },
+            "github_url": {
+              "name": "GitHub Repository",
+              "url": "https://github.com/Tvalley71/dantherm"
+            }
+          }
         }
       },
       "network": {
