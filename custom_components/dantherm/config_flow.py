@@ -42,6 +42,10 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+# URL constants for description placeholders
+BUYMEACOFFEE_URL = "https://www.buymeacoffee.com/tvalley71"
+GITHUB_URL = "https://github.com/Tvalley71/dantherm"
+
 # Debug mode configuration
 # Set environment variable DANTHERM_DEBUG=1 to enable debug mode.
 # In debug mode:
@@ -210,7 +214,10 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
-            description_placeholders={},
+            description_placeholders={
+                "buymeacoffee_url": BUYMEACOFFEE_URL,
+                "github_url": GITHUB_URL,
+            },
         )
 
     async def async_step_network(
