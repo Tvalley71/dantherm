@@ -22,6 +22,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
+from .support import DanthermLogDownloadView
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
@@ -230,6 +231,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
     hass.data[DOMAIN] = {}
     await async_setup_services(hass)
+    if hasattr(hass, "http"):
+        hass.http.register_view(DanthermLogDownloadView(hass))
     return True
 
 

@@ -12,9 +12,11 @@
       }
     },
     "error": {
-      "invalid_host": "Invalid host or IP address.",
-      "cannot_connect": "Cannot connect to the device.",
-      "already_configured": "Device is already configured."
+        "cannot_connect": "Failed to connect",
+        "invalid_auth": "Invalid authentication",
+        "unknown": "Unexpected error",
+        "invalid_host": "Invalid host IP address",
+        "log_generation_failed": "Failed to generate log file: {error_message}"
     },
     "abort": {
       "invalid_host": "Invalid host or IP address.",
@@ -25,9 +27,55 @@
     "step": {
       "init": {
         "title": "Dantherm Configuration",
-        "description": "## Welcome to the Dantherm Integration! 🏡\n\nThis integration is created by Tvalley71 for the Home Assistant community. You are about to configure advanced settings for your Dantherm ventilation unit.\n\n\n☕ If this integration helps you, I would really appreciate the recognition in the form of a star ⭐ on the integration on GitHub or maybe a cup of coffee at:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nYou will be guided through 3 configuration steps.",
+        "description": "## Welcome to the Dantherm Integration! 🏡\n\nThis integration is created by Tvalley71 for the Home Assistant community. You are about to configure advanced settings for your Dantherm ventilation unit.\n\n\n☕ If this integration helps you, I would really appreciate the recognition in the form of a star ⭐ on the integration on GitHub or maybe a cup of coffee at:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nChoose what you want to do:",
+        "menu_options": {
+          "continue_setup": "Continue with configuration",
+          "support": "Support & Troubleshooting"
+        }
+      },
+      "continue_setup": {
+        "title": "Continue Setup"
+      },
+      "support": {
+        "title": "Support & Troubleshooting",
+        "description": "Get help with your Dantherm integration for {device_name}.\n\nDebug logging is currently **{debug_status}**.\n\n{download_link}\n\nUse the checkbox below to toggle debug logging, then select an action:",
         "data": {
-          "continue": "Continue"
+          "debug_logging": "Enable debug logging",
+          "action": "Action"
+        },
+        "data_description": {
+          "debug_logging": "Toggle debug logging for this integration",
+          "action": "Select the support action you need"
+        }
+      },
+      "support_download_ready": {
+        "title": "Support File Generated",
+        "description": "Support file '{filename}' is ready. {download_link}\n\nYou can click the link above to download it now or copy the URL: {download_url}\n\nAfter download you may attach it to an issue on GitHub for troubleshooting.",
+        "data": {
+          "back": "Back to support menu"
+        }
+      },
+      "collect_logs": {
+        "title": "Generate Log File",
+        "description": "## Generate Log File for Troubleshooting\n\n**Status:** {log_status}\n\nClick **\"Generate Log File\"** to create a comprehensive diagnostic file that includes:\n\n• All integration logs and error messages\n• Device configuration and status\n• Home Assistant system information\n• Sanitized data (personal info removed)\n\nThe file will be saved to your `config/www/` directory and can be downloaded via the `/local/` URL or accessed directly from the folder.\n\n**This may take a few moments to complete.**",
+        "data": {
+          "generate": "Generate Log File",
+          "back": "Back to support menu"
+        }
+      },
+
+      "diagnostics_info": {
+        "title": "Generate Diagnostics Data",
+        "description": "## Diagnostics Information for {device_name}\n\nTo help with troubleshooting, you can download comprehensive diagnostics data:\n\n### How to get diagnostics:\n1. Go to **Settings** → **Devices & Services**\n2. Find your **{device_name}** device\n3. Click the **three dots menu** → **Download diagnostics**\n\n### What's included:\n- Device information and status\n- Entity states and configurations\n- Integration settings\n- Sanitized log entries (IP addresses and sensitive data removed)\n- Coordinator and runtime data\n\n### Sharing diagnostics:\nWhen reporting issues, please attach the diagnostics file to help identify the problem faster.",
+        "data": {
+          "back": "Back to support menu"
+        }
+      },
+      "troubleshooting": {
+        "title": "Troubleshooting Guide",
+        "description": "## Common Issues & Solutions for {device_name}\n\n### Connection Issues:\n- Verify device IP address is correct\n- Check that Modbus TCP is enabled on your unit\n- Ensure port 502 is accessible\n- Try restarting the integration\n\n### Missing Entities:\n- Some entities may be disabled by default\n- Check **Settings** → **Devices & Services** → **{device_name}** → **Entities**\n- Enable any needed entities manually\n\n### Adaptive Mode Issues:\n- Verify trigger entities are valid binary sensors or input booleans\n- Check that calendar events are properly formatted\n- Review adaptive manager logs for errors\n\n### Performance Issues:\n- Consider adjusting polling frequency in Network Settings\n- Check Home Assistant system resources\n- Review logs for communication errors\n\n### Getting More Help:\n- Check the [GitHub repository](https://github.com/Tvalley71/dantherm) for known issues\n- Create a new issue with diagnostics data attached\n- Join the Home Assistant community forums",
+        "data": {
+          "back": "Back to support menu"
         }
       },
       "network": {

@@ -14,7 +14,8 @@
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
       "cannot_connect": "Kan ikke oprette forbindelse.",
-      "already_configured": "Enhed er allerede konfigureret."
+      "already_configured": "Enhed er allerede konfigureret.",
+      "log_generation_failed": "Kunne ikke generere log fil: {error_message}"
     },
     "abort": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
@@ -25,9 +26,55 @@
     "step": {
       "init": {
         "title": "Dantherm Konfiguration",
-        "description": "## Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen i form af en stjerne ⭐ på integrationen på GitHub eller måske en kop kaffe på:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nDu vil blive guidet gennem 3 konfigurationstrin.",
+        "description": "## Velkommen til Dantherm Integrationen! 🏡\n\nDenne integration er skabt af Tvalley71 til Home Assistant fællesskabet. Du er ved at konfigurere avancerede indstillinger for din Dantherm ventilationsenhed.\n\n\n☕ Hvis denne integration hjælper dig, ville jeg virkelig sætte pris på anerkendelsen i form af en stjerne ⭐ på integrationen på GitHub eller måske en kop kaffe på:\nhttps://www.buymeacoffee.com/tvalley71\nhttps://github.com/Tvalley71/dantherm\n\n\n\nVælg hvad du vil gøre:",
+        "menu_options": {
+          "continue_setup": "Fortsæt med konfiguration",
+          "support": "Support & Fejlfinding"
+        }
+      },
+      "continue_setup": {
+        "title": "Fortsæt Opsætning"
+      },
+      "support": {
+        "title": "Support & Fejlfinding",
+        "description": "Få hjælp med din Dantherm integration for {device_name}.\n\nDebug logging er i øjeblikket **{debug_status}**.\n\n{download_link}\n\nBrug checkboksen nedenfor til at skifte debug logging, vælg derefter en handling:",
         "data": {
-          "continue": "Fortsæt"
+          "debug_logging": "Aktivér debug logging",
+          "action": "Handling"
+        },
+        "data_description": {
+          "debug_logging": "Skift debug logging for denne integration",
+          "action": "Vælg den support-handling du har brug for"
+        }
+      },
+      "support_download_ready": {
+        "title": "Supportfil Genereret",
+        "description": "Supportfil '{filename}' er klar. {download_link}\n\nDu kan klikke på linket ovenfor for at downloade den nu eller kopiere URL'en: {download_url}\n\nEfter download kan du vedhæfte den til et issue på GitHub for fejlfinding.",
+        "data": {
+          "back": "Tilbage til support menu"
+        }
+      },
+      "collect_logs": {
+        "title": "Generer Log Fil",
+        "description": "## Generer Log Fil til Fejlfinding\n\n**Status:** {log_status}\n\nKlik **\"Generer Log Fil\"** for at oprette en omfattende diagnostik fil der indeholder:\n\n• Alle integrations logs og fejlbeskeder\n• Enheds konfiguration og status\n• Home Assistant system information\n• Saniterede data (personlig info fjernet)\n\nFilen gemmes i din `config/www/` mappe og kan downloades via `/local/` URL'en eller tilgås direkte fra mappen.\n\n**Dette kan tage et øjeblik at fuldføre.**",
+        "data": {
+          "generate": "Generer Log Fil",
+          "back": "Tilbage til support menu"
+        }
+      },
+
+      "diagnostics_info": {
+        "title": "Generer Diagnostik Data",
+        "description": "## Diagnostik Information for {device_name}\n\nFor at hjælpe med fejlfinding kan du downloade omfattende diagnostik data:\n\n### Sådan får du diagnostik:\n1. Gå til **Indstillinger** → **Enheder & Tjenester**\n2. Find din **{device_name}** enhed\n3. Klik på **tre prikker menuen** → **Download diagnostik**\n\n### Hvad er inkluderet:\n- Enhedsinformation og status\n- Entitetstilstande og konfigurationer\n- Integrationsindstillinger\n- Saniterede log indtastninger (IP-adresser og følsom data fjernet)\n- Koordinator og runtime data\n\n### Deling af diagnostik:\nNår du rapporterer problemer, så vedhæft venligst diagnostik filen for at hjælpe med at identificere problemet hurtigere.",
+        "data": {
+          "back": "Tilbage til support menu"
+        }
+      },
+      "troubleshooting": {
+        "title": "Fejlfindingsguide",
+        "description": "## Almindelige Problemer & Løsninger for {device_name}\n\n### Forbindelsesproblemer:\n- Verificér at enhedens IP-adresse er korrekt\n- Tjek at Modbus TCP er aktiveret på din enhed\n- Sørg for at port 502 er tilgængelig\n- Prøv at genstarte integrationen\n\n### Manglende Entiteter:\n- Nogle entiteter kan være deaktiveret som standard\n- Tjek **Indstillinger** → **Enheder & Tjenester** → **{device_name}** → **Entiteter**\n- Aktivér eventuelle nødvendige entiteter manuelt\n\n### Adaptive Tilstand Problemer:\n- Verificér at udløser entiteter er gyldige binære sensorer eller input booleans\n- Tjek at kalender begivenheder er korrekt formateret\n- Gennemgå adaptive manager logs for fejl\n\n### Ydelsesproblemer:\n- Overvej at justere polling frekvens i Netværksindstillinger\n- Tjek Home Assistant systemressourcer\n- Gennemgå logs for kommunikationsfejl\n\n### Få Mere Hjælp:\n- Tjek [GitHub repository](https://github.com/Tvalley71/dantherm) for kendte problemer\n- Opret et nyt issue med diagnostik data vedhæftet\n- Deltag i Home Assistant community forummerne",
+        "data": {
+          "back": "Tilbage til support menu"
         }
       },
       "network": {

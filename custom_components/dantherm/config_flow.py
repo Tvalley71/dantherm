@@ -31,6 +31,11 @@ from .device_map import (
     POLLING_OPTIONS_LIST,
 )
 from .helpers import is_primary_entry
+from .support import (
+    async_toggle_debug_logging,
+    async_collect_integration_logs,
+    async_create_downloadable_support_file,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -157,6 +162,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
+        self._last_download: dict[str, str] | None = None
 
     def _get_polling_speed_from_interval(self, interval: int) -> str:
         """Convert scan interval to polling speed option."""
@@ -190,28 +196,17 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show the initial welcome screen with configuration overview."""
-        if user_input is not None:
-            # Check if user wants to continue
-            if not user_input.get("continue", False):
-                # User unchecked continue, abort the options flow
-                return self.async_abort(reason="aborted_by_user")
-
-            # User wants to continue, proceed to network configuration
-            return await self.async_step_network()
-
-        # Create a schema with a read-only information field
-        schema = vol.Schema(
-            {
-                vol.Optional("continue", default=True): bool,
-            }
-        )
-
-        return self.async_show_form(
+        """Show the main menu with options."""
+        return self.async_show_menu(
             step_id="init",
-            data_schema=schema,
-            description_placeholders={},
+            menu_options=["continue_setup", "support"],
         )
+
+    async def async_step_continue_setup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Continue with regular setup."""
+        return await self.async_step_network()
 
     async def async_step_network(
         self, user_input: dict[str, Any] | None = None
@@ -372,3 +367,223 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(step_id="advanced", data_schema=schema)
+
+    async def async_step_support(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show support options menu."""
+        if user_input is not None:
+            # Handle debug logging toggle
+            logger = logging.getLogger(f"custom_components.{DOMAIN}")
+            current_debug = logger.isEnabledFor(logging.DEBUG)
+            new_debug_setting = user_input.get("debug_logging", current_debug)
+
+            # Toggle debug logging if setting changed
+            if new_debug_setting != current_debug:
+                await async_toggle_debug_logging(self.hass, new_debug_setting)
+
+            # Handle other actions
+            action = user_input.get("action")
+            if action == "collect_logs":
+                # Generate files using shared helper
+                try:
+                    result = await async_create_downloadable_support_file(
+                        self.hass,
+                        self.config_entry.entry_id,
+                        self.config_entry.title,
+                        prefix="dantherm_support",
+                    )
+
+                    self._last_download = {
+                        "filename": result["filename"],
+                        "download_url": result["forced_download_url"],
+                        "file_path": result["file_path"],
+                        "timestamp": result["timestamp"],
+                    }
+
+                    # Ask frontend to open the download URL in a new tab/window
+                    # while keeping the flow alive; user can then click "Done" to continue
+                    return self.async_external_step(
+                        step_id="support_download",
+                        url=result["forced_download_url"],
+                    )
+
+                except (OSError, ValueError) as ex:
+                    return self.async_create_entry(
+                        title="Fejl ved fil generering",
+                        data={"error": f"Kunne ikke generere support filer: {ex}"},
+                    )
+            if action == "diagnostics_info":
+                return await self.async_step_diagnostics_info()
+            if action == "troubleshooting":
+                return await self.async_step_troubleshooting()
+            if action == "back_to_main":
+                return await self.async_step_network()
+
+            # If no specific action, stay on support page
+            return await self.async_step_support()
+
+        # Check current debug status
+        logger = logging.getLogger(f"custom_components.{DOMAIN}")
+        debug_enabled = logger.isEnabledFor(logging.DEBUG)
+
+        schema = vol.Schema(
+            {
+                vol.Optional("debug_logging", default=debug_enabled): bool,
+                vol.Optional("action"): vol.In(
+                    {
+                        "collect_logs": "Collect integration logs",
+                        "diagnostics_info": "Generate diagnostics data",
+                        "troubleshooting": "Troubleshooting guide",
+                        "back_to_main": "Back to main configuration",
+                    }
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="support",
+            data_schema=schema,
+            description_placeholders={
+                "device_name": self.config_entry.title,
+                "debug_status": "enabled" if debug_enabled else "disabled",
+                # If a file was just generated, provide a link placeholder
+                "download_link": (
+                    f"[Klik her for at downloade]({self._last_download['download_url']})"
+                    if self._last_download
+                    else ""
+                ),
+            },
+        )
+
+    async def async_step_support_download_ready(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show a small form with a clickable download link and a back button."""
+        if not self._last_download:
+            return await self.async_step_support()
+
+        if user_input is not None:
+            if user_input.get("back", False):
+                return await self.async_step_support()
+
+        schema = vol.Schema({vol.Optional("back", default=False): bool})
+
+        return self.async_show_form(
+            step_id="support_download_ready",
+            data_schema=schema,
+            description_placeholders={
+                "filename": self._last_download["filename"],
+                "download_url": self._last_download["download_url"],
+                "download_link": f"[Klik her for at downloade]({self._last_download['download_url']})",
+            },
+        )
+
+    async def async_step_support_download(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """External step 'done' handler: return to the download-ready view."""
+        # Once the external URL was opened, guide user to the view that also shows the link
+        return self.async_external_step_done(next_step_id="support_download_ready")
+
+    async def async_step_collect_logs(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Collect integration logs and generate download file."""
+        if user_input is not None:
+            if user_input.get("back", False):
+                return await self.async_step_support()
+            if user_input.get("generate", False):
+                # Generate and trigger the log file download using shared helper
+                try:
+                    result = await async_create_downloadable_support_file(
+                        self.hass,
+                        self.config_entry.entry_id,
+                        self.config_entry.title,
+                        prefix="dantherm_logs",
+                    )
+
+                    self._last_download = {
+                        "filename": result["filename"],
+                        "download_url": result["forced_download_url"],
+                        "file_path": result["file_path"],
+                        "timestamp": result["timestamp"],
+                    }
+
+                    # Open the download in a new tab and then show the ready step
+                    return self.async_external_step(
+                        step_id="support_download",
+                        url=result["forced_download_url"],
+                    )
+
+                except (OSError, ValueError) as ex:
+                    return self.async_show_form(
+                        step_id="collect_logs",
+                        data_schema=vol.Schema(
+                            {vol.Optional("back", default=False): bool}
+                        ),
+                        errors={"base": "log_generation_failed"},
+                        description_placeholders={"error_message": str(ex)},
+                    )
+
+        # Show form to generate logs
+        try:
+            # Quick preview of available logs
+            logs_preview = await async_collect_integration_logs(self.hass)
+            collection_info = logs_preview.get("collection_info", {})
+
+            status_parts = [
+                f"Debug logging: {'aktiveret' if collection_info.get('debug_enabled', False) else 'deaktiveret'}",
+                f"Log entries tilgængelige: {logs_preview.get('total_entries', 0)}",
+                "Følsomme data bliver automatisk fjernet",
+            ]
+
+            status = " • ".join(status_parts)
+
+        except (AttributeError, ValueError, RuntimeError):
+            status = "Klar til at generere log fil"
+
+        schema = vol.Schema(
+            {
+                vol.Optional("generate", default=False): bool,
+                vol.Optional("back", default=False): bool,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="collect_logs",
+            data_schema=schema,
+            description_placeholders={"log_status": status},
+        )
+
+    async def async_step_diagnostics_info(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show diagnostics information."""
+        if user_input is not None:
+            if user_input.get("back", False):
+                return await self.async_step_support()
+
+        schema = vol.Schema({vol.Optional("back", default=False): bool})
+
+        return self.async_show_form(
+            step_id="diagnostics_info",
+            data_schema=schema,
+            description_placeholders={"device_name": self.config_entry.title},
+        )
+
+    async def async_step_troubleshooting(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show troubleshooting guide."""
+        if user_input is not None:
+            if user_input.get("back", False):
+                return await self.async_step_support()
+
+        schema = vol.Schema({vol.Optional("back", default=False): bool})
+
+        return self.async_show_form(
+            step_id="troubleshooting",
+            data_schema=schema,
+            description_placeholders={"device_name": self.config_entry.title},
+        )
