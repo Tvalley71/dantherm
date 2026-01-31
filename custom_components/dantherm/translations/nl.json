@@ -29,17 +29,9 @@
         "data": {
           "continue": "Doorgaan"
         },
-        "data_description": {
-          "placeholders": {
-            "buymeacoffee_url": {
-              "name": "Buy Me a Coffee",
-              "url": "https://www.buymeacoffee.com/tvalley71"
-            },
-            "github_url": {
-              "name": "GitHub Repository",
-              "url": "https://github.com/Tvalley71/dantherm"
-            }
-          }
+        "description_placeholders": {
+          "buymeacoffee_url": "[Buy Me a Coffee](https://www.buymeacoffee.com/tvalley71)",
+          "github_url": "[GitHub Repository](https://github.com/Tvalley71/dantherm)"
         }
       },
       "network": {
