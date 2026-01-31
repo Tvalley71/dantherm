@@ -30,8 +30,8 @@
           "continue": "Doorgaan"
         },
         "description_placeholders": {
-          "buymeacoffee_url": "[Buy Me a Coffee](https://www.buymeacoffee.com/tvalley71)",
-          "github_url": "[GitHub Repository](https://github.com/Tvalley71/dantherm)"
+          "buymeacoffee_url": "https://www.buymeacoffee.com/tvalley71",
+          "github_url": "https://github.com/Tvalley71/dantherm"
         }
       },
       "network": {
