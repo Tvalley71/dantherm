@@ -18,6 +18,7 @@ DEVICE_TYPES = {
     10: "HCV400 E1",
     11: "HCV400 P1",
     12: "HCC 2 E1",
+    14: "HCV400 P1-E1",
     15: "HCV460 P2",
     19: "HCV460 E1",
     21: "RCV320 P2",
