@@ -28,9 +28,20 @@ async def test_service_schema_validation(hass: HomeAssistant) -> None:
 
     # Test basic schema validation
     try:
-        DANTHERM_SET_STATE_SCHEMA({"entity_id": "switch.test"})
+        DANTHERM_SET_STATE_SCHEMA({"device_id": ["switch.test"]})
     except vol.Invalid:
         pytest.fail("Basic schema validation should not fail")
+
+    # Test set_configuration schema accepts air quality thresholds
+    try:
+        DANTHERM_SET_CONFIGURATION_SCHEMA({
+            "device_id": ["device1"],
+            "air_quality_low_threshold": 1000,
+            "air_quality_middle_threshold": 1500,
+            "air_quality_high_threshold": 2000
+        })
+    except vol.Invalid:
+        pytest.fail("Configuration schema should accept air quality thresholds")
 
 
 def test_time_validation_patterns() -> None:
