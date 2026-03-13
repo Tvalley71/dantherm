@@ -12,6 +12,9 @@ from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
 from .device_map import (
+    ATTR_AIR_QUALITY_HIGH_THRESHOLD,
+    ATTR_AIR_QUALITY_LOW_THRESHOLD,
+    ATTR_AIR_QUALITY_MIDDLE_THRESHOLD,
     ATTR_AWAY_MODE,
     ATTR_BYPASS_MAXIMUM_TEMPERATURE,
     ATTR_BYPASS_MAXIMUM_TEMPERATURE_SUMMER,
@@ -45,8 +48,13 @@ from .device_map import (
     SERVICE_SET_STATE,
     WEEK_PROGRAM_SELECTIONS,
     ActiveUnitMode,
+    ComponentClass,
 )
-from .exceptions import InvalidTimeFormat, UnsupportedByFirmware
+from .exceptions import (
+    AirQualitySensorNotAvailable,
+    InvalidTimeFormat,
+    UnsupportedByFirmware,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +81,15 @@ DANTHERM_SET_CONFIGURATION_SCHEMA = vol.Schema(
         vol.Optional(ATTR_NIGHT_MODE_START_TIME): cv.string,
         vol.Optional(ATTR_NIGHT_MODE_END_TIME): cv.string,
         vol.Optional(ATTR_WEEK_PROGRAM_SELECTION): vol.In(WEEK_PROGRAM_SELECTIONS),
+        vol.Optional(ATTR_AIR_QUALITY_LOW_THRESHOLD): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=65535)
+        ),
+        vol.Optional(ATTR_AIR_QUALITY_MIDDLE_THRESHOLD): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=65535)
+        ),
+        vol.Optional(ATTR_AIR_QUALITY_HIGH_THRESHOLD): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=65535)
+        ),
     }
 )
 
@@ -280,6 +297,41 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 )
                 device.coordinator.enqueue_frontend(
                     device.set_week_program_selection, week_program_selection
+                )
+
+            # Check if VOC sensor is available before setting air quality thresholds
+            air_quality_thresholds_present = (
+                ATTR_AIR_QUALITY_LOW_THRESHOLD in call.data
+                or ATTR_AIR_QUALITY_MIDDLE_THRESHOLD in call.data
+                or ATTR_AIR_QUALITY_HIGH_THRESHOLD in call.data
+            )
+            if air_quality_thresholds_present:
+                if (device.installed_components & ComponentClass.VOC_sensor) == 0:
+                    raise AirQualitySensorNotAvailable
+
+            if ATTR_AIR_QUALITY_LOW_THRESHOLD in call.data:
+                air_quality_low_threshold = int(
+                    render_template(call.data[ATTR_AIR_QUALITY_LOW_THRESHOLD])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_air_quality_low_threshold, air_quality_low_threshold
+                )
+
+            if ATTR_AIR_QUALITY_MIDDLE_THRESHOLD in call.data:
+                air_quality_middle_threshold = int(
+                    render_template(call.data[ATTR_AIR_QUALITY_MIDDLE_THRESHOLD])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_air_quality_middle_threshold,
+                    air_quality_middle_threshold,
+                )
+
+            if ATTR_AIR_QUALITY_HIGH_THRESHOLD in call.data:
+                air_quality_high_threshold = int(
+                    render_template(call.data[ATTR_AIR_QUALITY_HIGH_THRESHOLD])
+                )
+                device.coordinator.enqueue_frontend(
+                    device.set_air_quality_high_threshold, air_quality_high_threshold
                 )
 
         await async_apply_device_function(call, apply_config)
