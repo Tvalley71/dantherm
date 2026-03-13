@@ -60,3 +60,14 @@ class InvalidAdaptiveState(HomeAssistantError):
             translation_key="invalid_adaptive_state",
             translation_placeholders=placeholders,
         )
+
+
+class AirQualitySensorNotAvailable(HomeAssistantError):
+    """Raised when air quality sensor is not available on the device."""
+
+    def __init__(self) -> None:
+        """Init HA error."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="air_quality_sensor_not_available",
+        )
