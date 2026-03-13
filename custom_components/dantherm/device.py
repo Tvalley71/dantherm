@@ -57,9 +57,9 @@ from .device_map import (
 from .modbus import (
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
+    MODBUS_REGISTER_AIR_QUALITY_HIGH_THRESHOLD,
     MODBUS_REGISTER_AIR_QUALITY_LOW_THRESHOLD,
     MODBUS_REGISTER_AIR_QUALITY_MIDDLE_THRESHOLD,
-    MODBUS_REGISTER_AIR_QUALITY_HIGH_THRESHOLD,
     MODBUS_REGISTER_ALARM,
     MODBUS_REGISTER_ALARM_RESET,
     MODBUS_REGISTER_BYPASS_DAMPER,
@@ -1550,21 +1550,27 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     async def async_get_air_quality_low_threshold(self) -> int | None:
         """Get air quality low threshold."""
 
-        result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY_LOW_THRESHOLD)
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_AIR_QUALITY_LOW_THRESHOLD
+        )
         _LOGGER.debug("Air quality low threshold = %s", result)
         return result
 
     async def async_get_air_quality_middle_threshold(self) -> int | None:
         """Get air quality middle threshold."""
 
-        result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY_MIDDLE_THRESHOLD)
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_AIR_QUALITY_MIDDLE_THRESHOLD
+        )
         _LOGGER.debug("Air quality middle threshold = %s", result)
         return result
 
     async def async_get_air_quality_high_threshold(self) -> int | None:
         """Get air quality high threshold."""
 
-        result = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY_HIGH_THRESHOLD)
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_AIR_QUALITY_HIGH_THRESHOLD
+        )
         _LOGGER.debug("Air quality high threshold = %s", result)
         return result
 
