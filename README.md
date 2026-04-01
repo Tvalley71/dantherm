@@ -35,11 +35,16 @@ Known supported units:
 <!-- START:shared-section no-replace -->
 The listed units are known to work with this integration. Basically, all units compatible with the **_Dantherm Residential_** or **_Pluggit iFlow_** apps should work with the integration as well.
 
-Users have reported that the integration also works with the **Bosch Vent 5000 C** and **Fränkische Profi-Air Flex** ventilation units.
+Users have also reported compatibility with the following units:
+
+- Bosch Vent 5000 C
+- Fränkische Profi-Air Flex
+- Fränkische Profi-Air 180 Flat
+
 <!-- END:shared-section -->
 
-> [!NOTE]  
-> If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.  
+> [!NOTE]
+> If you have a model not listed and are using this integration, please let me know by posting [here](https://github.com/Tvalley71/dantherm/discussions/new?category=general). Make sure to include both the model name and the unit type number.
 > The number can be found in the **Device Info** section on the integration page; if the unit is not recognized, it will be listed as "Unknown" followed by the number.
 
 ### Guide
@@ -91,6 +96,9 @@ Thanks to _Smartzeug_
 | `humidity_setpoint_summer`          | Humidity setpoint in % (summer) [[2][5]](#entity-notes) |
 | `home_mode_timeout`                 | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
 | `manual_bypass_duration`            | Duration for which manual bypass remains active after user activation [[1][2][5]](#entity-notes) |
+| `air_quality_low_threshold`         |  Set the low threshold for air quality sensitivity [[1][2]](#entity-notes) |
+| `air_quality_middle_threshold`      |  Set the middle threshold for air quality sensitivity [[1][2]](#entity-notes) |
+| `air_quality_high_threshold`        |  Set the high threshold for air quality sensitivity [[1][2]](#entity-notes) |
 
 #### Select Entities
 
@@ -151,12 +159,12 @@ Thanks to _Smartzeug_
 
 <h4 id="entity-notes">Notes</h4>
 
-[1] The entity may not install due to lack of support or installation in the particular unit.  
-[2] The entity is disabled by default.  
-[3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.  
-[4] The entity can only be enabled if any of the adaptive triggers are configured.  
-[5] The entity may not install due to firmware limitation.  
-[6] Winter setting if summer setting is available (Firmware ≥ 3.14).  
+[1] The entity may not install due to lack of support or installation in the particular unit.
+[2] The entity is disabled by default.
+[3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.
+[4] The entity can only be enabled if any of the adaptive triggers are configured.
+[5] The entity may not install due to firmware limitation.
+[6] Winter setting if summer setting is available (Firmware ≥ 3.14).
 
 _~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
 
@@ -246,7 +254,7 @@ This picture-elements card provides a dynamic and intuitive interface for monito
 *	Ventilation Temperatures – View four key temperature readings: Supply, Extract, Outdoor, and Exhaust.
 *	Humidity Level – Monitor indoor humidity for optimal air quality.
 *	Air Quality – Monitor indoor air quality.
-  
+
 Clicking on any displayed entity allows you to adjust its state or explore detailed history graphs for deeper insights.
 
 ![Skærmbillede 2025-06-30 kl  05 39 01](https://github.com/user-attachments/assets/a6adac2d-c003-4bd4-a98a-44e03d808007)
@@ -498,7 +506,7 @@ series:
       func: avg
 
 ```
-    
+
 </details>
 
 
@@ -522,11 +530,11 @@ The filtering feature can be enabled or disabled via the **"Sensor Filtering"** 
 
 Each sensor is equipped with a sliding history buffer, storing the last 5 readings. The filter applies two techniques:
 
-1. **Initialization Smoothing**  
+1. **Initialization Smoothing**
    For the first few readings (up to 5), the filter calculates a simple average. This helps the sensor start off with a stable baseline, preventing a single bad initial reading from influencing the system.
 
-2. **Spike Filtering**  
-   After initialization, every new reading is compared to a rolling average of the last 5 readings.  
+2. **Spike Filtering**
+   After initialization, every new reading is compared to a rolling average of the last 5 readings.
    If the new reading changes more than a defined threshold (`max_change`) compared to the rolling average, the spike is rejected, and the system uses the current rolling average instead.
 
 ### Individual Thresholds per Sensor
@@ -557,7 +565,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 
 2. **Configure a Trigger:**
    - Add a trigger that fits your use case. For example:
-     - A time-based trigger to schedule changes.    
+     - A time-based trigger to schedule changes.
      - A sensor-based trigger to react to environmental changes.
         - Air Quality Sensor: Trigger when CO2 levels exceed a threshold, e.g., 1000 ppm.
         - Humidity Sensor: Trigger when humidity exceeds, e.g., 70%.
@@ -584,7 +592,7 @@ The **Dantherm: Set state** action allows you to control the state of your Danth
 5. **Save the Automation:**
    - Once configured, save the automation. The Dantherm unit will now respond to the specified trigger and perform the desired action.
 
-The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools. 
+The **Dantherm: Set configuration** action allows you to adjust various configuration settings of your Dantherm device directly from Home Assistant. This action can be used in automations, scripts, or manually through the Developer Tools.
 
 Starting from version _0.4.17_ of the integration, the actions have been reorganized into multiple variants, because Home Assistant actions cannot dynamically add or remove fields. Therefore, you now have **Set configuration**, **Set configuration 2**, and **Set configuration 3**, each containing the fields supported by a specific firmware versions:
 
@@ -608,36 +616,36 @@ Starting from version _0.4.17_ of the integration, the actions have been reorgan
 The integration enhances the control of Dantherm ventilation units by introducing **Boost Mode**, **Eco Mode**, **Home Mode**, and a **Calendar Function** for advanced scheduling and automation. These features ensure efficient operation based on both **schedules** and **various triggers**, providing a comfortable and energy-efficient environment.
 
 
-### Boost Mode 🚀  
+### Boost Mode 🚀
 Boost Mode is designed for short bursts of increased ventilation, useful after activities like cooking or showering.
 
-- **Boost Mode Switch**: This must be **enabled** for Boost Mode to activate.  
-- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the unit switches to the **Boost Operation Selection**.  
-- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Boost Mode remains active after the trigger is deactivated.  
+- **Boost Mode Switch**: This must be **enabled** for Boost Mode to activate.
+- **Trigger-Based Activation**: If Boost Mode is **enabled** and the **Boost Mode Trigger** is active, the unit switches to the **Boost Operation Selection**.
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Boost Mode remains active after the trigger is deactivated.
 - **Available Operations**: `Level 4`, `Level 3`, or `Level 2`.
 
-> **Important**  
+> **Important**
 > The Dantherm unit has a built-in **automatic setback** from `Level 4` to `Level 3` after a fixed time period. This may cause Boost Mode to behave unexpectedly if `Level 4` is used for longer periods.
 
 
-### Eco Mode 🌱  
+### Eco Mode 🌱
 Eco Mode is designed to **reduce fan speed** under specific environmental conditions, optimizing efficiency and supporting the unit’s **defrost mechanism** in cold weather.
 
-- **Eco Mode Switch**: This must be **enabled** for Eco Mode to activate.  
-- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the unit switches to the **Eco Operation Selection**.  
-- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Eco Mode remains active after the trigger is deactivated.  
+- **Eco Mode Switch**: This must be **enabled** for Eco Mode to activate.
+- **Trigger-Based Activation**: If Eco Mode is **enabled** and the **Eco Mode Trigger** is active, the unit switches to the **Eco Operation Selection**.
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Eco Mode remains active after the trigger is deactivated.
 - **Available Operations**: `Standby` and `Level 1`.
 
-> **Important**  
+> **Important**
 > The Dantherm unit has a built-in **automatic setback** from `Standby` to `Level 3` after a fixed time period. This may cause Eco Mode to behave unexpectedly if `Standby` is used for longer periods.
 
 
-### Home Mode 🏡  
+### Home Mode 🏡
 Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ensuring efficient ventilation when you are at home.
 
-- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.  
-- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the unit switches to the **Home Operation Selection**.  
-- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Home Mode remains active after the trigger is deactivated.  
+- **Home Mode Switch**: This must be **enabled** for Home Mode to activate.
+- **Trigger-Based Activation**: If Home Mode is **enabled** and the **Home Mode Trigger** is active, the unit switches to the **Home Operation Selection**.
+- **Timeout Handling**: [See Trigger Timeout](#trigger-timeout) for details on how long Home Mode remains active after the trigger is deactivated.
 - **Available Operations**: `Automatic`, `Level 3`, `Level 2`, `Level 1`, or `Week Program`.
 
 
@@ -645,8 +653,8 @@ Home Mode allows for automatic adjustments based on a **Home Mode Trigger**, ens
 
 Each mode trigger (Boost, Eco, Home) includes a configurable timeout that defines how long the mode remains active after the trigger is deactivated.
 
-- **Timeout Behavior**: After the trigger turns off, the unit continues operating in the triggered mode for the remaining timeout period.  
-- **Reset on Re-trigger**: If the trigger is activated again *within the timeout window*, the countdown restarts.  
+- **Timeout Behavior**: After the trigger turns off, the unit continues operating in the triggered mode for the remaining timeout period.
+- **Reset on Re-trigger**: If the trigger is activated again *within the timeout window*, the countdown restarts.
 - **Automatic Revert**: When the timeout expires without further trigger activity, the unit reverts to the operation mode that was active before the trigger event—unless this has been overridden by a calendar schedule.
 
 This mechanism ensures that temporary conditions (e.g., presence, humidity, low temperature) cause a short-term mode change without disrupting long-term schedules.
@@ -658,16 +666,16 @@ Boost, Eco, and Home Modes rely on **Adaptive Triggers** — binary sensors or h
 
 An **Adaptive Trigger** can be:
 
-- A **motion sensor** (e.g., presence detection for Home Mode)  
-- A **humidity sensor** (e.g., high humidity after a shower for Boost Mode)  
-- A **power sensor** (e.g., detecting stove or shower fan usage)  
-- An **outdoor temperature sensor** (e.g., reducing fan speed in cold weather for Eco Mode)  
+- A **motion sensor** (e.g., presence detection for Home Mode)
+- A **humidity sensor** (e.g., high humidity after a shower for Boost Mode)
+- A **power sensor** (e.g., detecting stove or shower fan usage)
+- An **outdoor temperature sensor** (e.g., reducing fan speed in cold weather for Eco Mode)
 - A **custom helper** combining multiple conditions
 
 Adaptive Triggers are configured manually in the integration options and linked to each mode individually.
 
-> ⚠️ **Note**  
-> Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.  
+> ⚠️ **Note**
+> Only entities of type `binary_sensor` or `input_boolean` are supported as Adaptive Triggers.
 > Make sure the entity returns an `on` or `off` state.
 
 
@@ -702,13 +710,13 @@ If device discovery does not find your unit, you can manually update the IP addr
 
 #### Adaptive Triggers & Scheduling
 
-1. Enter the trigger entity in the appropriate field.  
-Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).  
-Example values:  
+1. Enter the trigger entity in the appropriate field.
+Use the field for the mode you want to configure (e.g., Boost Mode Trigger, Eco Mode Trigger, or Home Mode Trigger).
+Example values:
 `binary_sensor.kitchen_motion`, `binary_sensor.living_room_presence`, `binary_sensor.outdoor_temperature_low`
-2. If you have more than one Dantherm unit, you can choose whether each device should share the same calendar as your primary unit or use its own.  
-The primary calendar is automatically created for the first configured device. For any additional units, an option appears to link to the primary calendar.  
-This option defaults to enabled, which is recommended — it ensures consistent scheduling across all units and keeps configuration simple.  
+2. If you have more than one Dantherm unit, you can choose whether each device should share the same calendar as your primary unit or use its own.
+The primary calendar is automatically created for the first configured device. For any additional units, an option appears to link to the primary calendar.
+This option defaults to enabled, which is recommended — it ensures consistent scheduling across all units and keeps configuration simple.
 If you disable this option, the unit will instead create its own separate calendar, allowing fully independent scheduling.
 3. Click Submit to save your configuration.
 4. Enable the corresponding mode in the Home Assistant UI to activate the trigger.
@@ -719,7 +727,7 @@ Once configured, the Dantherm unit will automatically switch to the selected **o
 
 #### Advandced Options
 
-1. Disabling "Unknown" Temperatures in Bypass and Summer Mode.  
+1. Disabling "Unknown" Temperatures in Bypass and Summer Mode.
 To prevent temperature sensors from being set to unknown during bypass or summer mode, enable the option "Disable setting temperatures to unknown in bypass/summer modes".
 When this option is enabled, temperature sensors will always report their current value, even when the device is in bypass or summer mode.
 
@@ -732,7 +740,7 @@ When this option is enabled, the integration will not send any persistent notifi
 
 ## ⏳ Advanced Scheduling Features
 
-### Calendar Function 📅  
+### Calendar Function 📅
 The Calendar Function allows precise scheduling of different operation modes, providing full automation of the ventilation system.
 
 #### How to Use the Calendar Function
@@ -743,7 +751,7 @@ The Calendar Function allows precise scheduling of different operation modes, pr
 
 3. **Supported Event Keywords**: Use these exact words in your calendar event summaries:
    - **Level 1**, **Level 2**, **Level 3** - Sets manual fan levels
-   - **Automatic** - Switches to automatic demand mode  
+   - **Automatic** - Switches to automatic demand mode
    - **Away Mode** - Activates away mode for the event duration
    - **Night Mode** - Activates night mode for the event duration
    - **Boost Mode** - Activates boost mode for the event duration
@@ -763,7 +771,7 @@ Result: Boost mode active from 7 AM to 9 AM
 ```
 
 ```
-Summary: "Level 3" 
+Summary: "Level 3"
 Start: Today 19:00
 End: Today 22:00
 Result: Manual mode Level 3 from 7 PM to 10 PM
@@ -771,12 +779,12 @@ Result: Manual mode Level 3 from 7 PM to 10 PM
 
 ```
 Summary: "Away Mode"
-Start: Friday 08:00  
+Start: Friday 08:00
 End: Sunday 18:00
 Result: Away mode active for the weekend
-```  
+```
 
-- **Integration - Calendar Events**:  
+- **Integration - Calendar Events**:
   Calendar events control the ventilation system automatically. When an event starts, the system switches to the specified operation mode. When the event ends, it reverts to the previous active mode.
 
 - **Event Behavior**:
@@ -807,7 +815,7 @@ The calendar supports:
 - **Language Issues**: Check that your Home Assistant language is supported
 - **Priority Conflicts**: Higher priority events will override lower ones
 - **Night Mode Timing**: Built-in Night Mode times may conflict with scheduled events
-  
+
   - If **Level 1** to **Level 3** is scheduled, the unit will run in Manual mode at the selected fan level.
   - If **Automatic** is scheduled, the unit will operate in Demand Mode.
   - If **Away Mode** is scheduled, Away Mode will be **enabled at the start** and **disabled at the end** of the event.
@@ -819,14 +827,14 @@ The calendar supports:
 
 When multiple calendar events overlap, the system follows this priority order (highest to lowest):
 
-- **Priority System**: The following is the **priority order** for calendar scheduling:  
+- **Priority System**: The following is the **priority order** for calendar scheduling:
   1. 🚨 **Away Mode** (highest priority) - For vacation/extended absence
   2. ⚡ **Boost Mode** - For high ventilation needs
-  3. 🌙 **Night Mode** - For quiet nighttime operation  
+  3. 🌙 **Night Mode** - For quiet nighttime operation
   4. 🏠 **Home Mode** - For normal occupied periods
   5. 🍃 **Eco Mode** - For energy-saving operation
   6. 💨 **Level 3** - Maximum manual fan speed
-  7. 💨 **Level 2** - Medium manual fan speed  
+  7. 💨 **Level 2** - Medium manual fan speed
   8. 💨 **Level 1** - Minimum manual fan speed
   9. 🤖 **Automatic** - Demand-based automatic control
   10. 📅 **Week Program** (lowest priority) - Predefined weekly schedules
@@ -835,7 +843,7 @@ When multiple calendar events overlap, the system follows this priority order (h
 
 #### Step-by-Step: Creating Your First Calendar Event
 
-1. **Access the Calendar**: 
+1. **Access the Calendar**:
    - Go to **Calendar** in Home Assistant's sidebar
    - Find your "Dantherm Calendar" entity
 
@@ -853,7 +861,7 @@ When multiple calendar events overlap, the system follows this priority order (h
 #### Best Practices for Calendar Scheduling
 
 - **Morning Routine**: Schedule "Boost Mode" during morning activities (7-9 AM)
-- **Work Hours**: Use "Eco Mode" when away during work hours (9 AM-5 PM) 
+- **Work Hours**: Use "Eco Mode" when away during work hours (9 AM-5 PM)
 - **Evening Comfort**: Schedule "Home Mode" for family time (6-10 PM)
 - **Night Rest**: Use "Night Mode" for quiet overnight operation (10 PM-7 AM)
 - **Weekend Away**: Schedule "Away Mode" for entire weekends when traveling

@@ -133,6 +133,9 @@ ATTR_HUMIDITY_SETPOINT_SUMMER: Final = "humidity_setpoint_summer"
 
 ATTR_AIR_QUALITY: Final = "air_quality"
 ATTR_AIR_QUALITY_LEVEL: Final = "air_quality_level"
+ATTR_AIR_QUALITY_LOW_THRESHOLD: Final = "air_quality_low_threshold"
+ATTR_AIR_QUALITY_MIDDLE_THRESHOLD: Final = "air_quality_middle_threshold"
+ATTR_AIR_QUALITY_HIGH_THRESHOLD: Final = "air_quality_high_threshold"
 
 ATTR_EXHAUST_TEMPERATURE: Final = "exhaust_temperature"
 
@@ -659,6 +662,51 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.Bypass,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AIR_QUALITY_LOW_THRESHOLD,
+        icon="mdi:molecule",
+        data_setinternal=ATTR_AIR_QUALITY_LOW_THRESHOLD,
+        data_getinternal=ATTR_AIR_QUALITY_LOW_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.VOC_sensor,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AIR_QUALITY_MIDDLE_THRESHOLD,
+        icon="mdi:molecule",
+        data_setinternal=ATTR_AIR_QUALITY_MIDDLE_THRESHOLD,
+        data_getinternal=ATTR_AIR_QUALITY_MIDDLE_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.VOC_sensor,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AIR_QUALITY_HIGH_THRESHOLD,
+        icon="mdi:molecule",
+        data_setinternal=ATTR_AIR_QUALITY_HIGH_THRESHOLD,
+        data_getinternal=ATTR_AIR_QUALITY_HIGH_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.VOC_sensor,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_BOOST_MODE_TIMEOUT,

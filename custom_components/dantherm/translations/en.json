@@ -98,6 +98,9 @@
       "filter_lifetime": { "name": "Filter Lifetime" },
       "humidity_setpoint": { "name": "Humidity Setpoint" },
       "humidity_setpoint_summer": { "name": "Humidity Setpoint (Summer)" },
+      "air_quality_low_threshold": { "name": "Air Quality Low Threshold" },
+      "air_quality_middle_threshold": { "name": "Air Quality Middle Threshold" },
+      "air_quality_high_threshold": { "name": "Air Quality High Threshold" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
       "manual_bypass_duration": { "name": "Manual Bypass Duration" },
@@ -417,6 +420,18 @@
         "week_program_selection": {
           "name": "Week Program Selection",
           "description": "Select the active week program."
+        },
+        "air_quality_low_threshold": {
+          "name": "Air Quality Low Threshold",
+          "description": "Set the low threshold for air quality sensitivity."
+        },
+        "air_quality_middle_threshold": {
+          "name": "Air Quality Middle Threshold",
+          "description": "Set the middle threshold for air quality sensitivity."
+        },
+        "air_quality_high_threshold": {
+          "name": "Air Quality High Threshold",
+          "description": "Set the high threshold for air quality sensitivity."
         }
       }
     },
@@ -524,6 +539,9 @@
     },
     "invalid_adaptive_state": {
       "message": "Invalid adaptive state: {state}. Available states: {available_states}"
+    },
+    "air_quality_sensor_not_available": {
+      "message": "Air quality sensor is not available on this device. Air quality thresholds cannot be set."
     },
     "rediscovery_notification": {
       "message": "A {domain} device with serial number {serial_number} was rediscovered at ip-address: {ip_address}."

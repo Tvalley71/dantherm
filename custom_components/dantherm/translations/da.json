@@ -98,6 +98,9 @@
       "filter_lifetime": { "name": "Filterlevetid" },
       "humidity_setpoint": { "name": "Luftfugtighedssætpunkt" },
       "humidity_setpoint_summer": { "name": "Luftfugtighedssætpunkt (sommer)" },
+      "air_quality_low_threshold": { "name": "Luftkvalitet lav tærskel" },
+      "air_quality_middle_threshold": { "name": "Luftkvalitet mellem tærskel" },
+      "air_quality_high_threshold": { "name": "Luftkvalitet høj tærskel" },
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
       "manual_bypass_duration": { "name": "Varighed af manuel bypass" },
@@ -417,6 +420,18 @@
         "week_program_selection": {
           "name": "Ugeprogram",
           "description": "Vælg det aktive ugeprogram."
+        },
+        "air_quality_low_threshold": {
+          "name": "Luftkvalitet Lav Tærskel",
+          "description": "Sæt den lave tærskel for luftkvalitetsfølsomhed."
+        },
+        "air_quality_middle_threshold": {
+          "name": "Luftkvalitet Mellem Tærskel",
+          "description": "Sæt den mellemste tærskel for luftkvalitetsfølsomhed."
+        },
+        "air_quality_high_threshold": {
+          "name": "Luftkvalitet Høj Tærskel",
+          "description": "Sæt den høje tærskel for luftkvalitetsfølsomhed."
         }
       }
     },
@@ -524,6 +539,9 @@
     },
     "invalid_adaptive_state": {
       "message": "Ugyldig adaptiv tilstand: {state}. Tilgængelige tilstande: {available_states}"
+    },
+    "air_quality_sensor_not_available": {
+      "message": "Luftkvalitetssensor er ikke tilgængelig på denne enhed. Luftkvalitetstærskler kan ikke indstilles."
     },
     "rediscovery_notification": {
       "message": "En {domain}-enhed med serienummer {serial_number} blev genopdaget på ip-adresse {ip_address}."

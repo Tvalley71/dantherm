@@ -87,6 +87,33 @@ set_configuration:
             - "8"
             - "9"
             - "10"
+    air_quality_low_threshold:
+      example: 1000
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 1
+          unit_of_measurement: "ppm"
+          mode: box
+    air_quality_middle_threshold:
+      example: 1500
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 1
+          unit_of_measurement: "ppm"
+          mode: box
+    air_quality_high_threshold:
+      example: 2000
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 1
+          unit_of_measurement: "ppm"
+          mode: box
 set_configuration_2:
   fields:
     device_id:

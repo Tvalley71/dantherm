@@ -98,6 +98,9 @@
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },
       "humidity_setpoint_summer": { "name": "Luftfeuchtigkeits-Sollwert (Sommer)" },
+      "air_quality_low_threshold": { "name": "Luftqualität niedrige Schwelle" },
+      "air_quality_middle_threshold": { "name": "Luftqualität mittlere Schwelle" },
+      "air_quality_high_threshold": { "name": "Luftqualität hohe Schwelle" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
       "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
@@ -416,6 +419,18 @@
         "week_program_selection": {
           "name": "Wochentagsprogramm Auswahl",
           "description": "Wählen Sie das aktive Wochenprogramm aus."
+        },
+        "air_quality_low_threshold": {
+          "name": "Lage drempel für Luchtqualität",
+          "description": "Stellen Sie den niedrigen Schwellwert für die Empfindlichkeit der Luchtqualität ein."
+        },
+        "air_quality_middle_threshold": {
+          "name": "Mittlere drempel für Luchtqualität",
+          "description": "Stellen Sie den mittleren Schwellwert für die Empfindlichkeit der Luchtqualität ein."
+        },
+        "air_quality_high_threshold": {
+          "name": "Hoge drempel für Luchtqualität",
+          "description": "Stellen Sie den hohen Schwellwert für die Empfindlichkeit der Luchtqualität ein."
         }
       }
     },
@@ -523,6 +538,9 @@
     },
     "invalid_adaptive_state": {
       "message": "Ungültiger adaptiver Zustand: {state}. Verfügbare Zustände: {available_states}"
+    },
+    "air_quality_sensor_not_available": {
+      "message": "Der Lüftungskalibrator ist auf diesem Gerät nicht verfügbar. Die Lüftungskalibrations-Schwellenwerte können nicht eingestellt werden."
     },
     "rediscovery_notification": {
       "message": "Ein {domain}-Gerät mit der Seriennummer {serial_number} wurde unter der IP-Adresse {ip_address} erneut entdeckt."
