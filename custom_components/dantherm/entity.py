@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .device_map import DanthermEntityDescription
 
 if TYPE_CHECKING:
@@ -72,7 +72,7 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
         return DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self._device.get_device_name,
-            manufacturer=DEFAULT_NAME,
+            manufacturer=self._device.get_device_manufacturer,
             model=self._device.get_device_type,
             sw_version=f"({self._device.get_device_fw_version})",
             serial_number=self._device.get_device_serial_number,

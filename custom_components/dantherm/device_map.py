@@ -27,6 +27,7 @@ from homeassistant.components.text import TextEntityDescription, TextMode
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 
+from .const import DOMAIN
 from .modbus import (
     MODBUS_REGISTER_FAN1_SPEED,
     MODBUS_REGISTER_FAN2_SPEED,
@@ -46,11 +47,44 @@ SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installati
 SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
 
 # For config flow options
+CONF_MANUFACTURER: Final = "manufacturer"
 CONF_POLLING_SPEED: Final = "polling_speed"
 POLLING_OPTIONS = {
     "fast": SCAN_INTERVAL_FAST,
     "normal": SCAN_INTERVAL_NORMAL,
     "slow": SCAN_INTERVAL_SLOW,
+}
+
+MANUFACTURER_MAP = {
+    "Bosch": {},
+    "Dantherm": {
+        1: "WG200",
+        2: "WG300",
+        3: "WG500",
+        4: "HCC 2",
+        5: "HCC 2 ALU",
+        6: "HCV300 ALU",
+        7: "HCV500 ALU",
+        8: "HCV700 ALU",
+        9: "HCV400 P2",
+        10: "HCV400 E1",
+        11: "HCV400 P1",
+        12: "HCC 2 E1",
+        14: "HCV400 P1-E1",
+        15: "HCV460 P2",
+        19: "HCV460 E1",
+        21: "RCV320 P2",
+        23: "HCH 5 MKII",
+        26: "RCV320 P1",
+        27: "RCC220 P2",
+    },
+    "Fränkische": {},
+    "Pluggit": {
+        1: "AP190",
+        2: "AP310",
+        3: "AP460",
+        4: "AD160",
+    },
 }
 
 POLLING_OPTIONS_LIST = ["fast", "normal", "slow"]
@@ -1041,3 +1075,12 @@ TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
+
+
+@property
+def use_manufacturer_map() -> bool:
+    """Return True if the manufacturer map should be used."""
+
+    if DOMAIN == "dantherm":
+        return True
+    return False
