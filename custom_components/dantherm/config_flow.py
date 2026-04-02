@@ -26,9 +26,12 @@ from .device_map import (
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
     CONF_LINK_TO_PRIMARY_CALENDAR,
+    CONF_MANUFACTURER,
     CONF_POLLING_SPEED,
+    MANUFACTURER_MAP,
     POLLING_OPTIONS,
     POLLING_OPTIONS_LIST,
+    USE_MANUFACTURER_MAP,
 )
 from .helpers import is_primary_entry
 
@@ -58,6 +61,33 @@ IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_manufacturer_schema() -> vol.Schema:
+    """Return the schema for the manufacturer selection step."""
+
+    manufacturers = sorted(MANUFACTURER_MAP.keys())  # Sort manufacturers alphabetically
+    return vol.Schema(
+        {
+            vol.Required(CONF_MANUFACTURER, default=DEFAULT_NAME): vol.In(
+                manufacturers
+            ),
+        }
+    )
+
+
+def _get_user_schema(default_name: str = DEFAULT_NAME) -> vol.Schema:
+    """Return the schema for the user step."""
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=default_name): str,
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=65535)
+            ),
+        }
+    )
+
+
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     try:
@@ -83,17 +113,37 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 3  # Current version of the config flow
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._manufacturer: str | None = None
+
     def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
         if IS_DEBUG:
             return False  # Allow duplicates in debug mode
         return host in dantherm_modbus_entries(self.hass)
 
+    async def async_step_manufacturer(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the manufacturer selection step."""
+        if user_input is not None:
+            self._manufacturer = user_input[CONF_MANUFACTURER]
+            return await self.async_step_user()
+
+        return self.async_show_form(
+            step_id=CONF_MANUFACTURER,
+            data_schema=_get_manufacturer_schema(),
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
+
+        if USE_MANUFACTURER_MAP and self._manufacturer is None:
+            return await self.async_step_manufacturer()
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -135,6 +185,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not errors:
                     # Create config entry data with numeric scan_interval
                     data = {
+                        CONF_MANUFACTURER: getattr(self, "_manufacturer", None),
                         CONF_NAME: name,
                         CONF_HOST: host,
                         CONF_PORT: port,
@@ -143,8 +194,14 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     return self.async_create_entry(title=name, data=data)
         # Show the form on initial load or when there are errors
+        default_name = (
+            self._manufacturer.title()
+            if self._manufacturer is not None
+            else DEFAULT_NAME
+        )
+        data_schema = _get_user_schema(default_name=default_name)
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     @staticmethod

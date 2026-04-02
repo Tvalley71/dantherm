@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .adaptive_manager import DanthermAdaptiveManager
-from .const import DEVICE_TYPES
+from .const import DEFAULT_NAME, DEVICE_TYPES
 from .coordinator import DanthermCoordinator
 from .device_map import (
     ATTR_AIR_QUALITY,
@@ -34,6 +34,8 @@ from .device_map import (
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
+    CONF_MANUFACTURER,
+    MANUFACTURER_MAP,
     STATE_AUTOMATIC,
     STATE_AWAY,
     STATE_FIREPLACE,
@@ -48,6 +50,7 @@ from .device_map import (
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    USE_MANUFACTURER_MAP,
     ActiveUnitMode,
     BypassDamperState,
     ComponentClass,
@@ -458,10 +461,26 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return self._device_name
 
     @property
+    def get_device_manufacturer(self) -> str:
+        """Device manufacturer."""
+
+        return (
+            self._config_entry.data.get(CONF_MANUFACTURER, DEFAULT_NAME)
+            if self._config_entry
+            else DEFAULT_NAME
+        )
+
+    @property
     def get_device_type(self) -> str:
         """Device type."""
 
-        device_type = DEVICE_TYPES.get(self._device_type, None)
+        if USE_MANUFACTURER_MAP:
+            manufacturer = self.get_device_manufacturer
+            device_list = MANUFACTURER_MAP.get(manufacturer, {})
+        else:
+            device_list = DEVICE_TYPES
+
+        device_type = device_list.get(self._device_type, None)
         if device_type is None:
             device_type = f"UNKNOWN {self._device_type}"
         device_mode = None

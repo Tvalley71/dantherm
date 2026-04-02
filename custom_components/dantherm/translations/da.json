@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "manufacturer": {
+        "title": "Vælg Producent",
+        "description": "Vælg producenten af din ventilationsenhed.",
+        "data": {
+          "manufacturer": "Producent"
+        }
+      },
       "user": {
         "title": "Dantherm Configuration",
         "description": "Konfigurer enhedens forbindelsesindstillinger.",

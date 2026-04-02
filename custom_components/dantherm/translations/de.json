@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "manufacturer": {
+        "title": "Hersteller auswählen",
+        "description": "Wählen Sie den Hersteller Ihrer Lüftungsanlage.",
+        "data": {
+          "manufacturer": "Hersteller"
+        }
+      },
       "user": {
         "title": "Dantherm Configuration",
         "description": "Konfigurieren Sie Geräteverbindungseinstellungen.",

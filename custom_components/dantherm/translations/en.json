@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "manufacturer": {
+        "title": "Select Manufacturer",
+        "description": "Choose the manufacturer of your ventilation unit.",
+        "data": {
+          "manufacturer": "Manufacturer"
+        }
+      },
       "user": {
         "title": "Dantherm Configuration",
         "description": "Configure device connection settings.",
