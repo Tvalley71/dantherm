@@ -55,6 +55,10 @@ POLLING_OPTIONS = {
     "slow": SCAN_INTERVAL_SLOW,
 }
 
+USE_MANUFACTURER_MAP = (
+    DOMAIN == "dantherm"
+)  # Only use manufacturer map for the dantherm domain, not for pluggit
+
 MANUFACTURER_MAP = {
     "Bosch": {},
     "Dantherm": {
@@ -1075,12 +1079,3 @@ TIMETEXTS: tuple[DanthermTimeTextEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
-
-
-@property
-def use_manufacturer_map() -> bool:
-    """Return True if the manufacturer map should be used."""
-
-    if DOMAIN == "dantherm":
-        return True
-    return False

@@ -50,12 +50,12 @@ from .device_map import (
     STATE_STANDBY,
     STATE_SUMMER,
     STATE_WEEKPROGRAM,
+    USE_MANUFACTURER_MAP,
     ActiveUnitMode,
     BypassDamperState,
     ComponentClass,
     CurrentUnitMode,
     DanthermEntityDescription,
-    use_manufacturer_map,
 )
 from .modbus import (
     MODBUS_REGISTER_ACTIVE_MODE,
@@ -471,8 +471,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def get_device_type(self) -> str:
         """Device type."""
 
-        device_list = None
-        if use_manufacturer_map:
+        if USE_MANUFACTURER_MAP:
             manufacturer = self.get_device_manufacturer
             device_list = MANUFACTURER_MAP.get(manufacturer, {})
         else:

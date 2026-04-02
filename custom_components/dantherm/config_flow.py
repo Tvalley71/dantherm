@@ -31,7 +31,7 @@ from .device_map import (
     MANUFACTURER_MAP,
     POLLING_OPTIONS,
     POLLING_OPTIONS_LIST,
-    use_manufacturer_map,
+    USE_MANUFACTURER_MAP,
 )
 from .helpers import is_primary_entry
 
@@ -142,7 +142,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        if use_manufacturer_map and self._manufacturer is None:
+        if USE_MANUFACTURER_MAP and self._manufacturer is None:
             return await self.async_step_manufacturer()
 
         if user_input is not None:
