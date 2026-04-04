@@ -5,7 +5,8 @@
         "title": "Sélectionner le fabricant",
         "description": "Choisissez le fabricant de votre unité de ventilation.",
         "data": {
-          "manufacturer": "Fabricant"
+          "manufacturer": "Fabricant",
+          "use_discovery": "Utiliser la découverte automatique des appareils"
         }
       },
       "user": {
