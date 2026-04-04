@@ -28,22 +28,14 @@ from .device_map import (
     CONF_LINK_TO_PRIMARY_CALENDAR,
     CONF_MANUFACTURER,
     CONF_POLLING_SPEED,
+    CONF_USE_DISCOVERY,
     MANUFACTURER_MAP,
     POLLING_OPTIONS,
     POLLING_OPTIONS_LIST,
     USE_MANUFACTURER_MAP,
 )
+from .discovery import async_discover
 from .helpers import is_primary_entry
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=65535)
-        ),
-    }
-)
 
 # URL constants for description placeholders
 BUYMEACOFFEE_URL = "https://www.buymeacoffee.com/tvalley71"
@@ -70,17 +62,21 @@ def _get_manufacturer_schema() -> vol.Schema:
             vol.Required(CONF_MANUFACTURER, default=DEFAULT_NAME): vol.In(
                 manufacturers
             ),
+            vol.Optional(CONF_USE_DISCOVERY, default=False): bool,
         }
     )
 
 
-def _get_user_schema(default_name: str = DEFAULT_NAME) -> vol.Schema:
+def _get_user_schema(
+    default_name: str = DEFAULT_NAME,
+    default_host: str = "",
+) -> vol.Schema:
     """Return the schema for the user step."""
 
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=default_name): str,
-            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_HOST, default=default_host): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=65535)
             ),
@@ -116,6 +112,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._manufacturer: str | None = None
+        self._use_discovery: bool = (
+            False  # Default to False, only enabled via manufacturer step
+        )
 
     def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
@@ -129,6 +128,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the manufacturer selection step."""
         if user_input is not None:
             self._manufacturer = user_input[CONF_MANUFACTURER]
+            self._use_discovery = user_input.get(CONF_USE_DISCOVERY, False)
             return await self.async_step_user()
 
         return self.async_show_form(
@@ -144,6 +144,48 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if USE_MANUFACTURER_MAP and self._manufacturer is None:
             return await self.async_step_manufacturer()
+
+        if user_input is None:
+            default_name = DEFAULT_NAME
+            default_host = ""
+
+            # Discover devices on the network only if discovery is used and enabled by the user
+            if self._use_discovery:
+                discovered = await async_discover(self.hass)
+                _LOGGER.debug("Discovered devices: %s", discovered)
+
+                if discovered:
+                    configured_hosts = dantherm_modbus_entries(self.hass)
+
+                    available_devices = [
+                        d
+                        for d in discovered
+                        if (ip := d.get("ip")) and ip not in configured_hosts
+                    ]
+
+                    # If there are available devices, pre-fill the form with the
+                    # first one
+                    if available_devices:
+                        first_device = available_devices[0]
+
+                        default_host = first_device["ip"]
+                        default_name = first_device.get("name") or (
+                            self._manufacturer.title()
+                            if self._manufacturer
+                            else DEFAULT_NAME
+                        )
+
+                        _LOGGER.debug("Default host from discovery: %s", default_host)
+                        _LOGGER.debug("Default name from discovery: %s", default_name)
+
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_get_user_schema(
+                    default_name=default_name,
+                    default_host=default_host,
+                ),
+                errors=errors,
+            )
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -193,6 +235,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
 
                     return self.async_create_entry(title=name, data=data)
+
         # Show the form on initial load or when there are errors
         default_name = (
             self._manufacturer.title()
@@ -208,7 +251,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> "DanthermOptionsFlowHandler":
+    ) -> DanthermOptionsFlowHandler:
         """Create the options flow."""
         return DanthermOptionsFlowHandler(config_entry)
 

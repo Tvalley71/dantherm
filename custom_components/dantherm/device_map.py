@@ -48,6 +48,7 @@ SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
 
 # For config flow options
 CONF_MANUFACTURER: Final = "manufacturer"
+CONF_USE_DISCOVERY: Final = "use_discovery"
 CONF_POLLING_SPEED: Final = "polling_speed"
 POLLING_OPTIONS = {
     "fast": SCAN_INTERVAL_FAST,
