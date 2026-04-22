@@ -9,18 +9,18 @@
         }
       },
       "user": {
-        "title": "Dantherm Configuration",
-        "description": "Konfigurieren Sie Geräteverbindungseinstellungen.",
+        "title": "Dantherm-Konfiguration",
+        "description": "Konfigurieren Sie die Geräteverbindungseinstellungen.",
         "data": {
           "host": "Geräte-IP-Adresse",
-          "name": "Geben Sie ein Präfix für die Geräteeinheiten ein",
+          "name": "Geben Sie ein Präfix für die Geräte-Entitäten ein.",
           "port": "TCP-Portnummer"
         }
       }
     },
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
-      "cannot_connect": "Kann keine Verbindung herstellen.",
+      "cannot_connect": "Verbindung zum Gerät nicht möglich.",
       "already_configured": "Gerät ist bereits konfiguriert."
     },
     "abort": {
@@ -31,15 +31,15 @@
   "options": {
     "step": {
       "init": {
-        "title": "Dantherm Configuration",
-        "description": "## Willkommen zur Dantherm Integration! 🏡\n\nDiese Integration ist von Tvalley71 für die Home Assistant Community erstellt. Sie sind dabei, erweiterte Einstellungen für Ihr Dantherm-Lüftungsgerät zu konfigurieren.\n\n\n☕ Wenn Ihnen diese Integration hilft, würde ich die Anerkennung in Form eines Sterns ⭐ auf der Integration auf GitHub oder vielleicht einer Tasse Kaffee unter wirklich schätzen:\n{buymeacoffee_url}\n{github_url}\n\n\n\nSie werden durch 3 Konfigurationsschritte geführt.",
+        "title": "Dantherm-Konfiguration",
+        "description": "## Willkommen zur Dantherm Integration! 🏡\n\nDiese Integration wurde von Tvalley71 für die Home Assistant Community erstellt. Sie sind gerade dabei, erweiterte Einstellungen für Ihr Dantherm-Lüftungsgerät vorzunehmen.\n\n\n☕ Wenn Ihnen diese Integration hilft, würde ich mich über eine Anerkennung in Form eines Sterns ⭐ auf der Integration auf GitHub oder vielleicht über eine Tasse Kaffee sehr freuen unter:\n{buymeacoffee_url}\n{github_url}\n\n\n\nSie werden durch 3 Konfigurationsschritte geleitet.",
         "data": {
           "continue": "Weiter"
         }
       },
       "network": {
         "title": "Netzwerkeinstellungen",
-        "description": "Konfigurieren Sie Geräteverbindung und Datenaktualisierungsfrequenz.",
+        "description": "Konfigurieren Sie die Geräteverbindung und Datenaktualisierungsfrequenz.",
         "data": {
           "host": "Geräte-IP-Adresse",
           "port": "TCP-Portnummer",
@@ -48,29 +48,29 @@
       },
       "triggers": {
         "title": "Adaptive Trigger & Terminplanung",
-        "description": "Konfigurieren Sie Entitäten, die verschiedene Lüftungsmodi auslösen und Kalenderterminplanung.",
+        "description": "Konfigurieren Sie Entitäten, die verschiedene Lüftungsmodi und die Kalenderterminplanung auslösen.",
         "data": {
-          "boost_mode_trigger": "Boost-Modus Auslöser Entität",
-          "eco_mode_trigger": "Eco-Modus Auslöser Entität",
-          "home_mode_trigger": "Heim-Modus Auslöser Entität",
+          "boost_mode_trigger": "Boost-Modus Trigger-Entität",
+          "eco_mode_trigger": "Eco-Modus Trigger-Entität",
+          "home_mode_trigger": "Home-Modus Trigger-Entität",
           "link_calendar_to_primary": "Kalender mit primärem Gerät verknüpfen"
         }
       },
       "advanced": {
         "title": "Erweiterte Optionen",
-        "description": "Konfigurieren Sie erweiterte Verhalten und Anzeigeoptionen.",
+        "description": "Konfigurieren Sie erweitertes Verhalten und erweiterte Anzeigeoptionen.",
         "data": {
-          "disable_temperature_unknown": "Deaktivieren Sie das Setzen von Temperatursensoren auf unbekannt im Bypass-/Sommermodus",
+          "disable_temperature_unknown": "Deaktivieren Sie das Setzen der Temperatursensoren auf 'unbekannt' im Bypass-/Sommermodus",
           "disable_notifications": "Benachrichtigungen deaktivieren"
         }
       }
     },
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
-      "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder eine Eingabe-Boolesche ein."
+      "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder einen Input-Boolean ein."
     },
     "abort": {
-      "aborted_by_user": "Konfiguration vom Benutzer abgebrochen."
+      "aborted_by_user": "Konfiguration vom Nutzer abgebrochen."
     }
   },
   "entity": {
@@ -93,9 +93,9 @@
               "automatic": "Automatisch",
               "manual": "Manuell",
               "week_program": "Wochenprogramm",
-              "away": "Abwesend",
-              "summer": "Sommer",
-              "fireplace": "Kamin"
+              "away": "Abwesenheitsmodus",
+              "summer": "Sommermodus",
+              "fireplace": "Kaminmodus"
             }
           }
         }
@@ -105,9 +105,9 @@
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },
       "humidity_setpoint_summer": { "name": "Luftfeuchtigkeits-Sollwert (Sommer)" },
-      "air_quality_low_threshold": { "name": "Luftqualität niedrige Schwelle" },
-      "air_quality_middle_threshold": { "name": "Luftqualität mittlere Schwelle" },
-      "air_quality_high_threshold": { "name": "Luftqualität hohe Schwelle" },
+      "air_quality_low_threshold": { "name": "Luftqualitäts-Schwellwert (niedrig)" },
+      "air_quality_middle_threshold": { "name": "Luftqualitäts-Schwellwert (mittel)" },
+      "air_quality_high_threshold": { "name": "Luftqualitäts-Schwellwert (hoch)" },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
       "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
@@ -115,7 +115,7 @@
       "bypass_maximum_temperature_summer": { "name": "Bypass-Maximaltemperatur (Sommer)" },
       "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
       "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
-      "home_mode_timeout": { "name": "Heim-Modus Timeout" }
+      "home_mode_timeout": { "name": "Home-Modus Timeout" }
     },
     "select": {
       "operation_selection": {
@@ -125,14 +125,14 @@
           "automatic": "Automatisch",
           "manual": "Manuell",
           "week_program": "Wochenprogramm",
-          "away": "Abwesend",
-          "summer": "Sommer",
-          "fireplace": "Kamin",
-          "night": "Nacht"
+          "away": "Abwesenheitsmodus",
+          "summer": "Sommermodus",
+          "fireplace": "Kaminmodus",
+          "night": "Nachtmodus"
         }
       },
       "fan_level_selection": {
-        "name": "Lüfterauswahl",
+        "name": "Lüfterstufenauswahl",
         "state": {
           "0": "Stufe 0",
           "1": "Stufe 1",
@@ -174,7 +174,7 @@
         }
       },
       "home_operation_selection": {
-        "name": "Heim-Modus Auswahl",
+        "name": "Home-Modus Auswahl",
         "state": {
           "automatic": "Automatisch",
           "level_1": "Stufe 1",
@@ -203,50 +203,51 @@
           "2": "Automatisch",
           "3": "Wochenprogramm",
           "4": "Servoflow",
-          "5": "Abwesend",
-          "6": "Sommer",
-          "7": "DI-Übersteuerung",
+          "5": "Abwesenheitsmodus",
+          "6": "Sommermodus",
+          "7": "Digitaleingang-Übersteuerung",
           "8": "Hygrostat-Übersteuerung",
-          "9": "Kamin",
-          "10": "Installateur",
+          "9": "Kaminmodus",
+          "10": "Installateur-Modus",
           "11": "Notbetrieb 1",
           "12": "Notbetrieb 2",
-          "13": "Abschaltung",
+          "13": "Sicherheitsabschaltung",
           "14": "Abtauabschaltung",
           "15": "Abtauen",
-          "16": "Nacht"
+          "16": "Nachtmodus"
         }
       },
       "alarm": {
         "name": "Alarm",
         "state": {
-          "0": "Keiner",
-          "1": "Abluft-Lüfteralarm",
-          "2": "Zuluft-Lüfteralarm",
-          "3": "Bypass-Alarm",
-          "4": "T1 Alarm",
-          "5": "T2 Alarm",
-          "6": "T3 Alarm",
-          "7": "T4 Alarm",
-          "8": "T5 Alarm",
-          "9": "RH Alarm",
-          "10": "Außen13 Alarm",
-          "11": "Zuluft5 Alarm",
-          "12": "Feueralarm",
-          "13": "Kommunikationsalarm",
-          "14": "Feuerthermostatalarm",
-          "15": "Wasserstandsalarm"
+          "0": "Kein Alarm",
+          "1": "Abluftventilator-Alarm",
+          "2": "Zuluftventilator-Alarm",
+          "3": "Bypass-Klappen-Alarm",
+          "4": "Außenluft-Alarm (T1)",
+          "5": "Zuluft-Alarm (T2)",
+          "6": "Abluft-Alarm (T3)",
+          "7": "Fortluft-Alarm (T4)",
+          "8": "Raumluft-Alarm (T5)",
+          "9": "Luftfeuchtigkeits-Alarm",
+          "10": "Außenluft-Temperaturalarm",
+          "11": "Zuluft-Temperaturalarm",
+          "12": "Übertemperaturalarm",
+          "13": "Kommunikationsstörung",
+          "14": "Brandalarm",
+          "15": "Wasserstandsalarm",
+          "16": "Brandschutzalarm"
         }
       },
       "adaptive_state": {
-        "name": "Adaptive Zustand",
+        "name": "Adaptiver Zustand",
         "state": {
           "none": "Keiner",
           "automatic": "Automatisch",
           "away": "Abwesenheitsmodus",
           "boost": "Boost-Modus",
           "eco": "Eco-Modus",
-          "home": "Heim-Modus",
+          "home": "Home-Modus",
           "level_0": "Stufe 0",
           "level_1": "Stufe 1",
           "level_2": "Stufe 2",
@@ -260,8 +261,8 @@
         }
       },
       "fan_level": { "name": "Lüfterstufe" },
-      "fan1_speed": { "name": "Lüftergeschwindigkeit 1" },
-      "fan2_speed": { "name": "Lüftergeschwindigkeit 2" },
+      "fan1_speed": { "name": "Lüfterdrehzahl 1" },
+      "fan2_speed": { "name": "Lüfterdrehzahl 2" },
       "humidity": { "name": "Luftfeuchtigkeit" },
       "humidity_level": {
         "name": "Luftfeuchtigkeitsniveau",
@@ -276,7 +277,7 @@
       "air_quality_level": {
         "name": "Luftqualitätsniveau",
         "state": {
-          "0": "Ausgezeichnet",
+          "0": "Sehr gut",
           "1": "Akzeptabel",
           "2": "Mittel",
           "3": "Schlecht"
@@ -288,22 +289,22 @@
       "outdoor_temperature": { "name": "Außenlufttemperatur" },
       "room_temperature": { "name": "Raumtemperatur" },
       "filter_remain": {
-        "name": "Filter verbleibend",
+        "name": "Filterrestlaufzeit",
         "state": {
           "0": "Bitte jetzt den Filter wechseln."
         }
       },
       "filter_remain_level": {
-        "name": "Filterrestlaufzeit-Niveau",
+        "name": "Filterzustand",
         "state": {
-          "0": "Ausgezeichnet",
+          "0": "Sehr gut",
           "1": "Gut",
           "2": "Schlecht",
-          "3": "Jetzt ersetzen"
+          "3": "Jetzt wechseln"
         }
       },
       "work_time": { "name": "Laufzeit" },
-      "internal_preheater_dutycycle": { "name": "Vorheizer-Stellwert" },
+      "internal_preheater_dutycycle": { "name": "Vorheizregister-Stellwert" },
       "features": { "name": "Features" }
     },
     "switch": {
@@ -315,12 +316,12 @@
       "sensor_filtering": { "name": "Sensorfilterung" },
       "boost_mode": { "name": "Boost-Modus" },
       "eco_mode": { "name": "Eco-Modus" },
-      "home_mode": { "name": "Heim-Modus" },
+      "home_mode": { "name": "Home-Modus" },
       "disable_bypass": { "name": "Bypass deaktivieren" }
     },
     "text": {
-      "night_mode_start_time": { "name": "Startzeit des Nachtmodus" },
-      "night_mode_end_time": { "name": "Endzeit des Nachtmodus" }
+      "night_mode_start_time": { "name": "Nachtmodus-Startzeit" },
+      "night_mode_end_time": { "name": "Nachtmodus-Endzeit" }
     }
   },
   "selector": {
@@ -341,11 +342,11 @@
     },
     "fan_levels": {
       "options": {
-          "0": "Stufe 0",
-          "1": "Stufe 1",
-          "2": "Stufe 2",
-          "3": "Stufe 3",
-          "4": "Stufe 4"
+        "0": "Stufe 0",
+        "1": "Stufe 1",
+        "2": "Stufe 2",
+        "3": "Stufe 3",
+        "4": "Stufe 4"
       }
     },
     "week_program_selections": {
@@ -366,8 +367,8 @@
   },
   "services": {
     "set_state": {
-      "name": "Zustand setzen",
-      "description": "Steuern Sie den Zustand des Lüftungsgeräts mit einem Aktionsaufruf.",
+      "name": "Status setzen",
+      "description": "Steuern Sie den Status des Lüftungsgeräts mit einem Aktionsaufruf.",
       "fields": {
         "device_id": {
           "name": "Gerät",
@@ -375,11 +376,11 @@
         },
         "operation_selection": {
           "name": "Betriebsauswahl",
-          "description": "Wählen Sie den gewünschten Betriebsmodus aus. Standby wird nach ca. 4 Stunden Zeitspanne auf den manuellen Modus Stufe 3 zurückgesetzt."
+          "description": "Wählen Sie den gewünschten Betriebsmodus aus. Hinweis: Standby wird nach ca. 4 Stunden auf den manuellen Modus Stufe 3 zurückgesetzt."
         },
         "fan_level_selection": {
-          "name": "Lüfterauswahl",
-          "description": "Wählen Sie die gewünschte Lüfterstufe aus. Lüfterstufe 0 und Lüfterstufe 4 werden nach ca. 4 Stunden auf Stufe 3 zurückgesetzt."
+          "name": "Lüfterstufenauswahl",
+          "description": "Wählen Sie die gewünschte Lüfterstufe aus. Hinweis: Lüfterstufe 0 und Lüfterstufe 4 werden nach ca. 4 Stunden auf Stufe 3 zurückgesetzt."
         },
         "away_mode": {
           "name": "Abwesenheitsmodus",
@@ -391,11 +392,11 @@
         },
         "fireplace_mode": {
           "name": "Kaminmodus",
-          "description": "Schalten Sie den Kaminmodus ein oder aus. Der Kaminmodus bleibt für einen begrenzten Zeitraum aktiviert."
+          "description": "Schalten Sie den Kaminmodus ein oder aus. Hinweis: Der Kaminmodus bleibt für einen begrenzten Zeitraum aktiviert."
         },
         "manual_bypass_mode": {
           "name": "Manueller Bypass-Modus",
-          "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus. Der manuelle Bypass wird auf die manuelle Bypass-Dauer begrenzt."
+          "description": "Schalten Sie den manuellen Bypass-Modus ein oder aus. Hinweis: Der manuelle Bypass-Modus wird auf die manuelle Bypass-Dauer beschränkt."
         }
       }
     },
@@ -409,40 +410,40 @@
         },
         "filter_lifetime": {
           "name": "Filterlebensdauer",
-          "description": "Legen Sie die Lebensdauer des Filters in Tagen fest."
+          "description": "Legen Sie die Filter-Lebensdauer in Tagen fest."
         },
         "night_mode": {
           "name": "Nachtmodus",
           "description": "Nachtmodus aktivieren oder deaktivieren."
         },
         "night_mode_start_time": {
-          "name": "Startzeit des Nachtmodus",
-          "description": "Legen Sie die Startzeit für den Nachtmodus fest (HH:MM)."
+          "name": "Nachtmodus-Startzeit",
+          "description": "Legen Sie die Nachtmodus-Startzeit fest (HH:MM)."
         },
         "night_mode_end_time": {
-          "name": "Endzeit des Nachtmodus",
-          "description": "Legen Sie die Endzeit für den Nachtmodus fest (HH:MM)."
+          "name": "Nachtmodus-Endzeit",
+          "description": "Legen Sie die Nachtmodus-Endzeit fest (HH:MM)."
         },
         "week_program_selection": {
-          "name": "Wochentagsprogramm Auswahl",
+          "name": "Wochenprogramm-Auswahl",
           "description": "Wählen Sie das aktive Wochenprogramm aus."
         },
         "air_quality_low_threshold": {
-          "name": "Lage drempel für Luchtqualität",
-          "description": "Stellen Sie den niedrigen Schwellwert für die Empfindlichkeit der Luchtqualität ein."
+          "name": "Luftqualitäts-Schwellwert (niedrig)",
+          "description": "Stellen Sie den niedrigen Schwellwert für die Luftqualitäts-Empfindlichkeit ein."
         },
         "air_quality_middle_threshold": {
-          "name": "Mittlere drempel für Luchtqualität",
-          "description": "Stellen Sie den mittleren Schwellwert für die Empfindlichkeit der Luchtqualität ein."
+          "name": "Luftqualitäts-Schwellwert (mittel)",
+          "description": "Stellen Sie den mittleren Schwellwert für die Luftqualitäts-Empfindlichkeit ein."
         },
         "air_quality_high_threshold": {
-          "name": "Hoge drempel für Luchtqualität",
-          "description": "Stellen Sie den hohen Schwellwert für die Empfindlichkeit der Luchtqualität ein."
+          "name": "Luftqualitäts-Schwellwert (hoch)",
+          "description": "Stellen Sie den hohen Schwellwert für die Luftqualitäts-Empfindlichkeit ein."
         }
       }
     },
     "set_configuration_2": {
-      "name": "Konfiguration festlegen 2",
+      "name": "Konfiguration festlegen (2)",
       "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 2.70 oder neuer unterstützt.",
       "fields": {
         "device_id": {
@@ -450,12 +451,12 @@
           "description": "Wählen Sie das Dantherm-Gerät aus."
         },
         "bypass_minimum_temperature": {
-          "name": "Minimale Bypass-Temperatur",
-          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
+          "name": "Bypass-Minimaltemperatur",
+          "description": "Legen Sie die Bypass-Minimaltemperatur für den Bypass-Betrieb fest."
         },
         "bypass_maximum_temperature": {
-          "name": "Maximale Bypass-Temperatur",
-          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
+          "name": "Bypass-Maximaltemperatur",
+          "description": "Legen Sie die Bypass-Maximaltemperatur für den Bypass-Betrieb fest."
         },
         "humidity_setpoint": {
           "name": "Luftfeuchtigkeits-Sollwert",
@@ -463,16 +464,16 @@
         },
         "manual_bypass_duration": {
           "name": "Manuelle Bypass-Dauer",
-          "description": "Legen Sie die Dauer des manuellen Bypass-Modus in Minuten fest."
+          "description": "Legen Sie die manuelle Bypass-Dauer in Minuten fest."
         },
         "disable_bypass": {
           "name": "Bypass deaktivieren",
-          "description": "Deaktiviere die Bypass-Klappe."
+          "description": "Deaktivieren Sie den Bypass."
         }
       }
     },
     "set_configuration_3": {
-      "name": "Konfiguration festlegen 3",
+      "name": "Konfiguration festlegen (3)",
       "description": "Passen Sie die Konfigurationseinstellungen für das Dantherm-Gerät an. Hinweis: Die folgenden Felder werden nur auf Geräten mit Firmware-Version 3.08 oder neuer unterstützt.",
       "fields": {
         "device_id": {
@@ -481,11 +482,11 @@
         },
         "bypass_minimum_temperature_summer": {
           "name": "Bypass-Minimaltemperatur (Sommer)",
-          "description": "Legen Sie die minimale Temperatur für den Bypass-Betrieb fest."
+          "description": "Legen Sie die Bypass-Minimaltemperatur für den Bypass-Betrieb fest."
         },
         "bypass_maximum_temperature_summer": {
           "name": "Bypass-Maximaltemperatur (Sommer)",
-          "description": "Legen Sie die maximale Temperatur für den Bypass-Betrieb fest."
+          "description": "Legen Sie die Bypass-Maximaltemperatur für den Bypass-Betrieb fest."
         },
         "humidity_setpoint_summer": {
           "name": "Luftfeuchtigkeits-Sollwert (Sommer)",
@@ -495,7 +496,7 @@
     },
     "filter_reset": {
       "name": "Filter zurücksetzen",
-      "description": "Setzen Sie die verbleibenden Tage des Filters auf seine Lebensdauer zurück.",
+      "description": "Setzen Sie die Filterrestlaufzeit auf die Filter-Lebensdauer zurück.",
       "fields": {
         "device_id": {
           "name": "Gerät",
@@ -515,7 +516,7 @@
     },
     "clear_adaptive_event_stack": {
       "name": "Adaptive Ereigniswarteschlange löschen",
-      "description": "Löschen Sie alle Ereignisse aus der adaptiven Ereigniswarteschlange. Dadurch werden alle aktiven adaptiven Ereignisse entfernt und der adaptive Zustand auf \"keiner\" zurückgesetzt.",
+      "description": "Löschen Sie alle Ereignisse aus der adaptiven Ereigniswarteschlange. Dadurch werden alle aktiven adaptiven Ereignisse entfernt und der adaptive Status auf \"Keiner\" zurückgesetzt.",
       "fields": {
         "device_id": {
           "name": "Gerät",
@@ -529,7 +530,7 @@
       "message": "Ungültiges Zeitformat. Verwenden Sie HH:MM."
     },
     "invalid_filter_lifetime": {
-      "message": "Ungültige Filterlebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
+      "message": "Ungültige Filter-Lebensdauer. Verwenden Sie Werte zwischen 0 und 360 Tagen."
     },
     "unsupported_by_firmware": {
       "message": "Die Funktionen in dieser Aktion werden von der Firmware-Version des Geräts nicht unterstützt."
@@ -541,13 +542,13 @@
       "message": "Benachrichtigungen können in den Integrationsoptionen deaktiviert werden."
     },
     "filter_remain_notification": {
-      "message": "Der Filter hat das Ende seiner Lebensdauer erreicht. Bitte wechseln Sie den Filter."
+      "message": "Der Filter hat das Ende seiner Lebensdauer erreicht. Bitte jetzt den Filter wechseln."
     },
     "invalid_adaptive_state": {
-      "message": "Ungültiger adaptiver Zustand: {state}. Verfügbare Zustände: {available_states}"
+      "message": "Ungültiger adaptiver Status: {state}. Verfügbare Zustände: {available_states}"
     },
     "air_quality_sensor_not_available": {
-      "message": "Der Lüftungskalibrator ist auf diesem Gerät nicht verfügbar. Die Lüftungskalibrations-Schwellenwerte können nicht eingestellt werden."
+      "message": "Der Luftqualitätssensor ist auf diesem Gerät nicht verfügbar. Die Luftqualitäts-Schwellwerte können nicht eingestellt werden."
     },
     "rediscovery_notification": {
       "message": "Ein {domain}-Gerät mit der Seriennummer {serial_number} wurde unter der IP-Adresse {ip_address} erneut entdeckt."
