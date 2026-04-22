@@ -5,7 +5,8 @@
         "title": "Hersteller auswählen",
         "description": "Wählen Sie den Hersteller Ihrer Lüftungsanlage.",
         "data": {
-          "manufacturer": "Hersteller"
+          "manufacturer": "Hersteller",
+          "use_discovery": "Automatische Gerätesuche verwenden"
         }
       },
       "user": {

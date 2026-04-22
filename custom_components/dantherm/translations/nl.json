@@ -5,7 +5,8 @@
         "title": "Selecteer fabrikant",
         "description": "Kies de fabrikant van uw ventilatie-eenheid.",
         "data": {
-          "manufacturer": "Fabrikant"
+          "manufacturer": "Fabrikant",
+          "use_discovery": "Gebruik automatische apparaatdetectie"
         }
       },
       "user": {
