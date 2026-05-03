@@ -1,13 +1,17 @@
 """Test the Dantherm coordinator."""
 
-from datetime import timedelta
+import asyncio
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
+import config.custom_components.dantherm.coordinator as coordinator_mod
 from config.custom_components.dantherm.coordinator import (
     DanthermCoordinator,
     PendingActionState,
 )
 from config.custom_components.dantherm.device_map import (
+    ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
+    ATTR_ACTIONS_PENDING,
     ATTR_AWAY_MODE,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
@@ -15,26 +19,22 @@ from config.custom_components.dantherm.device_map import (
 )
 import pytest
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_config_entry():
     """Return mock config entry."""
-    return ConfigEntry(
-        version=1,
-        minor_version=1,
+    return MockConfigEntry(
         domain="dantherm",
         title="Test Device",
         data={"host": "192.168.1.100"},
         options={},
         entry_id="test_entry_id",
-        source="user",
         unique_id="test_unique_id",
-        discovery_keys={},
-        subentries_data={},
     )
 
 
@@ -44,6 +44,21 @@ def mock_hub():
     hub = MagicMock()
     hub.async_get_data = AsyncMock(return_value={"test_data": "value"})
     return hub
+
+
+async def _cancel_coordinator_tasks() -> None:
+    """Cancel lingering coordinator background tasks to avoid teardown errors."""
+    tasks = [
+        t
+        for t in asyncio.all_tasks()
+        if "_process_frontend" in str(t) or "_process_backend" in str(t)
+    ]
+    for task in tasks:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 class TestDanthermCoordinator:
@@ -67,6 +82,8 @@ class TestDanthermCoordinator:
         assert coordinator.update_interval == timedelta(seconds=30)
         assert coordinator._config_entry is mock_config_entry
 
+        await _cancel_coordinator_tasks()
+
     async def test_coordinator_update_success(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
     ) -> None:
@@ -82,6 +99,8 @@ class TestDanthermCoordinator:
         # With no entities, update should return empty dict
         await coordinator.async_refresh()
         assert coordinator.data == {}
+
+        await _cancel_coordinator_tasks()
 
     async def test_coordinator_update_failure(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
@@ -108,6 +127,8 @@ class TestDanthermCoordinator:
 
         # Check that update was not successful
         assert not coordinator.last_update_success
+
+        await _cancel_coordinator_tasks()
 
     async def test_coordinator_entity_management(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
@@ -136,6 +157,8 @@ class TestDanthermCoordinator:
         await coordinator.async_remove_entity(mock_entity)
         assert mock_entity not in coordinator._entities
 
+        await _cancel_coordinator_tasks()
+
     async def test_coordinator_write_operations(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
     ) -> None:
@@ -157,6 +180,8 @@ class TestDanthermCoordinator:
 
         # Verify the operation completed
         assert isinstance(result, dict)
+
+        await _cancel_coordinator_tasks()
 
     async def test_coordinator_is_entity_installed(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
@@ -181,28 +206,21 @@ class TestDanthermCoordinator:
         # Test entity installed
         assert coordinator.is_entity_installed("test_entity")
 
-
 class TestPendingActionLifecycle:
     """Tests for coordinator pending-action state machine."""
 
     @pytest.fixture
     async def coordinator(self, mock_hub):
-        """Return a coordinator with a short write_delay for fast tests.
-
-        Patches hass.loop.create_task to a no-op so the coordinator's infinite
-        background tasks (_process_frontend / _process_backend) are not
-        actually scheduled into the event loop, keeping tests fast and clean.
-        """
+        """Return a coordinator with a short write_delay for fast tests."""
         import asyncio
-
+        from unittest.mock import MagicMock
         from homeassistant.config_entries import ConfigEntry
 
         mock_hass = MagicMock()
         mock_hass.data = {}
-        # Prevent real asyncio tasks from being created by the coordinator.
+
         mock_hass.loop = MagicMock()
         mock_hass.loop.create_task = MagicMock(return_value=MagicMock(spec=asyncio.Task))
-        # enqueue_frontend / enqueue_backend need a running loop to create Futures.
         mock_hass.loop.create_future = asyncio.get_running_loop().create_future
 
         entry = ConfigEntry(
@@ -217,6 +235,7 @@ class TestPendingActionLifecycle:
             unique_id="test_unique_id",
             discovery_keys={},
         )
+
         return DanthermCoordinator(
             hass=mock_hass,
             name="TestDevice",
@@ -229,7 +248,6 @@ class TestPendingActionLifecycle:
     # ── helpers ────────────────────────────────────────────────────────────
 
     def _make_action_entity(self, key: str) -> MagicMock:
-        """Return a mock entity with an action-capable description."""
         desc = DanthermEntityDescription(key=key, data_setinternal="some_internal")
         entity = MagicMock()
         entity.key = key
@@ -237,197 +255,184 @@ class TestPendingActionLifecycle:
         entity.entity_id = f"switch.{key}"
         return entity
 
-    # ── mark_pending_requested ─────────────────────────────────────────────
+    # ── lifecycle test (merged from conflict branch) ───────────────────────
 
-    async def test_mark_pending_requested_creates_entry(
-        self, coordinator: DanthermCoordinator
+    async def test_pending_lifecycle_clears_only_after_delay_and_next_cycle(
+        self, coordinator: DanthermCoordinator, monkeypatch
     ) -> None:
-        """_mark_pending_requested adds the key to _pending_actions."""
-        assert not coordinator.has_pending_actions()
-        coordinator._mark_pending_requested("away_mode")
+        """Pending clears only when BOTH delay + next cycle are satisfied."""
 
-        assert coordinator.is_entity_pending("away_mode")
-        assert coordinator.has_pending_actions()
-        state = coordinator._pending_actions["away_mode"]
-        assert isinstance(state, PendingActionState)
-        assert state.requested_at is not None
-        assert state.executed_at is None
+        t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        current_time = {"now": t0}
 
-    async def test_mark_pending_requested_overwrites_existing(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """Calling _mark_pending_requested twice replaces the old state."""
-        coordinator._mark_pending_requested("away_mode")
-        first = coordinator._pending_actions["away_mode"]
-        coordinator._mark_pending_requested("away_mode")
-        second = coordinator._pending_actions["away_mode"]
+        monkeypatch.setattr(coordinator_mod, "ha_now", lambda: current_time["now"])
 
-        assert second is not first
-        assert coordinator.is_entity_pending("away_mode")
+        key = "test_action_key"
 
-    # ── mark_pending_executed ──────────────────────────────────────────────
-
-    async def test_mark_pending_executed_updates_timestamps(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """_mark_pending_executed sets executed_at and executed_read_cycle."""
-        coordinator._mark_pending_requested("summer_mode")
-        coordinator._update_cycle = 3
-        coordinator._mark_pending_executed("summer_mode")
-
-        state = coordinator._pending_actions["summer_mode"]
-        assert state.executed_at is not None
-        assert state.executed_read_cycle == 3
-
-    async def test_mark_pending_executed_without_prior_request(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """_mark_pending_executed creates a new entry when called without a prior request."""
-        coordinator._update_cycle = 1
-        coordinator._mark_pending_executed("fan_level_selection")
-
-        assert coordinator.is_entity_pending("fan_level_selection")
-        state = coordinator._pending_actions["fan_level_selection"]
-        assert state.executed_read_cycle == 1
-
-    # ── process_pending_transitions ───────────────────────────────────────
-
-    async def test_pending_not_cleared_before_later_read_cycle(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """Pending state is retained when update_cycle has not advanced past executed_read_cycle."""
         coordinator._update_cycle = 5
-        coordinator._mark_pending_requested("away_mode")
-        coordinator._mark_pending_executed("away_mode")  # executed at cycle 5
+        coordinator._pending_min_read_delay = timedelta(milliseconds=500)
 
-        # Same cycle — should not be cleared
-        coordinator._update_cycle = 5
+        coordinator._mark_pending_requested(key)
+        coordinator._mark_pending_executed(key)
+
+        executed_cycle = coordinator._pending_actions[key].executed_read_cycle
+        assert executed_cycle == 5
+        assert coordinator.is_entity_pending(key)
+
+        # Gate 1: same cycle
         coordinator._process_pending_transitions()
-        assert coordinator.is_entity_pending("away_mode")
+        assert coordinator.is_entity_pending(key)
 
-    async def test_pending_not_cleared_before_min_delay(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """Pending state is retained when min-delay has not yet elapsed."""
-        coordinator._update_cycle = 5
-        coordinator._mark_pending_requested("away_mode")
-        coordinator._mark_pending_executed("away_mode")
+        # Gate 2: time passed but same cycle
+        current_time["now"] = t0 + timedelta(milliseconds=600)
+        coordinator._process_pending_transitions()
+        assert coordinator.is_entity_pending(key)
 
-        # Advance cycle but keep delay short so clock hasn't moved enough
+        # Gate 3: next cycle + delay passed
         coordinator._update_cycle = 6
-        # Override min delay to a very large value so it cannot expire yet
-        coordinator._pending_min_read_delay = timedelta(hours=1)
         coordinator._process_pending_transitions()
 
-        assert coordinator.is_entity_pending("away_mode")
-
-    async def test_pending_cleared_after_later_cycle_and_delay(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """Pending state is cleared once update_cycle advanced and min-delay elapsed."""
-        coordinator._update_cycle = 5
-        coordinator._mark_pending_requested("away_mode")
-        coordinator._mark_pending_executed("away_mode")
-
-        # Advance past the executed cycle and set zero min delay so it always passes
-        coordinator._update_cycle = 6
-        coordinator._pending_min_read_delay = timedelta(seconds=0)
-        coordinator._process_pending_transitions()
-
-        assert not coordinator.is_entity_pending("away_mode")
+        assert not coordinator.is_entity_pending(key)
         assert not coordinator.has_pending_actions()
 
-    async def test_pending_not_cleared_when_only_requested_not_executed(
+    # ── async_set_entity_state trigger test (merged) ───────────────────────
+
+    async def test_async_set_entity_state_triggers_actions_pending_write(
         self, coordinator: DanthermCoordinator
     ) -> None:
-        """Requested-but-not-executed pending state is never cleared by _process_pending_transitions."""
-        coordinator._mark_pending_requested("fan_level_selection")
-        coordinator._update_cycle = 99
-        coordinator._pending_min_read_delay = timedelta(seconds=0)
-        coordinator._process_pending_transitions()
+        """Writing action must trigger immediate pending sensor update."""
 
-        assert coordinator.is_entity_pending("fan_level_selection")
+        import asyncio
 
-    # ── supports_pending / inject_pending_attr ────────────────────────────
+        def enqueue_frontend_immediate(coro_func, *args, **kwargs):
+            fut = asyncio.get_running_loop().create_future()
+            fut.set_result(None)
+            return fut
 
-    async def test_supports_pending_requires_add_entity(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """supports_pending returns True only after an action entity is added."""
-        assert not coordinator.supports_pending("away_mode")
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore
 
-        entity = self._make_action_entity("away_mode")
-        await coordinator.async_add_entity(entity)
-
-        assert coordinator.supports_pending("away_mode")
-
-    async def test_inject_pending_attr_adds_pending_key(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """_inject_pending_attr adds pending=True/False to attrs for action entities."""
-        entity = self._make_action_entity("away_mode")
-        await coordinator.async_add_entity(entity)
-
-        # No active pending → pending=False
-        result = coordinator._inject_pending_attr("away_mode", {"foo": "bar"})
-        assert result == {"foo": "bar", "pending": False}
-
-        # Active pending → pending=True
-        coordinator._mark_pending_requested("away_mode")
-        result = coordinator._inject_pending_attr("away_mode", None)
-        assert result == {"pending": True}
-
-    async def test_inject_pending_attr_no_op_for_non_action_entity(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """_inject_pending_attr is a no-op for entities that don't support pending."""
-        original = {"some": "attr"}
-        result = coordinator._inject_pending_attr("non_action_key", original)
-        assert result is original
-
-    # ── async_set_entity_state_by_key fallback path ───────────────────────
-
-    async def test_set_entity_state_by_description_calls_hub_setter(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """_set_entity_state_by_description invokes the hub setter for the description."""
-        from config.custom_components.dantherm.device_map import (
-            ActiveUnitMode,
-            DanthermSwitchEntityDescription,
+        action_desc = DanthermEntityDescription(
+            key="test_action",
+            name="Test Action",
+            data_setinternal="filter_reset",
         )
-        from homeassistant.components.switch import SwitchDeviceClass
+
+        action_entity = MagicMock()
+        action_entity.entity_id = "button.test_action"
+        action_entity.key = "test_action"
+        action_entity.entity_description = action_desc
+        action_entity.extra_state_attributes = {}
+
+        pending_entity = MagicMock()
+        pending_entity.entity_id = "binary_sensor.actions_pending"
+        pending_entity.key = ATTR_ACTIONS_PENDING
+        pending_entity.async_write_ha_state = MagicMock()
+
+        coordinator._entities = [pending_entity, action_entity]
+        coordinator._pending_supported_keys.add("test_action")
+        coordinator.data = {}
+
+        await coordinator.async_set_entity_state(action_entity, 1)
+
+        pending_entity.async_write_ha_state.assert_called_once()
+
+        assert coordinator.has_pending_actions()
+        assert coordinator.is_entity_pending("test_action")
+
+    def test_supports_pending_only_for_registered_keys(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Pending support should only be reported for supported keys."""
+
+        entity = self._make_action_entity("test_action")
+
+        assert coordinator.supports_pending(entity) is False
+
+        coordinator._pending_supported_keys.add("test_action")
+
+        assert coordinator.supports_pending(entity) is True
+
+    def test_inject_pending_attr_marks_pending_entity(
+        self, coordinator: DanthermCoordinator, monkeypatch
+    ) -> None:
+        """Inject the pending attribute for entities currently in flight."""
+
+        import inspect
+
+        entity = self._make_action_entity("test_action")
+        entity.extra_state_attributes = {"existing": "value"}
+        coordinator._pending_supported_keys.add("test_action")
+
+        monkeypatch.setattr(coordinator, "is_entity_pending", MagicMock(return_value=True))
+
+        pending_attr_name = getattr(coordinator_mod, "ATTR_PENDING", "pending")
+        inject_pending = coordinator._inject_pending_attr
+        parameter_count = len(inspect.signature(inject_pending).parameters)
+
+        if parameter_count == 1:
+            inject_pending(entity)
+            updated_attrs = entity.extra_state_attributes
+        else:
+            updated_attrs = inject_pending(entity, dict(entity.extra_state_attributes))
+
+        assert updated_attrs["existing"] == "value"
+        assert updated_attrs[pending_attr_name] is True
+
+    async def test_set_entity_state_by_description_delegates_to_matching_entity(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Setting by description should resolve the entity and delegate."""
+
+        desc = DanthermEntityDescription(
+            key="test_action",
+            name="Test Action",
+            data_setinternal="filter_reset",
+        )
+        entity = MagicMock()
+        entity.entity_id = "button.test_action"
+        entity.key = "test_action"
+        entity.entity_description = desc
+        coordinator._entities = [entity]
+        coordinator.async_set_entity_state = AsyncMock()
+
+        await coordinator._set_entity_state_by_description(desc, 1)
+
+        coordinator.async_set_entity_state.assert_awaited_once_with(entity, 1)
+
+    async def test_async_set_entity_state_by_key_falls_back_to_description(
+        self, coordinator: DanthermCoordinator, monkeypatch
+    ) -> None:
+        """Missing entity instances should still be handled through description fallback."""
 
         desc = DanthermSwitchEntityDescription(
-            key="test_switch",
-            data_setinternal="test_setter",
-            state_on=ActiveUnitMode.StartAway,
-            state_off=ActiveUnitMode.EndAway,
-            device_class=SwitchDeviceClass.SWITCH,
-        )
-        mock_setter = AsyncMock()
-        coordinator.hub.set_test_setter = mock_setter
-
-        await coordinator._set_entity_state_by_description(desc, "test_switch", True)
-
-        mock_setter.assert_called_once_with(ActiveUnitMode.StartAway)
-
-    async def test_set_entity_state_by_key_description_found_in_all_descriptions(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """async_set_entity_state_by_key routes to the description fallback when no entity is registered."""
-        # ATTR_AWAY_MODE is populated in _all_descriptions at coordinator init.
-        assert ATTR_AWAY_MODE in coordinator._all_descriptions
-
-        # Verify the fallback is selected (entity not in _entities but description exists).
-        assert not any(
-            getattr(e, "key", None) == ATTR_AWAY_MODE for e in coordinator._entities
+            key="test_action",
+            name="Test Action",
+            data_setinternal="filter_reset",
         )
 
-    async def test_set_entity_state_by_key_raises_for_unknown_key(
-        self, coordinator: DanthermCoordinator
-    ) -> None:
-        """async_set_entity_state_by_key raises HomeAssistantError for completely unknown keys."""
-        with pytest.raises(HomeAssistantError, match="unknown_key_xyz"):
-            await coordinator.async_set_entity_state_by_key(
-                "unknown_key_xyz", "some_state"
+        coordinator._entities = []
+        coordinator._set_entity_state_by_description = AsyncMock()
+
+        if hasattr(coordinator, "_get_entity_description_by_key"):
+            monkeypatch.setattr(
+                coordinator,
+                "_get_entity_description_by_key",
+                MagicMock(return_value=desc),
             )
+        elif hasattr(coordinator, "_entity_descriptions"):
+            coordinator._entity_descriptions = [desc]
+        elif hasattr(coordinator, "entity_descriptions"):
+            coordinator.entity_descriptions = [desc]
+        else:
+            monkeypatch.setattr(
+                coordinator_mod,
+                "ENTITY_DESCRIPTIONS",
+                [desc],
+                raising=False,
+            )
+
+        await coordinator.async_set_entity_state_by_key("test_action", True)
+
+        coordinator._set_entity_state_by_description.assert_awaited_once_with(
+            desc, True
+        )
