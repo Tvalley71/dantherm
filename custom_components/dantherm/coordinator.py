@@ -174,13 +174,22 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     def _write_pending_aware_states(
         self, source_entity: Entity | None, entity_key: str
     ) -> None:
-        """Write updated states for the source and device-level action pending sensor."""
+        """Refresh and write updated states for affected entities."""
+        entities_to_refresh: list[Entity] = []
+
         if source_entity is not None:
-            source_entity.async_write_ha_state()
+            entities_to_refresh.append(source_entity)
 
         for entity in self._entities:
             key = getattr(entity, "key", entity.entity_id)
-            if key in (ATTR_ACTIONS_PENDING, entity_key):
+            if key in (ATTR_ACTIONS_PENDING, entity_key) and entity not in entities_to_refresh:
+                entities_to_refresh.append(entity)
+
+        for entity in entities_to_refresh:
+            handle_coordinator_update = getattr(entity, "_handle_coordinator_update", None)
+            if callable(handle_coordinator_update):
+                handle_coordinator_update()
+            else:
                 entity.async_write_ha_state()
 
     async def _update_data(self) -> dict:
