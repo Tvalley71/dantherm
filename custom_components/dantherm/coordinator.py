@@ -12,6 +12,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now as ha_now
@@ -19,6 +20,15 @@ from homeassistant.util.dt import now as ha_now
 from .device_map import (
     ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
     ATTR_ACTIONS_PENDING,
+    BINARY_SENSORS,
+    BUTTONS,
+    COVERS,
+    FANS,
+    NUMBERS,
+    SELECTS,
+    SENSORS,
+    SWITCHES,
+    TIMETEXTS,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
 )
@@ -94,6 +104,24 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         self._pending_min_read_delay = timedelta(
             milliseconds=ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS
         )
+
+        # Flat lookup of all statically-defined entity descriptions by key.
+        # Used as a fallback write path when an entity is disabled (not instantiated).
+        self._all_descriptions: dict[str, DanthermEntityDescription] = {
+            desc.key: desc
+            for tuple_ in (
+                BINARY_SENSORS,
+                BUTTONS,
+                COVERS,
+                FANS,
+                NUMBERS,
+                SELECTS,
+                SENSORS,
+                SWITCHES,
+                TIMETEXTS,
+            )
+            for desc in tuple_
+        }
 
         # Start processors
         hass.loop.create_task(self._process_frontend())
@@ -421,12 +449,24 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if entity is not None:
             return await self.async_set_entity_state(entity, state)
 
-        _LOGGER.warning(
-            "Unable to set entity state for key=%s to state=%s because no instantiated entity was found; the entity may be disabled or not added",
-            entity_key,
-            state,
+        # Fallback: entity may be disabled in the entity registry.
+        # Look up its static description and execute the write directly.
+        description = self._all_descriptions.get(entity_key)
+        if description is not None:
+            _LOGGER.debug(
+                "Entity key=%s has no instantiated entity (may be disabled); "
+                "executing write via description fallback",
+                entity_key,
+            )
+            fut = self.enqueue_frontend(
+                self._set_entity_state_by_description, description, entity_key, state
+            )
+            return await fut
+
+        raise HomeAssistantError(
+            f"Cannot set state for entity key '{entity_key}': "
+            "no instantiated entity or matching description found"
         )
-        return None
 
     async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
         """Schedule a set entity state via the internal queue and update the cached data immediately."""
@@ -552,3 +592,37 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if self.supports_pending(entity_key):
             self._mark_pending_executed(entity_key)
         self._write_pending_aware_states(entity, entity_key)
+
+    async def _set_entity_state_by_description(
+        self,
+        description: DanthermEntityDescription,
+        entity_key: str,
+        state: Any,
+    ) -> None:
+        """Execute a write using only a description, without a live entity instance.
+
+        Used as a fallback when the entity is disabled in the entity registry.
+        HA state cannot be refreshed (the entity is not instantiated), but the
+        underlying Modbus / internal write is still performed.
+        """
+        if isinstance(description, DanthermSwitchEntityDescription):
+            if state == STATE_ON:
+                state = True
+            elif state == STATE_OFF:
+                state = False
+
+            if isinstance(state, bool):
+                if state:
+                    state = description.state_seton or description.state_on
+                else:
+                    state = description.state_setoff or description.state_off
+
+        if description.data_setinternal:
+            # Call the hub's named setter, e.g. hub.set_away_mode(state)
+            await getattr(self.hub, f"set_{description.data_setinternal}")(state)
+        elif description.data_address and description.data_setaddress:
+            # Write value directly to the Modbus holding register
+            await self.hub.write_holding_registers(description=description, value=state)
+        else:
+            # No hardware write path; persist value in the local store only
+            await self.async_store_entity_state(entity_key, state)
