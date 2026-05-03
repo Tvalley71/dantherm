@@ -148,7 +148,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_option(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle discovery selection when manufacturer step is skipped."""
+        """Handle the discovery selection step before continuing to user setup."""
         if user_input is not None:
             self._use_discovery = user_input.get(CONF_USE_DISCOVERY, False)
             self._discovery_configured = True
