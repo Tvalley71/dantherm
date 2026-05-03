@@ -338,3 +338,101 @@ class TestPendingActionLifecycle:
 
         assert coordinator.has_pending_actions()
         assert coordinator.is_entity_pending("test_action")
+
+    def test_supports_pending_only_for_registered_keys(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Pending support should only be reported for supported keys."""
+
+        entity = self._make_action_entity("test_action")
+
+        assert coordinator.supports_pending(entity) is False
+
+        coordinator._pending_supported_keys.add("test_action")
+
+        assert coordinator.supports_pending(entity) is True
+
+    def test_inject_pending_attr_marks_pending_entity(
+        self, coordinator: DanthermCoordinator, monkeypatch
+    ) -> None:
+        """Inject the pending attribute for entities currently in flight."""
+
+        import inspect
+
+        entity = self._make_action_entity("test_action")
+        entity.extra_state_attributes = {"existing": "value"}
+        coordinator._pending_supported_keys.add("test_action")
+
+        monkeypatch.setattr(coordinator, "is_entity_pending", MagicMock(return_value=True))
+
+        pending_attr_name = getattr(coordinator_mod, "ATTR_PENDING", "pending")
+        inject_pending = coordinator._inject_pending_attr
+        parameter_count = len(inspect.signature(inject_pending).parameters)
+
+        if parameter_count == 1:
+            inject_pending(entity)
+            updated_attrs = entity.extra_state_attributes
+        else:
+            updated_attrs = inject_pending(entity, dict(entity.extra_state_attributes))
+
+        assert updated_attrs["existing"] == "value"
+        assert updated_attrs[pending_attr_name] is True
+
+    async def test_set_entity_state_by_description_delegates_to_matching_entity(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Setting by description should resolve the entity and delegate."""
+
+        desc = DanthermEntityDescription(
+            key="test_action",
+            name="Test Action",
+            data_setinternal="filter_reset",
+        )
+        entity = MagicMock()
+        entity.entity_id = "button.test_action"
+        entity.key = "test_action"
+        entity.entity_description = desc
+        coordinator._entities = [entity]
+        coordinator.async_set_entity_state = AsyncMock()
+
+        await coordinator._set_entity_state_by_description(desc, 1)
+
+        coordinator.async_set_entity_state.assert_awaited_once_with(entity, 1)
+
+    async def test_async_set_entity_state_by_key_falls_back_to_description(
+        self, coordinator: DanthermCoordinator, monkeypatch
+    ) -> None:
+        """Missing entity instances should still be handled through description fallback."""
+
+        desc = DanthermSwitchEntityDescription(
+            key="test_action",
+            name="Test Action",
+            data_setinternal="filter_reset",
+        )
+
+        coordinator._entities = []
+        coordinator._set_entity_state_by_description = AsyncMock()
+
+        if hasattr(coordinator, "_get_entity_description_by_key"):
+            monkeypatch.setattr(
+                coordinator,
+                "_get_entity_description_by_key",
+                MagicMock(return_value=desc),
+            )
+        elif hasattr(coordinator, "_entity_descriptions"):
+            coordinator._entity_descriptions = [desc]
+        elif hasattr(coordinator, "entity_descriptions"):
+            coordinator.entity_descriptions = [desc]
+        else:
+            monkeypatch.setattr(
+                coordinator_mod,
+                "ENTITY_DESCRIPTIONS",
+                [desc],
+                raising=False,
+            )
+
+        await coordinator.async_set_entity_state_by_key("test_action", True)
+
+        coordinator._set_entity_state_by_description.assert_awaited_once_with(
+            desc, True
+        )
