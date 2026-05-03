@@ -62,6 +62,15 @@ def _get_manufacturer_schema() -> vol.Schema:
             vol.Required(CONF_MANUFACTURER, default=DEFAULT_NAME): vol.In(
                 manufacturers
             ),
+        }
+    )
+
+
+def _get_discovery_schema() -> vol.Schema:
+    """Return the schema for the discovery selection step."""
+
+    return vol.Schema(
+        {
             vol.Optional(CONF_USE_DISCOVERY, default=False): bool,
         }
     )
@@ -113,8 +122,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._manufacturer: str | None = None
         self._use_discovery: bool = (
-            False  # Default to False, only enabled via manufacturer step
+            False  # Default to False; set in the discovery_option step
         )
+        self._discovery_configured: bool = False
 
     def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
@@ -128,12 +138,25 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the manufacturer selection step."""
         if user_input is not None:
             self._manufacturer = user_input[CONF_MANUFACTURER]
-            self._use_discovery = user_input.get(CONF_USE_DISCOVERY, False)
-            return await self.async_step_user()
+            return await self.async_step_discovery_option()
 
         return self.async_show_form(
             step_id=CONF_MANUFACTURER,
             data_schema=_get_manufacturer_schema(),
+        )
+
+    async def async_step_discovery_option(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the discovery selection step before continuing to user setup."""
+        if user_input is not None:
+            self._use_discovery = user_input.get(CONF_USE_DISCOVERY, False)
+            self._discovery_configured = True
+            return await self.async_step_user()
+
+        return self.async_show_form(
+            step_id="discovery_option",
+            data_schema=_get_discovery_schema(),
         )
 
     async def async_step_user(
@@ -144,6 +167,9 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if USE_MANUFACTURER_MAP and self._manufacturer is None:
             return await self.async_step_manufacturer()
+
+        if not self._discovery_configured:
+            return await self.async_step_discovery_option()
 
         if user_input is None:
             default_name = DEFAULT_NAME
