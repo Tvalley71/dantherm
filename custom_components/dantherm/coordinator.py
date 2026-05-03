@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -11,14 +12,38 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import now as ha_now
 
-from .device_map import DanthermEntityDescription, DanthermSwitchEntityDescription
+from .device_map import (
+    ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
+    ATTR_ACTIONS_PENDING,
+    BINARY_SENSORS,
+    BUTTONS,
+    COVERS,
+    FANS,
+    NUMBERS,
+    SELECTS,
+    SENSORS,
+    SWITCHES,
+    TIMETEXTS,
+    DanthermEntityDescription,
+    DanthermSwitchEntityDescription,
+)
 from .store import DanthermStore
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PendingActionState:
+    """Track pending write lifecycle for an entity."""
+
+    requested_at: Any
+    executed_at: Any | None = None
+    executed_read_cycle: int | None = None
 
 
 class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
@@ -70,6 +95,33 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         self._rw_lock = asyncio.Lock()
         # Event to wake backend processor
         self._backend_event = asyncio.Event()
+        self._backend_busy = False
+
+        # Pending action tracking
+        self._pending_actions: dict[str, PendingActionState] = {}
+        self._pending_supported_keys: set[str] = set()
+        self._update_cycle = 0
+        self._pending_min_read_delay = timedelta(
+            milliseconds=ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS
+        )
+
+        # Flat lookup of all statically-defined entity descriptions by key.
+        # Used as a fallback write path when an entity is disabled (not instantiated).
+        self._all_descriptions: dict[str, DanthermEntityDescription] = {
+            desc.key: desc
+            for tuple_ in (
+                BINARY_SENSORS,
+                BUTTONS,
+                COVERS,
+                FANS,
+                NUMBERS,
+                SELECTS,
+                SENSORS,
+                SWITCHES,
+                TIMETEXTS,
+            )
+            for desc in tuple_
+        }
 
         # Start processors
         hass.loop.create_task(self._process_frontend())
@@ -78,6 +130,95 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     def schedule_reload(self) -> None:
         """Flag the integration to reload on the next update."""
         self._reload_on_update = True
+
+    @staticmethod
+    def _is_action_description(description: DanthermEntityDescription) -> bool:
+        """Return True when an entity description supports write actions."""
+        return bool(description.data_setinternal or description.data_setaddress)
+
+    def is_entity_pending(self, entity_key: str) -> bool:
+        """Return True when an entity currently has a pending action."""
+        return entity_key in self._pending_actions
+
+    def has_pending_actions(self) -> bool:
+        """Return True when the device has pending actions."""
+        return bool(self._pending_actions)
+
+    def supports_pending(self, entity_key: str) -> bool:
+        """Return True when an entity key supports the pending attribute."""
+        return entity_key in self._pending_supported_keys
+
+    def _inject_pending_attr(self, entity_key: str, attrs: Any) -> Any:
+        """Add pending attribute to supported entities."""
+        if not self.supports_pending(entity_key):
+            return attrs
+
+        result: dict[str, Any]
+        if isinstance(attrs, dict):
+            result = dict(attrs)
+        else:
+            result = {}
+
+        result["pending"] = self.is_entity_pending(entity_key)
+        return result
+
+    def _mark_pending_requested(self, entity_key: str) -> None:
+        """Mark an action as queued/requested for an entity."""
+        self._pending_actions[entity_key] = PendingActionState(requested_at=ha_now())
+
+    def _mark_pending_executed(self, entity_key: str) -> None:
+        """Mark that an action has been executed in the communicator."""
+        pending_state = self._pending_actions.get(entity_key)
+        if pending_state is None:
+            pending_state = PendingActionState(requested_at=ha_now())
+            self._pending_actions[entity_key] = pending_state
+
+        pending_state.executed_at = ha_now()
+        pending_state.executed_read_cycle = self._update_cycle
+
+    def _clear_pending(self, entity_key: str) -> None:
+        """Clear pending state for a key."""
+        self._pending_actions.pop(entity_key, None)
+
+    def _process_pending_transitions(self) -> None:
+        """Clear pending states after post-execute delay and a later read cycle."""
+        now = ha_now()
+
+        for entity_key, pending_state in list(self._pending_actions.items()):
+            if (
+                pending_state.executed_at is None
+                or pending_state.executed_read_cycle is None
+            ):
+                continue
+
+            if self._update_cycle <= pending_state.executed_read_cycle:
+                continue
+
+            if now < pending_state.executed_at + self._pending_min_read_delay:
+                continue
+
+            self._pending_actions.pop(entity_key, None)
+
+    def _write_pending_aware_states(
+        self, source_entity: Entity | None, entity_key: str
+    ) -> None:
+        """Refresh and write updated states for affected entities."""
+        entities_to_refresh: list[Entity] = []
+
+        if source_entity is not None:
+            entities_to_refresh.append(source_entity)
+
+        for entity in self._entities:
+            key = getattr(entity, "key", entity.entity_id)
+            if key in (ATTR_ACTIONS_PENDING, entity_key) and entity not in entities_to_refresh:
+                entities_to_refresh.append(entity)
+
+        for entity in entities_to_refresh:
+            handle_coordinator_update = getattr(entity, "_handle_coordinator_update", None)
+            if callable(handle_coordinator_update):
+                handle_coordinator_update()
+            else:
+                entity.async_write_ha_state()
 
     async def _update_data(self) -> dict:
         """Read all entities."""
@@ -117,6 +258,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
             # Update adaptive state
             await self.hub.async_update_adaptive_triggers()
+
+            self._update_cycle += 1
+            self._process_pending_transitions()
 
             data: dict[str, Any] = {}
             for entity in self._entities:
@@ -176,8 +320,8 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 self._frontend_queue.task_done()
 
     async def _wait_for_backend_drain(self) -> None:
-        """Pause until the backend queue is fully empty."""
-        while self._backend_queue:
+        """Pause until the backend queue is fully empty and idle."""
+        while self._backend_queue or self._backend_busy:
             # Sleep a fraction of write_delay to poll the queue
             await asyncio.sleep(self._write_delay / 2)
 
@@ -192,22 +336,26 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             if not self._backend_queue:
                 self._backend_event.clear()
 
-            async with self._rw_lock:
-                try:
-                    _LOGGER.debug("Backend: writing %s", func.__name__)
-                    result = await func(*args, **kwargs)
-                    if fut:
-                        fut.set_result(result)
-                except Exception as exc:
-                    _LOGGER.exception("Backend write failed")
-                    if fut:
-                        fut.set_exception(exc)
-                await asyncio.sleep(self._write_delay)
+            self._backend_busy = True
+            try:
+                async with self._rw_lock:
+                    try:
+                        _LOGGER.debug("Backend: writing %s", func.__name__)
+                        result = await func(*args, **kwargs)
+                        if fut:
+                            fut.set_result(result)
+                    except Exception as exc:
+                        _LOGGER.exception("Backend write failed")
+                        if fut:
+                            fut.set_exception(exc)
+                    await asyncio.sleep(self._write_delay)
+            finally:
+                self._backend_busy = False
 
     def enqueue_backend(
         self, func: Any, *args: Any, **kwargs: Any
     ) -> asyncio.Future[Any]:
-        """Enqueue a low‐level corotine with locking + delay.
+        """Enqueue a low‐level coroutine with locking + delay.
 
         Returns a Future you can await if you need to know when it completes,
         """
@@ -222,6 +370,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         _LOGGER.debug("Adding entity=%s", getattr(entity, "key", entity.entity_id))
         self._entities.append(entity)
+        description = getattr(entity, "entity_description", None)
+        if isinstance(
+            description, DanthermEntityDescription
+        ) and self._is_action_description(description):
+            self._pending_supported_keys.add(description.key)
 
     async def async_remove_entity(self, entity: Entity) -> None:
         """Remove entity from update."""
@@ -287,6 +440,34 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if entity:
             await self.async_set_entity_state(entity, state)
 
+    async def async_set_entity_state_by_key(self, entity_key: str, state: Any) -> Any:
+        """Schedule a set entity state by entity key, including pending support."""
+        entity = next(
+            (e for e in self._entities if getattr(e, "key", e.entity_id) == entity_key),
+            None,
+        )
+        if entity is not None:
+            return await self.async_set_entity_state(entity, state)
+
+        # Fallback: entity may be disabled in the entity registry.
+        # Look up its static description and execute the write directly.
+        description = self._all_descriptions.get(entity_key)
+        if description is not None:
+            _LOGGER.debug(
+                "Entity key=%s has no instantiated entity (may be disabled); "
+                "executing write via description fallback",
+                entity_key,
+            )
+            fut = self.enqueue_frontend(
+                self._set_entity_state_by_description, description, entity_key, state
+            )
+            return await fut
+
+        raise HomeAssistantError(
+            f"Cannot set state for entity key '{entity_key}': "
+            "no instantiated entity or matching description found"
+        )
+
     async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
         """Schedule a set entity state via the internal queue and update the cached data immediately."""
 
@@ -300,19 +481,33 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             state,
         )
 
-        # Enqueue frontent corotine
+        entity_key = getattr(entity, "key", entity.entity_id)
+
+        # Mark action as pending immediately
+        if self.supports_pending(entity_key):
+            self._mark_pending_requested(entity_key)
+
+        # Enqueue frontend coroutine
         fut = self.enqueue_frontend(self._set_entity_state, entity, state)
 
-        # Update the in-memory cache
+        # Update the in-memory cache (inject pending attr immediately)
+        current_attrs = getattr(entity, "extra_state_attributes", None)
+        updated_attrs = self._inject_pending_attr(entity_key, current_attrs)
         self.data.update(
             {
                 description.key: {
                     "state": state,
                     "icon": getattr(entity, "icon", None),
-                    "attrs": getattr(entity, "extra_state_attributes", None),
+                    "attrs": updated_attrs,
                 }
             }
         )
+
+        # Immediately notify the actions_pending binary sensor
+        for ent in self._entities:
+            if getattr(ent, "key", ent.entity_id) == ATTR_ACTIONS_PENDING:
+                ent.async_write_ha_state()
+                break
 
         return await fut
 
@@ -364,6 +559,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         elif hasattr(self.hub, f"async_get_{description.key}_attrs"):
             attrs = getattr(self.hub, f"async_get_{description.key}_attrs")
 
+        attrs = self._inject_pending_attr(description.key, attrs)
         return {"state": state, "icon": icon, "attrs": attrs}
 
     async def _set_entity_state(self, entity: Entity, state: Any) -> None:
@@ -385,12 +581,48 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 else:
                     state = description.state_setoff or description.state_off
 
+        entity_key = getattr(entity, "key", entity.entity_id)
         if description.data_setinternal:
             await getattr(self.hub, f"set_{description.data_setinternal}")(state)
         elif description.data_address and description.data_setaddress:
             await self.hub.write_holding_registers(description=description, value=state)
         else:
-            entity_key = getattr(entity, "key", entity.entity_id)
             await self.async_store_entity_state(entity_key, state)
 
-        entity.async_write_ha_state()
+        if self.supports_pending(entity_key):
+            self._mark_pending_executed(entity_key)
+        self._write_pending_aware_states(entity, entity_key)
+
+    async def _set_entity_state_by_description(
+        self,
+        description: DanthermEntityDescription,
+        entity_key: str,
+        state: Any,
+    ) -> None:
+        """Execute a write using only a description, without a live entity instance.
+
+        Used as a fallback when the entity is disabled in the entity registry.
+        HA state cannot be refreshed (the entity is not instantiated), but the
+        underlying Modbus / internal write is still performed.
+        """
+        if isinstance(description, DanthermSwitchEntityDescription):
+            if state == STATE_ON:
+                state = True
+            elif state == STATE_OFF:
+                state = False
+
+            if isinstance(state, bool):
+                if state:
+                    state = description.state_seton or description.state_on
+                else:
+                    state = description.state_setoff or description.state_off
+
+        if description.data_setinternal:
+            # Call the hub's named setter, e.g. hub.set_away_mode(state)
+            await getattr(self.hub, f"set_{description.data_setinternal}")(state)
+        elif description.data_address and description.data_setaddress:
+            # Write value directly to the Modbus holding register
+            await self.hub.write_holding_registers(description=description, value=state)
+        else:
+            # No hardware write path; persist value in the local store only
+            await self.async_store_entity_state(entity_key, state)

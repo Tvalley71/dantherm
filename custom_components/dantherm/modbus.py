@@ -238,7 +238,7 @@ class DanthermModbus:
                 return
             if address is not None:
                 if self.coordinator is not None:
-                    self.coordinator.enqueue_backend(
+                    await self.coordinator.enqueue_backend(
                         self.__write_holding_registers, address, [value]
                     )
                 else:
@@ -347,7 +347,7 @@ class DanthermModbus:
             int(value), self._client.DATATYPE.UINT32, "little"
         )
         if self.coordinator is not None:
-            self.coordinator.enqueue_backend(
+            await self.coordinator.enqueue_backend(
                 self.__write_holding_registers, address, payload
             )
         else:
@@ -390,7 +390,7 @@ class DanthermModbus:
             value, self._client.DATATYPE.FLOAT32, "little"
         )
         if self.coordinator is not None:
-            self.coordinator.enqueue_backend(
+            await self.coordinator.enqueue_backend(
                 self.__write_holding_registers, address, payload
             )
         else:

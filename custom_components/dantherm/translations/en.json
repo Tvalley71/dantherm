@@ -81,6 +81,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "actions_pending": { "name": "Actions Pending" }
+    },
     "button": {
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }

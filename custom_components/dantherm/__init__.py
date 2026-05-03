@@ -65,6 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
     Platform.COVER,
