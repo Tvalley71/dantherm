@@ -124,7 +124,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._use_discovery: bool = (
             False  # Default to False; set in the discovery_option step
         )
-        self._discovery_configured = False
+        self._discovery_configured: bool = False
 
     def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
