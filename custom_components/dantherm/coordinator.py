@@ -300,23 +300,25 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 self._backend_event.clear()
 
             self._backend_busy = True
-            async with self._rw_lock:
-                try:
-                    _LOGGER.debug("Backend: writing %s", func.__name__)
-                    result = await func(*args, **kwargs)
-                    if fut:
-                        fut.set_result(result)
-                except Exception as exc:
-                    _LOGGER.exception("Backend write failed")
-                    if fut:
-                        fut.set_exception(exc)
-                await asyncio.sleep(self._write_delay)
-            self._backend_busy = False
+            try:
+                async with self._rw_lock:
+                    try:
+                        _LOGGER.debug("Backend: writing %s", func.__name__)
+                        result = await func(*args, **kwargs)
+                        if fut:
+                            fut.set_result(result)
+                    except Exception as exc:
+                        _LOGGER.exception("Backend write failed")
+                        if fut:
+                            fut.set_exception(exc)
+                    await asyncio.sleep(self._write_delay)
+            finally:
+                self._backend_busy = False
 
     def enqueue_backend(
         self, func: Any, *args: Any, **kwargs: Any
     ) -> asyncio.Future[Any]:
-        """Enqueue a low‐level corotine with locking + delay.
+        """Enqueue a low‐level coroutine with locking + delay.
 
         Returns a Future you can await if you need to know when it completes,
         """
