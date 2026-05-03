@@ -75,6 +75,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "actions_pending": { "name": "Actions en attente" }
+    },
     "button": {
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
       "alarm_reset": { "name": "Réinitialiser alerte active" }

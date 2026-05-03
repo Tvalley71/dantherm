@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Final
 
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.calendar import CalendarEntityDescription
 from homeassistant.components.cover import (
@@ -45,6 +46,10 @@ REQUIRED_FIRMWARE_3 = 3.08
 SCAN_INTERVAL_FAST = 10  # Fast polling - legacy default, good for real-time monitoring
 SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installations
 SCAN_INTERVAL_SLOW = 60  # Slow polling - conserves bandwidth
+
+# Minimum milliseconds that must pass after a write is executed before pending
+# is cleared. If a read arrives before this time, clearing is deferred.
+ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS = 3000
 
 # For config flow options
 CONF_MANUFACTURER: Final = "manufacturer"
@@ -236,6 +241,8 @@ ATTR_INTERNAL_PREHEATER_DUTYCYCLE: Final = "internal_preheater_dutycycle"
 ATTR_FILTER_RESET: Final = "filter_reset"
 
 ATTR_ALARM_RESET: Final = "alarm_reset"
+
+ATTR_ACTIONS_PENDING: Final = "actions_pending"
 
 ATTR_FEATURES: Final = "features"
 
@@ -506,11 +513,28 @@ class DanthermSwitchEntityDescription(
 
 
 @dataclass(frozen=True)
+class DanthermBinarySensorEntityDescription(
+    DanthermEntityDescription, BinarySensorEntityDescription
+):
+    """Dantherm Binary Sensor Entity Description."""
+
+
+@dataclass(frozen=True)
 class DanthermTimeTextEntityDescription(
     DanthermEntityDescription, TextEntityDescription
 ):
     """Dantherm Time Text Entity Description."""
 
+
+BINARY_SENSORS: tuple[DanthermBinarySensorEntityDescription, ...] = (
+    DanthermBinarySensorEntityDescription(
+        key=ATTR_ACTIONS_PENDING,
+        icon="mdi:clock-alert",
+        data_getinternal=ATTR_ACTIONS_PENDING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     DanthermButtonEntityDescription(

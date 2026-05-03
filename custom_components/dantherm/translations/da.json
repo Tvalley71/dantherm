@@ -75,6 +75,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "actions_pending": { "name": "Ventende handlinger" }
+    },
     "button": {
       "filter_reset": { "name": "Nulstil filter" },
       "alarm_reset": { "name": "Nulstil alarm" }

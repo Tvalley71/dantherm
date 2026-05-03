@@ -65,6 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
     Platform.COVER,
@@ -477,7 +478,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if domain_data.get(ATTR_CALENDAR) is not None:
             try:
                 owner_id = getattr(domain_data[ATTR_CALENDAR], "_config_entry_id", None)
-            except (AttributeError, TypeError):
+            except AttributeError, TypeError:
                 owner_id = None
             if owner_id == entry.entry_id:
                 domain_data.pop(ATTR_CALENDAR, None)

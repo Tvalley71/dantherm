@@ -506,6 +506,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return self._device_serial_number
 
     @property
+    def get_actions_pending(self) -> bool:
+        """Return True when the device has at least one pending action."""
+        if self.coordinator is None:
+            return False
+        return self.coordinator.has_pending_actions()
+
+    @property
     def get_current_unit_mode(self) -> Any:
         """Get current unit mode."""
 

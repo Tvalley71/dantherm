@@ -75,6 +75,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "actions_pending": { "name": "Acties in behandeling" }
+    },
     "button": {
       "filter_reset": { "name": "Filter Resetten" },
       "alarm_reset": { "name": "Foutmelding Resetten" }
