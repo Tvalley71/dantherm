@@ -91,7 +91,7 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
 
         self._attr_changed = False
         if not self.coordinator.last_update_success:
-            # Make sure thr entity is not available if last update failed
+            # Make sure the entity is not available if last update failed
             self._attr_available = False
         elif self.platform.domain == "button":
             # If the platform is button, we always want to make it available
@@ -99,7 +99,9 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
             if not self._attr_available:
                 self._attr_changed = True
                 self._attr_available = True
-                return
+            # Still update pending attribute for buttons
+            self._update_pending_attr()
+            return
 
         states = self.coordinator.data.get(self.key, None)
         if states:
@@ -129,6 +131,20 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
         elif self._attr_available:
             self._attr_changed = True
             self._attr_available = False
+
+        # Always keep pending attribute in sync for action entities
+        self._update_pending_attr()
+
+    def _update_pending_attr(self) -> None:
+        """Sync the pending attribute directly from the coordinator for action entities."""
+        if not self.coordinator.supports_pending(self.key):
+            return
+
+        is_pending = self.coordinator.is_entity_pending(self.key)
+        current = self._attr_extra_state_attributes or {}
+        if current.get("pending") != is_pending:
+            self._attr_changed = True
+            self._attr_extra_state_attributes = {**current, "pending": is_pending}
 
     @callback
     def _handle_coordinator_update(self) -> None:
