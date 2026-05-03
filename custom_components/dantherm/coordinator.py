@@ -447,7 +447,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if self.supports_pending(entity_key):
             self._mark_pending_requested(entity_key)
 
-        # Enqueue frontent corotine
+        # Enqueue frontend coroutine
         fut = self.enqueue_frontend(self._set_entity_state, entity, state)
 
         # Update the in-memory cache (inject pending attr immediately)
