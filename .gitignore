@@ -13,5 +13,5 @@ __pycache__/
 *.bak
 
 # macOS metadata
-.DS_Store.coverage
+.DS_Store
 .coverage
