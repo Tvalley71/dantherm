@@ -5,7 +5,13 @@
         "title": "Vælg Producent",
         "description": "Vælg producenten af din ventilationsenhed.",
         "data": {
-          "manufacturer": "Producent",
+          "manufacturer": "Producent"
+        }
+      },
+      "discovery_option": {
+        "title": "Discovery",
+        "description": "Vælg om der skal anvendes automatisk enhedsopdagelse.",
+        "data": {
           "use_discovery": "Anvend automatisk enhedsopdagelse"
         }
       },

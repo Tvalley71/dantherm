@@ -5,7 +5,13 @@
         "title": "Select Manufacturer",
         "description": "Choose the manufacturer of your ventilation unit.",
         "data": {
-          "manufacturer": "Manufacturer",
+          "manufacturer": "Manufacturer"
+        }
+      },
+      "discovery_option": {
+        "title": "Discovery",
+        "description": "Choose whether to use automatic device discovery.",
+        "data": {
           "use_discovery": "Use automatic device discovery"
         }
       },
