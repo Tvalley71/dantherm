@@ -262,8 +262,6 @@ class TestPendingActionLifecycle:
     ) -> None:
         """Pending clears only when BOTH delay + next cycle are satisfied."""
 
-        coordinator_mod = sys.modules[DanthermCoordinator.__module__]
-
         t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         current_time = {"now": t0}
 
