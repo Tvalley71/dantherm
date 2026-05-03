@@ -37,6 +37,23 @@ class TestPlatformIntegration:
         )
         assert result is True
 
+    async def test_binary_sensor_platform_setup(
+        self,
+        hass,
+        mock_device_with_all_capabilities,
+        mock_platform_setup,
+    ) -> None:
+        """Test binary_sensor platform can be set up successfully."""
+        hass.data = {DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}}
+
+        mock_config_entry = AsyncMock()
+        mock_config_entry.entry_id = "test_entry"
+
+        result = await async_setup_binary_sensor(
+            hass, mock_config_entry, mock_platform_setup["add_entities"]
+        )
+        assert result is True
+
     async def test_button_platform_setup(
         self,
         hass,

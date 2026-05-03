@@ -14,9 +14,11 @@ __pycache__/
 
 # macOS metadata
 .DS_Store
+
 # Test artifacts
 .coverage
 .coverage.*
 coverage.xml
 htmlcov/
 .pytest_cache/
+

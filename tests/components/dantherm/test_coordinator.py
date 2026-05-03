@@ -5,15 +5,22 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import config.custom_components.dantherm.coordinator as coordinator_mod
-from config.custom_components.dantherm.coordinator import DanthermCoordinator
+from config.custom_components.dantherm.coordinator import (
+    DanthermCoordinator,
+    PendingActionState,
+)
 from config.custom_components.dantherm.device_map import (
     ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
     ATTR_ACTIONS_PENDING,
+    ATTR_AWAY_MODE,
     DanthermEntityDescription,
+    DanthermSwitchEntityDescription,
+    ActiveUnitMode,
 )
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -199,125 +206,137 @@ class TestDanthermCoordinator:
         # Test entity installed
         assert coordinator.is_entity_installed("test_entity")
 
-        await _cancel_coordinator_tasks()
+class TestPendingActionLifecycle:
+    """Tests for coordinator pending-action state machine."""
 
-    async def test_pending_lifecycle_clears_only_after_delay_and_next_cycle(
-        self, hass: HomeAssistant, mock_hub, mock_config_entry, monkeypatch
-    ) -> None:
-        """Pending action must NOT clear until BOTH the min delay has elapsed AND
-        at least one subsequent update cycle has occurred after execution."""
-        coordinator = DanthermCoordinator(
-            hass=hass,
+    @pytest.fixture
+    async def coordinator(self, mock_hub):
+        """Return a coordinator with a short write_delay for fast tests."""
+        import asyncio
+        from unittest.mock import MagicMock
+        from homeassistant.config_entries import ConfigEntry
+
+        mock_hass = MagicMock()
+        mock_hass.data = {}
+
+        mock_hass.loop = MagicMock()
+        mock_hass.loop.create_task = MagicMock(return_value=MagicMock(spec=asyncio.Task))
+        mock_hass.loop.create_future = asyncio.get_running_loop().create_future
+
+        entry = ConfigEntry(
+            version=1,
+            minor_version=1,
+            domain="dantherm",
+            title="Test Device",
+            data={"host": "192.168.1.100"},
+            options={},
+            entry_id="test_entry_id",
+            source="user",
+            unique_id="test_unique_id",
+            discovery_keys={},
+        )
+
+        return DanthermCoordinator(
+            hass=mock_hass,
             name="TestDevice",
             hub=mock_hub,
             scan_interval=30,
-            config_entry=mock_config_entry,
+            config_entry=entry,
+            write_delay=0.05,
         )
 
-        # Freeze time at a known point
+    # ── helpers ────────────────────────────────────────────────────────────
+
+    def _make_action_entity(self, key: str) -> MagicMock:
+        desc = DanthermEntityDescription(key=key, data_setinternal="some_internal")
+        entity = MagicMock()
+        entity.key = key
+        entity.entity_description = desc
+        entity.entity_id = f"switch.{key}"
+        return entity
+
+    # ── lifecycle test (merged from conflict branch) ───────────────────────
+
+    async def test_pending_lifecycle_clears_only_after_delay_and_next_cycle(
+        self, coordinator: DanthermCoordinator, monkeypatch
+    ) -> None:
+        """Pending clears only when BOTH delay + next cycle are satisfied."""
+
+        coordinator_mod = sys.modules[DanthermCoordinator.__module__]
+
         t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         current_time = {"now": t0}
 
-        def fake_now():
-            return current_time["now"]
-
-        # Patch the ha_now symbol used inside the coordinator module
-        monkeypatch.setattr(coordinator_mod, "ha_now", fake_now)
+        monkeypatch.setattr(coordinator_mod, "ha_now", lambda: current_time["now"])
 
         key = "test_action_key"
 
-        # Set update_cycle to 5 before marking executed
         coordinator._update_cycle = 5
+        coordinator._pending_min_read_delay = timedelta(milliseconds=500)
+
         coordinator._mark_pending_requested(key)
         coordinator._mark_pending_executed(key)
 
         executed_cycle = coordinator._pending_actions[key].executed_read_cycle
         assert executed_cycle == 5
-        assert coordinator.is_entity_pending(key), "Should be pending after mark_executed"
+        assert coordinator.is_entity_pending(key)
 
-        # --- Gate 1: same cycle, time not elapsed -> must NOT clear ---
+        # Gate 1: same cycle
         coordinator._process_pending_transitions()
-        assert coordinator.is_entity_pending(key), (
-            "Should still be pending: same update_cycle as executed_read_cycle"
-        )
+        assert coordinator.is_entity_pending(key)
 
-        # --- Gate 2: after delay, but SAME cycle -> must NOT clear ---
-        current_time["now"] = t0 + timedelta(
-            milliseconds=ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS + 500
-        )
+        # Gate 2: time passed but same cycle
+        current_time["now"] = t0 + timedelta(milliseconds=600)
         coordinator._process_pending_transitions()
-        assert coordinator.is_entity_pending(key), (
-            "Should still be pending: update_cycle has not advanced past executed_read_cycle"
-        )
+        assert coordinator.is_entity_pending(key)
 
-        # --- Gate 3: next cycle + after delay -> must clear ---
+        # Gate 3: next cycle + delay passed
         coordinator._update_cycle = 6
         coordinator._process_pending_transitions()
-        assert not coordinator.is_entity_pending(key), (
-            "Pending should be cleared: delay elapsed AND update_cycle > executed_read_cycle"
-        )
+
+        assert not coordinator.is_entity_pending(key)
         assert not coordinator.has_pending_actions()
 
-        await _cancel_coordinator_tasks()
+    # ── async_set_entity_state trigger test (merged) ───────────────────────
 
     async def test_async_set_entity_state_triggers_actions_pending_write(
-        self, hass: HomeAssistant, mock_hub, mock_config_entry
+        self, coordinator: DanthermCoordinator
     ) -> None:
-        """async_set_entity_state must immediately call async_write_ha_state on the
-        actions_pending binary sensor when a pending-supported entity is written."""
-        coordinator = DanthermCoordinator(
-            hass=hass,
-            name="TestDevice",
-            hub=mock_hub,
-            scan_interval=30,
-            config_entry=mock_config_entry,
-        )
+        """Writing action must trigger immediate pending sensor update."""
 
-        # Make enqueue_frontend return an already-resolved future so the test
-        # does not block on the background processor task.
+        import asyncio
+
         def enqueue_frontend_immediate(coro_func, *args, **kwargs):
             fut = asyncio.get_running_loop().create_future()
             fut.set_result(None)
             return fut
 
-        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore
 
-        # Build a real DanthermEntityDescription that qualifies as an "action"
-        # (has data_setinternal -> _is_action_description returns True)
         action_desc = DanthermEntityDescription(
             key="test_action",
             name="Test Action",
             data_setinternal="filter_reset",
         )
 
-        # Entity whose state will be written
         action_entity = MagicMock()
         action_entity.entity_id = "button.test_action"
         action_entity.key = "test_action"
         action_entity.entity_description = action_desc
         action_entity.extra_state_attributes = {}
 
-        # The actions_pending binary sensor entity that should be notified
         pending_entity = MagicMock()
         pending_entity.entity_id = "binary_sensor.actions_pending"
         pending_entity.key = ATTR_ACTIONS_PENDING
         pending_entity.async_write_ha_state = MagicMock()
 
         coordinator._entities = [pending_entity, action_entity]
-
-        # Register the action key as pending-supported (normally done in async_add_entity)
         coordinator._pending_supported_keys.add("test_action")
-
-        # Initialize coordinator data cache
         coordinator.data = {}
 
         await coordinator.async_set_entity_state(action_entity, 1)
 
-        # The actions_pending sensor should have been told to refresh immediately
         pending_entity.async_write_ha_state.assert_called_once()
 
-        # And the coordinator should report a pending action in progress
         assert coordinator.has_pending_actions()
         assert coordinator.is_entity_pending("test_action")
-
-        await _cancel_coordinator_tasks()
