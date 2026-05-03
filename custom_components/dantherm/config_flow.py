@@ -122,7 +122,7 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._manufacturer: str | None = None
         self._use_discovery: bool = (
-            False  # Default to False, only enabled via manufacturer step
+            False  # Default to False; set in the discovery_option step
         )
         self._discovery_configured = False
 
