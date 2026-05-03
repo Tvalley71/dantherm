@@ -409,6 +409,12 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         )
         if entity is not None:
             return await self.async_set_entity_state(entity, state)
+
+        _LOGGER.warning(
+            "Unable to set entity state for key=%s to state=%s because no instantiated entity was found; the entity may be disabled or not added",
+            entity_key,
+            state,
+        )
         return None
 
     async def async_set_entity_state(self, entity: Entity, state: Any) -> Any:
