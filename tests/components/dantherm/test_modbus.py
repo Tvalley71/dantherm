@@ -1,6 +1,6 @@
 """Test the Dantherm modbus functionality."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from config.custom_components.dantherm.modbus import (
     MODBUS_REGISTER_ALARM,
@@ -44,6 +44,39 @@ class TestDanthermModbus:
             host="192.168.1.100", port=502, name="test_device", timeout=10
         )
 
+    @patch("homeassistant.components.modbus.modbus.AsyncModbusSerialClient")
+    async def test_initialization_parameters_rtu(self, mock_serial_client):
+        """Test DanthermModbus RTU initialization with serial parameters."""
+        mock_client = AsyncMock()
+        mock_serial_client.return_value = mock_client
+
+        modbus = DanthermModbus(
+            "test_device",
+            "/dev/ttyUSB0",
+            "/dev/ttyUSB0",
+            2,
+            connection_type="rtu",
+            baudrate=38400,
+            bytesize=8,
+            parity="E",
+            stopbits=1,
+        )
+
+        assert modbus._host == "/dev/ttyUSB0"
+        assert modbus._port == "/dev/ttyUSB0"
+        assert modbus._unit_id == 2
+        assert modbus._attr_available is False
+
+        mock_serial_client.assert_called_once_with(
+            port="/dev/ttyUSB0",
+            framer=ANY,
+            baudrate=38400,
+            stopbits=1,
+            bytesize=8,
+            parity="E",
+            timeout=10,
+        )
+
     @patch("homeassistant.components.modbus.modbus.AsyncModbusTcpClient")
     async def test_ensure_connected_success(self, mock_tcp_client):
         """Test successful connection establishment."""
@@ -70,6 +103,28 @@ class TestDanthermModbus:
 
         assert result is False
         assert modbus._attr_available is False
+
+    @patch("homeassistant.components.modbus.modbus.AsyncModbusSerialClient")
+    async def test_ensure_connected_recreate_rtu_client(self, mock_serial_client):
+        """Test RTU connection recreation when client is missing."""
+        mock_client = AsyncMock()
+        mock_client.connected = True
+        mock_serial_client.return_value = mock_client
+
+        modbus = DanthermModbus(
+            "test",
+            "/dev/ttyUSB0",
+            "/dev/ttyUSB0",
+            1,
+            connection_type="rtu",
+        )
+        modbus._client = None
+
+        result = await modbus.ensure_connected()
+
+        assert result is True
+        assert modbus._attr_available is True
+        assert mock_serial_client.call_count >= 1
 
     @patch("homeassistant.components.modbus.modbus.AsyncModbusTcpClient")
     async def test_read_holding_registers_unavailable(self, mock_tcp_client):
