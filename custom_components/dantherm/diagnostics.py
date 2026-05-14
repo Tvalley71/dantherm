@@ -14,10 +14,10 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .device_map import ATTR_CALENDAR
+from .device_map import ATTR_CALENDAR, CONF_SERIAL_PORT
 from .translations import async_get_adaptive_state_from_summary
 
-TO_REDACT: set[str] = {CONF_HOST}
+TO_REDACT: set[str] = {CONF_HOST, CONF_SERIAL_PORT}
 
 
 async def _gather_device_info(
@@ -94,7 +94,7 @@ async def _gather_runtime(
         if hasattr(device, "events") and device.events:
             try:
                 event_stack_data = device.events.to_list()
-            except (AttributeError, TypeError):
+            except AttributeError, TypeError:
                 event_stack_data = "Error retrieving event stack"
 
         runtime["device"] = {
@@ -133,7 +133,7 @@ async def _extract_adaptive_state_async(hass: HomeAssistant, summary: str) -> st
     state_key = await async_get_adaptive_state_from_summary(hass, summary)
 
     # If a state was found, return the key, otherwise redact
-    return state_key if state_key else "**REDACTED**"
+    return state_key or "**REDACTED**"
 
 
 async def _gather_calendar_data(

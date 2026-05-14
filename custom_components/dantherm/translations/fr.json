@@ -8,25 +8,45 @@
           "manufacturer": "Fabricant"
         }
       },
-      "discovery_option": {
-        "title": "Discovery",
-        "description": "Choisissez si la découverte automatique des appareils doit être utilisée.",
+      "connection_type": {
+        "title": "Type de connexion",
+        "description": "Choisissez si la connexion doit se faire via TCP/IP ou en série (RTU).",
         "data": {
-          "use_discovery": "Utiliser la découverte automatique des appareils"
+          "connection_type": "Type de connexion"
         }
       },
-      "user": {
-        "title": "Dantherm Configuration",
-        "description": "Configurez les paramètres de connexion de l'appareil.",
+      "device_name": {
+        "title": "Nom de l'appareil",
+        "description": "Définissez un nom pour votre appareil Dantherm. Ce nom sera utilisé pour l'identifier dans Home Assistant.",
+        "data": {
+          "name": "Nom de l'appareil"
+        }
+      },
+      "tcp": {
+        "title": "Connexion TCP",
+        "description": "Entrez l'adresse IP et le port de l'appareil Dantherm. Les appareils disponibles sur le réseau seront préremplis automatiquement.",
         "data": {
           "host": "Adresse IP de l'appareil",
-          "name": "Préfixe à utiliser pour les entités",
           "port": "Numéro de port TCP"
+        }
+      },
+      "rtu": {
+        "title": "Connexion série (RTU)",
+        "description": "Configurez le port série et les paramètres Modbus RTU de l'appareil Dantherm.",
+        "data": {
+          "serial_port": "Chemin du périphérique série",
+          "modbus_unit_id": "ID d'unité Modbus",
+          "baudrate": "Débit en bauds",
+          "bytesize": "Bits de données",
+          "parity": "Parité",
+          "stopbits": "Bits d'arrêt"
         }
       }
     },
     "error": {
       "invalid_host": "Hôte ou adresse IP invalide.",
+      "invalid_serial_port": "Chemin du périphérique série invalide.",
+      "required": "Ce champ est obligatoire.",
       "cannot_connect": "Impossible de se connecter.",
       "already_configured": "L'appareil est déjà configuré."
     },
@@ -44,12 +64,25 @@
           "continue": "Continuer"
         }
       },
-      "network": {
-        "title": "Paramètres Réseau",
-        "description": "Configurez la connexion de l'appareil et la fréquence de mise à jour des données.",
+      "tcp": {
+        "title": "Paramètres de connexion TCP",
+        "description": "Mettez à jour l'adresse IP, le port et la fréquence de mise à jour des données de l'appareil Dantherm.",
         "data": {
           "host": "Adresse IP de l'appareil",
           "port": "Numéro de port TCP",
+          "polling_speed": "Fréquence de mise à jour des données"
+        }
+      },
+      "serial": {
+        "title": "Paramètres de connexion série (RTU)",
+        "description": "Mettez à jour le port série, les paramètres Modbus RTU et la fréquence de mise à jour des données.",
+        "data": {
+          "serial_port": "Chemin du périphérique série",
+          "modbus_unit_id": "ID d'unité Modbus",
+          "baudrate": "Débit en bauds",
+          "bytesize": "Bits de données",
+          "parity": "Parité",
+          "stopbits": "Bits d'arrêt",
           "polling_speed": "Fréquence de mise à jour des données"
         }
       },
@@ -74,6 +107,7 @@
     },
     "error": {
       "invalid_host": "Hôte ou adresse IP invalide.",
+      "invalid_serial_port": "Chemin du périphérique série invalide.",
       "invalid_entity": "ID d'entité invalide. Veuillez entrer un capteur binaire ou un booléen d'entrée valide."
     },
     "abort": {

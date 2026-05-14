@@ -9,11 +9,24 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from pymodbus import ModbusException
+from pymodbus.framer import FramerType
 
 from homeassistant.components.modbus import modbus
 
+from .const import (
+    DEFAULT_RTU_BAUDRATE,
+    DEFAULT_RTU_BYTESIZE,
+    DEFAULT_RTU_PARITY,
+    DEFAULT_RTU_STOPBITS,
+)
+
 if TYPE_CHECKING:
     from .device_map import DanthermEntityDescription
+
+MODBUS_CONNECTION_TYPE_TCP = "tcp"
+MODBUS_CONNECTION_TYPE_RTU = "rtu"
+
+DEFAULT_CONNECTION_TYPE = MODBUS_CONNECTION_TYPE_TCP
 
 # Modbus Register Constants
 MODBUS_REGISTER_AB_SWITCH_POSITION_HAL_LEFT = 84
@@ -54,6 +67,7 @@ MODBUS_REGISTER_ROOM_TEMP = 140
 MODBUS_REGISTER_SERIAL_NUMBER = 4
 MODBUS_REGISTER_SUPPLY_TEMP = 134
 MODBUS_REGISTER_SYSTEM_ID = 2
+MODBUS_REGISTER_SYSTEM_NAME = 8
 MODBUS_REGISTER_SYSTEM_ID_COMPONENTS = 610
 MODBUS_REGISTER_WEEK_PROGRAM_SELECTION = 466
 MODBUS_REGISTER_WORK_TIME = 624
@@ -79,6 +93,25 @@ class ABSwitchPosition(IntEnum):
 _LOGGER = logging.getLogger(__name__)
 
 
+def parse_ascii_string_from_data(data: bytes) -> str | None:
+    """Parse system name from raw Modbus response data.
+
+    Returns the ASCII string up to the first null byte, or None if invalid or empty.
+    """
+    if not data:
+        return None
+    end = data.find(b"\x00")
+    if end == -1:
+        end = min(len(data), 32)
+    try:
+        name = data[:end].decode("ascii", errors="ignore").strip()
+        if name:
+            return name
+    except UnicodeDecodeError:
+        pass
+    return None
+
+
 class DanthermModbus:
     """Dantherm Modbus."""
 
@@ -86,19 +119,51 @@ class DanthermModbus:
         self,
         name: str,
         host: str,
-        port: int,
+        port: int | str,
         unit_id: int,
+        connection_type: str = DEFAULT_CONNECTION_TYPE,
+        baudrate: int = DEFAULT_RTU_BAUDRATE,
+        bytesize: int = DEFAULT_RTU_BYTESIZE,
+        parity: str = DEFAULT_RTU_PARITY,
+        stopbits: int = DEFAULT_RTU_STOPBITS,
     ) -> None:
         """Initialize Modbus client."""
         self._host = host
         self._port = port
         self._unit_id = int(unit_id)
-        self._client: modbus.AsyncModbusTcpClient | None = modbus.AsyncModbusTcpClient(
-            host=self._host, port=self._port, name=name, timeout=10
-        )
+        self._connection_type = connection_type
+        self._baudrate = baudrate
+        self._bytesize = bytesize
+        self._parity = parity
+        self._stopbits = stopbits
+        self._client: (
+            modbus.AsyncModbusTcpClient | modbus.AsyncModbusSerialClient | None
+        ) = self._create_client(name)
         self._attr_available = False
         self._read_errors = 0
         # coordinator will be set by subclass
+
+    def _create_client(
+        self, client_name: str
+    ) -> modbus.AsyncModbusTcpClient | modbus.AsyncModbusSerialClient:
+        """Create the underlying pymodbus async client for selected transport."""
+        if self._connection_type == MODBUS_CONNECTION_TYPE_RTU:
+            return modbus.AsyncModbusSerialClient(
+                port=str(self._port),
+                framer=FramerType.RTU,
+                baudrate=self._baudrate,
+                stopbits=self._stopbits,
+                bytesize=self._bytesize,
+                parity=self._parity,
+                timeout=10,
+            )
+
+        return modbus.AsyncModbusTcpClient(
+            host=self._host,
+            port=int(self._port),
+            name=client_name,
+            timeout=10,
+        )
 
     @property
     def coordinator(self) -> Any:
@@ -114,9 +179,7 @@ class DanthermModbus:
     async def ensure_connected(self) -> bool:
         """Ensure Modbus client is connected."""
         if self._client is None:
-            self._client = modbus.AsyncModbusTcpClient(
-                host=self._host, port=self._port, name="dantherm-reconnect", timeout=10
-            )
+            self._client = self._create_client("dantherm-reconnect")
         if not self._client.connected:
             _LOGGER.debug("Modbus client not connected, attempting reconnect")
             if not await self._client.connect():
@@ -163,8 +226,6 @@ class DanthermModbus:
         self._client.close()
         self._client = None
         _LOGGER.debug("Modbus client closed")
-        # Wait for the client to close
-        await asyncio.sleep(5)
 
     async def read_holding_registers(
         self,
@@ -395,6 +456,19 @@ class DanthermModbus:
             )
         else:
             await self.__write_holding_registers(address, payload)
+
+    async def _read_holding_string(self, address: int, count: int) -> str | None:
+        result = await self.__read_holding_registers_with_retry(address, count)
+        if result is None or self._client is None:
+            return None
+        # Convert list of registers to bytes, then parse as ASCII string
+        result = b"".join(
+            register.to_bytes(2, byteorder="little") for register in result
+        )
+        converted = parse_ascii_string_from_data(result)
+        if converted is not None:
+            return converted.strip()
+        return None
 
     def _to_hex(self, value: int | str) -> str:
         """Convert value to hex string."""

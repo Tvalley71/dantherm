@@ -8,25 +8,45 @@
           "manufacturer": "Fabrikant"
         }
       },
-      "discovery_option": {
-        "title": "Discovery",
-        "description": "Kies of automatische apparaatdetectie moet worden gebruikt.",
+      "connection_type": {
+        "title": "Verbindingstype",
+        "description": "Kies of u via TCP/IP of serieel (RTU) wilt verbinden.",
         "data": {
-          "use_discovery": "Gebruik automatische apparaatdetectie"
+          "connection_type": "Verbindingstype"
         }
       },
-      "user": {
-        "title": "Dantherm Configuration",
-        "description": "Configureer apparaatverbindingsinstellingen.",
+      "device_name": {
+        "title": "Apparaatnaam",
+        "description": "Stel een naam in voor uw Dantherm-apparaat. Deze naam wordt gebruikt om het apparaat in Home Assistant te identificeren.",
+        "data": {
+          "name": "Apparaatnaam"
+        }
+      },
+      "tcp": {
+        "title": "TCP-verbinding",
+        "description": "Voer het IP-adres en de poort van het Dantherm-apparaat in. Beschikbare apparaten op het netwerk worden automatisch ingevuld.",
         "data": {
           "host": "Apparaat IP-adres",
-          "name": "Voer prefix in voor de apparaat entiteiten",
           "port": "TCP-poortnummer"
+        }
+      },
+      "rtu": {
+        "title": "Seriële (RTU)-verbinding",
+        "description": "Configureer de seriële poort en Modbus RTU-parameters voor het Dantherm-apparaat.",
+        "data": {
+          "serial_port": "Pad van seriële apparaat",
+          "modbus_unit_id": "Modbus unit-ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Databits",
+          "parity": "Pariteit",
+          "stopbits": "Stopbits"
         }
       }
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
+      "invalid_serial_port": "Ongeldig pad van seriële apparaat.",
+      "required": "Dit veld is verplicht.",
       "cannot_connect": "Kan geen verbinding maken.",
       "already_configured": "Apparaat is al geconfigureerd."
     },
@@ -44,12 +64,25 @@
           "continue": "Doorgaan"
         }
       },
-      "network": {
-        "title": "Netwerkinstellingen",
-        "description": "Configureer apparaatverbinding en data-updatefrequentie.",
+      "tcp": {
+        "title": "TCP-verbindingsinstellingen",
+        "description": "Werk het IP-adres, de poort en de data-updatefrequentie van het Dantherm-apparaat bij.",
         "data": {
           "host": "Apparaat IP-adres",
           "port": "TCP-poortnummer",
+          "polling_speed": "Data-updatefrequentie"
+        }
+      },
+      "serial": {
+        "title": "Seriële (RTU)-verbindingsinstellingen",
+        "description": "Werk de seriële poort, Modbus RTU-parameters en data-updatefrequentie bij.",
+        "data": {
+          "serial_port": "Pad van seriële apparaat",
+          "modbus_unit_id": "Modbus unit-ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Databits",
+          "parity": "Pariteit",
+          "stopbits": "Stopbits",
           "polling_speed": "Data-updatefrequentie"
         }
       },
@@ -74,6 +107,7 @@
     },
     "error": {
       "invalid_host": "Ongeldige host of IP-adres.",
+      "invalid_serial_port": "Ongeldig pad van seriële apparaat.",
       "invalid_entity": "Ongeldige entiteit-ID. Voer een geldige binaire sensor of invoer-boolean in."
     },
     "abort": {

@@ -8,25 +8,45 @@
           "manufacturer": "Producent"
         }
       },
-      "discovery_option": {
-        "title": "Discovery",
-        "description": "Vælg om der skal anvendes automatisk enhedsopdagelse.",
+      "connection_type": {
+        "title": "Forbindelsestype",
+        "description": "Vælg om forbindelsen skal være via TCP/IP eller seriel (RTU).",
         "data": {
-          "use_discovery": "Anvend automatisk enhedsopdagelse"
+          "connection_type": "Forbindelsestype"
         }
       },
-      "user": {
-        "title": "Dantherm Configuration",
-        "description": "Konfigurer enhedens forbindelsesindstillinger.",
+      "device_name": {
+        "title": "Enhedsnavn",
+        "description": "Angiv et navn til din Dantherm-enhed. Navnet bruges til at identificere enheden i Home Assistant.",
+        "data": {
+          "name": "Enhedsnavn"
+        }
+      },
+      "tcp": {
+        "title": "TCP-forbindelse",
+        "description": "Indtast IP-adresse og port for Dantherm-enheden. Tilgængelige enheder på netværket udfyldes automatisk.",
         "data": {
           "host": "Enhedens IP-adresse",
-          "name": "Indtast prefix til din enheds entiteter",
           "port": "TCP-portnummer"
+        }
+      },
+      "rtu": {
+        "title": "Seriel (RTU)-forbindelse",
+        "description": "Konfigurer den serielle port og Modbus RTU-parametre for Dantherm-enheden.",
+        "data": {
+          "serial_port": "Seriel enhedssti",
+          "modbus_unit_id": "Modbus unit ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Databits",
+          "parity": "Paritet",
+          "stopbits": "Stopbits"
         }
       }
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
+      "invalid_serial_port": "Ugyldig seriel enhedssti.",
+      "required": "Dette felt er påkrævet.",
       "cannot_connect": "Kan ikke oprette forbindelse.",
       "already_configured": "Enhed er allerede konfigureret."
     },
@@ -44,12 +64,25 @@
           "continue": "Fortsæt"
         }
       },
-      "network": {
-        "title": "Netværksindstillinger",
-        "description": "Konfigurer enhedsforbindelse og dataopdateringsfrekvens.",
+      "tcp": {
+        "title": "TCP-forbindelsesindstillinger",
+        "description": "Opdater IP-adresse, port og dataopdateringsfrekvens for Dantherm-enheden.",
         "data": {
           "host": "Enhedens IP-adresse",
           "port": "TCP-portnummer",
+          "polling_speed": "Dataopdateringsfrekvens"
+        }
+      },
+      "serial": {
+        "title": "Seriel (RTU)-forbindelsesindstillinger",
+        "description": "Opdater seriel port, Modbus RTU-parametre og dataopdateringsfrekvens.",
+        "data": {
+          "serial_port": "Seriel enhedssti",
+          "modbus_unit_id": "Modbus unit ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Databits",
+          "parity": "Paritet",
+          "stopbits": "Stopbits",
           "polling_speed": "Dataopdateringsfrekvens"
         }
       },
@@ -74,6 +107,7 @@
     },
     "error": {
       "invalid_host": "Ugyldig host eller IP-adresse.",
+      "invalid_serial_port": "Ugyldig seriel enhedssti.",
       "invalid_entity": "Ugyldigt enheds-ID. Indtast venligst en gyldig binær sensor eller input boolean."
     },
     "abort": {

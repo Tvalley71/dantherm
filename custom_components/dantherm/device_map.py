@@ -42,6 +42,15 @@ REQUIRED_PYMODBUS_VERSION = "3.7.4"
 REQUIRED_FIRMWARE_2 = 2.70
 REQUIRED_FIRMWARE_3 = 3.08
 
+# Conection configuration constants
+CONF_CONNECTION_TYPE = "connection_type"
+CONF_SERIAL_PORT = "serial_port"
+CONF_MODBUS_UNIT_ID = "modbus_unit_id"
+CONF_BAUDRATE = "baudrate"
+CONF_BYTESIZE = "bytesize"
+CONF_PARITY = "parity"
+CONF_STOPBITS = "stopbits"
+
 # Polling interval constants
 SCAN_INTERVAL_FAST = 10  # Fast polling - legacy default, good for real-time monitoring
 SCAN_INTERVAL_NORMAL = 30  # Normal polling - current default for new installations

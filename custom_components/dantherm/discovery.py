@@ -13,6 +13,8 @@ from typing import Any
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 
+from .modbus import parse_ascii_string_from_data
+
 # Default broadcast address if not specified
 DISCOVERY_BROADCAST_DEFAULT = "255.255.255.255"
 # UDP port used by devices for discovery
@@ -47,25 +49,6 @@ def _get_subnet(ip: str) -> str:
     return ""
 
 
-def _parse_name_from_reply(data: bytes) -> str | None:
-    """Parse the device name from a UDP reply.
-
-    Replies start with the ASCII name (null-terminated).
-    """
-    if not data:
-        return None
-    end = data.find(b"\x00")
-    if end == -1:
-        end = min(len(data), 32)
-    try:
-        name = data[:end].decode("ascii", errors="ignore").strip()
-        if name:
-            return name
-    except UnicodeDecodeError:
-        pass
-    return None
-
-
 async def _async_get_local_ips(hass: HomeAssistant) -> list[str]:
     """Return all IPv4 addresses for Home Assistant host."""
     adapters = await network.async_get_adapters(hass)
@@ -92,7 +75,7 @@ class _UdpProto(asyncio.DatagramProtocol):
         # Ignore own packets
         if ip in self.local_ips:
             return
-        name = _parse_name_from_reply(data)
+        name = parse_ascii_string_from_data(data)
         # Store first discovery from each IP
         self.by_ip.setdefault(
             ip,

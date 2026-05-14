@@ -8,25 +8,45 @@
           "manufacturer": "Hersteller"
         }
       },
-      "discovery_option": {
-        "title": "Discovery",
-        "description": "Wählen Sie, ob die automatische Gerätesuche verwendet werden soll.",
+      "connection_type": {
+        "title": "Verbindungstyp",
+        "description": "Wählen Sie, ob die Verbindung über TCP/IP oder seriell (RTU) erfolgen soll.",
         "data": {
-          "use_discovery": "Automatische Gerätesuche verwenden"
+          "connection_type": "Verbindungstyp"
         }
       },
-      "user": {
-        "title": "Dantherm-Konfiguration",
-        "description": "Konfigurieren Sie die Geräteverbindungseinstellungen.",
+      "device_name": {
+        "title": "Gerätename",
+        "description": "Legen Sie einen Namen für Ihr Dantherm-Gerät fest. Dieser Name wird zur Identifizierung in Home Assistant verwendet.",
+        "data": {
+          "name": "Gerätename"
+        }
+      },
+      "tcp": {
+        "title": "TCP-Verbindung",
+        "description": "Geben Sie IP-Adresse und Port des Dantherm-Geräts ein. Verfügbare Geräte im Netzwerk werden automatisch vorausgefüllt.",
         "data": {
           "host": "Geräte-IP-Adresse",
-          "name": "Geben Sie ein Präfix für die Geräte-Entitäten ein.",
           "port": "TCP-Portnummer"
+        }
+      },
+      "rtu": {
+        "title": "Serielle (RTU)-Verbindung",
+        "description": "Konfigurieren Sie den seriellen Port und die Modbus-RTU-Parameter für das Dantherm-Gerät.",
+        "data": {
+          "serial_port": "Pfad zum seriellen Gerät",
+          "modbus_unit_id": "Modbus Unit-ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Datenbits",
+          "parity": "Parität",
+          "stopbits": "Stoppbits"
         }
       }
     },
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "invalid_serial_port": "Ungültiger Pfad zum seriellen Gerät.",
+      "required": "Dieses Feld ist erforderlich.",
       "cannot_connect": "Verbindung zum Gerät nicht möglich.",
       "already_configured": "Gerät ist bereits konfiguriert."
     },
@@ -44,12 +64,25 @@
           "continue": "Weiter"
         }
       },
-      "network": {
-        "title": "Netzwerkeinstellungen",
-        "description": "Konfigurieren Sie die Geräteverbindung und Datenaktualisierungsfrequenz.",
+      "tcp": {
+        "title": "TCP-Verbindungseinstellungen",
+        "description": "Aktualisieren Sie IP-Adresse, Port und Datenaktualisierungsfrequenz für das Dantherm-Gerät.",
         "data": {
           "host": "Geräte-IP-Adresse",
           "port": "TCP-Portnummer",
+          "polling_speed": "Datenaktualisierungsfrequenz"
+        }
+      },
+      "serial": {
+        "title": "Serielle (RTU)-Verbindungseinstellungen",
+        "description": "Aktualisieren Sie seriellen Port, Modbus-RTU-Parameter und Datenaktualisierungsfrequenz.",
+        "data": {
+          "serial_port": "Pfad zum seriellen Gerät",
+          "modbus_unit_id": "Modbus Unit-ID",
+          "baudrate": "Baudrate",
+          "bytesize": "Datenbits",
+          "parity": "Parität",
+          "stopbits": "Stoppbits",
           "polling_speed": "Datenaktualisierungsfrequenz"
         }
       },
@@ -74,6 +107,7 @@
     },
     "error": {
       "invalid_host": "Ungültiger Host oder ungültige IP-Adresse.",
+      "invalid_serial_port": "Ungültiger Pfad zum seriellen Gerät.",
       "invalid_entity": "Ungültige Entitäts-ID. Bitte geben Sie einen gültigen binären Sensor oder einen Input-Boolean ein."
     },
     "abort": {

@@ -23,19 +23,36 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_MODBUS_UNIT_ID,
+    DEFAULT_NAME,
+    DEFAULT_RTU_BAUDRATE,
+    DEFAULT_RTU_BYTESIZE,
+    DEFAULT_RTU_PARITY,
+    DEFAULT_RTU_STOPBITS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from .device import DanthermDevice
 from .device_map import (
     ATTR_CALENDAR,
+    CONF_BAUDRATE,
     CONF_BOOST_MODE_TRIGGER,
+    CONF_BYTESIZE,
+    CONF_CONNECTION_TYPE,
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
+    CONF_MODBUS_UNIT_ID,
+    CONF_PARITY,
+    CONF_SERIAL_PORT,
+    CONF_STOPBITS,
     REQUIRED_PYMODBUS_VERSION,
 )
 from .discovery import async_discover
 from .helpers import get_primary_entry_id, is_primary_entry
+from .modbus import DEFAULT_CONNECTION_TYPE, MODBUS_CONNECTION_TYPE_RTU
 from .notifications import async_create_exception_notification
 from .services import async_setup_services
 
@@ -52,8 +69,17 @@ _LOGGER = logging.getLogger(__name__)
 DANTHERM_MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT): cv.string,
+        vol.Optional(CONF_CONNECTION_TYPE, default=DEFAULT_CONNECTION_TYPE): cv.string,
+        vol.Optional(CONF_SERIAL_PORT): cv.string,
+        vol.Optional(
+            CONF_MODBUS_UNIT_ID, default=DEFAULT_MODBUS_UNIT_ID
+        ): cv.positive_int,
+        vol.Optional(CONF_BAUDRATE, default=DEFAULT_RTU_BAUDRATE): cv.positive_int,
+        vol.Optional(CONF_BYTESIZE, default=DEFAULT_RTU_BYTESIZE): vol.Any(5, 6, 7, 8),
+        vol.Optional(CONF_PARITY, default=DEFAULT_RTU_PARITY): vol.Any("E", "O", "N"),
+        vol.Optional(CONF_STOPBITS, default=DEFAULT_RTU_STOPBITS): vol.Any(1, 2),
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
@@ -275,8 +301,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data.setdefault(ATTR_SETUP_ATTEMPTS, 0)
 
     name = entry.data[CONF_NAME]
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    connection_type = entry.data.get(CONF_CONNECTION_TYPE, DEFAULT_CONNECTION_TYPE)
+    host = entry.data.get(CONF_HOST, "")
+    port: int | str = entry.data.get(CONF_PORT, 502)
+    modbus_unit_id = entry.data.get(CONF_MODBUS_UNIT_ID, DEFAULT_MODBUS_UNIT_ID)
+    serial_port = entry.data.get(CONF_SERIAL_PORT, "")
+    baudrate = entry.data.get(CONF_BAUDRATE, DEFAULT_RTU_BAUDRATE)
+    bytesize = entry.data.get(CONF_BYTESIZE, DEFAULT_RTU_BYTESIZE)
+    parity = entry.data.get(CONF_PARITY, DEFAULT_RTU_PARITY)
+    stopbits = entry.data.get(CONF_STOPBITS, DEFAULT_RTU_STOPBITS)
+
+    if connection_type == MODBUS_CONNECTION_TYPE_RTU:
+        host = serial_port
+        port = serial_port
 
     # Migration: Handle old scan_interval values for existing users
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
@@ -295,12 +332,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Setup %s.%s", DOMAIN, name)
 
     # Try to connect to the device at the configured address
-    device = DanthermDevice(hass, name, host, port, 1, scan_interval, entry)
+    device = DanthermDevice(
+        hass,
+        name,
+        host,
+        port,
+        modbus_unit_id,
+        scan_interval,
+        entry,
+        connection_type,
+        baudrate,
+        bytesize,
+        parity,
+        stopbits,
+    )
     try:
         coordinator = await device.async_init_and_connect()
         if coordinator is None:
             raise ConfigEntryNotReady("Failed to create coordinator")
     except ValueError as ex:
+        if connection_type == MODBUS_CONNECTION_TYPE_RTU:
+            raise ConfigEntryNotReady(f"Timeout while connecting {serial_port}") from ex
+
         if entry_data[ATTR_SETUP_ATTEMPTS] <= DISCOVERY_TRIGGER_ATTEMPT:
             entry_data[ATTR_SETUP_ATTEMPTS] += 1
         if entry_data[ATTR_SETUP_ATTEMPTS] == DISCOVERY_TRIGGER_ATTEMPT:
@@ -324,7 +377,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.debug("Serial from device registry: %s", expected_serial)
 
                 test_device = DanthermDevice(
-                    hass, name, ip, port, 1, scan_interval, entry
+                    hass,
+                    name,
+                    ip,
+                    port,
+                    modbus_unit_id,
+                    scan_interval,
+                    entry,
+                    connection_type,
+                    baudrate,
+                    bytesize,
+                    parity,
+                    stopbits,
                 )
 
                 try:
@@ -478,7 +542,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if domain_data.get(ATTR_CALENDAR) is not None:
             try:
                 owner_id = getattr(domain_data[ATTR_CALENDAR], "_config_entry_id", None)
-            except (AttributeError, TypeError):
+            except AttributeError, TypeError:
                 owner_id = None
             if owner_id == entry.entry_id:
                 domain_data.pop(ATTR_CALENDAR, None)

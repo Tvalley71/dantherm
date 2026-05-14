@@ -15,7 +15,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .adaptive_manager import DanthermAdaptiveManager
-from .const import DEFAULT_NAME, DEVICE_TYPES
+from .const import (
+    DEFAULT_NAME,
+    DEFAULT_RTU_BAUDRATE,
+    DEFAULT_RTU_BYTESIZE,
+    DEFAULT_RTU_PARITY,
+    DEFAULT_RTU_STOPBITS,
+    DEVICE_TYPES,
+)
 from .coordinator import DanthermCoordinator
 from .device_map import (
     ATTR_AIR_QUALITY,
@@ -58,6 +65,7 @@ from .device_map import (
     DanthermEntityDescription,
 )
 from .modbus import (
+    DEFAULT_CONNECTION_TYPE,
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
     MODBUS_REGISTER_AIR_QUALITY_HIGH_THRESHOLD,
@@ -91,6 +99,7 @@ from .modbus import (
     MODBUS_REGISTER_SERIAL_NUMBER,
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
+    MODBUS_REGISTER_SYSTEM_NAME,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
     ABSwitchPosition,
     DanthermModbus,
@@ -136,10 +145,15 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         hass: HomeAssistant,
         name: str,
         host: str,
-        port: int,
+        port: int | str,
         unit_id: int,
         scan_interval: int,
         config_entry: ConfigEntry | None,
+        connection_type: str = DEFAULT_CONNECTION_TYPE,
+        baudrate: int = DEFAULT_RTU_BAUDRATE,
+        bytesize: int = DEFAULT_RTU_BYTESIZE,
+        parity: str = DEFAULT_RTU_PARITY,
+        stopbits: int = DEFAULT_RTU_STOPBITS,
     ) -> None:
         """Init device."""
         super().__init__(
@@ -147,6 +161,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             host,
             port,
             unit_id,
+            connection_type,
+            baudrate,
+            bytesize,
+            parity,
+            stopbits,
         )
         # Only initialize adaptive manager if we have a config_entry
         if config_entry is not None:
@@ -693,6 +712,14 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             "fan_level": self._fan_level,
             "preset_mode": preset_mode,
         }
+
+    async def async_get_system_name(self) -> str | None:
+        """Get system name."""
+
+        system_name = await self._read_holding_string(MODBUS_REGISTER_SYSTEM_NAME, 16)
+        if system_name:
+            return system_name
+        return None
 
     async def async_get_current_unit_mode(self) -> int | None:
         """Get current unit mmode."""
