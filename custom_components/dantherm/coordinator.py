@@ -210,11 +210,16 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         for entity in self._entities:
             key = getattr(entity, "key", entity.entity_id)
-            if key in (ATTR_ACTIONS_PENDING, entity_key) and entity not in entities_to_refresh:
+            if (
+                key in (ATTR_ACTIONS_PENDING, entity_key)
+                and entity not in entities_to_refresh
+            ):
                 entities_to_refresh.append(entity)
 
         for entity in entities_to_refresh:
-            handle_coordinator_update = getattr(entity, "_handle_coordinator_update", None)
+            handle_coordinator_update = getattr(
+                entity, "_handle_coordinator_update", None
+            )
             if callable(handle_coordinator_update):
                 handle_coordinator_update()
             else:
@@ -313,9 +318,12 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 # then wait for all backend writes to finish
                 await self._wait_for_backend_drain()
                 # finally, set the future’s result
-                fut.set_result(result)
-            except Exception as exc:  # noqa: BLE001
-                fut.set_exception(exc)
+                if not fut.done():  # check if future is not already done (e.g. by a timeout/exception/cancellation)
+                    fut.set_result(result)
+            except Exception as exc:
+                if not fut.done():  # check if future is not already done
+                    fut.set_exception(exc)
+                _LOGGER.exception("Frontend task failed: %s", func.__name__)
             finally:
                 self._frontend_queue.task_done()
 
