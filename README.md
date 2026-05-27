@@ -623,6 +623,8 @@ This can be useful in automations, scripts, and dashboards where you want to dis
 > [!NOTE]
 > Pending is not cleared immediately after a write operation, but after a later refresh cycle.
 
+https://github.com/user-attachments/assets/96a14937-46b2-47fa-ade3-e37c57028b56
+
 
 ## Integration enhancements
 
