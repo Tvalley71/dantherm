@@ -115,6 +115,7 @@ Thanks to _Smartzeug_
 
 | Entity                        | Description                          |
 |-------------------------------|--------------------------------------|
+| `actions_pending`             | Indicates whether one or more write actions are queued, in progress, or awaiting a follow-up refresh |
 | `air_quality`                 | Measures air quality if the unit is equipped with a VOC or CO₂ sensor [[1]](#entity-notes) |
 | `air_quality_level`           | Indicates the qualitative level of air quality (Clean, Polluted, etc.) [[2]](#entity-notes) |
 | `alarm`                       | Reports active alarms such as fan or temperature alarms |
@@ -607,6 +608,20 @@ Starting from version _0.4.17_ of the integration, the actions have been reorgan
 <img width="1200" height="691" alt="Skærmbillede 02-11-2025 kl  12 04 43 PM" src="https://github.com/user-attachments/assets/ca4e8d39-523f-49b6-bb3a-d3c8ab703dfe" />
 
 <img width="1200" height="513" alt="Skærmbillede 02-11-2025 kl  12 05 09 PM" src="https://github.com/user-attachments/assets/852e221d-5e8e-4dcb-9b15-632eaee4e9b9" />
+
+### Pending write operations
+
+The integration tracks pending write operations for supported entities, including direct writes from Home Assistant entities and changes made through the Dantherm actions.
+
+- **`binary_sensor.dantherm_actions_pending`** is on while one or more write actions are queued, being processed, or awaiting a follow-up refresh.
+- Supported entities expose an extra **`pending`** attribute:
+  - `true` = a change has been requested, but the updated state is still awaiting a follow-up refresh
+  - `false` = no pending change is currently tracked for that entity
+
+This can be useful in automations, scripts, and dashboards where you want to distinguish between a requested change and a later refreshed state.
+
+> [!NOTE]
+> Pending is not cleared immediately after a write operation, but after a later refresh cycle.
 
 
 ## Integration enhancements
