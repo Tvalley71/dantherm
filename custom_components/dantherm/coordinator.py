@@ -96,6 +96,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         # Event to wake backend processor
         self._backend_event = asyncio.Event()
         self._backend_busy = False
+        self._shutdown_requested = False
 
         # Pending action tracking
         self._pending_actions: dict[str, PendingActionState] = {}
@@ -124,8 +125,39 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         }
 
         # Start processors
-        hass.loop.create_task(self._process_frontend())
-        hass.loop.create_task(self._process_backend())
+        self._frontend_task = hass.loop.create_task(self._process_frontend())
+        self._backend_task = hass.loop.create_task(self._process_backend())
+
+    async def async_shutdown(self) -> None:
+        """Stop background queue processors and fail queued work."""
+        if self._shutdown_requested:
+            return
+
+        self._shutdown_requested = True
+
+        while not self._frontend_queue.empty():
+            _, _, _, fut = self._frontend_queue.get_nowait()
+            if not fut.done():
+                fut.cancel()
+            self._frontend_queue.task_done()
+
+        while self._backend_queue:
+            _, _, _, fut = self._backend_queue.popleft()
+            if not fut.done():
+                fut.cancel()
+
+        self._backend_event.set()
+
+        tasks = [
+            task
+            for task in (self._frontend_task, self._backend_task)
+            if not task.done()
+        ]
+        for task in tasks:
+            task.cancel()
+
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     def schedule_reload(self) -> None:
         """Flag the integration to reload on the next update."""
@@ -310,7 +342,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     async def _process_frontend(self) -> None:
         """Run frontend tasks in sequence, waiting for backend writes after each."""
         while True:
-            func, args, kwargs, fut = await self._frontend_queue.get()
+            try:
+                func, args, kwargs, fut = await self._frontend_queue.get()
+            except asyncio.CancelledError:
+                return
             try:
                 _LOGGER.debug("Frontend: executing %s", func.__name__)
                 # run the user-level coroutine
@@ -320,6 +355,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 # finally, set the future’s result
                 if not fut.done():  # check if future is not already done (e.g. by a timeout/exception/cancellation)
                     fut.set_result(result)
+            except asyncio.CancelledError:
+                if not fut.done():
+                    fut.cancel()
+                raise
             except Exception as exc:
                 if not fut.done():  # check if future is not already done
                     fut.set_exception(exc)
@@ -339,7 +378,17 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         """Sequentially execute raw Modbus writes with locking + delay."""
         while True:
             # Wait until at least one write is enqueued
-            await self._backend_event.wait()
+            try:
+                await self._backend_event.wait()
+            except asyncio.CancelledError:
+                return
+
+            if not self._backend_queue:
+                if self._shutdown_requested:
+                    return
+                self._backend_event.clear()
+                continue
+
             func, args, kwargs, fut = self._backend_queue.popleft()
             if not self._backend_queue:
                 self._backend_event.clear()
@@ -352,6 +401,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                         result = await func(*args, **kwargs)
                         if fut:
                             fut.set_result(result)
+                    except asyncio.CancelledError:
+                        if fut and not fut.done():
+                            fut.cancel()
+                        raise
                     except Exception as exc:
                         _LOGGER.exception("Backend write failed")
                         if fut:
@@ -396,6 +449,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if (
             not self._entities
         ):  # disconnect and close modbus connection if no more entities
+            await self.async_shutdown()
             await self.hub.disconnect_and_close()
 
     def get_entity(self, entity_id: str) -> Entity | None:
