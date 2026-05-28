@@ -282,11 +282,12 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return DanthermOptionsFlowHandler(config_entry)
 
 
-class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
+class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
     """Handle Dantherm options."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
+        self._pending_options: dict[str, Any] = dict(config_entry.options)
 
     def _get_polling_speed_from_interval(self, interval: int) -> str:
         """Convert scan interval to polling speed option."""
@@ -414,7 +415,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> ConfigFlowResult:
         """Configure adaptive mode triggers and calendar linking."""
         errors: dict[str, str] = {}
-        options = dict(self.config_entry.options)
+        options = dict(self._pending_options)
 
         schema_dict: dict[vol.Optional, Any] = {
             vol.Optional(
@@ -463,11 +464,17 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
                         errors[entity_key] = "invalid_entity"
 
             if not errors:
-                # Update options
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    options={**options, **user_input},
-                )
+                new_options = {**options, **user_input}
+
+                # Optional checkbox fields can be omitted when unchecked.
+                # Persist explicit booleans to avoid stale True values.
+                if not is_primary_entry(self.hass, self.config_entry.entry_id):
+                    new_options[CONF_LINK_TO_PRIMARY_CALENDAR] = bool(
+                        user_input.get(CONF_LINK_TO_PRIMARY_CALENDAR, False)
+                    )
+
+                # Keep in-memory until final step submits all options at once.
+                self._pending_options = new_options
                 # Go to next step
                 return await self.async_step_advanced()
 
@@ -479,7 +486,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure advanced options."""
-        options = dict(self.config_entry.options)
+        options = dict(self._pending_options)
 
         schema = vol.Schema(
             {
@@ -495,13 +502,18 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         if user_input is not None:
-            # Update options and reload
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                options={**options, **user_input},
+            new_options = {**options, **user_input}
+
+            # Optional checkbox fields can be omitted when unchecked.
+            # Persist explicit booleans to avoid stale True values.
+            new_options[CONF_DISABLE_TEMPERATURE_UNKNOWN] = bool(
+                user_input.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False)
             )
-            # Reload this entry so settings apply
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title="", data={})
+            new_options[CONF_DISABLE_NOTIFICATIONS] = bool(
+                user_input.get(CONF_DISABLE_NOTIFICATIONS, False)
+            )
+
+            # Return options so HA persists atomically and auto-reloads entry.
+            return self.async_create_entry(title="", data=new_options)
 
         return self.async_show_form(step_id="advanced", data_schema=schema)

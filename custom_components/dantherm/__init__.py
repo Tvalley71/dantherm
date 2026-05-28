@@ -262,7 +262,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If options are empty, initialize them with defaults
     if not options:
         _LOGGER.warning("No stored options found, initializing defaults")
-        hass.config_entries.async_update_entry(entry, options=DEFAULT_OPTIONS)
+        options = dict(DEFAULT_OPTIONS)
+        hass.config_entries.async_update_entry(entry, options=options)
 
     _LOGGER.debug("Loading stored options in setup: %s", options)
 
