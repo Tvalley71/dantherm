@@ -359,6 +359,76 @@ async def test_options_flow_advanced_unchecked_booleans_persist_false(
 
 @pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
+async def test_options_flow_network_only_change_still_schedules_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Changing entry data in options flow should still schedule a reload."""
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
+        options={
+            "boost_mode_trigger": "",
+            "eco_mode_trigger": "",
+            "home_mode_trigger": "",
+            CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
+            CONF_DISABLE_NOTIFICATIONS: False,
+        },
+        unique_id="SERIAL-2B",
+        entry_id="entry-2b",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        init_result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert init_result["type"] is FlowResultType.FORM
+        assert init_result["step_id"] == "init"
+
+        network_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={"continue": True},
+        )
+        assert network_result["type"] is FlowResultType.FORM
+        assert network_result["step_id"] == "network"
+
+        triggers_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                CONF_HOST: "9.9.9.9",
+                CONF_PORT: DEFAULT_PORT,
+                "polling_speed": "normal",
+            },
+        )
+        assert triggers_result["type"] is FlowResultType.FORM
+        assert triggers_result["step_id"] == "triggers"
+
+        advanced_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                "boost_mode_trigger": "",
+                "eco_mode_trigger": "",
+                "home_mode_trigger": "",
+            },
+        )
+        assert advanced_result["type"] is FlowResultType.FORM
+        assert advanced_result["step_id"] == "advanced"
+
+        done_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={},
+        )
+        assert done_result["type"] is FlowResultType.CREATE_ENTRY
+        assert schedule_reload.called
+        assert entry.data[CONF_HOST] == "9.9.9.9"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.asyncio
 async def test_user_flow_discovery_selects_new_device(hass: HomeAssistant) -> None:
     """Test that discovery returns only unconfigured device and populates host selection."""
     # Wait for integration to be loaded

@@ -288,6 +288,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self._pending_options: dict[str, Any] = dict(config_entry.options)
+        self._network_data_changed = False
 
     def _get_polling_speed_from_interval(self, interval: int) -> str:
         """Convert scan interval to polling speed option."""
@@ -399,6 +400,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
                     # Keep existing custom interval (preserve current value)
                     new_data[CONF_SCAN_INTERVAL] = current_scan_interval
 
+                self._network_data_changed = new_data != self.config_entry.data
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=new_data,
@@ -512,6 +514,9 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
             new_options[CONF_DISABLE_NOTIFICATIONS] = bool(
                 user_input.get(CONF_DISABLE_NOTIFICATIONS, False)
             )
+
+            if self._network_data_changed and new_options == self.config_entry.options:
+                self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
             # Return options so HA persists atomically and auto-reloads entry.
             return self.async_create_entry(title="", data=new_options)
