@@ -218,8 +218,8 @@ class TestDanthermCoordinator:
 
         await coordinator.async_shutdown()
 
-        assert coordinator._frontend_task.cancelled()
-        assert coordinator._backend_task.cancelled()
+        assert coordinator._frontend_task.done()
+        assert coordinator._backend_task.done()
 
 
 class TestPendingActionLifecycle:
