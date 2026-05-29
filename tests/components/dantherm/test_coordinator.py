@@ -1,26 +1,19 @@
 """Test the Dantherm coordinator."""
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import config.custom_components.dantherm.coordinator as coordinator_mod
-from config.custom_components.dantherm.coordinator import (
-    DanthermCoordinator,
-    PendingActionState,
-)
+from config.custom_components.dantherm.coordinator import DanthermCoordinator
 from config.custom_components.dantherm.device_map import (
-    ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
     ATTR_ACTIONS_PENDING,
-    ATTR_AWAY_MODE,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
-    ActiveUnitMode,
 )
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -152,10 +145,13 @@ class TestDanthermCoordinator:
         # Initialize data dict and mock disconnect to prevent errors
         coordinator.data = {}
         mock_hub.disconnect_and_close = AsyncMock()
+        coordinator.async_shutdown = AsyncMock()
 
         # Test removing entity (will call disconnect when no entities left)
         await coordinator.async_remove_entity(mock_entity)
         assert mock_entity not in coordinator._entities
+        coordinator.async_shutdown.assert_awaited_once()
+        mock_hub.disconnect_and_close.assert_awaited_once()
 
         await _cancel_coordinator_tasks()
 
@@ -206,6 +202,26 @@ class TestDanthermCoordinator:
         # Test entity installed
         assert coordinator.is_entity_installed("test_entity")
 
+        await _cancel_coordinator_tasks()
+
+    async def test_coordinator_async_shutdown_cancels_background_tasks(
+        self, hass: HomeAssistant, mock_hub, mock_config_entry
+    ) -> None:
+        """Test coordinator shutdown cancels processor tasks."""
+        coordinator = DanthermCoordinator(
+            hass=hass,
+            name="TestDevice",
+            hub=mock_hub,
+            scan_interval=30,
+            config_entry=mock_config_entry,
+        )
+
+        await coordinator.async_shutdown()
+
+        assert coordinator._frontend_task.done()
+        assert coordinator._backend_task.done()
+
+
 class TestPendingActionLifecycle:
     """Tests for coordinator pending-action state machine."""
 
@@ -214,13 +230,16 @@ class TestPendingActionLifecycle:
         """Return a coordinator with a short write_delay for fast tests."""
         import asyncio
         from unittest.mock import MagicMock
+
         from homeassistant.config_entries import ConfigEntry
 
         mock_hass = MagicMock()
         mock_hass.data = {}
 
         mock_hass.loop = MagicMock()
-        mock_hass.loop.create_task = MagicMock(return_value=MagicMock(spec=asyncio.Task))
+        mock_hass.loop.create_task = MagicMock(
+            return_value=MagicMock(spec=asyncio.Task)
+        )
         mock_hass.loop.create_future = asyncio.get_running_loop().create_future
 
         entry = ConfigEntry(
@@ -262,7 +281,7 @@ class TestPendingActionLifecycle:
     ) -> None:
         """Pending clears only when BOTH delay + next cycle are satisfied."""
 
-        t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
         current_time = {"now": t0}
 
         monkeypatch.setattr(coordinator_mod, "ha_now", lambda: current_time["now"])
@@ -363,7 +382,9 @@ class TestPendingActionLifecycle:
         entity.extra_state_attributes = {"existing": "value"}
         coordinator._pending_supported_keys.add("test_action")
 
-        monkeypatch.setattr(coordinator, "is_entity_pending", MagicMock(return_value=True))
+        monkeypatch.setattr(
+            coordinator, "is_entity_pending", MagicMock(return_value=True)
+        )
 
         pending_attr_name = getattr(coordinator_mod, "ATTR_PENDING", "pending")
         inject_pending = coordinator._inject_pending_attr
