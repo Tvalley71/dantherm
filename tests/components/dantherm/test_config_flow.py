@@ -25,16 +25,28 @@ try:
         DOMAIN,
     )
     from config.custom_components.dantherm.device import DanthermDevice
+    from config.custom_components.dantherm.device_map import (
+        CONF_DISABLE_NOTIFICATIONS,
+        CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    )
 except ImportError:
     # Fallback for custom integration tests
-    from custom_components.dantherm.config_flow import DanthermConfigFlow  # type: ignore[import-untyped]
+    from custom_components.dantherm.config_flow import (
+        DanthermConfigFlow,  # type: ignore[import-untyped]
+    )
     from custom_components.dantherm.const import (  # type: ignore[import-untyped]
         DEFAULT_NAME,
         DEFAULT_PORT,
         DEFAULT_SCAN_INTERVAL,
         DOMAIN,
     )
-    from custom_components.dantherm.device import DanthermDevice  # type: ignore[import-untyped]
+    from custom_components.dantherm.device import (
+        DanthermDevice,  # type: ignore[import-untyped]
+    )
+    from custom_components.dantherm.device_map import (  # type: ignore[import-untyped]
+        CONF_DISABLE_NOTIFICATIONS,
+        CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    )
 
 
 @pytest.fixture
@@ -189,7 +201,7 @@ async def test_user_flow_cannot_connect(
         mock_connect.assert_called_once()
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
 @pytest.mark.asyncio
 async def test_options_flow_update_and_reload(
     hass: HomeAssistant,
@@ -212,28 +224,207 @@ async def test_options_flow_update_and_reload(
     entry.add_to_hass(hass)
 
     with (
-        patch.object(hass.config_entries, "async_update_entry") as upd,
-        patch.object(hass.config_entries, "async_reload") as reload_entry,
+        patch.object(
+            hass.config_entries,
+            "async_update_entry",
+            wraps=hass.config_entries.async_update_entry,
+        ) as upd,
+        patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload,
     ):
         # Begin options flow
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
 
-        result2 = await hass.config_entries.options.async_configure(
+        network_result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"continue": True},
+        )
+        assert network_result["type"] is FlowResultType.FORM
+        assert network_result["step_id"] == "network"
+
+        triggers_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_HOST: "5.6.7.8",
                 CONF_PORT: DEFAULT_PORT,
-                # Test empty trigger values (should be allowed)
+                "polling_speed": "normal",
+            },
+        )
+        assert triggers_result["type"] is FlowResultType.FORM
+        assert triggers_result["step_id"] == "triggers"
+
+        advanced_result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
                 "boost_mode_trigger": "",
                 "eco_mode_trigger": "",
                 "home_mode_trigger": "",
             },
         )
+        assert advanced_result["type"] is FlowResultType.FORM
+        assert advanced_result["step_id"] == "advanced"
+
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         # Verify update entry called with new host in data
         assert upd.called
-        assert reload_entry.called
+        assert schedule_reload.called
+        assert entry.data[CONF_HOST] == "5.6.7.8"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.asyncio
+async def test_options_flow_advanced_unchecked_booleans_persist_false(
+    hass: HomeAssistant,
+) -> None:
+    """Unchecked advanced options should be persisted as explicit False values."""
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
+        options={
+            CONF_DISABLE_TEMPERATURE_UNKNOWN: True,
+            CONF_DISABLE_NOTIFICATIONS: True,
+        },
+        unique_id="SERIAL-2",
+        entry_id="entry-2",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_update_entry",
+            wraps=hass.config_entries.async_update_entry,
+        ) as upd,
+        patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload,
+    ):
+        init_result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert init_result["type"] is FlowResultType.FORM
+        assert init_result["step_id"] == "init"
+
+        network_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={"continue": True},
+        )
+        assert network_result["type"] is FlowResultType.FORM
+        assert network_result["step_id"] == "network"
+
+        triggers_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: DEFAULT_PORT,
+                "polling_speed": "normal",
+            },
+        )
+        assert triggers_result["type"] is FlowResultType.FORM
+        assert triggers_result["step_id"] == "triggers"
+
+        advanced_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                "boost_mode_trigger": "",
+                "eco_mode_trigger": "",
+                "home_mode_trigger": "",
+            },
+        )
+        assert advanced_result["type"] is FlowResultType.FORM
+        assert advanced_result["step_id"] == "advanced"
+
+        done_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
+                CONF_DISABLE_NOTIFICATIONS: False,
+            },
+        )
+        assert done_result["type"] is FlowResultType.CREATE_ENTRY
+        assert upd.called
+        assert schedule_reload.called
+
+        final_options = done_result["data"]
+        assert final_options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False) is False
+        assert final_options.get(CONF_DISABLE_NOTIFICATIONS, False) is False
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.asyncio
+async def test_options_flow_network_only_change_still_schedules_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Changing entry data in options flow should still schedule a reload."""
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
+        options={
+            "boost_mode_trigger": "",
+            "eco_mode_trigger": "",
+            "home_mode_trigger": "",
+            CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
+            CONF_DISABLE_NOTIFICATIONS: False,
+        },
+        unique_id="SERIAL-2B",
+        entry_id="entry-2b",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        init_result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert init_result["type"] is FlowResultType.FORM
+        assert init_result["step_id"] == "init"
+
+        network_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={"continue": True},
+        )
+        assert network_result["type"] is FlowResultType.FORM
+        assert network_result["step_id"] == "network"
+
+        triggers_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                CONF_HOST: "9.9.9.9",
+                CONF_PORT: DEFAULT_PORT,
+                "polling_speed": "normal",
+            },
+        )
+        assert triggers_result["type"] is FlowResultType.FORM
+        assert triggers_result["step_id"] == "triggers"
+
+        advanced_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={
+                "boost_mode_trigger": "",
+                "eco_mode_trigger": "",
+                "home_mode_trigger": "",
+            },
+        )
+        assert advanced_result["type"] is FlowResultType.FORM
+        assert advanced_result["step_id"] == "advanced"
+
+        done_result = await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={},
+        )
+        assert done_result["type"] is FlowResultType.CREATE_ENTRY
+        assert schedule_reload.called
+        assert entry.data[CONF_HOST] == "9.9.9.9"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
