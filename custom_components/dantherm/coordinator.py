@@ -134,6 +134,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             return
 
         self._shutdown_requested = True
+        await super().async_shutdown()
 
         while not self._frontend_queue.empty():
             _, _, _, fut = self._frontend_queue.get_nowait()
