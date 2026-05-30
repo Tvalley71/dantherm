@@ -439,6 +439,12 @@ class DanthermAdaptiveManager:
         if self._calendar is None:
             return
 
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive calendar processing while operation selection is pending"
+            )
+            return
+
         events = await self._calendar.async_get_active_events()
         # Check for events that have ended
         for event in self._active_calendar_events:
@@ -462,6 +468,12 @@ class DanthermAdaptiveManager:
         self, action: str, event: CalendarEvent
     ) -> None:
         """Update adaptive calendar state based on action."""
+
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive calendar state change while operation selection is pending"
+            )
+            return
 
         event_id = getattr(event, "uid", None)
         # Parse the event to get the target operation (use your translation/key lookup)
