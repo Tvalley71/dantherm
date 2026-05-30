@@ -457,3 +457,38 @@ class TestPendingActionLifecycle:
         coordinator._set_entity_state_by_description.assert_awaited_once_with(
             desc, True
         )
+
+    async def test_async_set_entity_state_by_key_fallback_marks_pending(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Fallback by-key writes should still toggle pending lifecycle state."""
+
+        import asyncio
+
+        def enqueue_frontend_immediate(coro_func, *args, **kwargs):
+            fut = asyncio.get_running_loop().create_future()
+            fut.set_result(None)
+            return fut
+
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
+
+        entity_key = "operation_selection"
+        desc = DanthermEntityDescription(
+            key=entity_key,
+            name="Operation Selection",
+            data_setinternal="operation_selection",
+        )
+        coordinator._all_descriptions[entity_key] = desc
+        coordinator._pending_supported_keys.add(entity_key)
+
+        pending_entity = MagicMock()
+        pending_entity.entity_id = "binary_sensor.actions_pending"
+        pending_entity.key = ATTR_ACTIONS_PENDING
+        pending_entity.async_write_ha_state = MagicMock()
+        coordinator._entities = [pending_entity]
+
+        await coordinator.async_set_entity_state_by_key(entity_key, "manual")
+
+        assert coordinator.has_pending_actions()
+        assert coordinator.is_entity_pending(entity_key)
+        assert pending_entity.async_write_ha_state.call_count >= 2
