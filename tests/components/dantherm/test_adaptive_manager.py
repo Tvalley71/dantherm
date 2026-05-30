@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from config.custom_components.dantherm.adaptive_manager import (
     AdaptiveEventStack,
     DanthermAdaptiveManager,
 )
+from config.custom_components.dantherm.device_map import ATTR_OPERATION_SELECTION
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -267,3 +268,51 @@ class TestEventStackIntegration:
         ):
             await adaptive_manager.async_set_up_adaptive_manager()
             mock_cleanup.assert_called_once()
+
+
+class TestAdaptivePendingBehavior:
+    """Test adaptive behavior while operation changes are pending."""
+
+    async def test_adaptive_target_operation_uses_coordinator_key_write(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Adaptive operation changes should go through coordinator by key."""
+
+        mock_coordinator = MagicMock()
+        mock_coordinator.async_set_entity_state_by_key = AsyncMock()
+
+        with patch.object(
+            DanthermAdaptiveManager,
+            "coordinator",
+            new_callable=PropertyMock,
+            return_value=mock_coordinator,
+        ):
+            await adaptive_manager._set_adaptive_target_operation("manual", "automatic")
+
+        mock_coordinator.async_set_entity_state_by_key.assert_awaited_once_with(
+            ATTR_OPERATION_SELECTION, "manual"
+        )
+
+    async def test_expired_events_skip_when_operation_selection_pending(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Expired adaptive events should wait until operation write is no longer pending."""
+
+        mock_coordinator = MagicMock()
+        mock_coordinator.is_entity_pending.return_value = True
+
+        with (
+            patch.object(
+                DanthermAdaptiveManager,
+                "coordinator",
+                new_callable=PropertyMock,
+                return_value=mock_coordinator,
+            ),
+            patch.object(adaptive_manager, "expired_event") as mock_expired,
+        ):
+            await adaptive_manager.async_process_expired_events()
+
+        mock_coordinator.is_entity_pending.assert_called_once_with(
+            ATTR_OPERATION_SELECTION
+        )
+        mock_expired.assert_not_called()
