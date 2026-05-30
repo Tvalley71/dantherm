@@ -20,6 +20,7 @@ from homeassistant.util.dt import now as ha_now
 from .device_map import (
     ACTION_PENDING_MIN_READ_DELAY_MILLISECONDS,
     ATTR_ACTIONS_PENDING,
+    ATTR_CALENDAR,
     BINARY_SENSORS,
     BUTTONS,
     COVERS,
@@ -270,6 +271,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         # adaptive state sensors.
         await self.hub.async_process_expired_events()
         await self.hub.async_update_adaptive_triggers()
+
+        # Calendar updates may also trigger writes through adaptive handling.
+        # Run them outside _rw_lock to avoid lock inversion with the backend writer.
+        if any(getattr(entity, "key", entity.entity_id) == ATTR_CALENDAR for entity in self._entities):
+            await self.hub.async_get_calendar()
 
         data: dict[str, Any] = {}
 
@@ -605,7 +611,11 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         ):
             state = None
         elif description.data_getinternal:
-            if hasattr(self.hub, f"async_get_{description.data_getinternal}"):
+            if description.key == ATTR_CALENDAR:
+                state = self.get_stored_entity_state(
+                    description.key, description.data_default
+                )
+            elif hasattr(self.hub, f"async_get_{description.data_getinternal}"):
                 state = await getattr(
                     self.hub, f"async_get_{description.data_getinternal}"
                 )()
