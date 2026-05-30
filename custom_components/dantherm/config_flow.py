@@ -422,13 +422,19 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
         schema_dict: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_BOOST_MODE_TRIGGER,
-                default=options.get(CONF_BOOST_MODE_TRIGGER, ""),
+                description={
+                    "suggested_value": options.get(CONF_BOOST_MODE_TRIGGER, "")
+                },
             ): str,
             vol.Optional(
-                CONF_ECO_MODE_TRIGGER, default=options.get(CONF_ECO_MODE_TRIGGER, "")
+                CONF_ECO_MODE_TRIGGER,
+                description={"suggested_value": options.get(CONF_ECO_MODE_TRIGGER, "")},
             ): str,
             vol.Optional(
-                CONF_HOME_MODE_TRIGGER, default=options.get(CONF_HOME_MODE_TRIGGER, "")
+                CONF_HOME_MODE_TRIGGER,
+                description={
+                    "suggested_value": options.get(CONF_HOME_MODE_TRIGGER, "")
+                },
             ): str,
         }
 
@@ -516,7 +522,9 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
             )
 
             if self._network_data_changed and new_options == self.config_entry.options:
-                self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
 
             # Return options so HA persists atomically and auto-reloads entry.
             return self.async_create_entry(title="", data=new_options)
