@@ -265,6 +265,14 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
         if not self._entities:
             return {}
 
+        # Keep adaptive event stack current before building entity states.
+        # This avoids a one-cycle delay where expired events still appear in
+        # adaptive state sensors.
+        await self.hub.async_process_expired_events()
+        await self.hub.async_update_adaptive_triggers()
+
+        data: dict[str, Any] = {}
+
         async with self._rw_lock:
             _LOGGER.debug("<<< UPDATE BEGIN - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
@@ -294,13 +302,8 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             # Read bypass maximum temperature
             await self.hub.async_get_bypass_maximum_temperature()
 
-            # Update adaptive state
-            await self.hub.async_update_adaptive_triggers()
-
             self._update_cycle += 1
             self._process_pending_transitions()
-
-            data: dict[str, Any] = {}
             for entity in self._entities:
                 await self.async_update_entity(entity, data)
 
@@ -317,9 +320,6 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
                 # Reset the flag
                 self._reload_on_update = False
-
-            # Process expired events
-            await self.hub.async_process_expired_events()
 
             _LOGGER.debug("<<< UPDATE END - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
 
@@ -521,10 +521,21 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
                 "executing write via description fallback",
                 entity_key,
             )
+
+            if self.supports_pending(entity_key):
+                self._mark_pending_requested(entity_key)
+                self._write_pending_aware_states(None, entity_key)
+
             fut = self.enqueue_frontend(
                 self._set_entity_state_by_description, description, entity_key, state
             )
-            return await fut
+            result = await fut
+
+            if self.supports_pending(entity_key):
+                self._mark_pending_executed(entity_key)
+                self._write_pending_aware_states(None, entity_key)
+
+            return result
 
         raise HomeAssistantError(
             f"Cannot set state for entity key '{entity_key}': "
