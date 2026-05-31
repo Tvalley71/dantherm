@@ -26,6 +26,7 @@ from .device_map import (
     ATTR_HOME_MODE,
     ATTR_HOME_MODE_TIMEOUT,
     ATTR_HOME_OPERATION_SELECTION,
+    ATTR_OPERATION_SELECTION,
     CONF_BOOST_MODE_TRIGGER,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
@@ -320,6 +321,12 @@ class DanthermAdaptiveManager:
     async def async_update_adaptive_triggers(self) -> None:
         """Update adaptive triggers."""
 
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive trigger update while operation selection is pending"
+            )
+            return
+
         triggers_to_process = []
         now = ha_now()
 
@@ -356,6 +363,13 @@ class DanthermAdaptiveManager:
 
     async def _update_adaptive_trigger_state(self, trigger_name: str) -> None:
         """Update adaptive trigger state."""
+
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive trigger state update for %s while operation selection is pending",
+                trigger_name,
+            )
+            return
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
         # Check if mode is switch on
@@ -425,6 +439,12 @@ class DanthermAdaptiveManager:
         if self._calendar is None:
             return
 
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive calendar processing while operation selection is pending"
+            )
+            return
+
         events = await self._calendar.async_get_active_events()
         # Check for events that have ended
         for event in self._active_calendar_events:
@@ -448,6 +468,12 @@ class DanthermAdaptiveManager:
         self, action: str, event: CalendarEvent
     ) -> None:
         """Update adaptive calendar state based on action."""
+
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping adaptive calendar state change while operation selection is pending"
+            )
+            return
 
         event_id = getattr(event, "uid", None)
         # Parse the event to get the target operation (use your translation/key lookup)
@@ -522,6 +548,12 @@ class DanthermAdaptiveManager:
     async def async_process_expired_events(self) -> None:
         """Process expired events."""
 
+        if self._is_operation_change_pending():
+            _LOGGER.debug(
+                "Skipping expired adaptive event processing while operation selection is pending"
+            )
+            return
+
         while (event := self.expired_event()) is not None:
             # Check if operation mode change timeout has passed
             if ha_now() < self._operation_change_timeout:
@@ -569,7 +601,20 @@ class DanthermAdaptiveManager:
 
         _LOGGER.info("Target operation = %s", target_operation)
 
+        if self.coordinator is not None:
+            await self.coordinator.async_set_entity_state_by_key(
+                ATTR_OPERATION_SELECTION, target_operation
+            )
+            return
+
         await self.set_operation_selection(target_operation)
+
+    def _is_operation_change_pending(self) -> bool:
+        """Return True when operation selection write is currently pending."""
+        if self.coordinator is None:
+            return False
+
+        return bool(self.coordinator.is_entity_pending(ATTR_OPERATION_SELECTION))
 
     def _get_adaptive_trigger_timeout(self, mode_name: str) -> datetime:
         """Get adaptive trigger timeout."""

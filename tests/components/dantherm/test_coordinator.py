@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import config.custom_components.dantherm.coordinator as coordinator_mod
 from config.custom_components.dantherm.coordinator import DanthermCoordinator
 from config.custom_components.dantherm.device_map import (
+    ATTR_CALENDAR,
     ATTR_ACTIONS_PENDING,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
@@ -221,6 +222,119 @@ class TestDanthermCoordinator:
         assert coordinator._frontend_task.done()
         assert coordinator._backend_task.done()
 
+    async def test_update_data_reads_calendar_outside_rw_lock(
+        self, hass: HomeAssistant, mock_hub, mock_config_entry
+    ) -> None:
+        """Adaptive calendar updates should run before the locked entity read loop."""
+
+        coordinator = DanthermCoordinator(
+            hass=hass,
+            name="TestDevice",
+            hub=mock_hub,
+            scan_interval=30,
+            config_entry=mock_config_entry,
+        )
+
+        mock_hub.async_process_expired_events = AsyncMock()
+        mock_hub.async_update_adaptive_triggers = AsyncMock()
+        mock_hub.async_get_calendar = AsyncMock(return_value="calendar-state")
+        mock_hub.async_get_current_unit_mode = AsyncMock(return_value="mode")
+        mock_hub.async_get_active_unit_mode = AsyncMock()
+        mock_hub.async_get_fan_level = AsyncMock()
+        mock_hub.async_get_alarm = AsyncMock()
+        mock_hub.async_get_sensor_filtering = AsyncMock()
+        mock_hub.async_get_bypass_maximum_temperature = AsyncMock()
+
+        entered_lock = False
+
+        class LockProbe:
+            async def __aenter__(self_inner):
+                nonlocal entered_lock
+                entered_lock = True
+                return None
+
+            async def __aexit__(self_inner, exc_type, exc, tb):
+                return False
+
+        async def _calendar_side_effect():
+            assert not entered_lock
+            return "calendar-state"
+
+        mock_hub.async_get_calendar.side_effect = _calendar_side_effect
+
+        calendar_entity = MagicMock()
+        calendar_entity.key = ATTR_CALENDAR
+        calendar_entity.entity_id = "calendar.test_device"
+        calendar_entity.entity_description = DanthermEntityDescription(
+            key=ATTR_CALENDAR,
+            data_getinternal=ATTR_CALENDAR,
+        )
+
+        coordinator._rw_lock = LockProbe()
+        coordinator._entities.append(calendar_entity)
+
+        await coordinator._update_data()
+
+        mock_hub.async_get_calendar.assert_awaited_once()
+
+        await _cancel_coordinator_tasks()
+
+    async def test_operation_selection_by_key_toggles_actions_pending_lifecycle(
+        self, hass: HomeAssistant, mock_hub, mock_config_entry, monkeypatch
+    ) -> None:
+        """Operation selection writes should drive actions_pending on and off."""
+
+        coordinator = DanthermCoordinator(
+            hass=hass,
+            name="TestDevice",
+            hub=mock_hub,
+            scan_interval=30,
+            config_entry=mock_config_entry,
+        )
+
+        current_time = {"now": datetime(2026, 1, 1, tzinfo=UTC)}
+        monkeypatch.setattr(coordinator_mod, "ha_now", lambda: current_time["now"])
+
+        def enqueue_frontend_immediate(coro_func, *args, **kwargs):
+            fut = asyncio.get_running_loop().create_future()
+            fut.set_result(None)
+            return fut
+
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
+
+        entity_key = "operation_selection"
+        desc = DanthermEntityDescription(
+            key=entity_key,
+            name="Operation Selection",
+            data_setinternal="operation_selection",
+        )
+        coordinator._all_descriptions[entity_key] = desc
+        coordinator._pending_supported_keys.add(entity_key)
+
+        pending_entity = MagicMock()
+        pending_entity.entity_id = "binary_sensor.actions_pending"
+        pending_entity.key = ATTR_ACTIONS_PENDING
+        pending_entity._handle_coordinator_update = None
+        pending_entity.async_write_ha_state = MagicMock()
+        coordinator._entities = [pending_entity]
+
+        await coordinator.async_set_entity_state_by_key(entity_key, "manual")
+
+        assert coordinator.has_pending_actions()
+        assert coordinator.is_entity_pending(entity_key)
+        assert pending_entity.async_write_ha_state.call_count >= 2
+
+        current_time["now"] += coordinator._pending_min_read_delay + timedelta(
+            milliseconds=1
+        )
+        coordinator._update_cycle = 1
+        coordinator._process_pending_transitions()
+
+        assert not coordinator.has_pending_actions()
+        assert not coordinator.is_entity_pending(entity_key)
+
+        await _cancel_coordinator_tasks()
+
 
 class TestPendingActionLifecycle:
     """Tests for coordinator pending-action state machine."""
@@ -228,9 +342,6 @@ class TestPendingActionLifecycle:
     @pytest.fixture
     async def coordinator(self, mock_hub):
         """Return a coordinator with a short write_delay for fast tests."""
-        import asyncio
-        from unittest.mock import MagicMock
-
         from homeassistant.config_entries import ConfigEntry
 
         mock_hass = MagicMock()
@@ -320,8 +431,6 @@ class TestPendingActionLifecycle:
         self, coordinator: DanthermCoordinator
     ) -> None:
         """Writing action must trigger immediate pending sensor update."""
-
-        import asyncio
 
         def enqueue_frontend_immediate(coro_func, *args, **kwargs):
             fut = asyncio.get_running_loop().create_future()
@@ -457,3 +566,37 @@ class TestPendingActionLifecycle:
         coordinator._set_entity_state_by_description.assert_awaited_once_with(
             desc, True
         )
+
+    async def test_async_set_entity_state_by_key_fallback_marks_pending(
+        self, coordinator: DanthermCoordinator
+    ) -> None:
+        """Fallback by-key writes should still toggle pending lifecycle state."""
+
+        def enqueue_frontend_immediate(coro_func, *args, **kwargs):
+            fut = asyncio.get_running_loop().create_future()
+            fut.set_result(None)
+            return fut
+
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
+
+        entity_key = "operation_selection"
+        desc = DanthermEntityDescription(
+            key=entity_key,
+            name="Operation Selection",
+            data_setinternal="operation_selection",
+        )
+        coordinator._all_descriptions[entity_key] = desc
+        coordinator._pending_supported_keys.add(entity_key)
+
+        pending_entity = MagicMock()
+        pending_entity.entity_id = "binary_sensor.actions_pending"
+        pending_entity.key = ATTR_ACTIONS_PENDING
+        pending_entity._handle_coordinator_update = None
+        pending_entity.async_write_ha_state = MagicMock()
+        coordinator._entities = [pending_entity]
+
+        await coordinator.async_set_entity_state_by_key(entity_key, "manual")
+
+        assert coordinator.has_pending_actions()
+        assert coordinator.is_entity_pending(entity_key)
+        assert pending_entity.async_write_ha_state.call_count >= 2

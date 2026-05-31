@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from config.custom_components.dantherm.adaptive_manager import (
     AdaptiveEventStack,
     DanthermAdaptiveManager,
 )
+from config.custom_components.dantherm.device_map import ATTR_OPERATION_SELECTION
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -40,6 +41,14 @@ class MockCalendar:
     def __init__(self, events: list[MockCalendarEvent] | None = None) -> None:
         """Initialize mock calendar."""
         self._events = events or []
+
+    async def async_get_active_events(self) -> list[MockCalendarEvent]:
+        """Return active events."""
+        return list(self._events)
+
+    def event_exists(self, event: MockCalendarEvent) -> bool:
+        """Check if an event exists."""
+        return any(candidate.uid == event.uid for candidate in self._events)
 
 
 @pytest.fixture
@@ -267,3 +276,123 @@ class TestEventStackIntegration:
         ):
             await adaptive_manager.async_set_up_adaptive_manager()
             mock_cleanup.assert_called_once()
+
+
+class TestAdaptivePendingBehavior:
+    """Test adaptive behavior while operation changes are pending."""
+
+    async def test_adaptive_target_operation_uses_coordinator_key_write(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Adaptive operation changes should go through coordinator by key."""
+
+        mock_coordinator = MagicMock()
+        mock_coordinator.async_set_entity_state_by_key = AsyncMock()
+
+        with patch.object(
+            DanthermAdaptiveManager,
+            "coordinator",
+            new_callable=PropertyMock,
+            return_value=mock_coordinator,
+        ):
+            await adaptive_manager._set_adaptive_target_operation("manual", "automatic")
+
+        mock_coordinator.async_set_entity_state_by_key.assert_awaited_once_with(
+            ATTR_OPERATION_SELECTION, "manual"
+        )
+
+    async def test_expired_events_skip_when_operation_selection_pending(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Expired adaptive events should wait until operation write is no longer pending."""
+
+        mock_coordinator = MagicMock()
+        mock_coordinator.is_entity_pending.return_value = True
+
+        with (
+            patch.object(
+                DanthermAdaptiveManager,
+                "coordinator",
+                new_callable=PropertyMock,
+                return_value=mock_coordinator,
+            ),
+            patch.object(adaptive_manager, "expired_event") as mock_expired,
+        ):
+            await adaptive_manager.async_process_expired_events()
+
+        mock_coordinator.is_entity_pending.assert_called_once_with(
+            ATTR_OPERATION_SELECTION
+        )
+        mock_expired.assert_not_called()
+
+    async def test_calendar_updates_skip_when_operation_selection_pending(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Calendar processing should not run while operation selection is pending."""
+
+        adaptive_manager._calendar = MockCalendar(
+            [
+                MockCalendarEvent(
+                    "calendar-event",
+                    "Boost",
+                    ha_now(),
+                    ha_now() + timedelta(hours=1),
+                )
+            ]
+        )
+        mock_coordinator = MagicMock()
+        mock_coordinator.is_entity_pending.return_value = True
+
+        with (
+            patch.object(
+                DanthermAdaptiveManager,
+                "coordinator",
+                new_callable=PropertyMock,
+                return_value=mock_coordinator,
+            ),
+            patch.object(
+                adaptive_manager, "_update_adaptive_calendar_state", new=AsyncMock()
+            ) as mock_update,
+        ):
+            await adaptive_manager.async_update_adaptive_calendar()
+
+        mock_coordinator.is_entity_pending.assert_called_once_with(
+            ATTR_OPERATION_SELECTION
+        )
+        mock_update.assert_not_awaited()
+
+    async def test_calendar_operation_uses_coordinator_key_write(
+        self, adaptive_manager: DanthermAdaptiveManager, hass: HomeAssistant
+    ) -> None:
+        """Calendar-driven operation changes should use pending-aware coordinator writes."""
+
+        event = MockCalendarEvent(
+            "calendar-operation",
+            "Adaptive",
+            ha_now(),
+            ha_now() + timedelta(hours=1),
+        )
+        mock_coordinator = MagicMock()
+        mock_coordinator.is_entity_pending.return_value = False
+        mock_coordinator.async_set_entity_state_by_key = AsyncMock()
+
+        with (
+            patch.object(
+                DanthermAdaptiveManager,
+                "coordinator",
+                new_callable=PropertyMock,
+                return_value=mock_coordinator,
+            ),
+            patch.object(
+                adaptive_manager, "get_current_operation", return_value="manual"
+            ),
+            patch(
+                "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
+                AsyncMock(return_value="automatic"),
+            ),
+        ):
+            await adaptive_manager._update_adaptive_calendar_state("start", event)
+
+        mock_coordinator.async_set_entity_state_by_key.assert_awaited_once_with(
+            ATTR_OPERATION_SELECTION, "automatic"
+        )
