@@ -219,6 +219,9 @@ class TestDanthermCoordinator:
 
         await coordinator.async_shutdown()
 
+        assert coordinator._frontend_task.done()
+        assert coordinator._backend_task.done()
+
     async def test_update_data_reads_calendar_outside_rw_lock(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
     ) -> None:
