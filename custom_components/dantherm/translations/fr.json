@@ -312,6 +312,15 @@
           "3": "Remplacer maintenant"
         }
       },
+      "filter_dirtyness_degree": {
+        "name": "Degré de saleté du filtre",
+        "state": {
+          "0": "Excellent",
+          "1": "Bon",
+          "2": "Mauvais",
+          "3": "Remplacer maintenant"
+        }
+      },
       "work_time": { "name": "Temps de fonctionnement" },
       "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"},
       "features": { "name": "Features" }

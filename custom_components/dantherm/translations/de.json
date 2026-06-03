@@ -313,6 +313,15 @@
           "3": "Jetzt wechseln"
         }
       },
+      "filter_dirtyness_degree": {
+        "name": "Filter Verschmutzungsgrad",
+        "state": {
+          "0": "Sehr gut",
+          "1": "Gut",
+          "2": "Schlecht",
+          "3": "Jetzt wechseln"
+        }
+      },
       "work_time": { "name": "Laufzeit" },
       "internal_preheater_dutycycle": { "name": "Vorheizregister-Stellwert" },
       "features": { "name": "Features" }
