@@ -229,6 +229,7 @@ ATTR_SENSOR_FILTERING: Final = "sensor_filtering"
 ATTR_FILTER_LIFETIME: Final = "filter_lifetime"
 ATTR_FILTER_REMAIN: Final = "filter_remain"
 ATTR_FILTER_REMAIN_LEVEL: Final = "filter_remain_level"
+ATTR_FILTER_DIRTYNESS_DEGREE: Final = "filter_dirtyness_degree"
 
 ATTR_WORK_TIME: Final = "work_time"
 
@@ -427,6 +428,7 @@ class DanthermEntityDescription(EntityDescription):
     data_getunknown: str | None = None
 
     component_class: int | None = None
+    not_component_class: int | None = None
 
 
 @dataclass(frozen=True)
@@ -604,6 +606,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+        not_component_class=ComponentClass.Servo_flow,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_HUMIDITY_SETPOINT,
@@ -985,6 +988,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
+        not_component_class=ComponentClass.Servo_flow,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_FILTER_REMAIN_LEVEL,
@@ -993,6 +997,13 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+        not_component_class=ComponentClass.Servo_flow,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_FILTER_DIRTYNESS_DEGREE,
+        icon="mdi:air-filter",
+        data_getinternal=ATTR_FILTER_DIRTYNESS_DEGREE,
+        component_class=ComponentClass.Servo_flow,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_WORK_TIME,

@@ -74,6 +74,7 @@ from .modbus import (
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
     MODBUS_REGISTER_FAN_LEVEL,
+    MODBUS_REGISTER_FILTER_DIRTYNESS,
     MODBUS_REGISTER_FILTER_LIFETIME,
     MODBUS_REGISTER_FILTER_REMAIN,
     MODBUS_REGISTER_FILTER_RESET,
@@ -89,6 +90,7 @@ from .modbus import (
     MODBUS_REGISTER_OUTDOOR_TEMP,
     MODBUS_REGISTER_ROOM_TEMP,
     MODBUS_REGISTER_SERIAL_NUMBER,
+    MODBUS_REGISTER_SERVOFLOW_ENABLED,
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
@@ -323,9 +325,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         def exclude_from_component_class(
             description: DanthermEntityDescription,
         ) -> bool:
-            """Check if entity must be excluded from component_class."""
-            if description.component_class:
-                return (self.installed_components & description.component_class) == 0
+            """Check if entity must be excluded from component_class or not_component_class."""
+            if (
+                description.not_component_class
+                and (self.installed_components & description.not_component_class) != 0
+            ):
+                return True
+            if (
+                description.component_class
+                and (self.installed_components & description.component_class) == 0
+            ):
+                return True
             return False
 
         async def exclude_from_entity_state(
@@ -1068,6 +1078,24 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             )
         _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
         return self._filter_remain_level
+
+    async def async_get_servoflow_enabled(self) -> bool | None:
+        """Get servoflow enabled."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_SERVOFLOW_ENABLED)
+        _LOGGER.debug("ServoFlow enabled = %s", result)
+        return result == 1
+
+    async def async_get_filter_dirtyness_degree(self) -> int | None:
+        """Get filter dirtyness degree."""
+
+        result = await self.async_get_servoflow_enabled()
+        if result is None or result is False:
+            return None
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_DIRTYNESS)
+        _LOGGER.debug("Filter dirtyness degree = %s", result)
+        return result
 
     async def async_get_night_mode_start_time(self) -> str | None:
         """Get night mode start time."""
