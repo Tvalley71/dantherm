@@ -68,7 +68,8 @@
         "description": "Configure advanced behavior and display options.",
         "data": {
           "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes",
-          "disable_notifications": "Disable notifications"
+          "disable_notifications": "Disable notifications",
+          "enable_time_synchronization": "Enable time synchronization"
         }
       }
     },

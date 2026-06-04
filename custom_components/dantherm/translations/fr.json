@@ -68,7 +68,8 @@
         "description": "Configurez le comportement avancé et les options d'affichage.",
         "data": {
           "disable_temperature_unknown": "Désactiver la mise à inconnu des capteurs de température en modes bypass/été",
-          "disable_notifications": "Désactiver les notifications"
+          "disable_notifications": "Désactiver les notifications",
+          "enable_time_synchronization": "Activer la synchronisation de l'heure"
         }
       }
     },

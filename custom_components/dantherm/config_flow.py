@@ -24,6 +24,7 @@ from .device_map import (
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
+    CONF_ENABLE_TIME_SYNCHRONIZATION,
     CONF_HOME_MODE_TRIGGER,
     CONF_LINK_TO_PRIMARY_CALENDAR,
     CONF_MANUFACTURER,
@@ -506,6 +507,10 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
                     CONF_DISABLE_NOTIFICATIONS,
                     default=options.get(CONF_DISABLE_NOTIFICATIONS, False),
                 ): bool,
+                vol.Optional(
+                    CONF_ENABLE_TIME_SYNCHRONIZATION,
+                    default=options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False),
+                ): bool,
             }
         )
 
@@ -519,6 +524,9 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
             )
             new_options[CONF_DISABLE_NOTIFICATIONS] = bool(
                 user_input.get(CONF_DISABLE_NOTIFICATIONS, False)
+            )
+            new_options[CONF_ENABLE_TIME_SYNCHRONIZATION] = bool(
+                user_input.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False)
             )
 
             if self._network_data_changed and new_options == self.config_entry.options:

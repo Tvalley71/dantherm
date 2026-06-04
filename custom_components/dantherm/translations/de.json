@@ -68,7 +68,8 @@
         "description": "Konfigurieren Sie erweitertes Verhalten und erweiterte Anzeigeoptionen.",
         "data": {
           "disable_temperature_unknown": "Deaktivieren Sie das Setzen der Temperatursensoren auf 'unbekannt' im Bypass-/Sommermodus",
-          "disable_notifications": "Benachrichtigungen deaktivieren"
+          "disable_notifications": "Benachrichtigungen deaktivieren",
+          "enable_time_synchronization": "Zeitsynchronisierung aktivieren"
         }
       }
     },
