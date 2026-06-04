@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from datetime import datetime
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -13,6 +14,7 @@ from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.dt import now as ha_now
 
 from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEFAULT_NAME, DEVICE_TYPES
@@ -57,6 +59,7 @@ from .device_map import (
     CurrentUnitMode,
     DanthermEntityDescription,
 )
+from .helpers import as_dt, duration_dt
 from .modbus import (
     MODBUS_REGISTER_ACTIVE_MODE,
     MODBUS_REGISTER_AIR_QUALITY,
@@ -71,6 +74,8 @@ from .modbus import (
     MODBUS_REGISTER_BYPASS_MIN_TEMP,
     MODBUS_REGISTER_BYPASS_MIN_TEMP_SUMMER,
     MODBUS_REGISTER_CURRENT_MODE,
+    MODBUS_REGISTER_DATETIME,
+    MODBUS_REGISTER_DATETIME_SET,
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
     MODBUS_REGISTER_FAN_LEVEL,
@@ -173,6 +178,8 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._filter_remain = None
         self._filter_remain_level = None
         self._last_current_operation = None
+        self._last_time_sync_check: datetime | None = None
+        self._time_sync_pending = False
         self._coordinator: DanthermCoordinator | None = None
         self.installed_components = 0
 
@@ -693,6 +700,70 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             "fan_level": self._fan_level,
             "preset_mode": preset_mode,
         }
+
+    async def async_get_current_datetime(self) -> datetime:
+        """Get current date and time."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_DATETIME)
+        if result is not None:
+            return as_dt(datetime.fromtimestamp(result))
+        return None
+
+    async def async_set_datetime(self, dt: datetime) -> None:
+        """Set current date and time."""
+
+        timestamp = int(dt.timestamp())
+        await self._write_holding_uint32(MODBUS_REGISTER_DATETIME_SET, timestamp)
+        _LOGGER.debug("Date and time set to %s", dt)
+
+    async def async_should_synchronize_time(self) -> bool:
+        """Return True when time synchronization should be scheduled."""
+
+        if self._time_sync_pending:
+            _LOGGER.debug("Time synchronization already pending, skipping")
+            return False
+
+        if (
+            self._last_time_sync_check
+            and (duration_dt(self._last_time_sync_check, ha_now())).total_seconds()
+            < 3600
+        ):
+            return False
+
+        current_device_time = await self.async_get_current_datetime()
+        if current_device_time is None:
+            _LOGGER.warning(
+                "Unable to get current device time, skipping synchronization"
+            )
+            return False
+
+        time_difference = duration_dt(ha_now(), current_device_time).total_seconds()
+        self._last_time_sync_check = ha_now()
+        if time_difference < 10:
+            _LOGGER.debug("Device time is already synchronized, skipping")
+            return False
+
+        _LOGGER.info(
+            "Scheduling device time synchronization. Current device time: %s, local time: %s, difference: %s seconds",
+            current_device_time,
+            ha_now(),
+            time_difference,
+        )
+
+        self._time_sync_pending = True
+        return True
+
+    async def async_set_current_time(self) -> None:
+        """Set current local time on the device."""
+        try:
+            await self.async_set_datetime(ha_now())
+        finally:
+            self._time_sync_pending = False
+
+    async def async_synchronize_time(self) -> None:
+        """Synchronize time with the device."""
+        if await self.async_should_synchronize_time():
+            await self.async_set_current_time()
 
     async def async_get_current_unit_mode(self) -> int | None:
         """Get current unit mmode."""
