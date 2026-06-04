@@ -312,15 +312,6 @@
           "3": "Nu vervangen"
         }
       },
-      "filter_dirtyness_degree": {
-        "name": "Filtervervuilingsgraad",
-        "state": {
-          "0": "Uitstekend",
-          "1": "Goed",
-          "2": "Slecht",
-          "3": "Nu vervangen"
-        }
-      },
       "work_time": { "name": "Inschakelduur" },
       "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"},
       "features": { "name": "Features" }

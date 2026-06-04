@@ -313,15 +313,6 @@
           "3": "Replace Now"
         }
       },
-      "filter_dirtyness_degree": {
-        "name": "Filter Dirtyness Degree",
-        "state": {
-          "0": "Excellent",
-          "1": "Good",
-          "2": "Poor",
-          "3": "Replace Now"
-        }
-      },
       "work_time": { "name": "Work Time" },
       "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"},
       "features": { "name": "Features" }
@@ -561,7 +552,7 @@
       "message": "Notifications can be disabled in the integration options."
     },
     "filter_remain_notification": {
-      "message": "The filter has reached the end of it's lifetime. Please replace the filter."
+      "message": "The filter has reached the end of its lifetime. Please replace the filter."
     },
     "invalid_adaptive_state": {
       "message": "Invalid adaptive state: {state}. Available states: {available_states}"
