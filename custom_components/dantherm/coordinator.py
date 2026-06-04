@@ -274,7 +274,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
         # Calendar updates may also trigger writes through adaptive handling.
         # Run them outside _rw_lock to avoid lock inversion with the backend writer.
-        if any(getattr(entity, "key", entity.entity_id) == ATTR_CALENDAR for entity in self._entities):
+        if any(
+            getattr(entity, "key", entity.entity_id) == ATTR_CALENDAR
+            for entity in self._entities
+        ):
             await self.hub.async_get_calendar()
 
         data: dict[str, Any] = {}
@@ -301,6 +304,9 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
             # Read alarm
             await self.hub.async_get_alarm()
+
+            # Read filter state
+            await self.hub.async_get_filter_state()
 
             # Read sensor filtering, make sure we have the latest value
             await self.hub.async_get_sensor_filtering()
