@@ -242,8 +242,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
 
         self.installed_components = 0
+        components_read = False
+
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
         if system_id is not None:
+            components_read = True
             self._device_type = system_id >> 24
             _LOGGER.debug("Device type = %s", self.get_device_type)
             _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
@@ -253,16 +256,21 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             MODBUS_REGISTER_SYSTEM_ID_COMPONENTS
         )
         if system_id_components is not None:
+            components_read = True
             _LOGGER.debug(
                 "Installed components (610) = %s", hex(system_id_components & 0xFFFF)
             )
             self.installed_components |= system_id_components & 0xFFFF
 
-        if self.installed_components:
-            _LOGGER.debug("Installed components = %s", hex(self.installed_components))
-        else:
+        if not components_read:
             _LOGGER.warning("Could not read installed components from device")
-            return None
+            if self._client is not None:
+                self._client.close()
+                self._client = None
+            self._attr_available = False
+            raise ValueError("Could not read installed components from device")
+
+        _LOGGER.debug("Installed components = %s", hex(self.installed_components))
 
         fw_version = await self._read_holding_uint32(MODBUS_REGISTER_FIRMWARE_VERSION)
         if fw_version is not None:
