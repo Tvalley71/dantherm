@@ -912,7 +912,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_HUMIDITY_LEVEL,
         data_getinternal=ATTR_HUMIDITY_LEVEL,
         icon="mdi:water-percent",
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.RH_Senser,
@@ -931,7 +930,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_AIR_QUALITY_LEVEL,
         data_getinternal=ATTR_AIR_QUALITY_LEVEL,
         icon="mdi:molecule",
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.VOC_sensor,
@@ -993,8 +991,8 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_FILTER_REMAIN_LEVEL,
         icon="mdi:air-filter",
         data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
+        # Entity will be enabled by default if Servo_flow is present, see sensor.py
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(
