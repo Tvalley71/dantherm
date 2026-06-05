@@ -72,7 +72,7 @@ from .modbus import (
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
     MODBUS_REGISTER_FAN_LEVEL,
-    MODBUS_REGISTER_FILTER_DIRTYNESS,
+    MODBUS_REGISTER_FILTER_DIRTINESS,
     MODBUS_REGISTER_FILTER_LIFETIME,
     MODBUS_REGISTER_FILTER_REMAIN,
     MODBUS_REGISTER_FILTER_RESET,
@@ -1020,7 +1020,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
             if servoflow_enabled:
                 remain_level = await self._read_holding_uint32(
-                    MODBUS_REGISTER_FILTER_DIRTYNESS
+                    MODBUS_REGISTER_FILTER_DIRTINESS
                 )
         else:
             self._filter_lifetime = await self._read_holding_uint32(
