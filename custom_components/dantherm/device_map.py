@@ -247,6 +247,7 @@ ATTR_ACTIONS_PENDING: Final = "actions_pending"
 ATTR_FEATURES: Final = "features"
 
 CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
+CONF_ENABLE_TIME_SYNCHRONIZATION: Final = "enable_time_synchronization"
 
 OPERATION_SELECTIONS = [
     STATE_STANDBY,

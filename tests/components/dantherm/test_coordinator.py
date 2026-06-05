@@ -7,8 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 import config.custom_components.dantherm.coordinator as coordinator_mod
 from config.custom_components.dantherm.coordinator import DanthermCoordinator
 from config.custom_components.dantherm.device_map import (
-    ATTR_CALENDAR,
     ATTR_ACTIONS_PENDING,
+    ATTR_CALENDAR,
+    CONF_ENABLE_TIME_SYNCHRONIZATION,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
 )
@@ -251,7 +252,6 @@ class TestDanthermCoordinator:
             async def __aenter__(self_inner):
                 nonlocal entered_lock
                 entered_lock = True
-                return None
 
             async def __aexit__(self_inner, exc_type, exc, tb):
                 return False
@@ -276,6 +276,60 @@ class TestDanthermCoordinator:
         await coordinator._update_data()
 
         mock_hub.async_get_calendar.assert_awaited_once()
+
+        await _cancel_coordinator_tasks()
+
+    async def test_update_data_synchronizes_time_outside_rw_lock(
+        self, hass: HomeAssistant, mock_hub, mock_config_entry
+    ) -> None:
+        """Time synchronization should run before the locked entity read loop."""
+
+        mock_config_entry.options = {CONF_ENABLE_TIME_SYNCHRONIZATION: True}
+        coordinator = DanthermCoordinator(
+            hass=hass,
+            name="TestDevice",
+            hub=mock_hub,
+            scan_interval=30,
+            config_entry=mock_config_entry,
+        )
+
+        mock_hub.async_process_expired_events = AsyncMock()
+        mock_hub.async_update_adaptive_triggers = AsyncMock()
+        mock_hub.async_should_synchronize_time = AsyncMock(return_value=True)
+        mock_hub.async_set_current_time = AsyncMock()
+        mock_hub.async_get_current_unit_mode = AsyncMock(return_value="mode")
+        mock_hub.async_get_active_unit_mode = AsyncMock()
+        mock_hub.async_get_fan_level = AsyncMock()
+        mock_hub.async_get_alarm = AsyncMock()
+        mock_hub.async_get_sensor_filtering = AsyncMock()
+        mock_hub.async_get_bypass_maximum_temperature = AsyncMock()
+
+        entered_lock = False
+
+        class LockProbe:
+            async def __aenter__(self_inner):
+                nonlocal entered_lock
+                entered_lock = True
+
+            async def __aexit__(self_inner, exc_type, exc, tb):
+                return False
+
+        async def _time_sync_side_effect():
+            assert not entered_lock
+            return True
+
+        mock_hub.async_should_synchronize_time.side_effect = _time_sync_side_effect
+
+        dummy_entity = MagicMock()
+        dummy_entity.key = "dummy_sensor"
+        dummy_entity.entity_id = "sensor.dummy_sensor"
+        coordinator._rw_lock = LockProbe()
+        coordinator._entities.append(dummy_entity)
+        coordinator.async_update_entity = AsyncMock(return_value={})
+
+        await coordinator._update_data()
+
+        mock_hub.async_should_synchronize_time.assert_awaited_once()
 
         await _cancel_coordinator_tasks()
 

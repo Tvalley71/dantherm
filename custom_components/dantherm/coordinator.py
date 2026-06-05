@@ -23,6 +23,7 @@ from .device_map import (
     ATTR_CALENDAR,
     BINARY_SENSORS,
     BUTTONS,
+    CONF_ENABLE_TIME_SYNCHRONIZATION,
     COVERS,
     FANS,
     NUMBERS,
@@ -279,12 +280,20 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             for entity in self._entities
         ):
             await self.hub.async_get_calendar()
-
         data: dict[str, Any] = {}
+
+        # Time synchronization is split in two phases:
+        # 1) Decision/read phase here (outside _rw_lock)
+        # 2) Write phase scheduled on the frontend queue (non-blocking)
+        # This avoids lock inversion and avoids blocking the update cycle.
+        if self._config_entry.options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False):
+            if await self.hub.async_should_synchronize_time():
+                self.enqueue_frontend(
+                    self.hub.async_set_current_time, fire_and_forget=True
+                )
 
         async with self._rw_lock:
             _LOGGER.debug("<<< UPDATE BEGIN - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
-
             # Read current unit mode
             result = await self.hub.async_get_current_unit_mode()
             if result is None:
@@ -340,14 +349,21 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     # ────────────── FRONTEND ─────────────────
 
     def enqueue_frontend(
-        self, coro_func: Any, *args: Any, **kwargs: Any
+        self, coro_func: Any, *args: Any, fire_and_forget: bool = False, **kwargs: Any
     ) -> asyncio.Future[Any]:
         """Schedule a high-level coroutine to run "one at a time.
 
         Returns a Future you can await, or ignore if you want fire-and-forget.
+        When fire_and_forget=True, any exception is logged by the frontend worker,
+        and a done-callback retrieves the exception to prevent asyncio
+        'exception was never retrieved' warnings if the caller discards the Future.
         """
         loop = asyncio.get_running_loop()
         fut: asyncio.Future[Any] = loop.create_future()
+        if fire_and_forget:
+            fut.add_done_callback(
+                lambda f: f.exception() if f.done() and not f.cancelled() else None
+            )
         # enqueue with its own future
         self._frontend_queue.put_nowait((coro_func, args, kwargs, fut))
         return fut

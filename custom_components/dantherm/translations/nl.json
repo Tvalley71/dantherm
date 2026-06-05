@@ -68,7 +68,8 @@
         "description": "Configureer geavanceerd gedrag en weergaveopties.",
         "data": {
           "disable_temperature_unknown": "Temperatuursensoren niet onbekend maken in bypass/zomer modi",
-          "disable_notifications": "Meldingen uitschakelen"
+          "disable_notifications": "Meldingen uitschakelen",
+          "enable_time_synchronization": "Tijdsynchronisatie inschakelen"
         }
       }
     },

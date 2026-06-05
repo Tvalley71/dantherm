@@ -28,6 +28,7 @@ try:
     from config.custom_components.dantherm.device_map import (
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
+        CONF_ENABLE_TIME_SYNCHRONIZATION,
     )
 except ImportError:
     # Fallback for custom integration tests
@@ -46,6 +47,7 @@ except ImportError:
     from custom_components.dantherm.device_map import (  # type: ignore[import-untyped]
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
+        CONF_ENABLE_TIME_SYNCHRONIZATION,
     )
 
 
@@ -346,6 +348,7 @@ async def test_options_flow_advanced_unchecked_booleans_persist_false(
             user_input={
                 CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
                 CONF_DISABLE_NOTIFICATIONS: False,
+                CONF_ENABLE_TIME_SYNCHRONIZATION: False,
             },
         )
         assert done_result["type"] is FlowResultType.CREATE_ENTRY
@@ -355,6 +358,7 @@ async def test_options_flow_advanced_unchecked_booleans_persist_false(
         final_options = done_result["data"]
         assert final_options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False) is False
         assert final_options.get(CONF_DISABLE_NOTIFICATIONS, False) is False
+        assert final_options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False) is False
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
@@ -378,6 +382,7 @@ async def test_options_flow_network_only_change_still_schedules_reload(
             "home_mode_trigger": "",
             CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
             CONF_DISABLE_NOTIFICATIONS: False,
+            CONF_ENABLE_TIME_SYNCHRONIZATION: False,
         },
         unique_id="SERIAL-2B",
         entry_id="entry-2b",
