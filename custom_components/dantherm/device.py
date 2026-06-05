@@ -238,10 +238,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Setup has started")
 
         # Connect and verify modbus connection
-        if not await self.connect_and_verify():
-            # We shoud never get here since connect_and_verify should raise an exception
-            # if it fails, but just in case, we return None to indicate setup failure
-            return None
+        await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
 
         self.installed_components = 0
