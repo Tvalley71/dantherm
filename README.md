@@ -91,7 +91,7 @@ Thanks to _Smartzeug_
 | `bypass_minimum_temperature_summer` | Minimum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
 | `bypass_maximum_temperature_summer` | Maximum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
 | `eco_mode_timeout`                  | Sets the duration for Eco Mode before it automatically deactivates [[3]](#entity-notes) |
-| `filter_lifetime`                   | Expected lifetime of the filter before triggering a replacement notification [[2]](#entity-notes) |
+| `filter_lifetime`                   | Expected lifetime of the filter before triggering a replacement notification [[1][2]](#entity-notes) |
 | `humidity_setpoint`                 | Humidity setpoint in % (winter[[6]](#entity-notes)) [[2][5]](#entity-notes) |
 | `humidity_setpoint_summer`          | Humidity setpoint in % (summer) [[2][5]](#entity-notes) |
 | `home_mode_timeout`                 | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
@@ -124,8 +124,8 @@ Thanks to _Smartzeug_
 | `fan_level`                   | Current fan level (Level 0 to Level 4) |
 | `fan1_speed`                  | Actual RPM of fan 1 [[2]](#entity-notes) |
 | `fan2_speed`                  | Actual RPM of fan 2 [[2]](#entity-notes) |
-| `filter_remain`               | Remaining filter life in days |
-| `filter_remain_level`         | Qualitative status of remaining filter life (e.g. Good, Replace) [[2]](#entity-notes) |
+| `filter_remain`               | Remaining filter life in days [[1]](#entity-notes) |
+| `filter_remain_level`         | Qualitative status of the remaining filter lifetime (e.g. Good, Replace). If the unit supports ServoFlow, the status is based on the filter's dirtiness degree; otherwise, it is based on the filter's remaining lifetime in days. [[1][2]](#entity-notes) |
 | `humidity`                    | Indoor relative humidity from internal sensor [[1]](#entity-notes) |
 | `humidity_level`              | Qualitative level of humidity (e.g. Dry, Normal, Humid) [[2]](#entity-notes) |
 | `adaptive_state`              | Shows which adaptive mode (Home, Eco, Boost) is currently active [[4]](#entity-notes) |

@@ -427,6 +427,7 @@ class DanthermEntityDescription(EntityDescription):
     data_getunknown: str | None = None
 
     component_class: int | None = None
+    not_component_class: int | None = None
 
 
 @dataclass(frozen=True)
@@ -604,6 +605,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
+        not_component_class=ComponentClass.Servo_flow,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_HUMIDITY_SETPOINT,
@@ -910,7 +912,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_HUMIDITY_LEVEL,
         data_getinternal=ATTR_HUMIDITY_LEVEL,
         icon="mdi:water-percent",
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.RH_Senser,
@@ -929,7 +930,6 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         key=ATTR_AIR_QUALITY_LEVEL,
         data_getinternal=ATTR_AIR_QUALITY_LEVEL,
         icon="mdi:molecule",
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         component_class=ComponentClass.VOC_sensor,
@@ -985,13 +985,14 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         suggested_unit_of_measurement="d",
         device_class=SensorDeviceClass.DURATION,
+        not_component_class=ComponentClass.Servo_flow,
     ),
     DanthermSensorEntityDescription(
         key=ATTR_FILTER_REMAIN_LEVEL,
         icon="mdi:air-filter",
         data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_visible_default=True,
+        # Entity will be enabled by default if Servo_flow is present, see sensor.py
         entity_registry_enabled_default=False,
     ),
     DanthermSensorEntityDescription(

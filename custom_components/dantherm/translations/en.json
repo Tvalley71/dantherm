@@ -552,7 +552,7 @@
       "message": "Notifications can be disabled in the integration options."
     },
     "filter_remain_notification": {
-      "message": "The filter has reached the end of it's lifetime. Please replace the filter."
+      "message": "The filter has reached the end of its lifetime. Please replace the filter."
     },
     "invalid_adaptive_state": {
       "message": "Invalid adaptive state: {state}. Available states: {available_states}"

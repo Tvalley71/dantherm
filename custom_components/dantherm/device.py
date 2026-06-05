@@ -22,9 +22,7 @@ from .device_map import (
     ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
     ATTR_BYPASS_DAMPER,
-    ATTR_FILTER_LIFETIME,
     ATTR_FILTER_REMAIN,
-    ATTR_FILTER_REMAIN_LEVEL,
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
@@ -74,6 +72,7 @@ from .modbus import (
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
     MODBUS_REGISTER_FAN_LEVEL,
+    MODBUS_REGISTER_FILTER_DIRTYNESS,
     MODBUS_REGISTER_FILTER_LIFETIME,
     MODBUS_REGISTER_FILTER_REMAIN,
     MODBUS_REGISTER_FILTER_RESET,
@@ -89,6 +88,7 @@ from .modbus import (
     MODBUS_REGISTER_OUTDOOR_TEMP,
     MODBUS_REGISTER_ROOM_TEMP,
     MODBUS_REGISTER_SERIAL_NUMBER,
+    MODBUS_REGISTER_SERVOFLOW_ENABLED,
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
@@ -302,9 +302,6 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             await self.async_set_up_tracking_for_adaptive_triggers()
 
         # Remove chached properties
-        self.__dict__.pop("_get_filter_lifetime_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_entity_installed", None)
-        self.__dict__.pop("_get_filter_remain_level_entity_installed", None)
         self.__dict__.pop("_get_humidity_entity_installed", None)
         self.__dict__.pop("_get_air_quality_entity_installed", None)
         self.__dict__.pop("_get_boost_mode_trigger_available", None)
@@ -323,9 +320,17 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         def exclude_from_component_class(
             description: DanthermEntityDescription,
         ) -> bool:
-            """Check if entity must be excluded from component_class."""
-            if description.component_class:
-                return (self.installed_components & description.component_class) == 0
+            """Check if entity must be excluded from component_class or not_component_class."""
+            if (
+                description.not_component_class
+                and (self.installed_components & description.not_component_class) != 0
+            ):
+                return True
+            if (
+                description.component_class
+                and (self.installed_components & description.component_class) == 0
+            ):
+                return True
             return False
 
         async def exclude_from_entity_state(
@@ -955,27 +960,6 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         return bool(self._options.get(CONF_HOME_MODE_TRIGGER, False))
 
     @cached_property
-    def _get_filter_lifetime_entity_installed(self) -> bool:
-        """Check if the filter lifetime entity is installed (cached)."""
-        return self.coordinator is not None and self.coordinator.is_entity_installed(
-            ATTR_FILTER_LIFETIME
-        )
-
-    @cached_property
-    def _get_filter_remain_entity_installed(self) -> bool:
-        """Check if the filter remain entity is installed (cached)."""
-        return self.coordinator is not None and self.coordinator.is_entity_installed(
-            ATTR_FILTER_REMAIN
-        )
-
-    @cached_property
-    def _get_filter_remain_level_entity_installed(self) -> bool:
-        """Check if the filter remain level entity is installed (cached)."""
-        return self.coordinator is not None and self.coordinator.is_entity_installed(
-            ATTR_FILTER_REMAIN_LEVEL
-        )
-
-    @cached_property
     def _get_humidity_entity_installed(self) -> bool:
         """Check if the humidity entity is installed (cached)."""
         return self.coordinator is not None and self.coordinator.is_entity_installed(
@@ -1010,64 +994,66 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
     async def async_get_filter_lifetime(self) -> int | None:
         """Get filter lifetime."""
-
-        self._filter_lifetime = await self._read_holding_uint32(
-            MODBUS_REGISTER_FILTER_LIFETIME
-        )
-        _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
-
         return self._filter_lifetime
 
     async def async_get_filter_remain(self) -> int | None:
         """Get filter remain."""
+        return self._filter_remain
 
-        result = await self._read_holding_uint32(MODBUS_REGISTER_FILTER_REMAIN)
-        if result == 0 and result != self._filter_remain:
-            # Create persistent notification if filter remain is zero
+    async def async_get_filter_remain_level(self) -> int | None:
+        """Get filter remain level."""
+        return self._filter_remain_level
+
+    async def async_get_filter_state(self) -> None:
+        """Get filter state."""
+
+        remain_level = None
+
+        if (
+            self.installed_components & ComponentClass.Servo_flow
+            == ComponentClass.Servo_flow
+        ):
+            servoflow_enabled = (
+                await self._read_holding_uint32(MODBUS_REGISTER_SERVOFLOW_ENABLED) == 1
+            )
+            _LOGGER.debug("ServoFlow enabled = %s", servoflow_enabled)
+
+            if servoflow_enabled:
+                remain_level = await self._read_holding_uint32(
+                    MODBUS_REGISTER_FILTER_DIRTYNESS
+                )
+        else:
+            self._filter_lifetime = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_LIFETIME
+            )
+            _LOGGER.debug("Filter lifetime = %s", self._filter_lifetime)
+
+            self._filter_remain = await self._read_holding_uint32(
+                MODBUS_REGISTER_FILTER_REMAIN
+            )
+            _LOGGER.debug("Filter remain = %s", self._filter_remain)
+
+            if self._filter_lifetime is not None and self._filter_remain is not None and self._filter_lifetime > 0:
+                remain_level = 0
+                if self._filter_remain <= self._filter_lifetime:
+                    remain_level = int(
+                        (self._filter_lifetime - self._filter_remain)
+                        / (self._filter_lifetime / 3)
+                    )
+
+        if remain_level == 3 and remain_level != self._filter_remain_level:
+            # Create persistent notification if filter remain level is 3 (replace filter now)
             if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
                     self._hass,
                     self._device_name,
                     "sensor",
                     ATTR_FILTER_REMAIN,
-                    str(result),
+                    str(0),
                 )
 
-        self._filter_remain = result
-        _LOGGER.debug("Filter remain = %s", self._filter_remain)
-
-        if not self._get_filter_remain_level_entity_installed:
-            await self.async_get_filter_remain_level()
-
-        return self._filter_remain
-
-    async def async_get_filter_remain_level(self) -> int | None:
-        """Get filter remain level."""
-
-        if self._get_filter_lifetime_entity_installed:
-            filter_lifetime = self._filter_lifetime
-        else:
-            filter_lifetime = await self._read_holding_uint32(
-                MODBUS_REGISTER_FILTER_LIFETIME
-            )
-
-        if self._get_filter_remain_entity_installed:
-            filter_remain = self._filter_remain
-        else:
-            filter_remain = await self._read_holding_uint32(
-                MODBUS_REGISTER_FILTER_REMAIN
-            )
-
-        if filter_lifetime is None or filter_remain is None:
-            return None
-
-        self._filter_remain_level = 0
-        if filter_remain <= filter_lifetime:
-            self._filter_remain_level = int(
-                (filter_lifetime - filter_remain) / (filter_lifetime / 3)
-            )
+        self._filter_remain_level = remain_level
         _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
-        return self._filter_remain_level
 
     async def async_get_night_mode_start_time(self) -> str | None:
         """Get night mode start time."""

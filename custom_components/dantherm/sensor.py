@@ -11,7 +11,13 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .adaptive_manager import AdaptiveEventStack
 from .const import DOMAIN
 from .device import DanthermDevice
-from .device_map import ATTR_ADAPTIVE_STATE, SENSORS, DanthermSensorEntityDescription
+from .device_map import (
+    ATTR_ADAPTIVE_STATE,
+    ATTR_FILTER_REMAIN_LEVEL,
+    SENSORS,
+    ComponentClass,
+    DanthermSensorEntityDescription,
+)
 from .entity import DanthermEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +51,21 @@ async def async_setup_entry(
             if description.key == ATTR_ADAPTIVE_STATE:
                 # Create AdaptiveStateSensor for the adaptive state
                 sensor = AdaptiveStateSensor(device, description)
+            elif (
+                description.key == ATTR_FILTER_REMAIN_LEVEL
+                and device.installed_components & ComponentClass.Servo_flow
+                == ComponentClass.Servo_flow
+            ):  # If Servo_flow is present, we want to create the filter_remain_level sensor enabled by default.
+                sensor = DanthermSensor(
+                    device,
+                    DanthermSensorEntityDescription(
+                        key=ATTR_FILTER_REMAIN_LEVEL,
+                        icon="mdi:air-filter",
+                        data_getinternal=ATTR_FILTER_REMAIN_LEVEL,
+                        entity_registry_visible_default=True,
+                        entity_registry_enabled_default=True,
+                    ),
+                )
             else:
                 sensor = DanthermSensor(device, description)
             entities.append(sensor)
