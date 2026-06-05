@@ -96,6 +96,7 @@ from .modbus import (
     MODBUS_REGISTER_SERVOFLOW_ENABLED,
     MODBUS_REGISTER_SUPPLY_TEMP,
     MODBUS_REGISTER_SYSTEM_ID,
+    MODBUS_REGISTER_SYSTEM_ID_COMPONENTS,
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
     ABSwitchPosition,
     DanthermModbus,
@@ -244,16 +245,39 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Setup has started")
 
         # Connect and verify modbus connection
-        result = await self.connect_and_verify()
+        await self.connect_and_verify()
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
-        self.installed_components = result & 0xFFFF
-        _LOGGER.debug("Installed components (610) = %s", hex(self.installed_components))
+
+        self.installed_components = 0
+        components_read = False
 
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
         if system_id is not None:
+            components_read = True
             self._device_type = system_id >> 24
             _LOGGER.debug("Device type = %s", self.get_device_type)
             _LOGGER.debug("Installed components (2) = %s", hex(system_id & 0xFFFF))
+            self.installed_components |= system_id & 0xFFFF
+
+        system_id_components = await self._read_holding_uint32(
+            MODBUS_REGISTER_SYSTEM_ID_COMPONENTS
+        )
+        if system_id_components is not None:
+            components_read = True
+            _LOGGER.debug(
+                "Installed components (610) = %s", hex(system_id_components & 0xFFFF)
+            )
+            self.installed_components |= system_id_components & 0xFFFF
+
+        if not components_read:
+            _LOGGER.warning("Could not read installed components from device")
+            if self._client is not None:
+                self._client.close()
+                self._client = None
+            self._attr_available = False
+            raise ValueError("Could not read installed components from device")
+
+        _LOGGER.debug("Installed components = %s", hex(self.installed_components))
 
         fw_version = await self._read_holding_uint32(MODBUS_REGISTER_FIRMWARE_VERSION)
         if fw_version is not None:
