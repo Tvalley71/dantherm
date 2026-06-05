@@ -295,7 +295,8 @@ class TestDanthermCoordinator:
 
         mock_hub.async_process_expired_events = AsyncMock()
         mock_hub.async_update_adaptive_triggers = AsyncMock()
-        mock_hub.async_synchronize_time = AsyncMock()
+        mock_hub.async_should_synchronize_time = AsyncMock(return_value=True)
+        mock_hub.async_set_current_time = AsyncMock()
         mock_hub.async_get_current_unit_mode = AsyncMock(return_value="mode")
         mock_hub.async_get_active_unit_mode = AsyncMock()
         mock_hub.async_get_fan_level = AsyncMock()
@@ -315,8 +316,9 @@ class TestDanthermCoordinator:
 
         async def _time_sync_side_effect():
             assert not entered_lock
+            return True
 
-        mock_hub.async_synchronize_time.side_effect = _time_sync_side_effect
+        mock_hub.async_should_synchronize_time.side_effect = _time_sync_side_effect
 
         dummy_entity = MagicMock()
         dummy_entity.key = "dummy_sensor"
@@ -327,7 +329,7 @@ class TestDanthermCoordinator:
 
         await coordinator._update_data()
 
-        mock_hub.async_synchronize_time.assert_awaited_once()
+        mock_hub.async_should_synchronize_time.assert_awaited_once()
 
         await _cancel_coordinator_tasks()
 

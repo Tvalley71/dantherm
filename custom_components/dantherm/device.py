@@ -737,7 +737,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             )
             return False
 
-        time_difference = duration_dt(ha_now(), current_device_time).total_seconds()
+        time_difference = abs(duration_dt(ha_now(), current_device_time).total_seconds())
         self._last_time_sync_check = ha_now()
         if time_difference < 10:
             _LOGGER.debug("Device time is already synchronized, skipping")
