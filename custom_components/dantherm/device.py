@@ -701,7 +701,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             "preset_mode": preset_mode,
         }
 
-    async def async_get_current_datetime(self) -> datetime:
+    async def async_get_current_datetime(self) -> datetime | None:
         """Get current date and time."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_DATETIME)
