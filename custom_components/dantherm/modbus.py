@@ -126,7 +126,7 @@ class DanthermModbus:
         self._attr_available = True
         return True
 
-    async def connect_and_verify(self) -> int | bool:
+    async def connect_and_verify(self) -> bool:
         """Connect to Modbus and verify connection with retries."""
 
         _LOGGER.debug("Attempting Modbus connection for %s", self._host)
@@ -138,13 +138,11 @@ class DanthermModbus:
 
         _LOGGER.debug("Modbus connection established, verifying connection")
         for _ in range(5):
-            result = await self._read_holding_uint32(
-                MODBUS_REGISTER_SYSTEM_ID_COMPONENTS
-            )
+            result = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
             if result is not None:
                 _LOGGER.debug("Modbus client is connected!")
                 self._attr_available = True
-                return result
+                return True
             await asyncio.sleep(1)
 
         _LOGGER.error("Modbus client failed to respond for %s", self._host)
