@@ -77,7 +77,7 @@ from .modbus import (
     MODBUS_REGISTER_EXHAUST_TEMP,
     MODBUS_REGISTER_EXTRACT_TEMP,
     MODBUS_REGISTER_FAN_LEVEL,
-    MODBUS_REGISTER_FILTER_DIRTYNESS,
+    MODBUS_REGISTER_FILTER_DIRTINESS,
     MODBUS_REGISTER_FILTER_LIFETIME,
     MODBUS_REGISTER_FILTER_REMAIN,
     MODBUS_REGISTER_FILTER_RESET,
@@ -730,18 +730,32 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             "preset_mode": preset_mode,
         }
 
+    def _get_local_offset_seconds(self, dt: datetime | None = None) -> int:
+        """Return local UTC offset in seconds."""
+        ref = dt or ha_now()
+        offset = ref.utcoffset()
+        return int(offset.total_seconds()) if offset else 0
+
+    def _to_device_timestamp(self, dt: datetime) -> int:
+        """Convert local datetime to Dantherm device timestamp."""
+        return int(dt.timestamp()) + self._get_local_offset_seconds(dt)
+
+    def _from_device_timestamp(self, value: int) -> datetime:
+        """Convert Dantherm device timestamp to local datetime."""
+        return as_dt(datetime.fromtimestamp(value - self._get_local_offset_seconds()))
+
     async def async_get_current_datetime(self) -> datetime | None:
         """Get current date and time."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_DATETIME)
         if result is not None:
-            return as_dt(datetime.fromtimestamp(result))
+            return self._from_device_timestamp(result)
         return None
 
     async def async_set_datetime(self, dt: datetime) -> None:
         """Set current date and time."""
 
-        timestamp = int(dt.timestamp())
+        timestamp = self._to_device_timestamp(dt)
         await self._write_holding_uint32(MODBUS_REGISTER_DATETIME_SET, timestamp)
         _LOGGER.debug("Date and time set to %s", dt)
 
@@ -766,7 +780,9 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             )
             return False
 
-        time_difference = abs(duration_dt(ha_now(), current_device_time).total_seconds())
+        time_difference = abs(
+            duration_dt(ha_now(), current_device_time).total_seconds()
+        )
         self._last_time_sync_check = ha_now()
         if time_difference < 10:
             _LOGGER.debug("Device time is already synchronized, skipping")
@@ -1115,7 +1131,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
             if servoflow_enabled:
                 remain_level = await self._read_holding_uint32(
-                    MODBUS_REGISTER_FILTER_DIRTYNESS
+                    MODBUS_REGISTER_FILTER_DIRTINESS
                 )
         else:
             self._filter_lifetime = await self._read_holding_uint32(
@@ -1128,7 +1144,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             )
             _LOGGER.debug("Filter remain = %s", self._filter_remain)
 
-            if self._filter_lifetime is not None and self._filter_remain is not None and self._filter_lifetime > 0:
+            if (
+                self._filter_lifetime is not None
+                and self._filter_remain is not None
+                and self._filter_lifetime > 0
+            ):
                 remain_level = 0
                 if self._filter_remain <= self._filter_lifetime:
                     remain_level = int(
