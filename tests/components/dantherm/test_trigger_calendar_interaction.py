@@ -19,6 +19,7 @@ def mock_coordinator():
     """Mock coordinator for testing."""
     coordinator = Mock()
     coordinator.async_set_entity_state_from_entity_id = AsyncMock()
+    coordinator.is_entity_pending = Mock(return_value=False)
     return coordinator
 
 
@@ -50,7 +51,13 @@ def adaptive_manager(mock_coordinator, mock_calendar):
         return_value=ha_now() + timedelta(hours=1)
     )
     manager._operation_change_timeout = ha_now() - timedelta(minutes=1)
-    return manager
+
+    original_coordinator_property = DanthermAdaptiveManager.coordinator
+    DanthermAdaptiveManager.coordinator = property(lambda self: mock_coordinator)
+    try:
+        yield manager
+    finally:
+        DanthermAdaptiveManager.coordinator = original_coordinator_property
 
 
 class TestTriggerCalendarInteraction:
@@ -58,7 +65,7 @@ class TestTriggerCalendarInteraction:
 
     @pytest.mark.asyncio
     async def test_calendar_activates_switch_then_trigger_uses_stack(
-        self, adaptive_manager
+        self, adaptive_manager, mock_coordinator
     ):
         """Test full flow: Calendar -> Switch Entity -> Trigger -> Event Stack."""
         # Arrange
@@ -86,11 +93,6 @@ class TestTriggerCalendarInteraction:
 
         adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
 
-        # Mock coordinator
-        mock_coordinator = Mock()
-        mock_coordinator.async_set_entity_state_from_entity_id = AsyncMock()
-        type(adaptive_manager).coordinator = property(lambda self: mock_coordinator)
-
         # Mock the event_exists and push_event methods
         adaptive_manager.event_exists = Mock(return_value=False)  # First time
         adaptive_manager.push_event = Mock(return_value=True)  # Event becomes top
@@ -113,11 +115,8 @@ class TestTriggerCalendarInteraction:
             await adaptive_manager._update_adaptive_trigger_state("boost_mode_trigger")
 
             # Assert: Calendar should have activated switch (if it found the entity)
-            if (
-                adaptive_manager.coordinator.async_set_entity_state_from_entity_id.call_count
-                > 0
-            ):
-                adaptive_manager.coordinator.async_set_entity_state_from_entity_id.assert_called_with(
+            if mock_coordinator.async_set_entity_state_from_entity_id.call_count > 0:
+                mock_coordinator.async_set_entity_state_from_entity_id.assert_called_with(
                     "switch.device_boost_mode", True
                 )
             else:
@@ -289,7 +288,9 @@ class TestTriggerCalendarInteraction:
         )
 
     @pytest.mark.asyncio
-    async def test_calendar_and_trigger_interaction_order(self, adaptive_manager):
+    async def test_calendar_and_trigger_interaction_order(
+        self, adaptive_manager, mock_coordinator
+    ):
         """Test interaction order matters for calendar vs trigger events."""
         # Arrange
         # Create a manual boost trigger event first
@@ -315,11 +316,6 @@ class TestTriggerCalendarInteraction:
         )
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
-        # Mock coordinator
-        mock_coordinator = Mock()
-        mock_coordinator.async_set_entity_state_from_entity_id = AsyncMock()
-        type(adaptive_manager).coordinator = property(lambda self: mock_coordinator)
-
         with patch(
             "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
@@ -342,7 +338,7 @@ class TestTriggerCalendarInteraction:
 
     @pytest.mark.asyncio
     async def test_calendar_end_disables_switch_trigger_continues(
-        self, adaptive_manager
+        self, adaptive_manager, mock_coordinator
     ):
         """Test calendar end disables switch but trigger may continue."""
         # Arrange
@@ -358,11 +354,6 @@ class TestTriggerCalendarInteraction:
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
-
-        # Mock coordinator
-        mock_coordinator = Mock()
-        mock_coordinator.async_set_entity_state_from_entity_id = AsyncMock()
-        type(adaptive_manager).coordinator = property(lambda self: mock_coordinator)
 
         with patch(
             "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"

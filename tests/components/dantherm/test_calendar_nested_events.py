@@ -30,6 +30,7 @@ def mock_coordinator_for_all_tests():
     """Automatically mock coordinator for all tests in this file."""
     mock_coordinator = Mock()
     mock_coordinator.async_set_entity_state_from_entity_id = AsyncMock()
+    mock_coordinator.is_entity_pending = Mock(return_value=False)
 
     # Store original coordinator property
     original_coordinator = DanthermAdaptiveManager.coordinator

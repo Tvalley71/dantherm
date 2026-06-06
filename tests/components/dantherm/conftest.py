@@ -20,6 +20,12 @@ def entity_registry_enabled_by_default_fixture():
 
 
 @pytest.fixture
+def ignore_translations_for_mock_domains() -> list[str]:
+    """Skip translation checks for mock custom component domains in these tests."""
+    return [DOMAIN]
+
+
+@pytest.fixture
 def standard_config_entry():
     """Create standard config entry for Dantherm tests."""
     return MockConfigEntry(

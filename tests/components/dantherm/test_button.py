@@ -1,6 +1,6 @@
 """Test the Dantherm button platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from config.custom_components.dantherm.button import DanthermButton, async_setup_entry
 from config.custom_components.dantherm.const import DOMAIN
@@ -43,7 +43,7 @@ async def test_button_setup_success(hass: HomeAssistant) -> None:
     # Mock hass.data to return valid device
     hass.data = {DOMAIN: {"test_entry": {"device": mock_device}}}
 
-    mock_add_entities = AsyncMock()
+    mock_add_entities = MagicMock()
 
     result = await async_setup_entry(hass, mock_config_entry, mock_add_entities)
     assert result is True

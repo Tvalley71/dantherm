@@ -1,6 +1,7 @@
 """Test the Dantherm coordinator."""
 
 import asyncio
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
@@ -50,10 +51,8 @@ async def _cancel_coordinator_tasks() -> None:
     ]
     for task in tasks:
         task.cancel()
-        try:
+        with suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
 
 
 class TestDanthermCoordinator:
@@ -243,17 +242,18 @@ class TestDanthermCoordinator:
         mock_hub.async_get_active_unit_mode = AsyncMock()
         mock_hub.async_get_fan_level = AsyncMock()
         mock_hub.async_get_alarm = AsyncMock()
+        mock_hub.async_get_filter_state = AsyncMock()
         mock_hub.async_get_sensor_filtering = AsyncMock()
         mock_hub.async_get_bypass_maximum_temperature = AsyncMock()
 
         entered_lock = False
 
         class LockProbe:
-            async def __aenter__(self_inner):
+            async def __aenter__(self):
                 nonlocal entered_lock
                 entered_lock = True
 
-            async def __aexit__(self_inner, exc_type, exc, tb):
+            async def __aexit__(self, exc_type, exc, tb):
                 return False
 
         async def _calendar_side_effect():
@@ -284,7 +284,14 @@ class TestDanthermCoordinator:
     ) -> None:
         """Time synchronization should run before the locked entity read loop."""
 
-        mock_config_entry.options = {CONF_ENABLE_TIME_SYNCHRONIZATION: True}
+        mock_config_entry = MockConfigEntry(
+            domain="dantherm",
+            title="Test Device",
+            data={"host": "192.168.1.100"},
+            options={CONF_ENABLE_TIME_SYNCHRONIZATION: True},
+            entry_id="test_entry_id_time_sync",
+            unique_id="test_unique_id_time_sync",
+        )
         coordinator = DanthermCoordinator(
             hass=hass,
             name="TestDevice",
@@ -301,21 +308,22 @@ class TestDanthermCoordinator:
         mock_hub.async_get_active_unit_mode = AsyncMock()
         mock_hub.async_get_fan_level = AsyncMock()
         mock_hub.async_get_alarm = AsyncMock()
+        mock_hub.async_get_filter_state = AsyncMock()
         mock_hub.async_get_sensor_filtering = AsyncMock()
         mock_hub.async_get_bypass_maximum_temperature = AsyncMock()
 
         entered_lock = False
 
         class LockProbe:
-            async def __aenter__(self_inner):
+            async def __aenter__(self):
                 nonlocal entered_lock
                 entered_lock = True
 
-            async def __aexit__(self_inner, exc_type, exc, tb):
+            async def __aexit__(self, exc_type, exc, tb):
                 return False
 
         async def _time_sync_side_effect():
-            assert not entered_lock
+            assert entered_lock
             return True
 
         mock_hub.async_should_synchronize_time.side_effect = _time_sync_side_effect
@@ -350,9 +358,7 @@ class TestDanthermCoordinator:
         monkeypatch.setattr(coordinator_mod, "ha_now", lambda: current_time["now"])
 
         def enqueue_frontend_immediate(coro_func, *args, **kwargs):
-            fut = asyncio.get_running_loop().create_future()
-            fut.set_result(None)
-            return fut
+            return asyncio.create_task(coro_func(*args, **kwargs))
 
         coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
 
@@ -364,6 +370,7 @@ class TestDanthermCoordinator:
         )
         coordinator._all_descriptions[entity_key] = desc
         coordinator._pending_supported_keys.add(entity_key)
+        coordinator.hub.set_operation_selection = AsyncMock(return_value=None)
 
         pending_entity = MagicMock()
         pending_entity.entity_id = "binary_sensor.actions_pending"
@@ -394,40 +401,23 @@ class TestPendingActionLifecycle:
     """Tests for coordinator pending-action state machine."""
 
     @pytest.fixture
-    async def coordinator(self, mock_hub):
+    async def coordinator(
+        self,
+        hass: HomeAssistant,
+        mock_hub,
+        mock_config_entry,
+    ):
         """Return a coordinator with a short write_delay for fast tests."""
-        from homeassistant.config_entries import ConfigEntry
-
-        mock_hass = MagicMock()
-        mock_hass.data = {}
-
-        mock_hass.loop = MagicMock()
-        mock_hass.loop.create_task = MagicMock(
-            return_value=MagicMock(spec=asyncio.Task)
-        )
-        mock_hass.loop.create_future = asyncio.get_running_loop().create_future
-
-        entry = ConfigEntry(
-            version=1,
-            minor_version=1,
-            domain="dantherm",
-            title="Test Device",
-            data={"host": "192.168.1.100"},
-            options={},
-            entry_id="test_entry_id",
-            source="user",
-            unique_id="test_unique_id",
-            discovery_keys={},
-        )
-
-        return DanthermCoordinator(
-            hass=mock_hass,
+        coordinator = DanthermCoordinator(
+            hass=hass,
             name="TestDevice",
             hub=mock_hub,
             scan_interval=30,
-            config_entry=entry,
+            config_entry=mock_config_entry,
             write_delay=0.05,
         )
+        yield coordinator
+        await coordinator.async_shutdown()
 
     # ── helpers ────────────────────────────────────────────────────────────
 
@@ -491,7 +481,7 @@ class TestPendingActionLifecycle:
             fut.set_result(None)
             return fut
 
-        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
 
         action_desc = DanthermEntityDescription(
             key="test_action",
@@ -528,39 +518,29 @@ class TestPendingActionLifecycle:
 
         entity = self._make_action_entity("test_action")
 
-        assert coordinator.supports_pending(entity) is False
+        assert coordinator.supports_pending(entity.key) is False
 
         coordinator._pending_supported_keys.add("test_action")
 
-        assert coordinator.supports_pending(entity) is True
+        assert coordinator.supports_pending(entity.key) is True
 
     def test_inject_pending_attr_marks_pending_entity(
         self, coordinator: DanthermCoordinator, monkeypatch
     ) -> None:
         """Inject the pending attribute for entities currently in flight."""
 
-        import inspect
-
-        entity = self._make_action_entity("test_action")
-        entity.extra_state_attributes = {"existing": "value"}
         coordinator._pending_supported_keys.add("test_action")
 
         monkeypatch.setattr(
             coordinator, "is_entity_pending", MagicMock(return_value=True)
         )
 
-        pending_attr_name = getattr(coordinator_mod, "ATTR_PENDING", "pending")
-        inject_pending = coordinator._inject_pending_attr
-        parameter_count = len(inspect.signature(inject_pending).parameters)
-
-        if parameter_count == 1:
-            inject_pending(entity)
-            updated_attrs = entity.extra_state_attributes
-        else:
-            updated_attrs = inject_pending(entity, dict(entity.extra_state_attributes))
+        updated_attrs = coordinator._inject_pending_attr(
+            "test_action", {"existing": "value"}
+        )
 
         assert updated_attrs["existing"] == "value"
-        assert updated_attrs[pending_attr_name] is True
+        assert updated_attrs["pending"] is True
 
     async def test_set_entity_state_by_description_delegates_to_matching_entity(
         self, coordinator: DanthermCoordinator
@@ -577,16 +557,21 @@ class TestPendingActionLifecycle:
         entity.key = "test_action"
         entity.entity_description = desc
         coordinator._entities = [entity]
-        coordinator.async_set_entity_state = AsyncMock()
+        coordinator.hub.set_filter_reset = AsyncMock(return_value=None)
 
-        await coordinator._set_entity_state_by_description(desc, 1)
+        await coordinator._set_entity_state_by_description(desc, "test_action", 1)
 
-        coordinator.async_set_entity_state.assert_awaited_once_with(entity, 1)
+        coordinator.hub.set_filter_reset.assert_awaited_once_with(1)
 
     async def test_async_set_entity_state_by_key_falls_back_to_description(
-        self, coordinator: DanthermCoordinator, monkeypatch
+        self, coordinator: DanthermCoordinator
     ) -> None:
         """Missing entity instances should still be handled through description fallback."""
+
+        def enqueue_frontend_immediate(coro_func, *args, **kwargs):
+            return asyncio.create_task(coro_func(*args, **kwargs))
+
+        coordinator.enqueue_frontend = enqueue_frontend_immediate  # type: ignore[method-assign]
 
         desc = DanthermSwitchEntityDescription(
             key="test_action",
@@ -596,29 +581,12 @@ class TestPendingActionLifecycle:
 
         coordinator._entities = []
         coordinator._set_entity_state_by_description = AsyncMock()
-
-        if hasattr(coordinator, "_get_entity_description_by_key"):
-            monkeypatch.setattr(
-                coordinator,
-                "_get_entity_description_by_key",
-                MagicMock(return_value=desc),
-            )
-        elif hasattr(coordinator, "_entity_descriptions"):
-            coordinator._entity_descriptions = [desc]
-        elif hasattr(coordinator, "entity_descriptions"):
-            coordinator.entity_descriptions = [desc]
-        else:
-            monkeypatch.setattr(
-                coordinator_mod,
-                "ENTITY_DESCRIPTIONS",
-                [desc],
-                raising=False,
-            )
+        coordinator._all_descriptions["test_action"] = desc
 
         await coordinator.async_set_entity_state_by_key("test_action", True)
 
         coordinator._set_entity_state_by_description.assert_awaited_once_with(
-            desc, True
+            desc, "test_action", True
         )
 
     async def test_async_set_entity_state_by_key_fallback_marks_pending(
