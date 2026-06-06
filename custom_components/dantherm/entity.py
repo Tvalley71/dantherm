@@ -11,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .device import DanthermDevice
 from .device_map import DanthermEntityDescription
 
 if TYPE_CHECKING:
@@ -24,10 +25,12 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
 
     coordinator: DanthermCoordinator
 
-    def __init__(self, device: Any, description: DanthermEntityDescription) -> None:
+    def __init__(
+        self, device: DanthermDevice, description: DanthermEntityDescription
+    ) -> None:
         """Initialize the instance."""
         super().__init__(device.coordinator)
-        self._device = device
+        self._device: DanthermDevice = device
 
         # Always use config entry ID as unique_id prefix for consistency
         config_entry = getattr(self._device, "_config_entry", None)
@@ -75,7 +78,7 @@ class DanthermEntity(CoordinatorEntity["DanthermCoordinator"]):
             manufacturer=self._device.get_device_manufacturer,
             model=self._device.get_device_type,
             sw_version=f"({self._device.get_device_fw_version})",
-            serial_number=self._device.get_device_serial_number,
+            serial_number=str(self._device.get_device_serial_number),
         )
 
     @property
