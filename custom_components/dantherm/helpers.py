@@ -95,9 +95,11 @@ def set_device_entities_enabled_from_key(
                     hass, entry.entity_id, RegistryEntryDisabler.INTEGRATION
                 )
             count += 1
-        except (ValueError, KeyError):
-            # Log error but continue with other entities
-            # Only catch specific exceptions that could occur during entity updates
+        # Log error but continue with other entities
+        # Only catch specific exceptions that could occur during entity updates
+        except ValueError:
+            pass
+        except KeyError:
             pass
 
     return count
@@ -147,7 +149,7 @@ def as_dt(value: datetime | date) -> datetime:
         return dt.replace(microsecond=0)
     return (
         datetime.combine(value, datetime.min.time())
-        .astimezone(ha_now().tzinfo)
+        .replace(tzinfo=ha_now().tzinfo)
         .replace(microsecond=0)
     )
 

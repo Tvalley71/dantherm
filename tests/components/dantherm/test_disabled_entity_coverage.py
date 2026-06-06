@@ -79,6 +79,9 @@ class TestDisabledEntityCoverage:
             "manual_bypass_duration",
             "bypass_minimum_temperature_summer",
             "bypass_maximum_temperature_summer",
+            "air_quality_low_threshold",
+            "air_quality_middle_threshold",
+            "air_quality_high_threshold",
         }
 
         assert set(disabled_numbers) == expected_disabled_numbers, (
@@ -96,6 +99,11 @@ class TestDisabledEntityCoverage:
                 "manual_bypass_duration",
                 "bypass_minimum_temperature_summer",
                 "bypass_maximum_temperature_summer",
+            ],
+            "air_quality_": [
+                "air_quality_low_threshold",
+                "air_quality_middle_threshold",
+                "air_quality_high_threshold",
             ],
         }
 

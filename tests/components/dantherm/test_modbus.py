@@ -1,6 +1,6 @@
 """Test the Dantherm modbus functionality."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from config.custom_components.dantherm.modbus import (
     MODBUS_REGISTER_ALARM,
@@ -201,6 +201,7 @@ class TestDanthermModbus:
     async def test_disconnect_and_close(self, mock_tcp_client, mock_sleep):
         """Test disconnection and closing."""
         mock_client = AsyncMock()
+        mock_client.close = MagicMock()
         mock_tcp_client.return_value = mock_client
 
         modbus = DanthermModbus("test", "192.168.1.100", 502, 1)
@@ -226,7 +227,7 @@ class TestDanthermModbus:
         with patch.object(modbus, "_read_holding_uint32", return_value=12345):
             result = await modbus.connect_and_verify()
 
-            assert result == 12345
+            assert result is True
             assert modbus._attr_available is True
             mock_client.connect.assert_called_once()
 

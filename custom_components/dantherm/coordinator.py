@@ -282,18 +282,17 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             await self.hub.async_get_calendar()
         data: dict[str, Any] = {}
 
-        # Time synchronization is split in two phases:
-        # 1) Decision/read phase here (outside _rw_lock)
-        # 2) Write phase scheduled on the frontend queue (non-blocking)
-        # This avoids lock inversion and avoids blocking the update cycle.
-        if self._config_entry.options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False):
-            if await self.hub.async_should_synchronize_time():
-                self.enqueue_frontend(
-                    self.hub.async_set_current_time, fire_and_forget=True
-                )
-
         async with self._rw_lock:
             _LOGGER.debug("<<< UPDATE BEGIN - %s >>>", ha_now().strftime("%H:%M:%S.%f"))
+
+            # Keep time sync check under the same read/write lock as regular polling
+            # to avoid overlap with read cycles, while keeping the actual write queued.
+            if self._config_entry.options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False):
+                if await self.hub.async_should_synchronize_time():
+                    self.enqueue_frontend(
+                        self.hub.async_set_current_time, fire_and_forget=True
+                    )
+
             # Read current unit mode
             result = await self.hub.async_get_current_unit_mode()
             if result is None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -13,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
+from tests.common import MockConfigEntry
 
 # Dynamic imports based on test environment
 try:
@@ -29,6 +30,8 @@ try:
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
         CONF_ENABLE_TIME_SYNCHRONIZATION,
+        CONF_MANUFACTURER,
+        CONF_USE_DISCOVERY,
     )
 except ImportError:
     # Fallback for custom integration tests
@@ -48,6 +51,8 @@ except ImportError:
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
         CONF_ENABLE_TIME_SYNCHRONIZATION,
+        CONF_MANUFACTURER,
+        CONF_USE_DISCOVERY,
     )
 
 
@@ -95,8 +100,6 @@ def temp_integration_files():
         json.dump(translations_content, f, indent=2)
 
     # Copy necessary Python files
-    import shutil
-
     source_dir = Path("config/custom_components/dantherm")
     files_to_copy = [
         "__init__.py",
@@ -203,7 +206,7 @@ async def test_user_flow_cannot_connect(
         mock_connect.assert_called_once()
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_options_flow_update_and_reload(
     hass: HomeAssistant,
@@ -278,7 +281,7 @@ async def test_options_flow_update_and_reload(
         assert entry.data[CONF_HOST] == "5.6.7.8"
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_options_flow_advanced_unchecked_booleans_persist_false(
     hass: HomeAssistant,
@@ -361,7 +364,7 @@ async def test_options_flow_advanced_unchecked_booleans_persist_false(
         assert final_options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False) is False
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_options_flow_network_only_change_still_schedules_reload(
     hass: HomeAssistant,
@@ -432,18 +435,17 @@ async def test_options_flow_network_only_change_still_schedules_reload(
         assert entry.data[CONF_HOST] == "9.9.9.9"
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "temp_integration_files")
+@pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_user_flow_discovery_selects_new_device(hass: HomeAssistant) -> None:
     """Test that discovery returns only unconfigured device and populates host selection."""
-    # Wait for integration to be loaded
-    await hass.config_entries.async_wait_component(
-        hass.config_entries.flow._load_integration(hass, DOMAIN, {})
-    )
-
     with (
-        patch("custom_components.dantherm.config_flow.async_discover") as mock_discover,
-        patch("custom_components.dantherm.config_flow.DanthermDevice") as mock_device,
+        patch(
+            "config.custom_components.dantherm.config_flow.async_discover"
+        ) as mock_discover,
+        patch(
+            "config.custom_components.dantherm.config_flow.DanthermDevice"
+        ) as mock_device,
     ):
         mock_discover.return_value = [
             {"ip": "10.10.10.10", "name": "Dantherm Discovered"}
@@ -458,13 +460,25 @@ async def test_user_flow_discovery_selects_new_device(hass: HomeAssistant) -> No
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == CONF_MANUFACTURER
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_MANUFACTURER: "Dantherm"},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "discovery_option"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USE_DISCOVERY: True},
+        )
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         schema = result["data_schema"].schema
-        host_validator = next(v for k, v in schema.items() if str(k) == "host")
-        assert hasattr(host_validator, "container")
-        assert host_validator.container == ["10.10.10.10"]
-        assert get_schema_suggested_value(schema, CONF_HOST) == "10.10.10.10"
+        host_field = next(k for k in schema if str(k) == CONF_HOST)
+        assert host_field.default() == "10.10.10.10"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -478,6 +492,7 @@ async def test_user_flow_discovery_selects_new_device(hass: HomeAssistant) -> No
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
 async def test_user_flow_discovery_excludes_already_configured(
     hass: HomeAssistant,
@@ -510,10 +525,22 @@ async def test_user_flow_discovery_excludes_already_configured(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == CONF_MANUFACTURER
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_MANUFACTURER: "Dantherm"},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "discovery_option"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USE_DISCOVERY: True},
+        )
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         schema = result["data_schema"].schema
-        host_validator = next(v for k, v in schema.items() if str(k) == "host")
-        assert hasattr(host_validator, "container")
-        assert host_validator.container == ["10.10.10.11"]
-        assert get_schema_suggested_value(schema, CONF_HOST) == "10.10.10.11"
+        host_field = next(k for k in schema if str(k) == CONF_HOST)
+        assert host_field.default() == "10.10.10.11"
