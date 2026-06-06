@@ -30,7 +30,7 @@ class TestInvalidTimeFormat:
     def test_raise_and_catch(self) -> None:
         """Test raising and catching InvalidTimeFormat."""
         with pytest.raises(InvalidTimeFormat) as exc_info:
-            raise InvalidTimeFormat()
+            raise InvalidTimeFormat
 
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == "invalid_timeformat"
@@ -63,7 +63,7 @@ class TestInvalidFilterLifetime:
     def test_raise_and_catch(self) -> None:
         """Test raising and catching InvalidFilterLifetime."""
         with pytest.raises(InvalidFilterLifetime) as exc_info:
-            raise InvalidFilterLifetime()
+            raise InvalidFilterLifetime
 
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == "invalid_filter_lifetime"
@@ -118,7 +118,7 @@ class TestExceptionBehavior:
     def test_catch_as_home_assistant_error(self) -> None:
         """Test catching InvalidTimeFormat as HomeAssistantError."""
         with pytest.raises(HomeAssistantError) as exc_info:
-            raise InvalidTimeFormat()
+            raise InvalidTimeFormat
 
         assert isinstance(exc_info.value, InvalidTimeFormat)
         assert exc_info.value.translation_domain == DOMAIN
