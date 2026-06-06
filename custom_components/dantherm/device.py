@@ -742,7 +742,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
     def _from_device_timestamp(self, value: int) -> datetime:
         """Convert Dantherm device timestamp to local datetime."""
-        return as_dt(datetime.fromtimestamp(value - self._get_local_offset_seconds()))
+        return as_dt(datetime.fromtimestamp(value))
 
     async def async_get_current_datetime(self) -> datetime | None:
         """Get current date and time."""
