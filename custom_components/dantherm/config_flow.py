@@ -1,5 +1,7 @@
 """Config Flow implementation."""
 
+from __future__ import annotations
+
 import contextlib
 import ipaddress
 import logging

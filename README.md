@@ -13,7 +13,7 @@ Home Assistant integration for Dantherm ventilation units.
 
 This custom integration requires:
 
-- Home Assistant version **2025.1.0** or newer
+- Home Assistant version **2025.8.0** or newer
 
 Only support for Modbus over TCP/IP.
 
