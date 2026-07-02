@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
+    __version__,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -238,11 +239,13 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Dantherm from a config entry."""
 
-    _LOGGER.warning(
-        "🏁 SETUP DEBUG: async_setup_entry called for entry %s", entry.entry_id
-    )
-    _LOGGER.warning(
-        "🏁 SETUP DEBUG: Version = %s, title = %s", entry.version, entry.title
+    _LOGGER.debug(
+        "🏁 SETUP DEBUG: entry title = %s, entry id = %s, entry version = %s, HA version = %s, PyModbus version = %s",
+        entry.title,
+        entry.entry_id,
+        entry.version,
+        __version__,
+        pymodbus.__version__,
     )
 
     if version.parse(pymodbus.__version__) < version.parse(REQUIRED_PYMODBUS_VERSION):
