@@ -239,7 +239,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Dantherm from a config entry."""
 
-    _LOGGER.warning(
+    _LOGGER.debug(
         "🏁 SETUP DEBUG: entry title = %s, entry id = %s, entry version = %s, HA version = %s, PyModbus version = %s",
         entry.title,
         entry.entry_id,
