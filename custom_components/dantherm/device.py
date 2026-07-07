@@ -20,10 +20,13 @@ from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEFAULT_NAME, DEVICE_TYPES
 from .coordinator import DanthermCoordinator
 from .device_map import (
+    ALARM_EVENT_TYPE_BY_CODE,
     ATTR_AIR_QUALITY,
     ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
+    ATTR_ALARM_EVENT,
     ATTR_BYPASS_DAMPER,
+    ATTR_FILTER_EVENT,
     ATTR_FILTER_REMAIN,
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
@@ -229,6 +232,9 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             },
         }
 
+        # Registry of event entities keyed by entity description key
+        self._event_entities: dict[str, Any] = {}
+
     @property
     def coordinator(self) -> DanthermCoordinator | None:
         """Override coordinator property from DanthermAdaptiveManager."""
@@ -238,6 +244,22 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     def coordinator(self, value: DanthermCoordinator | None) -> None:
         """Set coordinator property."""
         self._coordinator = value
+
+    def register_event_entity(self, entity: Any) -> None:
+        """Register an event entity with this device."""
+        self._event_entities[entity.key] = entity
+
+    def unregister_event_entity(self, entity: Any) -> None:
+        """Unregister an event entity from this device."""
+        self._event_entities.pop(entity.key, None)
+
+    def fire_event(
+        self, key: str, event_type: str, attributes: dict[str, Any] | None = None
+    ) -> None:
+        """Fire an event on the registered event entity for the given key."""
+        entity = self._event_entities.get(key)
+        if entity is not None:
+            entity.trigger_event(event_type, attributes)
 
     async def async_init_and_connect(self) -> DanthermCoordinator | None:
         """Set up modbus for Dantherm Device."""
@@ -848,7 +870,9 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Get alarm."""
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_ALARM)
+
         if result not in (None, 0, self._alarm):
+            alarm_state = str(result)
             # Create persistent notification if alarm is not zero
             if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
@@ -856,7 +880,15 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                     self._device_name,
                     "sensor",
                     ATTR_ALARM,
-                    str(result) if result is not None else None,
+                    alarm_state,
+                )
+            event_type = ALARM_EVENT_TYPE_BY_CODE.get(result)
+            if event_type is not None:
+                # Fire alarm event
+                self.fire_event(
+                    ATTR_ALARM_EVENT,
+                    event_type,
+                    {"alarm_code": result},
                 )
 
         self._alarm = result
@@ -1166,6 +1198,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                     ATTR_FILTER_REMAIN,
                     str(0),
                 )
+            # Fire filter expired event
+            self.fire_event(ATTR_FILTER_EVENT, "filter_expired")
+        elif remain_level == 2 and remain_level != self._filter_remain_level:
+            # Fire filter warning event when level first reaches 2 (Poor)
+            self.fire_event(ATTR_FILTER_EVENT, "filter_warning")
 
         self._filter_remain_level = remain_level
         _LOGGER.debug("Filter Remain Level = %s", self._filter_remain_level)
