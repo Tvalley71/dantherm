@@ -89,6 +89,44 @@
       "filter_reset": { "name": "Filter zurücksetzen" },
       "alarm_reset": { "name": "Alarm zurücksetzen" }
     },
+    "event": {
+      "alarm_event": {
+        "name": "Alarmereignis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_exhaust_air_fan": "Abluftventilator-Alarm",
+              "alarm_supply_air_fan": "Zuluftventilator-Alarm",
+              "alarm_bypass_damper": "Bypass-Klappen-Alarm",
+              "alarm_outdoor_air": "Außenluft-Alarm (T1)",
+              "alarm_supply_air": "Zuluft-Alarm (T2)",
+              "alarm_extract_air": "Abluft-Alarm (T3)",
+              "alarm_exhaust_air": "Fortluft-Alarm (T4)",
+              "alarm_room_air": "Raumluft-Alarm (T5)",
+              "alarm_rh": "Luftfeuchtigkeits-Alarm",
+              "alarm_outdoor_temperature": "Außenluft-Temperaturalarm",
+              "alarm_supply_temperature": "Zuluft-Temperaturalarm",
+              "alarm_overtemperature": "Übertemperaturalarm",
+              "alarm_communication_error": "Kommunikationsstörung",
+              "alarm_fire": "Brandalarm",
+              "alarm_high_waterlevel": "Wasserstandsalarm",
+              "alarm_fire_protection": "Brandschutzalarm"
+            }
+          }
+        }
+      },
+      "filter_event": {
+        "name": "Filterereignis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "filter_warning": "Filterwarnung",
+              "filter_expired": "Filter abgelaufen"
+            }
+          }
+        }
+      }
+    },
     "calendar": {
       "calendar": { "name": "Kalender" }
     },

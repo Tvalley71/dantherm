@@ -89,6 +89,44 @@
       "filter_reset": { "name": "Filter Resetten" },
       "alarm_reset": { "name": "Foutmelding Resetten" }
     },
+    "event": {
+      "alarm_event": {
+        "name": "Alarmgebeurtenis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_exhaust_air_fan": "Exhaust FAN Alarm",
+              "alarm_supply_air_fan": "Supply FAN Alarm",
+              "alarm_bypass_damper": "Bypass Alarm",
+              "alarm_outdoor_air": "T1 Alarm",
+              "alarm_supply_air": "T2 Alarm",
+              "alarm_extract_air": "T3 Alarm",
+              "alarm_exhaust_air": "T4 Alarm",
+              "alarm_room_air": "T5 Alarm",
+              "alarm_rh": "RH Alarm",
+              "alarm_outdoor_temperature": "Outdoor Alarm",
+              "alarm_supply_temperature": "Supply Alarm",
+              "alarm_overtemperature": "Fire Alarm",
+              "alarm_communication_error": "Comminication Alarm",
+              "alarm_fire": "Fire Termostat Alarm",
+              "alarm_high_waterlevel": "High Waterlevel Alarm",
+              "alarm_fire_protection": "Brandbeveiligingsalarm"
+            }
+          }
+        }
+      },
+      "filter_event": {
+        "name": "Filtergebeurtenis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "filter_warning": "Filterwaarschuwing",
+              "filter_expired": "Filter verlopen"
+            }
+          }
+        }
+      }
+    },
     "calendar": {
       "calendar": { "name": "Kalender" }
     },

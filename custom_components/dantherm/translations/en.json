@@ -89,6 +89,44 @@
       "filter_reset": { "name": "Reset Filter" },
       "alarm_reset": { "name": "Reset Alarm" }
     },
+    "event": {
+      "alarm_event": {
+        "name": "Alarm Event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_exhaust_air_fan": "Exhaust air fan alarm",
+              "alarm_supply_air_fan": "Supply air fan alarm",
+              "alarm_bypass_damper": "Bypass damper alarm",
+              "alarm_outdoor_air": "Outdoor air alarm (T1)",
+              "alarm_supply_air": "Supply air alarm (T2)",
+              "alarm_extract_air": "Extrack air alarm (T3)",
+              "alarm_exhaust_air": "Exhaust air alarm (T4)",
+              "alarm_room_air": "Room air alarm (T5)",
+              "alarm_rh": "RH alarm",
+              "alarm_outdoor_temperature": "Outdoor temperature alarm",
+              "alarm_supply_temperature": "Supply temperature alarm",
+              "alarm_overtemperature": "Overtemperature alarm",
+              "alarm_communication_error": "Communication error",
+              "alarm_fire": "Fire alarm",
+              "alarm_high_waterlevel": "High waterlevel alarm",
+              "alarm_fire_protection": "Fire protection alarm"
+            }
+          }
+        }
+      },
+      "filter_event": {
+        "name": "Filter Event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "filter_warning": "Filter Warning",
+              "filter_expired": "Filter Expired"
+            }
+          }
+        }
+      }
+    },
     "calendar": {
       "calendar": { "name": "Calendar" }
     },

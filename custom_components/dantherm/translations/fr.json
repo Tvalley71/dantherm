@@ -89,6 +89,44 @@
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
       "alarm_reset": { "name": "Réinitialiser alerte active" }
     },
+    "event": {
+      "alarm_event": {
+        "name": "Événement d'alarme",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_exhaust_air_fan": "Alerte ventilateur extraction",
+              "alarm_supply_air_fan": "Alerte ventilateur pulsion",
+              "alarm_bypass_damper": "Alerte bypass",
+              "alarm_outdoor_air": "Alerte T1",
+              "alarm_supply_air": "Alerte T2",
+              "alarm_extract_air": "Alerte T3",
+              "alarm_exhaust_air": "Alerte T4",
+              "alarm_room_air": "Alerte T5",
+              "alarm_rh": "Alerte humidité",
+              "alarm_outdoor_temperature": "Alarme extérieur 13",
+              "alarm_supply_temperature": "Alerte pulsion 5",
+              "alarm_overtemperature": "Alerte feu",
+              "alarm_communication_error": "Alerte communication",
+              "alarm_fire": "Alerte thermostat feu",
+              "alarm_high_waterlevel": "Alerte niveau d'eau élevé",
+              "alarm_fire_protection": "Alerte protection incendie"
+            }
+          }
+        }
+      },
+      "filter_event": {
+        "name": "Événement de filtre",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "filter_warning": "Alerte filtre",
+              "filter_expired": "Filtre expiré"
+            }
+          }
+        }
+      }
+    },
     "calendar": {
       "calendar": { "name": "Calendrier" }
     },
