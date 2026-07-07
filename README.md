@@ -76,6 +76,13 @@ Thanks to _Smartzeug_
 |------------------|--------------------------|
 | `bypass_damper`  | Indicates and controls the manual bypass state of the bypass damper [[1]](#entity-notes) |
 
+#### Event Entities
+
+| Entity         | Description |
+|----------------|-------------|
+| `alarm_event`  | Fires event notifications when the unit reports a new alarm. Supported event types: `alarm_exhaust_air_fan`, `alarm_supply_air_fan`, `alarm_bypass_damper`, `alarm_outdoor_air`, `alarm_supply_air`, `alarm_extract_air`, `alarm_exhaust_air`, `alarm_room_air`, `alarm_rh`, `alarm_outdoor_temperature`, `alarm_supply_temperature`, `alarm_overtemperature`, `alarm_communication_error`, `alarm_fire`, `alarm_high_waterlevel`, `alarm_fire_protection`. Alarm events include the `alarm_code` attribute. |
+| `filter_event` | Fires event notifications for filter lifecycle changes. Supported event types: `filter_warning`, `filter_expired`. |
+
 #### Fan Entity
 | Entity           | Description              |
 |------------------|--------------------------|
@@ -244,9 +251,6 @@ Danish, Dutch, English, German and French.
 ## Examples
 
 #### Picture-elements card
-
-![new](https://github.com/user-attachments/assets/1b21d1a8-e2a1-4589-87b0-eccf9697678c)
-The picture elements card has been updated with fresh images and options to include humidity and air quality sensors with changing level icons _(2025-6-29)_.
 
 This picture-elements card provides a dynamic and intuitive interface for monitoring and controlling your Dantherm ventilation unit. Designed to resemble the Dantherm app, it visually adapts based on the unit’s bypass state while displaying key real-time data:
 
@@ -893,6 +897,64 @@ When multiple calendar events overlap, the system follows this priority order (h
 <img width="750" alt="Skærmbillede 2025-08-03 kl  17 25 42" src="https://github.com/user-attachments/assets/02a362f1-19c6-4fd0-94a9-e5be88ef986c" />
 
 These features provide **seamless automation and intelligent airflow control**, ensuring the ventilation system adapts dynamically to both **planned schedules** and **real-time environmental conditions**. 🚀🏡🌱📅
+
+#### Using Event Entities
+
+The Dantherm event entities are useful when you want to react to discrete changes instead of continuously monitoring sensor values.
+
+- **`alarm_event`** can be used to detect when a new alarm is raised.
+- **`filter_event`** can be used to detect when the filter reaches warning level or needs replacement.
+
+Each event entity stores the latest received event as its current state and exposes the event type as an attribute.
+
+For `alarm_event`, event attributes include:
+- `alarm_code` for the numeric alarm code
+
+The human-readable text is provided through Home Assistant translations for the `event_type` value.
+
+If Home Assistant **Recorder** is enabled, these event updates can also be reviewed later in the entity history, which makes them useful for tracking alarm occurrences and filter-related events over time.
+
+Typical use cases include:
+
+- Sending a notification when a new alarm is triggered
+- Creating a maintenance reminder when the filter reaches warning or expired state
+- Triggering automations only when a specific event type occurs
+- Reviewing past alarm or filter events in Home Assistant history
+
+#### Automation Examples
+
+```yaml
+automation:
+  - alias: Dantherm alarm triggered
+    triggers:
+      - trigger: event
+        entity_id: event.dantherm_alarm_event
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: Dantherm alarm
+          message: >
+            Dantherm: {{ trigger.to_state.attributes.event_type }}
+            (code: {{ trigger.to_state.attributes.alarm_code }})
+
+```yaml
+automation:
+  - alias: Dantherm filter reminder
+    triggers:
+      - trigger: event
+        entity_id: event.dantherm_filter_event
+        event_type:
+          - filter_warning
+          - filter_expired
+    actions:
+      - action: notify.notify
+        data:
+          message: >
+            {% if trigger.to_state.attributes.event_type == 'filter_warning' %}
+              Dantherm filter is getting close to replacement time. Remember to order new filters.
+            {% else %}
+              Dantherm filter has expired. Replace the filter now.
+            {% endif %}
 
 <!-- END:shared-section -->
 
