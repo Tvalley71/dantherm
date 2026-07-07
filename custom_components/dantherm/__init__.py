@@ -70,6 +70,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CALENDAR,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
