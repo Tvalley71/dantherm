@@ -927,25 +927,47 @@ Typical use cases include:
 automation:
   - alias: Dantherm alarm triggered
     triggers:
-      - trigger: event
-        entity_id: event.dantherm_alarm_event
+      - trigger: event.received
+        target:
+          entity_id: event.dantherm_alarm_event
+        options:
+          event_type:
+            - alarm_exhaust_air
+            - alarm_fire
+            - alarm_fire_protection
+            - alarm_bypass_damper
+            - alarm_high_waterlevel
+            - alarm_supply_air
+            - alarm_supply_temperature
+            - alarm_supply_air_fan
+            - alarm_communication_error
+            - alarm_overtemperature
+            - alarm_rh
+            - alarm_room_air
+            - alarm_outdoor_air
+            - alarm_outdoor_temperature
+            - alarm_extract_air
+            - alarm_exhaust_air_fan
     actions:
-      - action: persistent_notification.create
+      - action: notify.notify
         data:
           title: Dantherm alarm
           message: >
-            Dantherm: {{ trigger.to_state.attributes.event_type }}
-            (code: {{ trigger.to_state.attributes.alarm_code }})
+            Dantherm: {{ trigger.to_state.attributes.event_type }} (code: {{
+            trigger.to_state.attributes.alarm_code }})
+```
 
 ```yaml
 automation:
   - alias: Dantherm filter reminder
     triggers:
-      - trigger: event
-        entity_id: event.dantherm_filter_event
-        event_type:
-          - filter_warning
-          - filter_expired
+      - trigger: event.received
+        target:
+          entity_id: event.dantherm_filter_event
+        options:
+          event_type:
+            - filter_warning
+            - filter_expired
     actions:
       - action: notify.notify
         data:
@@ -955,6 +977,7 @@ automation:
             {% else %}
               Dantherm filter has expired. Replace the filter now.
             {% endif %}
+```
 
 <!-- END:shared-section -->
 
