@@ -108,6 +108,7 @@ from .notifications import (
     async_create_key_value_notification,
     async_dismiss_notification,
 )
+from .translations import async_get_translated_state_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -873,6 +874,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         if result not in (None, 0, self._alarm):
             alarm_state = str(result)
+            alarm_text = await async_get_translated_state_text(
+                self._hass,
+                "sensor",
+                ATTR_ALARM,
+                alarm_state,
+            )
             # Create persistent notification if alarm is not zero
             if not self._options.get(CONF_DISABLE_NOTIFICATIONS, False):
                 await async_create_key_value_notification(
@@ -881,6 +888,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                     "sensor",
                     ATTR_ALARM,
                     alarm_state,
+                    state_text=alarm_text,
                 )
             event_type = ALARM_EVENT_TYPE_BY_CODE.get(result)
             if event_type is not None:
@@ -888,7 +896,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 self.fire_event(
                     ATTR_ALARM_EVENT,
                     event_type,
-                    {"alarm_code": result},
+                    {"alarm_code": result, "alarm_text": alarm_text},
                 )
 
         self._alarm = result
