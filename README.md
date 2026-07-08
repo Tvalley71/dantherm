@@ -80,7 +80,7 @@ Thanks to _Smartzeug_
 
 | Entity         | Description |
 |----------------|-------------|
-| `alarm_event`  | Fires event notifications when the unit reports a new alarm. Supported event types: `alarm_exhaust_air_fan`, `alarm_supply_air_fan`, `alarm_bypass_damper`, `alarm_outdoor_air`, `alarm_supply_air`, `alarm_extract_air`, `alarm_exhaust_air`, `alarm_room_air`, `alarm_rh`, `alarm_outdoor_temperature`, `alarm_supply_temperature`, `alarm_overtemperature`, `alarm_communication_error`, `alarm_fire`, `alarm_high_waterlevel`, `alarm_fire_protection`. Alarm events include the `alarm_code` attribute. |
+| `alarm_event`  | Fires event notifications when the unit reports a new alarm. Supported event types: `alarm_exhaust_air_fan`, `alarm_supply_air_fan`, `alarm_bypass_damper`, `alarm_outdoor_air`, `alarm_supply_air`, `alarm_extract_air`, `alarm_exhaust_air`, `alarm_room_air`, `alarm_rh`, `alarm_outdoor_temperature`, `alarm_supply_temperature`, `alarm_overtemperature`, `alarm_communication_error`, `alarm_fire`, `alarm_high_waterlevel`, `alarm_fire_protection`. Alarm events include `alarm_code` and `alarm_text` attributes. |
 | `filter_event` | Fires event notifications for filter lifecycle changes. Supported event types: `filter_warning`, `filter_expired`. |
 
 #### Fan Entity
@@ -909,8 +909,9 @@ Each event entity stores the latest received event as its current state and expo
 
 For `alarm_event`, event attributes include:
 - `alarm_code` for the numeric alarm code
+- `alarm_text` for the human-readable alarm description
 
-The human-readable text is provided through Home Assistant translations for the `event_type` value.
+The `event_type` attribute is still available for filtering automations by event category.
 
 If Home Assistant **Recorder** is enabled, these event updates can also be reviewed later in the entity history, which makes them useful for tracking alarm occurrences and filter-related events over time.
 
@@ -953,7 +954,7 @@ automation:
         data:
           title: Dantherm alarm
           message: >
-            Dantherm: {{ trigger.to_state.attributes.event_type }} (code: {{
+            Dantherm: {{ trigger.to_state.attributes.alarm_text }} (code: {{
             trigger.to_state.attributes.alarm_code }})
 ```
 
