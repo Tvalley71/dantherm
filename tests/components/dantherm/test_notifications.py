@@ -96,6 +96,46 @@ async def test_async_create_key_value_notification(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
+async def test_async_create_key_value_notification_with_pretranslated_text(
+    hass: HomeAssistant,
+) -> None:
+    """It should reuse pretranslated values and skip translation lookups."""
+
+    with (
+        patch(
+            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            new=AsyncMock(),
+        ) as mock_exc_text,
+        patch(
+            "config.custom_components.dantherm.notifications.async_get_translated_state_text",
+            new=AsyncMock(),
+        ) as mock_state_text,
+        patch(
+            "config.custom_components.dantherm.notifications.async_create_notification",
+            new=AsyncMock(),
+        ) as mock_create,
+    ):
+        await dn.async_create_key_value_notification(
+            hass,
+            device_name="Dev",
+            platform="sensor",
+            key="alarm",
+            state="5",
+            state_text="HCC 2 ALU",
+            message_text="header",
+        )
+
+        mock_exc_text.assert_not_awaited()
+        mock_state_text.assert_not_awaited()
+        args, kwargs = mock_create.await_args
+        assert args[0] is hass
+        assert kwargs == {}
+        assert args[1] == "Dev: HCC 2 ALU"
+        assert args[2] == "header"
+        assert args[3] == "Dev_alarm_notification"
+
+
+@pytest.mark.asyncio
 async def test_async_create_exception_notification(hass: HomeAssistant) -> None:
     """It should create title from device only and format placeholders in message template."""
 

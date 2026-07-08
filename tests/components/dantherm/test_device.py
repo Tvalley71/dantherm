@@ -124,10 +124,10 @@ async def test_alarm_notification(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_alarm_event_includes_alarm_code_only(
+async def test_alarm_event_includes_alarm_code_and_alarm_text(
     hass: HomeAssistant,
 ) -> None:
-    """Test that alarm events include alarm code only in attributes."""
+    """Test that alarm events include alarm code and alarm text in attributes."""
 
     config_entry = ConfigEntry(
         version=1,
@@ -153,14 +153,18 @@ async def test_alarm_event_includes_alarm_code_only(
             "config.custom_components.dantherm.device.async_create_key_value_notification",
             new=AsyncMock(),
         ),
+        patch(
+            "config.custom_components.dantherm.device.async_get_translated_state_text",
+            new=AsyncMock(return_value="HCC 2 ALU"),
+        ),
         patch.object(device, "fire_event") as mock_fire_event,
     ):
         await device.async_get_alarm()
 
     mock_fire_event.assert_called_once_with(
         ATTR_ALARM_EVENT,
-        "alarm_supply_air_fan",
-        {"alarm_code": 2},
+        "alarm_supply_air",
+        {"alarm_code": 5, "alarm_text": "HCC 2 ALU"},
     )
 
 
