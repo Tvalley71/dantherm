@@ -247,6 +247,7 @@ ATTR_ACTIONS_PENDING: Final = "actions_pending"
 ATTR_FEATURES: Final = "features"
 
 CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
+CONF_ENABLE_SENSOR_FILTERING: Final = "enable_sensor_filtering"
 CONF_ENABLE_TIME_SYNCHRONIZATION: Final = "enable_time_synchronization"
 
 OPERATION_SELECTIONS = [
@@ -1087,14 +1088,6 @@ SWITCHES: tuple[DanthermSwitchEntityDescription, ...] = (
         state_setoff=ActiveUnitMode.EndSummer,
         icon_off="mdi:weather-sunny-off",
         device_class=SwitchDeviceClass.SWITCH,
-    ),
-    DanthermSwitchEntityDescription(
-        key=ATTR_SENSOR_FILTERING,
-        data_default=False,
-        icon_on="mdi:filter",
-        icon_off="mdi:filter-off",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
     ),
     DanthermSwitchEntityDescription(
         key=ATTR_BOOST_MODE,
