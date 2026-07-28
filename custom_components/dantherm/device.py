@@ -28,11 +28,11 @@ from .device_map import (
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
-    ATTR_SENSOR_FILTERING,
     CONF_BOOST_MODE_TRIGGER,
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
+    CONF_ENABLE_SENSOR_FILTERING,
     CONF_HOME_MODE_TRIGGER,
     CONF_MANUFACTURER,
     MANUFACTURER_MAP,
@@ -866,8 +866,8 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     async def async_get_sensor_filtering(self) -> bool:
         """Get sensor filtering."""
 
-        self._sensor_filtering = self.get_entity_state_from_coordinator(
-            ATTR_SENSOR_FILTERING, False
+        self._sensor_filtering = bool(
+            self._options.get(CONF_ENABLE_SENSOR_FILTERING, False)
         )
         return self._sensor_filtering
 
