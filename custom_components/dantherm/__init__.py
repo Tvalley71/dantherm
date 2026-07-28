@@ -14,13 +14,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
+    STATE_ON,
     Platform,
     __version__,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 
@@ -28,10 +30,12 @@ from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .device import DanthermDevice
 from .device_map import (
     ATTR_CALENDAR,
+    ATTR_SENSOR_FILTERING,
     CONF_BOOST_MODE_TRIGGER,
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
+    CONF_ENABLE_SENSOR_FILTERING,
     CONF_HOME_MODE_TRIGGER,
     REQUIRED_PYMODBUS_VERSION,
 )
@@ -39,6 +43,7 @@ from .discovery import async_discover
 from .helpers import get_primary_entry_id, is_primary_entry
 from .notifications import async_create_exception_notification
 from .services import async_setup_services
+from .store import DanthermStore
 
 # Constants only for migration use
 ATTR_DISABLE_ALARM_NOTIFICATIONS: Final = "disable_alarm_notifications"
@@ -84,7 +89,55 @@ DEFAULT_OPTIONS = {
     CONF_ECO_MODE_TRIGGER: "",
     CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
     CONF_DISABLE_NOTIFICATIONS: False,
+    CONF_ENABLE_SENSOR_FILTERING: False,
 }
+
+
+async def _migrate_sensor_filtering_option(
+    hass: HomeAssistant, entry: ConfigEntry, options: dict[str, Any]
+) -> tuple[dict[str, Any], bool]:
+    """Transfer the legacy switch state to the new checkbox option."""
+
+    entity_store = DanthermStore(hass, entry.data.get(CONF_NAME))
+    await entity_store.async_load_entities()
+    legacy_value = entity_store.get_stored_entity_state(ATTR_SENSOR_FILTERING)
+    if legacy_value is not None:
+        if isinstance(legacy_value, bool):
+            pass
+        elif isinstance(legacy_value, str):
+            normalized = legacy_value.strip().lower()
+            if normalized in {"on", "true", "1"}:
+                legacy_value = True
+            if normalized in {"off", "false", "0"}:
+                legacy_value = False
+        else:
+            _LOGGER.warning(
+                "Unexpected legacy value type for sensor filtering: %s (%s)",
+                legacy_value,
+                type(legacy_value),
+            )
+            legacy_value = None
+
+    if legacy_value is not None:
+        options[CONF_ENABLE_SENSOR_FILTERING] = legacy_value
+        return options, True
+
+    options[CONF_ENABLE_SENSOR_FILTERING] = False
+    return options, True
+
+
+async def _remove_legacy_sensor_filtering_entity(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Remove the old sensor-filtering switch entity from the registry."""
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        "switch",
+        DOMAIN,
+        f"{entry.entry_id}_{ATTR_SENSOR_FILTERING}",
+    )
+    if entity_id:
+        entity_registry.async_remove(entity_id)
 
 
 def get_expected_serial_for_entry(
@@ -262,11 +315,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     options = dict(entry.options)
-    # If options are empty, initialize them with defaults
     if not options:
         _LOGGER.warning("No stored options found, initializing defaults")
         options = dict(DEFAULT_OPTIONS)
-        hass.config_entries.async_update_entry(entry, options=options)
+
+    await _remove_legacy_sensor_filtering_entity(hass, entry)
 
     _LOGGER.debug("Loading stored options in setup: %s", options)
 
@@ -381,6 +434,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_DISABLE_TEMPERATURE_UNKNOWN, False
         ),
         CONF_DISABLE_NOTIFICATIONS: options.get(CONF_DISABLE_NOTIFICATIONS, False),
+        CONF_ENABLE_SENSOR_FILTERING: options.get(CONF_ENABLE_SENSOR_FILTERING, False),
     }
 
     # Forward setup to platforms
@@ -449,6 +503,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 "Removed deprecated uids_migrated flag from config entry data"
             )
 
+    # Version 3: Migrate legacy sensor filtering switch state to options checkbox
+    if config_entry.version == 3:
+        from_version = config_entry.version
+        options, changed = await _migrate_sensor_filtering_option(
+            hass, config_entry, options
+        )
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options=options if changed else config_entry.options,
+            version=4,
+        )
+        _LOGGER.info(
+            "Upgrading config entry from version %s to 4 (sensor_filtering checkbox migration)",
+            from_version,
+        )
+
     return True
 
 
@@ -489,7 +559,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if domain_data.get(ATTR_CALENDAR) is not None:
             try:
                 owner_id = getattr(domain_data[ATTR_CALENDAR], "_config_entry_id", None)
-            except (AttributeError, TypeError):
+            except AttributeError, TypeError:
                 owner_id = None
             if owner_id == entry.entry_id:
                 domain_data.pop(ATTR_CALENDAR, None)
