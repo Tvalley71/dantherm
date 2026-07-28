@@ -69,6 +69,7 @@
         "data": {
           "disable_temperature_unknown": "Disable setting temperature sensors to unknown in bypass/summer modes",
           "disable_notifications": "Disable notifications",
+          "enable_sensor_filtering": "Enable sensor filtering",
           "enable_time_synchronization": "Enable time synchronization"
         }
       }
@@ -324,7 +325,6 @@
       "fireplace_mode": { "name": "Fireplace Mode" },
       "manual_bypass_mode": { "name": "Manual Bypass Mode" },
       "summer_mode": { "name": "Summer Mode" },
-      "sensor_filtering": { "name": "Sensor Filtering" },
       "boost_mode": { "name": "Boost Mode" },
       "eco_mode": { "name": "Eco Mode" },
       "home_mode": { "name": "Home Mode" },

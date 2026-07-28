@@ -69,6 +69,7 @@
         "data": {
           "disable_temperature_unknown": "Deaktivieren Sie das Setzen der Temperatursensoren auf 'unbekannt' im Bypass-/Sommermodus",
           "disable_notifications": "Benachrichtigungen deaktivieren",
+          "enable_sensor_filtering": "Sensorfilterung aktivieren",
           "enable_time_synchronization": "Zeitsynchronisierung aktivieren"
         }
       }
@@ -324,7 +325,6 @@
       "fireplace_mode": { "name": "Kaminmodus" },
       "manual_bypass_mode": { "name": "Manueller Bypass-Modus" },
       "summer_mode": { "name": "Sommermodus" },
-      "sensor_filtering": { "name": "Sensorfilterung" },
       "boost_mode": { "name": "Boost-Modus" },
       "eco_mode": { "name": "Eco-Modus" },
       "home_mode": { "name": "Home-Modus" },
