@@ -29,6 +29,7 @@ try:
     from config.custom_components.dantherm.device_map import (
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
+        CONF_ENABLE_SENSOR_FILTERING,
         CONF_ENABLE_TIME_SYNCHRONIZATION,
         CONF_MANUFACTURER,
         CONF_USE_DISCOVERY,
@@ -50,6 +51,7 @@ except ImportError:
     from custom_components.dantherm.device_map import (  # type: ignore[import-untyped]
         CONF_DISABLE_NOTIFICATIONS,
         CONF_DISABLE_TEMPERATURE_UNKNOWN,
+        CONF_ENABLE_SENSOR_FILTERING,
         CONF_ENABLE_TIME_SYNCHRONIZATION,
         CONF_MANUFACTURER,
         CONF_USE_DISCOVERY,
@@ -283,6 +285,75 @@ async def test_options_flow_update_and_reload(
 
 @pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.asyncio
+async def test_options_flow_skips_empty_trigger_values(hass: HomeAssistant) -> None:
+    """Empty trigger values should not be persisted as options."""
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
+        options={},
+        unique_id="SERIAL-3",
+        entry_id="entry-3",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    network_result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"continue": True},
+    )
+    assert network_result["type"] is FlowResultType.FORM
+    assert network_result["step_id"] == "network"
+
+    triggers_result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            "polling_speed": "normal",
+        },
+    )
+    assert triggers_result["type"] is FlowResultType.FORM
+    assert triggers_result["step_id"] == "triggers"
+
+    advanced_result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "boost_mode_trigger": "",
+            "eco_mode_trigger": "",
+            "home_mode_trigger": "",
+        },
+    )
+    assert advanced_result["type"] is FlowResultType.FORM
+    assert advanced_result["step_id"] == "advanced"
+
+    done_result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DISABLE_TEMPERATURE_UNKNOWN: False,
+            CONF_DISABLE_NOTIFICATIONS: False,
+            CONF_ENABLE_SENSOR_FILTERING: False,
+            CONF_ENABLE_TIME_SYNCHRONIZATION: False,
+        },
+    )
+    assert done_result["type"] is FlowResultType.CREATE_ENTRY
+
+    final_options = done_result["data"]
+    assert "boost_mode_trigger" not in final_options
+    assert "eco_mode_trigger" not in final_options
+    assert "home_mode_trigger" not in final_options
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.asyncio
 async def test_options_flow_advanced_unchecked_booleans_persist_false(
     hass: HomeAssistant,
 ) -> None:
@@ -362,6 +433,67 @@ async def test_options_flow_advanced_unchecked_booleans_persist_false(
         assert final_options.get(CONF_DISABLE_TEMPERATURE_UNKNOWN, False) is False
         assert final_options.get(CONF_DISABLE_NOTIFICATIONS, False) is False
         assert final_options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False) is False
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.asyncio
+async def test_options_flow_advanced_includes_sensor_filtering_checkbox(
+    hass: HomeAssistant,
+) -> None:
+    """The advanced options step should expose the sensor-filtering checkbox."""
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        },
+        options={CONF_ENABLE_SENSOR_FILTERING: True},
+        unique_id="SERIAL-3",
+        entry_id="entry-3",
+    )
+    entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["step_id"] == "init"
+
+    network_result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={"continue": True},
+    )
+    assert network_result["type"] is FlowResultType.FORM
+    assert network_result["step_id"] == "network"
+
+    triggers_result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: DEFAULT_PORT,
+            "polling_speed": "normal",
+        },
+    )
+    assert triggers_result["type"] is FlowResultType.FORM
+    assert triggers_result["step_id"] == "triggers"
+
+    advanced_result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={
+            "boost_mode_trigger": "",
+            "eco_mode_trigger": "",
+            "home_mode_trigger": "",
+        },
+    )
+    assert advanced_result["type"] is FlowResultType.FORM
+    assert advanced_result["step_id"] == "advanced"
+
+    schema = advanced_result["data_schema"].schema
+    sensor_filtering_field = next(
+        key for key in schema if str(key) == CONF_ENABLE_SENSOR_FILTERING
+    )
+    assert sensor_filtering_field.default() is True
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
