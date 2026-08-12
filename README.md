@@ -2,6 +2,8 @@
 
 Home Assistant integration for Dantherm ventilation units.
 
+![Active installations](https://img.shields.io/endpoint?url=https://vaskivskyi.github.io/ha-custom-analytics/badges/dantherm/total.json)
+
 > [!TIP]
 > The integration also exist in a version for Pluggit ventilation units [here](https://github.com/Tvalley71/pluggit).
 
