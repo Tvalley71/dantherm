@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
-    STATE_ON,
     Platform,
     __version__,
 )
