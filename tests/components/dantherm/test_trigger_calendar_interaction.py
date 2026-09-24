@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from config.custom_components.dantherm.adaptive_manager import DanthermAdaptiveManager
 from config.custom_components.dantherm.device_map import STATE_BOOST, STATE_HOME
@@ -81,6 +81,7 @@ class TestTriggerCalendarInteraction:
         mock_entity.entity_id = (
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
+        mock_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         # Mock that boost mode switch becomes active after calendar event
@@ -130,6 +131,36 @@ class TestTriggerCalendarInteraction:
                 "auto",
                 end_time=adaptive_manager._get_adaptive_trigger_timeout("boost"),
             )
+
+    @pytest.mark.asyncio
+    async def test_calendar_selects_entity_by_translation_key(self, adaptive_manager):
+        """Test calendar updates the matching mode entity, not the first entity."""
+        event = CalendarEvent(
+            summary="Boost Mode",
+            start=ha_now(),
+            end=ha_now() + timedelta(hours=2),
+            uid="test_boost_2",
+        )
+        eco_entity = Mock(
+            entity_id="switch.device_eco_mode", translation_key="eco_mode"
+        )
+        boost_entity = Mock(
+            entity_id="switch.device_boost_mode", translation_key="boost_mode"
+        )
+        adaptive_manager.get_device_entities = Mock(
+            return_value=[eco_entity, boost_entity]
+        )
+
+        with patch(
+            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
+            return_value=STATE_BOOST,
+        ):
+            await adaptive_manager._update_adaptive_calendar_state("start", event)
+
+        assert (
+            adaptive_manager.coordinator.async_set_entity_state_from_entity_id.call_args_list
+            == [call(boost_entity.entity_id, True)]
+        )
 
     @pytest.mark.asyncio
     async def test_trigger_callback_then_update_uses_stack(self, adaptive_manager):
@@ -314,6 +345,7 @@ class TestTriggerCalendarInteraction:
         mock_entity.entity_id = (
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
+        mock_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
@@ -353,6 +385,7 @@ class TestTriggerCalendarInteraction:
         mock_entity.entity_id = (
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
+        mock_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
