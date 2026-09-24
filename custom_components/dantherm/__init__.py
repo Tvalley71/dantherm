@@ -108,8 +108,10 @@ async def _migrate_sensor_filtering_option(
             normalized = legacy_value.strip().lower()
             if normalized in {"on", "true", "1"}:
                 legacy_value = True
-            if normalized in {"off", "false", "0"}:
+            elif normalized in {"off", "false", "0"}:
                 legacy_value = False
+            else:
+                legacy_value = None
         else:
             _LOGGER.warning(
                 "Unexpected legacy value type for sensor filtering: %s (%s)",
@@ -487,7 +489,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
 
     # Version 2: Enhanced unique_id migration logic
-    if config_entry.version == 2:
+    elif config_entry.version == 2:
         # Perform entity unique_id migration here in migration function
         await _migrate_entities_unique_ids(hass, config_entry)
         hass.config_entries.async_update_entry(config_entry, version=3)
@@ -504,7 +506,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
 
     # Version 3: Migrate legacy sensor filtering switch state to options checkbox
-    if config_entry.version == 3:
+    elif config_entry.version == 3:
         from_version = config_entry.version
         options, changed = await _migrate_sensor_filtering_option(
             hass, config_entry, options
