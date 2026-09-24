@@ -501,7 +501,12 @@ class DanthermAdaptiveManager:
             # If the event is a switch operation, update the state of the entity
             entities = self.get_device_entities()
             entity = next(
-                (e for e in entities if e.entity_id.endswith(f"_{operation}_mode")),
+                (
+                    e
+                    for e in entities
+                    if e.translation_key
+                    and e.translation_key.endswith(f"{operation}_mode")
+                ),
                 None,
             )
             if entity:
