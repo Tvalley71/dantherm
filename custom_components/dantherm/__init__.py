@@ -489,7 +489,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
 
     # Version 2: Enhanced unique_id migration logic
-    elif config_entry.version == 2:
+    if config_entry.version == 2:
         # Perform entity unique_id migration here in migration function
         await _migrate_entities_unique_ids(hass, config_entry)
         hass.config_entries.async_update_entry(config_entry, version=3)
