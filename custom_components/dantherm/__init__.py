@@ -471,6 +471,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     _LOGGER.info("Migrating config entry from version %s", config_entry.version)
     options = dict(config_entry.options)
     data = dict(config_entry.data)
+    from_version = config_entry.version
 
     # Version 1: Move disable_alarm_notifications to disable_notifications
     if config_entry.version == 1:
@@ -481,22 +482,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             options[CONF_DISABLE_NOTIFICATIONS] = options.pop(
                 ATTR_DISABLE_ALARM_NOTIFICATIONS
             )
-            hass.config_entries.async_update_entry(
-                config_entry, options=options, version=2
-            )
-            _LOGGER.info(
-                "Migrated disable_alarm_notifications to disable_notifications"
-            )
+        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
+        _LOGGER.info(
+            "Upgrading config entry from version %s to 2 (disable_alarm_notifications to disable_notifications migration)",
+            from_version,
+        )
 
     # Version 2: Enhanced unique_id migration logic
     if config_entry.version == 2:
         # Perform entity unique_id migration here in migration function
         await _migrate_entities_unique_ids(hass, config_entry)
-        hass.config_entries.async_update_entry(config_entry, version=3)
-        _LOGGER.info(
-            "Upgrading config entry from version %s to 3 (enhanced unique_id migration)",
-            config_entry.version,
-        )
 
         # Clean up deprecated uids_migrated flag (no longer needed with version-based migration)
         if "uids_migrated" in data:
@@ -505,9 +500,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 "Removed deprecated uids_migrated flag from config entry data"
             )
 
+        hass.config_entries.async_update_entry(config_entry, version=3)
+        _LOGGER.info(
+            "Upgrading config entry from version %s to 3 (enhanced unique_id migration)",
+            from_version,
+        )
+
     # Version 3: Migrate legacy sensor filtering switch state to options checkbox
-    elif config_entry.version == 3:
-        from_version = config_entry.version
+    if config_entry.version == 3:
         options, changed = await _migrate_sensor_filtering_option(
             hass, config_entry, options
         )
