@@ -504,7 +504,8 @@ class DanthermAdaptiveManager:
                 (
                     e
                     for e in entities
-                    if e.translation_key.endswith(f"{operation}_mode")
+                    if e.translation_key
+                    and e.translation_key.endswith(f"{operation}_mode")
                 ),
                 None,
             )
