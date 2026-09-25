@@ -100,7 +100,7 @@
               "alarm_bypass_damper": "Bypass damper alarm",
               "alarm_outdoor_air": "Outdoor air alarm (T1)",
               "alarm_supply_air": "Supply air alarm (T2)",
-              "alarm_extract_air": "Extrack air alarm (T3)",
+              "alarm_extract_air": "Extract air alarm (T3)",
               "alarm_exhaust_air": "Exhaust air alarm (T4)",
               "alarm_room_air": "Room air alarm (T5)",
               "alarm_rh": "RH alarm",

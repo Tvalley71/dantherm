@@ -107,8 +107,8 @@
               "alarm_outdoor_temperature": "Outdoor Alarm",
               "alarm_supply_temperature": "Supply Alarm",
               "alarm_overtemperature": "Fire Alarm",
-              "alarm_communication_error": "Comminication Alarm",
-              "alarm_fire": "Fire Termostat Alarm",
+              "alarm_communication_error": "Communication Alarm",
+              "alarm_fire": "Fire Thermostat Alarm",
               "alarm_high_waterlevel": "High Waterlevel Alarm",
               "alarm_fire_protection": "Brandbeveiligingsalarm"
             }
