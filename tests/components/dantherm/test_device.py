@@ -4,7 +4,12 @@ from time import monotonic
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from config.custom_components.dantherm.device import DanthermDevice
-from config.custom_components.dantherm.device_map import ATTR_ALARM_EVENT
+from config.custom_components.dantherm.device_map import (
+    ATTR_ALARM_EVENT,
+    DanthermEventEntityDescription,
+)
+from config.custom_components.dantherm.entity import DanthermEntity
+from config.custom_components.dantherm.event import DanthermEvent
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -120,7 +125,62 @@ async def test_alarm_notification(hass: HomeAssistant) -> None:
         assert args[1] == "TestDevice"
         assert args[2] == "sensor"
         assert args[3] == "alarm"
-        assert args[4] == "2"
+        assert args[4] == "5"
+
+
+async def test_event_entity_uses_base_lifecycle_and_registers_device(
+    hass: HomeAssistant,
+) -> None:
+    """Event entities should use the base coordinator lifecycle once and register with device."""
+
+    config_entry = ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="dantherm",
+        title="Test",
+        data={},
+        options={},
+        entry_id="event123",
+        source="user",
+        unique_id=None,
+        discovery_keys={},
+        subentries_data={},
+    )
+    device = DanthermDevice(hass, "TestDevice", "localhost", 1, 1, 5, config_entry)
+    device.coordinator = MagicMock()
+    device.coordinator.async_add_entity = AsyncMock()
+    device.coordinator.async_remove_entity = AsyncMock()
+
+    entity = DanthermEvent(
+        device,
+        DanthermEventEntityDescription(
+            key=ATTR_ALARM_EVENT,
+            icon="mdi:alert-circle",
+            event_types=["alarm_supply_air"],
+        ),
+    )
+
+    with patch.object(
+        DanthermEntity,
+        "async_added_to_hass",
+        wraps=DanthermEntity.async_added_to_hass,
+    ) as mock_added:
+        await entity.async_added_to_hass()
+
+    mock_added.assert_awaited_once()
+    device.coordinator.async_add_entity.assert_awaited_once_with(entity)
+    assert device._event_entities[ATTR_ALARM_EVENT] is entity
+
+    with patch.object(
+        DanthermEntity,
+        "async_will_remove_from_hass",
+        wraps=DanthermEntity.async_will_remove_from_hass,
+    ) as mock_removed:
+        await entity.async_will_remove_from_hass()
+
+    mock_removed.assert_awaited_once()
+    device.coordinator.async_remove_entity.assert_awaited_once_with(entity)
+    assert ATTR_ALARM_EVENT not in device._event_entities
 
 
 @pytest.mark.asyncio
