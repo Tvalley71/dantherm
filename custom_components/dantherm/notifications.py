@@ -10,14 +10,29 @@ from .translations import (
 
 
 async def async_create_key_value_notification(
-    hass: HomeAssistant, device_name: str, platform: str, key: str, state: str | None
+    hass: HomeAssistant,
+    device_name: str,
+    platform: str,
+    key: str,
+    state: str | int | None,
+    *,
+    state_text: str | None = None,
+    message_text: str | None = None,
 ) -> None:
     """Create a persistent notification."""
 
-    # Get the message and state text for the notification
-    message = await async_get_translated_exception_text(hass, f"{key}_notification", "")
+    # Resolve notification text only when not provided by caller.
+    message = message_text
+    if message is None:
+        message = await async_get_translated_exception_text(
+            hass, f"{key}_notification", ""
+        )
+
     state_str = state or "unknown"
-    state_text = await async_get_translated_state_text(hass, platform, key, state_str)
+    if state_text is None:
+        state_text = await async_get_translated_state_text(
+            hass, platform, key, state_str
+        )
 
     # Generate a unique notification id based on the device name and key
     notification_id = f"{device_name}_{key}_notification"
