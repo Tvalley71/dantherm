@@ -63,20 +63,14 @@ class DanthermEvent(EventEntity, DanthermEntity):
         self.entity_description: DanthermEventEntityDescription = description
 
     async def async_added_to_hass(self) -> None:
-        """Register entity with device and restore last event."""
-        await super().async_added_to_hass()
-        await self.coordinator.async_add_entity(self)
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Register restored event state with the device."""
-        await super().async_internal_added_to_hass()
+        """Register base coordinator lifecycle and device callback."""
+        await DanthermEntity.async_added_to_hass(self)
         self._device.register_event_entity(self)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Unregister entity from device."""
+        """Unregister the device callback before removing the base lifecycle."""
         self._device.unregister_event_entity(self)
-        await self.coordinator.async_remove_entity(self)
-        await super().async_will_remove_from_hass()
+        await DanthermEntity.async_will_remove_from_hass(self)
 
     def trigger_event(
         self, event_type: str, attributes: dict[str, Any] | None = None
