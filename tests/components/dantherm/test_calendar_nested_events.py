@@ -93,8 +93,10 @@ class TestComprehensiveCalendarTriggerIntegration:
         # Mock switch entities for switch modes
         mock_eco_entity = Mock()
         mock_eco_entity.entity_id = "switch.device_eco_mode"
+        mock_eco_entity.translation_key = "eco_mode"
         mock_boost_entity = Mock()
         mock_boost_entity.entity_id = "switch.device_boost_mode"
+        mock_boost_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(
             return_value=[mock_eco_entity, mock_boost_entity]
         )
@@ -318,8 +320,10 @@ class TestComprehensiveCalendarTriggerIntegration:
         # Mock switch entities
         mock_home_entity = Mock()
         mock_home_entity.entity_id = "switch.device_home_mode"
+        mock_home_entity.translation_key = "home_mode"
         mock_fireplace_entity = Mock()
         mock_fireplace_entity.entity_id = "switch.device_fireplace_mode"
+        mock_fireplace_entity.translation_key = "fireplace_mode"
         adaptive_manager.get_device_entities = Mock(
             return_value=[mock_home_entity, mock_fireplace_entity]
         )
@@ -600,6 +604,7 @@ class TestCalendarNestedEvents:
         mock_entity.entity_id = (
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
+        mock_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
@@ -701,6 +706,7 @@ class TestCalendarNestedEvents:
         # Create mock entity
         mock_entity = Mock()
         mock_entity.entity_id = "switch.device_boost_mode"
+        mock_entity.translation_key = "boost_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
@@ -768,6 +774,7 @@ class TestCalendarNestedEvents:
         # Mock fireplace mode switch entity
         mock_entity = Mock()
         mock_entity.entity_id = "switch.device_fireplace_mode"
+        mock_entity.translation_key = "fireplace_mode"
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
@@ -820,8 +827,10 @@ class TestCalendarNestedEvents:
             # Mock entities for switch operations
             mock_eco_entity = Mock()
             mock_eco_entity.entity_id = "switch.device_eco_mode"
+            mock_eco_entity.translation_key = "eco_mode"
             mock_boost_entity = Mock()
             mock_boost_entity.entity_id = "switch.device_boost_mode"
+            mock_boost_entity.translation_key = "boost_mode"
             adaptive_manager.get_device_entities = Mock(
                 return_value=[mock_eco_entity, mock_boost_entity]
             )
@@ -921,6 +930,7 @@ class TestCalendarTriggerIntegration:
         mock_entity.entity_id = (
             "switch.device_boost_mode"  # Should end with _{operation}_mode
         )
+        mock_entity.translation_key = "boost_mode"
 
         with patch(
             "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"

@@ -452,14 +452,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         device_registry = dr.async_get(self._hass)
 
         # Find device_id der matcher denne config entry
-        device_id = next(
-            (
-                d.id
-                for d in device_registry.devices.values()
-                if self._config_entry.entry_id in d.config_entries
-            ),
-            None,
+        device_entries = dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
         )
+        device_id = device_entries[0].id if device_entries else None
 
         if not device_id:
             _LOGGER.warning(
@@ -481,14 +477,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         device_registry = dr.async_get(self._hass)
 
         # Find device_id that matches this config entry
-        device_id = next(
-            (
-                d.id
-                for d in device_registry.devices.values()
-                if self._config_entry.entry_id in d.config_entries
-            ),
-            None,
+        device_entries = dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
         )
+        device_id = device_entries[0].id if device_entries else None
 
         if not device_id:
             _LOGGER.warning(
