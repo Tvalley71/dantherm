@@ -26,6 +26,7 @@ from .device_map import (
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
     CONF_ECO_MODE_TRIGGER,
+    CONF_ENABLE_SENSOR_FILTERING,
     CONF_ENABLE_TIME_SYNCHRONIZATION,
     CONF_HOME_MODE_TRIGGER,
     CONF_LINK_TO_PRIMARY_CALENDAR,
@@ -54,6 +55,11 @@ GITHUB_URL = "https://github.com/Tvalley71/dantherm"
 IS_DEBUG = os.getenv("DANTHERM_DEBUG") == "1"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _sanitize_options(options: dict[str, Any]) -> dict[str, Any]:
+    """Return options with empty-string entries removed."""
+    return {key: value for key, value in options.items() if value not in (None, "")}
 
 
 def _get_manufacturer_schema() -> vol.Schema:
@@ -118,7 +124,7 @@ def dantherm_modbus_entries(hass: HomeAssistant) -> set[str]:
 class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Dantherm Modbus configflow."""
 
-    VERSION = 3  # Current version of the config flow
+    VERSION = 4  # Current version of the config flow
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
@@ -326,6 +332,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the initial welcome screen with configuration overview."""
+
         if user_input is not None:
             # Check if user wants to continue
             if not user_input.get("continue", False):
@@ -475,7 +482,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
                         errors[entity_key] = "invalid_entity"
 
             if not errors:
-                new_options = {**options, **user_input}
+                new_options = _sanitize_options({**options, **user_input})
 
                 # Optional checkbox fields can be omitted when unchecked.
                 # Persist explicit booleans to avoid stale True values.
@@ -510,6 +517,10 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
                     default=options.get(CONF_DISABLE_NOTIFICATIONS, False),
                 ): bool,
                 vol.Optional(
+                    CONF_ENABLE_SENSOR_FILTERING,
+                    default=options.get(CONF_ENABLE_SENSOR_FILTERING, False),
+                ): bool,
+                vol.Optional(
                     CONF_ENABLE_TIME_SYNCHRONIZATION,
                     default=options.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False),
                 ): bool,
@@ -517,7 +528,7 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
         )
 
         if user_input is not None:
-            new_options = {**options, **user_input}
+            new_options = _sanitize_options({**options, **user_input})
 
             # Optional checkbox fields can be omitted when unchecked.
             # Persist explicit booleans to avoid stale True values.
@@ -526,6 +537,9 @@ class DanthermOptionsFlowHandler(config_entries.OptionsFlowWithReload):
             )
             new_options[CONF_DISABLE_NOTIFICATIONS] = bool(
                 user_input.get(CONF_DISABLE_NOTIFICATIONS, False)
+            )
+            new_options[CONF_ENABLE_SENSOR_FILTERING] = bool(
+                user_input.get(CONF_ENABLE_SENSOR_FILTERING, False)
             )
             new_options[CONF_ENABLE_TIME_SYNCHRONIZATION] = bool(
                 user_input.get(CONF_ENABLE_TIME_SYNCHRONIZATION, False)
