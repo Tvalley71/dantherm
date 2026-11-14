@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "name": "Dantherm Integration",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.analysis.ignore": [
+      "**/homeassistant/**",
+      "**/tests/**"
+    ],
+    "python.analysis.extraPaths": [
+      "/workspaces/core"
+    ]
+  }
+}
