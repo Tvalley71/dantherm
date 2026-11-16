@@ -46,7 +46,7 @@ def adaptive_manager(mock_coordinator, mock_calendar):
     manager.get_current_operation = Mock(return_value=STATE_HOME)
     manager._set_adaptive_target_operation = AsyncMock()
     manager.get_device_entities = Mock(return_value=[])
-    manager.get_entity_state_from_coordinator = Mock(return_value=None)
+    manager._get_entity_state_from_coordinator = Mock(return_value=None)
     manager._get_adaptive_trigger_timeout = Mock(
         return_value=ha_now() + timedelta(hours=1)
     )
@@ -92,7 +92,7 @@ class TestTriggerCalendarInteraction:
                 return "auto"  # Target operation
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
 
         # Mock the event_exists and push_event methods
         adaptive_manager.event_exists = Mock(return_value=False)  # First time
@@ -175,7 +175,7 @@ class TestTriggerCalendarInteraction:
                 return "auto"  # Target operation
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
 
         # Mock the event_exists and push_event methods
         adaptive_manager.event_exists = Mock(return_value=False)  # First time
@@ -221,7 +221,7 @@ class TestTriggerCalendarInteraction:
                 return "level_3"  # Target operation
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
         adaptive_manager.event_exists = Mock(return_value=False)
         adaptive_manager.push_event = Mock(return_value=True)
 
@@ -255,7 +255,7 @@ class TestTriggerCalendarInteraction:
                 return "level_1"
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
         adaptive_manager.event_exists = Mock(return_value=False)
 
         # Mock push_event to actually use the stack
@@ -302,7 +302,7 @@ class TestTriggerCalendarInteraction:
                 return "auto"
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
         adaptive_manager.event_exists = Mock(return_value=True)  # Event already exists
         adaptive_manager.update_event = Mock()
 
@@ -418,7 +418,7 @@ class TestTriggerChangeEvents:
                 return True  # Switch is on
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
 
         event_data = {
             "old_state": Mock(state=STATE_OFF),
@@ -449,7 +449,7 @@ class TestTriggerChangeEvents:
                 return True  # Switch is on
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
 
         event_data = {
             "old_state": Mock(state=STATE_ON),

@@ -123,7 +123,7 @@ class TestComprehensiveCalendarTriggerIntegration:
                 return "auto"  # Target operations
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
         adaptive_manager.get_current_operation = Mock(return_value=STATE_HOME)
         adaptive_manager._operation_change_timeout = now - timedelta(minutes=1)
 
@@ -284,7 +284,7 @@ class TestComprehensiveCalendarTriggerIntegration:
                 return "auto"  # Target operations
             return default
 
-        adaptive_manager.get_entity_state_from_coordinator = mock_get_entity_state
+        adaptive_manager._get_entity_state_from_coordinator = mock_get_entity_state
 
         # Initialize triggers for switch modes that we'll be testing
         adaptive_manager._adaptive_triggers = {

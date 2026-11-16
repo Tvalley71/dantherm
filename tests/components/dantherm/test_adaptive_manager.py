@@ -113,10 +113,11 @@ class TestAdaptiveManagerCleanup:
         # Add some events to the stack
         adaptive_manager.events.append({"event": "test", "event_id": "missing_id"})
 
-        removed_count = adaptive_manager.cleanup_stale_events()
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
 
         # Should not remove events without calendar reference
         assert removed_count == 0
+        assert restore_operation is None
         assert len(adaptive_manager.events) == 1
 
     def test_cleanup_stale_events_with_valid_events(self, adaptive_manager):
@@ -134,10 +135,11 @@ class TestAdaptiveManagerCleanup:
         # Add event that exists in calendar
         adaptive_manager.events.append({"event": "test", "event_id": "valid_id"})
 
-        removed_count = adaptive_manager.cleanup_stale_events()
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
 
         # Should not remove valid events
         assert removed_count == 0
+        assert restore_operation is None
         assert len(adaptive_manager.events) == 1
 
     def test_cleanup_stale_events_with_invalid_events(self, adaptive_manager):
@@ -155,11 +157,57 @@ class TestAdaptiveManagerCleanup:
         # Add event that doesn't exist in calendar
         adaptive_manager.events.append({"event": "test", "event_id": "invalid_id"})
 
-        removed_count = adaptive_manager.cleanup_stale_events()
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
 
         # Should remove invalid events
         assert removed_count == 1
+        assert restore_operation is None
         assert len(adaptive_manager.events) == 0
+
+    def test_cleanup_stale_top_event_returns_previous_operation(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Removing a stale top event should return the operation to restore."""
+        adaptive_manager._calendar = MockCalendar()
+        adaptive_manager.events.append(
+            {"event": "stale", "event_id": "invalid_id", "previous": "automatic"}
+        )
+
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
+
+        assert removed_count == 1
+        assert restore_operation == "automatic"
+        assert not adaptive_manager.events
+
+    def test_cleanup_stale_top_events_returns_deepest_previous_operation(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Removing consecutive stale top events should restore past all of them."""
+        adaptive_manager._calendar = MockCalendar(
+            [
+                MockCalendarEvent(
+                    "valid_id", "Valid Event", ha_now(), ha_now() + timedelta(hours=1)
+                )
+            ]
+        )
+        adaptive_manager.events.extend(
+            [
+                {"event": "stale-one", "event_id": "invalid-one", "previous": "eco"},
+                {
+                    "event": "stale-two",
+                    "event_id": "invalid-two",
+                    "previous": "manual",
+                },
+                {"event": "valid", "event_id": "valid_id", "previous": "base"},
+            ]
+        )
+
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
+
+        assert removed_count == 2
+        assert restore_operation == "manual"
+        assert len(adaptive_manager.events) == 1
+        assert adaptive_manager.events[0]["event"] == "valid"
 
     def test_cleanup_stale_events_mixed_events(self, adaptive_manager):
         """Test cleanup with mix of valid and invalid events."""
@@ -178,10 +226,11 @@ class TestAdaptiveManagerCleanup:
         adaptive_manager.events.append({"event": "invalid", "event_id": "invalid_id"})
         adaptive_manager.events.append({"event": "no_id"})  # No event_id
 
-        removed_count = adaptive_manager.cleanup_stale_events()
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
 
         # Should remove only the invalid event
         assert removed_count == 1
+        assert restore_operation is None
         assert len(adaptive_manager.events) == 2
 
     def test_cleanup_calendar_access_error(self, adaptive_manager):
@@ -196,8 +245,9 @@ class TestAdaptiveManagerCleanup:
         adaptive_manager.events.append({"event": "test", "event_id": "some_id"})
 
         # Should still remove events when calendar access fails (fail-safe behavior)
-        removed_count = adaptive_manager.cleanup_stale_events()
+        removed_count, restore_operation = adaptive_manager.cleanup_stale_events()
         assert removed_count == 1  # Event gets removed in error case
+        assert restore_operation is None
         assert len(adaptive_manager.events) == 0
 
 
@@ -271,15 +321,51 @@ class TestEventStackIntegration:
             ),
             patch.object(adaptive_manager, "_adaptive_triggers", {}),
             patch.object(
-                adaptive_manager, "cleanup_stale_events", return_value=2
+                adaptive_manager, "cleanup_stale_events", return_value=(2, "manual")
             ) as mock_cleanup,
+            patch.object(
+                adaptive_manager,
+                "_set_adaptive_target_operation",
+                new=AsyncMock(),
+            ) as mock_set_operation,
+            patch.object(
+                adaptive_manager, "get_current_operation", return_value="eco"
+            ),
         ):
             await adaptive_manager.async_set_up_adaptive_manager()
             mock_cleanup.assert_called_once()
+            mock_set_operation.assert_awaited_once_with("manual", "eco")
 
 
 class TestAdaptivePendingBehavior:
     """Test adaptive behavior while operation changes are pending."""
+
+    async def test_adaptive_trigger_updates_skip_when_operation_selection_pending(
+        self, adaptive_manager: DanthermAdaptiveManager
+    ) -> None:
+        """Adaptive triggers should wait for the pending operation write."""
+        mock_coordinator = MagicMock()
+        mock_coordinator.is_entity_pending.return_value = True
+
+        with (
+            patch.object(
+                DanthermAdaptiveManager,
+                "coordinator",
+                new_callable=PropertyMock,
+                return_value=mock_coordinator,
+            ),
+            patch.object(
+                adaptive_manager,
+                "_update_adaptive_trigger_state",
+                new=AsyncMock(),
+            ) as mock_update,
+        ):
+            await adaptive_manager.async_update_adaptive_triggers()
+
+        mock_coordinator.is_entity_pending.assert_called_once_with(
+            ATTR_OPERATION_SELECTION
+        )
+        mock_update.assert_not_awaited()
 
     async def test_adaptive_target_operation_uses_coordinator_key_write(
         self, adaptive_manager: DanthermAdaptiveManager

@@ -5,15 +5,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from config.custom_components.dantherm.device import DanthermDevice
 from config.custom_components.dantherm.device_map import (
+    ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
+    ATTR_AFTER_HEATER_ROOM_SETPOINT,
+    ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
     ATTR_ALARM_EVENT,
+    ATTR_EXTRACT_TEMPERATURE,
+    ATTR_ROOM_TEMPERATURE,
+    ATTR_SUPPLY_TEMPERATURE,
+    ComponentClass,
     DanthermEventEntityDescription,
 )
 from config.custom_components.dantherm.entity import DanthermEntity
 from config.custom_components.dantherm.event import DanthermEvent
+from config.custom_components.dantherm.modbus import HacComponentClass
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import STATE_UNKNOWN, HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
@@ -320,3 +331,117 @@ async def test_set_night_mode_start_time_invalid(hass: HomeAssistant) -> None:
     with patch.object(device, "_write_holding_uint32", new=AsyncMock()) as mock_write:
         await device.set_night_mode_start_time("99:99")
         mock_write.assert_not_awaited()
+
+
+async def test_after_heater_disabled_setpoints_return_false(
+    hass: HomeAssistant, standard_config_entry: MockConfigEntry
+) -> None:
+    """Zero setpoints should be ignored when HRC2 is not installed."""
+    device = DanthermDevice(
+        hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
+    )
+    entity_states = {
+        ATTR_SUPPLY_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 0,
+        ATTR_EXTRACT_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
+    }
+
+    with (
+        patch.object(
+            device,
+            "async_get_entity_state",
+            new=AsyncMock(side_effect=entity_states.get),
+        ),
+        patch.object(
+            device,
+            "_read_holding_uint32",
+            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+        ),
+    ):
+        assert await device.async_get_after_heater_active() is False
+
+
+async def test_after_heater_missing_temperature_returns_unknown(
+    hass: HomeAssistant, standard_config_entry: MockConfigEntry
+) -> None:
+    """An enabled setpoint with no corresponding reading should be unknown."""
+    device = DanthermDevice(
+        hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
+    )
+    entity_states = {
+        ATTR_SUPPLY_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 20,
+        ATTR_EXTRACT_TEMPERATURE: 18,
+        ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
+    }
+
+    with (
+        patch.object(
+            device,
+            "async_get_entity_state",
+            new=AsyncMock(side_effect=entity_states.get),
+        ),
+        patch.object(
+            device,
+            "_read_holding_uint32",
+            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+        ),
+    ):
+        assert await device.async_get_after_heater_active() == STATE_UNKNOWN
+
+
+async def test_after_heater_checks_room_setpoint_with_hrc2(
+    hass: HomeAssistant, standard_config_entry: MockConfigEntry
+) -> None:
+    """The room setpoint should be checked when HRC2 is installed."""
+    device = DanthermDevice(
+        hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
+    )
+    device.installed_components = ComponentClass.HRC2
+    entity_states = {
+        ATTR_SUPPLY_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 0,
+        ATTR_EXTRACT_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
+        ATTR_ROOM_TEMPERATURE: 18,
+        ATTR_AFTER_HEATER_ROOM_SETPOINT: 20,
+    }
+
+    with (
+        patch.object(
+            device,
+            "async_get_entity_state",
+            new=AsyncMock(side_effect=entity_states.get),
+        ),
+        patch.object(
+            device,
+            "_read_holding_uint32",
+            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+        ),
+    ):
+        assert await device.async_get_after_heater_active() is True
+
+
+async def test_after_heater_missing_hrc2_setpoint_returns_unavailable(
+    hass: HomeAssistant, standard_config_entry: MockConfigEntry
+) -> None:
+    """A missing room setpoint should make the HRC2-dependent result unavailable."""
+    device = DanthermDevice(
+        hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
+    )
+    device.installed_components = ComponentClass.HRC2
+    entity_states = {
+        ATTR_SUPPLY_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 0,
+        ATTR_EXTRACT_TEMPERATURE: None,
+        ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
+        ATTR_AFTER_HEATER_ROOM_SETPOINT: None,
+    }
+
+    with patch.object(
+        device,
+        "async_get_entity_state",
+        new=AsyncMock(side_effect=entity_states.get),
+    ):
+        assert await device.async_get_after_heater_active() == STATE_UNAVAILABLE

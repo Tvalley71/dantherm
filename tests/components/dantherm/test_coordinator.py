@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import config.custom_components.dantherm.coordinator as coordinator_mod
 from config.custom_components.dantherm.coordinator import DanthermCoordinator
+from config.custom_components.dantherm.device import DanthermDevice
 from config.custom_components.dantherm.device_map import (
     ATTR_ACTIONS_PENDING,
     ATTR_CALENDAR,
@@ -57,6 +58,90 @@ async def _cancel_coordinator_tasks() -> None:
 
 class TestDanthermCoordinator:
     """Test DanthermCoordinator class."""
+
+    @pytest.mark.parametrize(
+        ("state", "exclude_if", "exclude_above", "exclude_below", "expected"),
+        [
+            (0, 0, None, None, None),
+            (1, 0, None, None, 1),
+            (70, None, 70, None, None),
+            (71, None, 70, None, None),
+            (69, None, 70, None, 69),
+            (-40, None, None, -40, None),
+            (-41, None, None, -40, None),
+            (-39, None, None, -40, -39),
+            (0, None, 0, None, None),
+            (0, None, None, 0, None),
+            (None, None, 70, -40, None),
+        ],
+    )
+    async def test_entity_state_exclusions(
+        self,
+        hass: HomeAssistant,
+        mock_hub: MagicMock,
+        mock_config_entry: MockConfigEntry,
+        state: int | None,
+        exclude_if: int | None,
+        exclude_above: int | None,
+        exclude_below: int | None,
+        expected: int | None,
+    ) -> None:
+        """Return None for excluded values, including inclusive boundaries."""
+        coordinator = DanthermCoordinator(
+            hass, "TestDevice", mock_hub, 30, mock_config_entry
+        )
+        mock_hub.async_get_test = AsyncMock(return_value=state)
+        description = DanthermEntityDescription(
+            key="test",
+            data_getinternal="test",
+            data_exclude_if=exclude_if,
+            data_exclude_if_above=exclude_above,
+            data_exclude_if_below=exclude_below,
+        )
+
+        assert await coordinator.async_get_entity_state(description) == expected
+        assert (await coordinator.async_get_entity_data(description))[
+            "state"
+        ] == expected
+        await coordinator.async_shutdown()
+
+    @pytest.mark.parametrize(
+        ("state", "exclude_if", "exclude_above", "installed"),
+        [
+            (0, 0, None, False),
+            (1, 0, None, True),
+            (0, None, 0, False),
+            (None, None, 0, True),
+        ],
+    )
+    async def test_installation_preserves_exclusion_check(
+        self,
+        hass: HomeAssistant,
+        mock_hub: MagicMock,
+        mock_config_entry: MockConfigEntry,
+        state: int | None,
+        exclude_if: int | None,
+        exclude_above: int | None,
+        installed: bool,
+    ) -> None:
+        """Installation still checks the unfiltered value."""
+        coordinator = DanthermCoordinator(
+            hass, "TestDevice", mock_hub, 30, mock_config_entry
+        )
+        mock_hub.async_get_test = AsyncMock(return_value=state)
+        device = DanthermDevice(
+            hass, "TestDevice", "localhost", 1, 1, 5, mock_config_entry
+        )
+        device.coordinator = coordinator
+        description = DanthermEntityDescription(
+            key="test",
+            data_getinternal="test",
+            data_exclude_if=exclude_if,
+            data_exclude_if_above=exclude_above,
+        )
+
+        assert await device.async_install_entity(description) is installed
+        await coordinator.async_shutdown()
 
     async def test_coordinator_initialization(
         self, hass: HomeAssistant, mock_hub, mock_config_entry
