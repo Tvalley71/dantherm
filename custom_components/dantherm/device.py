@@ -2,35 +2,42 @@
 
 from __future__ import annotations
 
+import logging
 from collections import deque
 from datetime import datetime
-import logging
 from types import MappingProxyType
 from typing import Any
 
-from propcache.api import cached_property
-
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import STATE_UNKNOWN, HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import now as ha_now
+from propcache.api import cached_property
 
 from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEFAULT_NAME, DEVICE_TYPES
 from .coordinator import DanthermCoordinator
 from .device_map import (
     ALARM_EVENT_TYPE_BY_CODE,
+    ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
+    ATTR_AFTER_HEATER_ROOM_SETPOINT,
+    ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
     ATTR_AIR_QUALITY,
     ATTR_AIR_QUALITY_LEVEL,
     ATTR_ALARM,
     ATTR_ALARM_EVENT,
     ATTR_BYPASS_DAMPER,
+    ATTR_EXTRACT_TEMPERATURE,
     ATTR_FILTER_EVENT,
     ATTR_FILTER_REMAIN,
     ATTR_HUMIDITY,
     ATTR_HUMIDITY_LEVEL,
     ATTR_INTERNAL_PREHEATER,
+    ATTR_ROOM_TEMPERATURE,
+    ATTR_SUPPLY_TEMPERATURE,
     CONF_BOOST_MODE_TRIGGER,
     CONF_DISABLE_NOTIFICATIONS,
     CONF_DISABLE_TEMPERATURE_UNKNOWN,
@@ -85,6 +92,15 @@ from .modbus import (
     MODBUS_REGISTER_FILTER_REMAIN,
     MODBUS_REGISTER_FILTER_RESET,
     MODBUS_REGISTER_FIRMWARE_VERSION,
+    MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS,
+    MODBUS_REGISTER_HAC_AFTER_HEATER_EXTRACT_SETPOINT,
+    MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT,
+    MODBUS_REGISTER_HAC_AFTER_HEATER_SUPPLY_SETPOINT,
+    MODBUS_REGISTER_HAC_CARBON_DIOXIDE,
+    MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD,
+    MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD,
+    MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
+    MODBUS_REGISTER_HAC_COMPONENTS,
     MODBUS_REGISTER_HUMIDITY,
     MODBUS_REGISTER_HUMIDITY_SETPOINT,
     MODBUS_REGISTER_HUMIDITY_SETPOINT_SUMMER,
@@ -103,6 +119,7 @@ from .modbus import (
     MODBUS_REGISTER_WEEK_PROGRAM_SELECTION,
     ABSwitchPosition,
     DanthermModbus,
+    HacComponentClass,
 )
 from .notifications import (
     async_create_key_value_notification,
@@ -137,6 +154,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     _last_current_operation: str | None
     _coordinator: DanthermCoordinator | None
     installed_components: int
+    hac_installed_components: int
     _options: MappingProxyType[str, Any] | dict[str, Any]
     _filtered_sensors: dict[str, dict[str, Any]]
     # Note: coordinator property is overridden below
@@ -187,6 +205,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._time_sync_pending = False
         self._coordinator: DanthermCoordinator | None = None
         self.installed_components = 0
+        self.hac_installed_components = 0
 
         # During config flow we may not have a ConfigEntry yet
         if config_entry is not None:
@@ -272,6 +291,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.info("Modbus setup completed successfully for %s", self._host)
 
         self.installed_components = 0
+        self.hac_installed_components = 0
         components_read = False
 
         system_id = await self._read_holding_uint32(MODBUS_REGISTER_SYSTEM_ID)
@@ -315,9 +335,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._device_ab_switch_position = await self.get_device_ab_switch_position()
 
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
-            await self._read_hac_controller()
-        else:
-            _LOGGER.debug("No HAC controller installed")
+            self.hac_installed_components = await self._read_holding_uint32(
+                MODBUS_REGISTER_HAC_COMPONENTS
+            )
+            _LOGGER.debug(
+                "HAC installed components = %s", hex(self.hac_installed_components)
+            )
 
         # Create coordinator only if we have a config_entry (not during config flow)
         if self._config_entry is not None:
@@ -356,8 +379,6 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             await self.async_set_up_tracking_for_adaptive_triggers()
 
         # Remove chached properties
-        self.__dict__.pop("_get_humidity_entity_installed", None)
-        self.__dict__.pop("_get_air_quality_entity_installed", None)
         self.__dict__.pop("_get_boost_mode_trigger_available", None)
         self.__dict__.pop("_get_eco_mode_trigger_available", None)
         self.__dict__.pop("_get_home_mode_trigger_available", None)
@@ -374,7 +395,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         def exclude_from_component_class(
             description: DanthermEntityDescription,
         ) -> bool:
-            """Check if entity must be excluded from component_class or not_component_class."""
+            """Check if entity must be excluded from component_class, not_component_class or hac_component_class."""
             if (
                 description.not_component_class
                 and (self.installed_components & description.not_component_class) != 0
@@ -385,6 +406,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 and (self.installed_components & description.component_class) == 0
             ):
                 return True
+            if (
+                description.hac_component_class
+                and (self.hac_installed_components & description.hac_component_class)
+                == 0
+            ):
+                return True
             return False
 
         async def exclude_from_entity_state(
@@ -392,33 +419,15 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         ) -> bool:
             """Check if entity must be excluded if any of the data_exclude_if conditions are met."""
 
-            if (
-                description.data_exclude_if_above
-                or description.data_exclude_if_below
+            if self.coordinator is not None and (
+                description.data_exclude_if_above is not None
+                or description.data_exclude_if_below is not None
                 or description.data_exclude_if is not None
             ):
-                if self.coordinator is not None:
-                    entity_data = await self.coordinator.async_get_entity_data(
-                        description
-                    )
-                    if entity_data:
-                        state = entity_data["state"]
-
-                        if (
-                            (
-                                description.data_exclude_if is not None
-                                and description.data_exclude_if == state
-                            )
-                            or (
-                                description.data_exclude_if_above is not None
-                                and state >= description.data_exclude_if_above
-                            )
-                            or (
-                                description.data_exclude_if_below is not None
-                                and state <= description.data_exclude_if_below
-                            )
-                        ):
-                            return True
+                state = await self.coordinator.async_get_entity_state(
+                    description, apply_exclusions=False
+                )
+                return self.coordinator.is_state_excluded(description, state)
             return False
 
         async def exclude_from_firmware_version(
@@ -489,15 +498,25 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         return device_id
 
-    def get_entity_state_from_coordinator(
+    def _get_entity_state_from_coordinator(
         self, entity: str, default: Any = None
     ) -> Any:
         """Get entity state from coordinator."""
         if self.coordinator is None:
             return default
         states = self.coordinator.data.get(entity, None)
-        if states:
+        if states is not None:
             return states["state"]
+        return default
+
+    async def async_get_entity_state(self, entity: str, default: Any = None) -> Any:
+        """Get entity state from coordinator."""
+
+        state = self._get_entity_state_from_coordinator(entity, None)
+        if state is None:
+            state = await self.coordinator.async_get_entity_state_from_entity_id(entity)
+        if state is not None:
+            return state
         return default
 
     @property
@@ -1046,6 +1065,153 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
             return {"events": self.events.to_list()}
         return None
 
+    async def async_get_carbon_dioxide(self) -> int | None:
+        """Get carbon dioxide."""
+
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_CARBON_DIOXIDE)
+        _LOGGER.debug("Carbon dioxide = %s", result)
+        return result
+
+    async def async_get_carbon_dioxide_low_threshold(self) -> int | None:
+        """Get carbon dioxide low threshold."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD
+        )
+        _LOGGER.debug("Carbon dioxide low threshold = %s", result)
+        return result
+
+    async def async_get_carbon_dioxide_middle_threshold(self) -> int | None:
+        """Get carbon dioxide middle threshold."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD
+        )
+        _LOGGER.debug("Carbon dioxide middle threshold = %s", result)
+        return result
+
+    async def async_get_carbon_dioxide_high_threshold(self) -> int | None:
+        """Get carbon dioxide high threshold."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD
+        )
+        _LOGGER.debug("Carbon dioxide high threshold = %s", result)
+        return result
+
+    async def async_get_after_heater_active(self) -> bool | str | None:
+        """Check if after heater is active."""
+
+        # Get the current supply temperature.
+        supply_temperature = await self.async_get_entity_state(
+            ATTR_SUPPLY_TEMPERATURE, None
+        )
+
+        # Get the current supply setpoint.
+        supply_setpoint = await self.async_get_entity_state(
+            ATTR_AFTER_HEATER_SUPPLY_SETPOINT, None
+        )
+
+        if supply_setpoint is None:
+            return STATE_UNAVAILABLE
+
+        # Get the current extract temperature.
+        extract_temperature = await self.async_get_entity_state(
+            ATTR_EXTRACT_TEMPERATURE, None
+        )
+
+        # Get the current extract setpoint.
+        extract_setpoint = await self.async_get_entity_state(
+            ATTR_AFTER_HEATER_EXTRACT_SETPOINT, None
+        )
+
+        if extract_setpoint is None:
+            return STATE_UNAVAILABLE
+
+        room_temperature = None
+        room_setpoint = None
+        # if the HRC remote is present, get the current room temperature and setpoint.
+        if self.installed_components & ComponentClass.HRC2 == ComponentClass.HRC2:
+            room_setpoint = await self.async_get_entity_state(
+                ATTR_AFTER_HEATER_ROOM_SETPOINT, None
+            )
+
+            if room_setpoint is None:
+                return STATE_UNAVAILABLE
+
+            room_temperature = await self.async_get_entity_state(
+                ATTR_ROOM_TEMPERATURE, None
+            )
+
+        # Read the active components from the device to determine if the after heater is active
+        active_components = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS
+        )
+        _LOGGER.debug("After heater active = %s", active_components)
+
+        if (
+            active_components is None
+        ):  # If active components could not be read, return STATE_UNAVAILABLE
+            return STATE_UNAVAILABLE
+
+        checks = [
+            (supply_setpoint, supply_temperature),
+            (extract_setpoint, extract_temperature),
+        ]
+        if room_setpoint is not None:  # HRC2 is present
+            checks.append((room_setpoint, room_temperature))
+
+        checks = [
+            (setpoint, temperature) for setpoint, temperature in checks if setpoint != 0
+        ]
+
+        if not checks:
+            return False
+
+        if not (
+            active_components & HacComponentClass.AfterHeater
+            == HacComponentClass.AfterHeater
+        ):
+            return False
+
+        if any(
+            temperature is not None and temperature < setpoint
+            for setpoint, temperature in checks
+        ):
+            return True
+
+        if any(temperature is None for _, temperature in checks):
+            return STATE_UNKNOWN
+
+        return False
+
+    async def async_get_after_heater_supply_setpoint(self) -> int | None:
+        """Get after heater supply setpoint."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_SUPPLY_SETPOINT
+        )
+        _LOGGER.debug("After heater supply setpoint = %s", result)
+        return result
+
+    async def async_get_after_heater_extract_setpoint(self) -> int | None:
+        """Get after heater extract setpoint."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_EXTRACT_SETPOINT
+        )
+        _LOGGER.debug("After heater extract setpoint = %s", result)
+        return result
+
+    async def async_get_after_heater_room_setpoint(self) -> int | None:
+        """Get after heater room setpoint."""
+
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT
+        )
+        _LOGGER.debug("After heater room setpoint = %s", result)
+        return result
+
     @property
     def get_features_attrs(self) -> dict[str, bool]:
         """Get feattures attributes."""
@@ -1102,20 +1268,6 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Get home mode trigger available."""
         return bool(self._options.get(CONF_HOME_MODE_TRIGGER, False))
 
-    @cached_property
-    def _get_humidity_entity_installed(self) -> bool:
-        """Check if the humidity entity is installed (cached)."""
-        return self.coordinator is not None and self.coordinator.is_entity_installed(
-            ATTR_HUMIDITY
-        )
-
-    @cached_property
-    def _get_air_quality_entity_installed(self) -> bool:
-        """Check if the air quality entity is installed (cached)."""
-        return self.coordinator is not None and self.coordinator.is_entity_installed(
-            ATTR_AIR_QUALITY
-        )
-
     async def set_alarm_reset(self, value: int | None = None) -> None:
         """Set alarm reset."""
 
@@ -1135,15 +1287,18 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         _LOGGER.debug("Bypass damper = %s", self._bypass_damper)
         return self._bypass_damper
 
-    async def async_get_filter_lifetime(self) -> int | None:
+    @property
+    def get_filter_lifetime(self) -> int | None:
         """Get filter lifetime."""
         return self._filter_lifetime
 
-    async def async_get_filter_remain(self) -> int | None:
+    @property
+    def get_filter_remain(self) -> int | None:
         """Get filter remain."""
         return self._filter_remain
 
-    async def async_get_filter_remain_level(self) -> int | None:
+    @property
+    def get_filter_remain_level(self) -> int | None:
         """Get filter remain level."""
         return self._filter_remain_level
 
@@ -1598,16 +1753,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     async def async_get_humidity_level(self) -> str | None:
         """Get humidity level with hysteresis."""
 
-        if self._get_humidity_entity_installed:
-            humidity = self.get_entity_state_from_coordinator(ATTR_HUMIDITY, None)
-        else:
-            humidity = await self._read_holding_uint32(MODBUS_REGISTER_HUMIDITY)
+        humidity = await self.async_get_entity_state(ATTR_HUMIDITY, None)
 
         if humidity is None:
             _LOGGER.debug("Humidity Level is not available")
             return None
 
-        previous = self.get_entity_state_from_coordinator(ATTR_HUMIDITY_LEVEL, None)
+        previous = self._get_entity_state_from_coordinator(ATTR_HUMIDITY_LEVEL, None)
 
         if previous == 0 and humidity > 32:
             level = 1
@@ -1669,16 +1821,13 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
     async def async_get_air_quality_level(self) -> str | None:
         """Get air quality level with hysteresis."""
 
-        if self._get_air_quality_entity_installed:
-            air_quality = self.get_entity_state_from_coordinator(ATTR_AIR_QUALITY, None)
-        else:
-            air_quality = await self._read_holding_uint32(MODBUS_REGISTER_AIR_QUALITY)
+        air_quality = await self.async_get_entity_state(ATTR_AIR_QUALITY, None)
 
         if air_quality is None:
             _LOGGER.debug("Air Quality Level is not available")
             return None
 
-        previous = self.get_entity_state_from_coordinator(ATTR_AIR_QUALITY_LEVEL, None)
+        previous = self._get_entity_state_from_coordinator(ATTR_AIR_QUALITY_LEVEL, None)
 
         if previous == 0 and air_quality > 650:
             level = 1

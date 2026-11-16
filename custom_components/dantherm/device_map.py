@@ -36,6 +36,7 @@ from .modbus import (
     MODBUS_REGISTER_INTERNAL_PREHEATER_DUTYCYCLE,
     MODBUS_REGISTER_WORK_TIME,
     DataClass,
+    HacComponentClass,
 )
 
 REQUIRED_PYMODBUS_VERSION = "3.8.3"
@@ -245,6 +246,37 @@ ATTR_ALARM_RESET: Final = "alarm_reset"
 
 ATTR_ACTIONS_PENDING: Final = "actions_pending"
 
+ATTR_ALARM_EVENT: Final = "alarm_event"
+ATTR_FILTER_EVENT: Final = "filter_event"
+ALARM_EVENT_TYPE_BY_CODE: Final = {
+    1: "alarm_exhaust_air_fan",
+    2: "alarm_supply_air_fan",
+    3: "alarm_bypass_damper",
+    4: "alarm_outdoor_air",
+    5: "alarm_supply_air",
+    6: "alarm_extract_air",
+    7: "alarm_exhaust_air",
+    8: "alarm_room_air",
+    9: "alarm_rh",
+    10: "alarm_outdoor_temperature",
+    11: "alarm_supply_temperature",
+    12: "alarm_overtemperature",
+    13: "alarm_communication_error",
+    14: "alarm_fire",
+    15: "alarm_high_waterlevel",
+    16: "alarm_fire_protection",
+}
+ALARM_EVENT_TYPES: Final = list(ALARM_EVENT_TYPE_BY_CODE.values())
+
+ATTR_CARBON_DIOXIDE: Final = "carbon_dioxide"
+ATTR_CARBON_DIOXIDE_LOW_THRESHOLD: Final = "carbon_dioxide_low_threshold"
+ATTR_CARBON_DIOXIDE_MIDDLE_THRESHOLD: Final = "carbon_dioxide_middle_threshold"
+ATTR_CARBON_DIOXIDE_HIGH_THRESHOLD: Final = "carbon_dioxide_high_threshold"
+ATTR_AFTER_HEATER_ACTIVE: Final = "after_heater_active"
+ATTR_AFTER_HEATER_SUPPLY_SETPOINT: Final = "after_heater_supply_setpoint"
+ATTR_AFTER_HEATER_EXTRACT_SETPOINT: Final = "after_heater_extract_setpoint"
+ATTR_AFTER_HEATER_ROOM_SETPOINT: Final = "after_heater_room_setpoint"
+
 ATTR_FEATURES: Final = "features"
 
 CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
@@ -432,6 +464,8 @@ class DanthermEntityDescription(EntityDescription):
     component_class: int | None = None
     not_component_class: int | None = None
 
+    hac_component_class: HacComponentClass | None = None
+
 
 @dataclass(frozen=True)
 class DanthermButtonEntityDescription(
@@ -545,6 +579,13 @@ BINARY_SENSORS: tuple[DanthermBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    DanthermBinarySensorEntityDescription(
+        key=ATTR_AFTER_HEATER_ACTIVE,
+        icon="mdi:heat-wave",
+        data_getinternal=ATTR_AFTER_HEATER_ACTIVE,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.AfterHeater,
+    ),
 )
 
 BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
@@ -561,28 +602,6 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
         data_class=DataClass.UInt32,
     ),
 )
-
-ATTR_ALARM_EVENT: Final = "alarm_event"
-ATTR_FILTER_EVENT: Final = "filter_event"
-ALARM_EVENT_TYPE_BY_CODE: Final = {
-    1: "alarm_exhaust_air_fan",
-    2: "alarm_supply_air_fan",
-    3: "alarm_bypass_damper",
-    4: "alarm_outdoor_air",
-    5: "alarm_supply_air",
-    6: "alarm_extract_air",
-    7: "alarm_exhaust_air",
-    8: "alarm_room_air",
-    9: "alarm_rh",
-    10: "alarm_outdoor_temperature",
-    11: "alarm_supply_temperature",
-    12: "alarm_overtemperature",
-    13: "alarm_communication_error",
-    14: "alarm_fire",
-    15: "alarm_high_waterlevel",
-    16: "alarm_fire_protection",
-}
-ALARM_EVENT_TYPES: Final = list(ALARM_EVENT_TYPE_BY_CODE.values())
 
 EVENTS: tuple[DanthermEventEntityDescription, ...] = (
     DanthermEventEntityDescription(
@@ -851,6 +870,103 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
+    DanthermNumberEntityDescription(
+        key=ATTR_CARBON_DIOXIDE_LOW_THRESHOLD,
+        icon="mdi:molecule-co2",
+        data_setinternal=ATTR_CARBON_DIOXIDE_LOW_THRESHOLD,
+        data_getinternal=ATTR_CARBON_DIOXIDE_LOW_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.CO2Sensor,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
+        icon="mdi:molecule-co2",
+        data_setinternal=ATTR_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
+        data_getinternal=ATTR_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.CO2Sensor,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_CARBON_DIOXIDE_HIGH_THRESHOLD,
+        icon="mdi:molecule-co2",
+        data_setinternal=ATTR_CARBON_DIOXIDE_HIGH_THRESHOLD,
+        data_getinternal=ATTR_CARBON_DIOXIDE_HIGH_THRESHOLD,
+        native_max_value=65535,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="ppm",
+        mode=NumberMode.BOX,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.CO2Sensor,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
+        data_getinternal=ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
+        native_max_value=30,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.AfterHeater,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
+        data_getinternal=ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
+        native_max_value=30,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.AfterHeater,
+    ),
+    DanthermNumberEntityDescription(
+        key=ATTR_AFTER_HEATER_ROOM_SETPOINT,
+        icon="mdi:water-percent",
+        data_setinternal=ATTR_AFTER_HEATER_ROOM_SETPOINT,
+        data_getinternal=ATTR_AFTER_HEATER_ROOM_SETPOINT,
+        native_max_value=30,
+        native_min_value=0,
+        native_step=1,
+        native_unit_of_measurement="°C",
+        mode=NumberMode.SLIDER,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        component_class=ComponentClass.HAC1
+        | ComponentClass.HRC2,  # Presumeably the HRC remote must be present to deliver the room temperature
+        hac_component_class=HacComponentClass.AfterHeater,
+    ),
 )
 
 SELECTS: tuple[DanthermSelectEntityDescription, ...] = (
@@ -1069,6 +1185,17 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         icon="mdi:information",
         data_getinternal=ATTR_ADAPTIVE_STATE,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DanthermSensorEntityDescription(
+        key=ATTR_CARBON_DIOXIDE,
+        icon="mdi:molecule-co2",
+        data_getinternal=ATTR_CARBON_DIOXIDE,
+        data_exclude_if=0,
+        native_unit_of_measurement="ppm",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        component_class=ComponentClass.HAC1,
+        hac_component_class=HacComponentClass.CO2Sensor,
     ),
     # DanthermSensorEntityDescription(
     #    key=ATTR_FEATURES,

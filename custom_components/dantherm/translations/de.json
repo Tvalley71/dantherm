@@ -84,7 +84,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "actions_pending": { "name": "Ausstehende Aktionen" }
+      "actions_pending": { "name": "Ausstehende Aktionen" },
+      "after_heater_active": { "name": "Nachheizung aktiv" }
     },
     "button": {
       "filter_reset": { "name": "Filter zurücksetzen" },
@@ -165,7 +166,13 @@
       "bypass_maximum_temperature_summer": { "name": "Bypass-Maximaltemperatur (Sommer)" },
       "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
       "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
-      "home_mode_timeout": { "name": "Home-Modus Timeout" }
+      "home_mode_timeout": { "name": "Home-Modus Timeout" },
+      "carbon_dioxide_low_threshold": { "name": "Kohlendioxid-Schwellwert (niedrig)" },
+      "carbon_dioxide_middle_threshold": { "name": "Kohlendioxid-Schwellwert (mittel)" },
+      "carbon_dioxide_high_threshold": { "name": "Kohlendioxid-Schwellwert (hoch)" },
+      "after_heater_supply_setpoint": { "name": "Nachheizung Zuluft-Sollwert" },
+      "after_heater_extract_setpoint": { "name": "Nachheizung Abluft-Sollwert" },
+      "after_heater_room_setpoint": { "name": "Nachheizung Raum-Sollwert" }
     },
     "select": {
       "operation_selection": {
@@ -355,6 +362,7 @@
       },
       "work_time": { "name": "Laufzeit" },
       "internal_preheater_dutycycle": { "name": "Vorheizregister-Stellwert" },
+      "carbon_dioxide": { "name": "Kohlendioxid" },
       "features": { "name": "Features" }
     },
     "switch": {

@@ -84,7 +84,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "actions_pending": { "name": "Actions Pending" }
+      "actions_pending": { "name": "Actions Pending" },
+      "after_heater_active": { "name": "After Heater Active" }
     },
     "button": {
       "filter_reset": { "name": "Reset Filter" },
@@ -165,7 +166,13 @@
       "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperature (Summer)" },
       "boost_mode_timeout": { "name": "Boost Mode Timeout" },
       "eco_mode_timeout": { "name": "Eco Mode Timeout" },
-      "home_mode_timeout": { "name": "Home Mode Timeout" }
+      "home_mode_timeout": { "name": "Home Mode Timeout" },
+      "carbon_dioxide_low_threshold": { "name": "Carbon Dioxide Low Threshold" },
+      "carbon_dioxide_middle_threshold": { "name": "Carbon Dioxide Middle Threshold" },
+      "carbon_dioxide_high_threshold": { "name": "Carbon Dioxide High Threshold" },
+      "after_heater_supply_setpoint": { "name": "After Heater Supply Setpoint" },
+      "after_heater_extract_setpoint": { "name": "After Heater Extract Setpoint" },
+      "after_heater_room_setpoint": { "name": "After Heater Room Setpoint" }
     },
     "select": {
       "operation_selection": {
@@ -355,6 +362,7 @@
       },
       "work_time": { "name": "Work Time" },
       "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"},
+      "carbon_dioxide": { "name": "Carbon Dioxide" },
       "features": { "name": "Features" }
     },
     "switch": {

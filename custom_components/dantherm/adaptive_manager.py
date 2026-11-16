@@ -119,7 +119,7 @@ class DanthermAdaptiveManager:
         """Get device ID - implemented in DanthermDevice."""
         raise NotImplementedError("This method is implemented in DanthermDevice")
 
-    def get_entity_state_from_coordinator(
+    def _get_entity_state_from_coordinator(
         self, entity: str, default: Any = None
     ) -> Any:
         """Get entity state from coordinator - implemented in DanthermDevice."""
@@ -186,9 +186,13 @@ class DanthermAdaptiveManager:
             self._calendar = entry_data.get(ATTR_CALENDAR)
 
         # Clean up stale events on startup
-        removed_count = self.cleanup_stale_events()
+        removed_count, restore_operation = self.cleanup_stale_events()
         if removed_count > 0:
             _LOGGER.info("Startup cleanup removed %d stale events", removed_count)
+        if restore_operation is not None:
+            await self._set_adaptive_target_operation(
+                restore_operation, self.get_current_operation()
+            )
 
     def _calculate_event_end_time(self, event: CalendarEvent) -> datetime:
         """Calculate the proper end time for a calendar event.
@@ -373,7 +377,7 @@ class DanthermAdaptiveManager:
 
         mode_name = trigger_name.split("_", maxsplit=1)[0]
         # Check if mode is switch on
-        if not self.get_entity_state_from_coordinator(f"{mode_name}_mode", False):
+        if not self._get_entity_state_from_coordinator(f"{mode_name}_mode", False):
             return
 
         mode_data = self._adaptive_triggers[trigger_name]
@@ -391,7 +395,7 @@ class DanthermAdaptiveManager:
                 current_operation = self.get_current_operation()
 
                 # Get the trigger target operation from it's selection entity
-                target_operation = self.get_entity_state_from_coordinator(
+                target_operation = self._get_entity_state_from_coordinator(
                     f"{mode_name}_operation_selection", None
                 )
 
@@ -576,17 +580,17 @@ class DanthermAdaptiveManager:
 
     async def _boost_mode_trigger_changed(self, event: Any) -> None:
         """Boost trigger state change callback."""
-        if self.get_entity_state_from_coordinator(ATTR_BOOST_MODE):
+        if self._get_entity_state_from_coordinator(ATTR_BOOST_MODE):
             await self._adaptive_trigger_changed(CONF_BOOST_MODE_TRIGGER, event)
 
     async def _eco_mode_trigger_changed(self, event: Any) -> None:
         """Eco trigger state change callback."""
-        if self.get_entity_state_from_coordinator(ATTR_ECO_MODE):
+        if self._get_entity_state_from_coordinator(ATTR_ECO_MODE):
             await self._adaptive_trigger_changed(CONF_ECO_MODE_TRIGGER, event)
 
     async def _home_mode_trigger_changed(self, event: Any) -> None:
         """Home trigger state change callback."""
-        if self.get_entity_state_from_coordinator(ATTR_HOME_MODE):
+        if self._get_entity_state_from_coordinator(ATTR_HOME_MODE):
             await self._adaptive_trigger_changed(CONF_HOME_MODE_TRIGGER, event)
 
     async def _set_adaptive_target_operation(
@@ -623,7 +627,7 @@ class DanthermAdaptiveManager:
 
     def _get_adaptive_trigger_timeout(self, mode_name: str) -> datetime:
         """Get adaptive trigger timeout."""
-        minutes = self.get_entity_state_from_coordinator(f"{mode_name}_mode_timeout", 5)
+        minutes = self._get_entity_state_from_coordinator(f"{mode_name}_mode_timeout", 5)
         return ha_now() + timedelta(minutes=minutes)
 
     def push_event(
@@ -686,18 +690,19 @@ class DanthermAdaptiveManager:
         _LOGGER.debug("Remove events: %s = %s", event, operation)
         return operation
 
-    def cleanup_stale_events(self) -> int:
+    def cleanup_stale_events(self) -> tuple[int, str | None]:
         """Clean up stale events from the event stack.
 
         This method removes events that have event_ids that no longer exist in the calendar.
 
         Returns:
-            Number of events removed
+            Number of events removed and the operation to restore, if the top event was removed.
         """
         if not self.events:
-            return 0
+            return 0, None
 
         removed_count = 0
+        restore_operation: str | None = None
 
         # Create a list of events to remove to avoid modifying deque during iteration
         events_to_remove = []
@@ -742,7 +747,10 @@ class DanthermAdaptiveManager:
 
         # Remove the stale events
         for event in events_to_remove:
-            self.events.remove_item(event)
+            was_top = self.events.top() is event
+            operation = self.events.remove_item(event)
+            if was_top:
+                restore_operation = operation
             removed_count += 1
 
         if removed_count > 0:
@@ -750,7 +758,7 @@ class DanthermAdaptiveManager:
                 "Cleanup removed %d stale events from event stack", removed_count
             )
 
-        return removed_count
+        return removed_count, restore_operation
 
 
 class AdaptiveEventStack(deque[dict[str, Any]]):

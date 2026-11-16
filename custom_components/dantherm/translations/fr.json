@@ -84,7 +84,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "actions_pending": { "name": "Actions en attente" }
+      "actions_pending": { "name": "Actions en attente" },
+      "after_heater_active": { "name": "Post-chauffage actif" }
     },
     "button": {
       "filter_reset": { "name": "Réinitialiser durée de vie filtre" },
@@ -165,7 +166,13 @@
       "bypass_maximum_temperature_summer": { "name": "Bypass température maximale (été)" },
       "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
       "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
-      "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" }
+      "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" },
+      "carbon_dioxide_low_threshold": { "name": "Seuil bas de dioxyde de carbone" },
+      "carbon_dioxide_middle_threshold": { "name": "Seuil moyen de dioxyde de carbone" },
+      "carbon_dioxide_high_threshold": { "name": "Seuil élevé de dioxyde de carbone" },
+      "after_heater_supply_setpoint": { "name": "Consigne de soufflage du post-chauffage" },
+      "after_heater_extract_setpoint": { "name": "Consigne d'extraction du post-chauffage" },
+      "after_heater_room_setpoint": { "name": "Consigne de température ambiante du post-chauffage" }
     },
     "select": {
       "operation_selection": {
@@ -285,7 +292,8 @@
           "12": "Alerte feu",
           "13": "Alerte communication",
           "14": "Alerte thermostat feu",
-          "15": "Alerte niveau d'eau élevé"
+          "15": "Alerte niveau d'eau élevé",
+          "16": "Alerte protection incendie"
         }
       },
       "adaptive_state": {
@@ -354,6 +362,7 @@
       },
       "work_time": { "name": "Temps de fonctionnement" },
       "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"},
+      "carbon_dioxide": { "name": "Dioxyde de carbone" },
       "features": { "name": "Features" }
     },
     "switch": {

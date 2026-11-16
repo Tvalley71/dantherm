@@ -61,6 +61,15 @@ MODBUS_REGISTER_SYSTEM_ID = 2
 MODBUS_REGISTER_SYSTEM_ID_COMPONENTS = 610
 MODBUS_REGISTER_WEEK_PROGRAM_SELECTION = 466
 MODBUS_REGISTER_WORK_TIME = 624
+MODBUS_REGISTER_HAC_CARBON_DIOXIDE = 574
+MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD = 568
+MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD = 570
+MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD = 572
+MODBUS_REGISTER_HAC_COMPONENTS = 244
+MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS = 300
+MODBUS_REGISTER_HAC_AFTER_HEATER_SUPPLY_SETPOINT = 344
+MODBUS_REGISTER_HAC_AFTER_HEATER_EXTRACT_SETPOINT = 346
+MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT = 348
 
 
 class DataClass(IntEnum):
@@ -78,6 +87,17 @@ class ABSwitchPosition(IntEnum):
     Unknown = 0
     A = 1
     B = 2
+
+
+class HacComponentClass(IntEnum):
+    """Dantherm HAC components class."""
+
+    CO2Sensor = 0x0001
+    PreHeater = 0x0004
+    PreCooler = 0x0008
+    AfterHeater = 0x0010
+    AfterCooler = 0x0020
+    Hygrostat = 0x0040
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -412,31 +432,45 @@ class DanthermModbus:
     async def _read_hac_controller(self) -> None:
         """Read HAC controller data."""
 
-        class HacComponentClass(int):
-            """Dantherm HAC components."""
-
-            CO2Sensor = 0x0001
-            PreHeater = 0x0004
-            PreCooler = 0x0008
-            AfterHeater = 0x0010
-            AfterCooler = 0x0020
-            Hygrostat = 0x0040
-
         _LOGGER.critical(
             "HAC controller found, please reach out for support collaboration"
         )
 
-        result = await self._read_holding_uint32(574)
-        _LOGGER.debug("HAC CO2 Level = %s ppm (574)", result)
-        result = await self._read_holding_uint32(568)
-        _LOGGER.debug("Low Threshold of CO2 = %s ppm (568)", result)
-        result = await self._read_holding_uint32(570)
-        _LOGGER.debug("Middle Threshold of CO2 = %s ppm (570)", result)
-        result = await self._read_holding_uint32(572)
-        _LOGGER.debug("High Threshold of CO2 = %s ppm (572)", result)
-        result = await self._read_holding_uint32(244)
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_CARBON_DIOXIDE)
+        _LOGGER.debug(
+            "HAC CO2 Level = %s ppm (%s)", result, MODBUS_REGISTER_HAC_CARBON_DIOXIDE
+        )
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD
+        )
+        _LOGGER.debug(
+            "Low Threshold of CO2 = %s ppm (%s)",
+            result,
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD,
+        )
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD
+        )
+        _LOGGER.debug(
+            "Middle Threshold of CO2 = %s ppm (%s)",
+            result,
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
+        )
+        result = await self._read_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD
+        )
+        _LOGGER.debug(
+            "High Threshold of CO2 = %s ppm (%s)",
+            result,
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD,
+        )
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_COMPONENTS)
         if result is not None:
-            _LOGGER.debug("Installed Hac components = %s (244)", hex(result))
+            _LOGGER.debug(
+                "Installed Hac components = %s (%s)",
+                hex(result),
+                MODBUS_REGISTER_HAC_COMPONENTS,
+            )
             if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
                 _LOGGER.debug("CO2 sensor found")
             if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
@@ -447,12 +481,36 @@ class DanthermModbus:
                 _LOGGER.debug("After-heater found")
             if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
                 _LOGGER.debug("After-cooler found")
-        result = await self._read_holding_uint32(300)
+            if result & HacComponentClass.Hygrostat == HacComponentClass.Hygrostat:
+                _LOGGER.debug("Hygrostat found")
+        result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS)
         if result is not None:
-            _LOGGER.debug("Hac active component = %s (300)", hex(result))
-        result = await self._read_holding_int32(344)
-        _LOGGER.debug("Setpoint of the T2 = %s °C (344)", result)
-        result = await self._read_holding_int32(346)
-        _LOGGER.debug("Setpoint of the T3 = %s °C (346)", result)
-        result = await self._read_holding_int32(348)
-        _LOGGER.debug("Setpoint of the T5 = %s °C (348)", result)
+            _LOGGER.debug(
+                "Hac active components = %s (%s)",
+                hex(result),
+                MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS,
+            )
+        result = await self._read_holding_int32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_SUPPLY_SETPOINT
+        )
+        _LOGGER.debug(
+            "Setpoint of the after heater supply = %s °C (%s)",
+            result,
+            MODBUS_REGISTER_HAC_AFTER_HEATER_SUPPLY_SETPOINT,
+        )
+        result = await self._read_holding_int32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_EXTRACT_SETPOINT
+        )
+        _LOGGER.debug(
+            "Setpoint of the after heater extract = %s °C (%s)",
+            result,
+            MODBUS_REGISTER_HAC_AFTER_HEATER_EXTRACT_SETPOINT,
+        )
+        result = await self._read_holding_int32(
+            MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT
+        )
+        _LOGGER.debug(
+            "Setpoint of the after heater room = %s °C (%s)",
+            result,
+            MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT,
+        )

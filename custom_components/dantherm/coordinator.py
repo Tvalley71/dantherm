@@ -494,6 +494,16 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             getattr(entity, "key", entity.entity_id) == key for entity in self._entities
         )
 
+    def get_entity_description(
+        self, entity_id: str
+    ) -> DanthermEntityDescription | None:
+        """Get the entity description by entity id."""
+
+        description = self._all_descriptions.get(entity_id)
+        if description is not None:
+            return description
+        return None
+
     async def async_update_entity(
         self, entity: Entity, data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -520,6 +530,82 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             return
         self.data.update({description.key: {"state": last_state}})
         entity.async_write_ha_state()
+
+    async def async_get_entity_state_from_entity_id(
+        self, entity_id: str, default: Any = None
+    ) -> Any:
+        """Get the entity state from entity id."""
+
+        description = self.get_entity_description(entity_id)
+        if description is None:
+            return default
+        state = await self.async_get_entity_state(description)
+        if state is None:
+            return default
+        return state
+
+    @staticmethod
+    def is_state_excluded(description: DanthermEntityDescription, state: Any) -> bool:
+        """Check whether a state matches the description's exclusion conditions."""
+        if state is None:
+            return False
+        return (
+            (
+                description.data_exclude_if is not None
+                and state == description.data_exclude_if
+            )
+            or (
+                description.data_exclude_if_above is not None
+                and state >= description.data_exclude_if_above
+            )
+            or (
+                description.data_exclude_if_below is not None
+                and state <= description.data_exclude_if_below
+            )
+        )
+
+    async def async_get_entity_state(
+        self, description: DanthermEntityDescription, *, apply_exclusions: bool = True
+    ) -> Any:
+        """Get the entity state from the entity description."""
+
+        if not isinstance(description, DanthermEntityDescription):
+            return None
+
+        state = None
+        if description.data_getavailable:
+            if not getattr(self.hub, f"get_{description.data_getavailable}", True):
+                return None
+            if not getattr(
+                self.hub, f"get_{description.data_getavailable}_available", True
+            ):
+                return None
+
+        if description.data_getunknown and (
+            getattr(self.hub, f"get_{description.data_getunknown}", False)
+            or getattr(self.hub, f"get_{description.data_getunknown}_unknown", False)
+        ):
+            state = None
+        elif description.data_getinternal:
+            if description.key == ATTR_CALENDAR:
+                state = self.get_stored_entity_state(
+                    description.key, description.data_default
+                )
+            elif hasattr(self.hub, f"async_get_{description.data_getinternal}"):
+                state = await getattr(
+                    self.hub, f"async_get_{description.data_getinternal}"
+                )()
+            else:
+                state = getattr(self.hub, f"get_{description.data_getinternal}")
+        elif description.data_address:
+            state = await self.hub.read_holding_registers(description=description)
+        else:
+            state = self.get_stored_entity_state(
+                description.key, description.data_default
+            )
+        if apply_exclusions and self.is_state_excluded(description, state):
+            return None
+        return state
 
     async def async_set_entity_state_from_entity_id(
         self, entity_id: str, state: Any
@@ -617,38 +703,10 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
     ) -> Any:
         """Get entity data from description, state, icon and attributes."""
 
-        state = None
-        if description.data_getavailable:
-            if not getattr(self.hub, f"get_{description.data_getavailable}", True):
-                return None
-            if not getattr(
-                self.hub, f"get_{description.data_getavailable}_available", True
-            ):
-                return None
+        # Get the current state for the entity described by the description.
+        state = await self.async_get_entity_state(description)
 
-        if description.data_getunknown and (
-            getattr(self.hub, f"get_{description.data_getunknown}", False)
-            or getattr(self.hub, f"get_{description.data_getunknown}_unknown", False)
-        ):
-            state = None
-        elif description.data_getinternal:
-            if description.key == ATTR_CALENDAR:
-                state = self.get_stored_entity_state(
-                    description.key, description.data_default
-                )
-            elif hasattr(self.hub, f"async_get_{description.data_getinternal}"):
-                state = await getattr(
-                    self.hub, f"async_get_{description.data_getinternal}"
-                )()
-            else:
-                state = getattr(self.hub, f"get_{description.data_getinternal}")
-        elif description.data_address:
-            state = await self.hub.read_holding_registers(description=description)
-        else:
-            state = self.get_stored_entity_state(
-                description.key, description.data_default
-            )
-
+        # Determine the appropriate icon for the entity based on its state and description.
         icon = None
         if hasattr(self.hub, f"get_{description.key}_icon"):
             icon = getattr(self.hub, f"get_{description.key}_icon")
@@ -658,6 +716,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             elif description.icon:
                 icon = description.icon
 
+        # Retrieve the attributes for the entity, either from the hub or by default.
         attrs = None
         if hasattr(self.hub, f"get_{description.key}_attrs"):
             attrs = getattr(self.hub, f"get_{description.key}_attrs")
@@ -665,6 +724,8 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             attrs = getattr(self.hub, f"async_get_{description.key}_attrs")
 
         attrs = self._inject_pending_attr(description.key, attrs)
+
+        # Return the collected entity data as a dictionary.
         return {"state": state, "icon": icon, "attrs": attrs}
 
     async def _set_entity_state(self, entity: Entity, state: Any) -> None:

@@ -84,7 +84,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "actions_pending": { "name": "Acties in behandeling" }
+      "actions_pending": { "name": "Acties in behandeling" },
+      "after_heater_active": { "name": "Naverwarmer actief" }
     },
     "button": {
       "filter_reset": { "name": "Filter Resetten" },
@@ -165,7 +166,13 @@
       "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperatuur (Zomer)" },
       "boost_mode_timeout": { "name": "Boost-modus Time-out" },
       "eco_mode_timeout": { "name": "Eco-modus Time-out" },
-      "home_mode_timeout": { "name": "Thuis-modus Time-out" }
+      "home_mode_timeout": { "name": "Thuis-modus Time-out" },
+      "carbon_dioxide_low_threshold": { "name": "Koolstofdioxide Lage Drempel" },
+      "carbon_dioxide_middle_threshold": { "name": "Koolstofdioxide Middel Drempel" },
+      "carbon_dioxide_high_threshold": { "name": "Koolstofdioxide Hoge Drempel" },
+      "after_heater_supply_setpoint": { "name": "Naverwarmer Toevoerinstelwaarde" },
+      "after_heater_extract_setpoint": { "name": "Naverwarmer Afvoerinstelwaarde" },
+      "after_heater_room_setpoint": { "name": "Naverwarmer Ruimte-instelwaarde" }
     },
     "select": {
       "operation_selection": {
@@ -285,7 +292,8 @@
           "12": "Fire Alarm",
           "13": "Comminication Alarm",
           "14": "Fire Termostat Alarm",
-          "15": "High Waterlevel Alarm"
+          "15": "High Waterlevel Alarm",
+          "16": "Brandbeveiligingsalarm"
         }
       },
       "adaptive_state": {
@@ -354,6 +362,7 @@
       },
       "work_time": { "name": "Inschakelduur" },
       "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"},
+      "carbon_dioxide": { "name": "Koolstofdioxide" },
       "features": { "name": "Features" }
     },
     "switch": {
