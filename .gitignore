@@ -1,5 +1,6 @@
 # Home Assistant config directory (eksempel)
 config/*
+tests/testing_config/
 
 # Python cache
 __pycache__/
