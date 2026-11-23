@@ -28,6 +28,52 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
+async def test_carbon_dioxide_sensor_filtering(hass: HomeAssistant) -> None:
+    """Test that carbon dioxide readings use the sensor filter when enabled."""
+
+    device = DanthermDevice(
+        hass,
+        "TestDevice",
+        "localhost",
+        1,
+        1,
+        5,
+        MockConfigEntry(domain="dantherm"),
+    )
+    device._sensor_filtering = True
+
+    with patch.object(
+        device,
+        "_read_holding_uint32",
+        side_effect=[800, 800, 800, 800, 800, 1000],
+    ):
+        for _ in range(5):
+            assert await device.async_get_carbon_dioxide() == 800
+
+        assert await device.async_get_carbon_dioxide() == 800
+
+
+@pytest.mark.asyncio
+async def test_carbon_dioxide_sensor_filtering_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that carbon dioxide readings are not filtered when disabled."""
+
+    device = DanthermDevice(
+        hass,
+        "TestDevice",
+        "localhost",
+        1,
+        1,
+        5,
+        MockConfigEntry(domain="dantherm"),
+    )
+
+    with patch.object(device, "_read_holding_uint32", return_value=1000):
+        assert await device.async_get_carbon_dioxide() == 1000
+
+
+@pytest.mark.asyncio
 async def test_set_alarm_reset_dismisses_notification(hass: HomeAssistant) -> None:
     """set_alarm_reset should dismiss the persistent notification and write reset value."""
 
