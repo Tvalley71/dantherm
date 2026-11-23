@@ -225,6 +225,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 "max_change": 50,
                 "initialized": False,
             },
+            "carbon_dioxide": {
+                "history": deque(maxlen=5),
+                "max_change": 50,
+                "initialized": False,
+            },
             "exhaust": {
                 "history": deque(maxlen=5),
                 "max_change": 2,
@@ -1070,7 +1075,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
         result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_CARBON_DIOXIDE)
         _LOGGER.debug("Carbon dioxide = %s", result)
-        return result
+        if not self._sensor_filtering or result is None:
+            return result
+        filtered_result = self._filter_sensor("carbon_dioxide", float(result))
+        return int(filtered_result)
 
     async def async_get_carbon_dioxide_low_threshold(self) -> int | None:
         """Get carbon dioxide low threshold."""
