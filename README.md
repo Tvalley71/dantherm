@@ -61,122 +61,131 @@ Thanks to _Smartzeug_
 
 #### Buttons Entities
 
-| Entity            | Description       |
-|-------------------|-------------------|
-| `alarm_reset`     | Clears the active alarm and dismis the alarm notification |
-| `filter_reset`    | Resets the filter remain timer and dismis the alarm notification |
+| Entity            | Default | Description       |
+|-------------------|---------|-------------------|
+| `alarm_reset`     | Enabled | Clears the active alarm and dismis the alarm notification |
+| `filter_reset`    | Enabled | Resets the filter remain timer and dismis the alarm notification |
+
+#### Binary Sensor Entities
+
+| Entity               | Default                     | Description |
+|----------------------|-----------------------------|-------------|
+| `actions_pending`    | Disabled                    | Indicates whether one or more write actions are queued, in progress, or awaiting a follow-up refresh |
+| `after_heater_active` | Enabled [[1]](#entity-notes) | Indicates whether the HAC after-heater is currently active |
 
 #### Calendar Entity
 
-| Entity    | Description              |
-|-----------|--------------------------|
-| `calendar`| Controls scheduled operations based on Home Assistant calendar events |
+| Entity     | Default | Description              |
+|------------|---------|--------------------------|
+| `calendar` | Enabled | Controls scheduled operations based on Home Assistant calendar events |
 
 #### Cover Entity
 
-| Entity           | Description              |
-|------------------|--------------------------|
-| `bypass_damper`  | Indicates and controls the manual bypass state of the bypass damper [[1]](#entity-notes) |
+| Entity           | Default | Description              |
+|------------------|---------|--------------------------|
+| `bypass_damper`  | Enabled [[1]](#entity-notes) | Indicates and controls the manual bypass state of the bypass damper |
 
 #### Event Entities
 
-| Entity         | Description |
-|----------------|-------------|
-| `alarm_event`  | Fires event notifications when the unit reports a new alarm. Supported event types: `alarm_exhaust_air_fan`, `alarm_supply_air_fan`, `alarm_bypass_damper`, `alarm_outdoor_air`, `alarm_supply_air`, `alarm_extract_air`, `alarm_exhaust_air`, `alarm_room_air`, `alarm_rh`, `alarm_outdoor_temperature`, `alarm_supply_temperature`, `alarm_overtemperature`, `alarm_communication_error`, `alarm_fire`, `alarm_high_waterlevel`, `alarm_fire_protection`. Alarm events include `alarm_code` and `alarm_text` attributes. |
-| `filter_event` | Fires event notifications for filter lifecycle changes. Supported event types: `filter_warning`, `filter_expired`. |
+| Entity         | Default | Description |
+|----------------|---------|-------------|
+| `alarm_event`  | Enabled | Fires event notifications when the unit reports a new alarm. Supported event types: `alarm_exhaust_air_fan`, `alarm_supply_air_fan`, `alarm_bypass_damper`, `alarm_outdoor_air`, `alarm_supply_air`, `alarm_extract_air`, `alarm_exhaust_air`, `alarm_room_air`, `alarm_rh`, `alarm_outdoor_temperature`, `alarm_supply_temperature`, `alarm_overtemperature`, `alarm_communication_error`, `alarm_fire`, `alarm_high_waterlevel`, `alarm_fire_protection`. Alarm events include `alarm_code` and `alarm_text` attributes. |
+| `filter_event` | Enabled | Fires event notifications for filter lifecycle changes. Supported event types: `filter_warning`, `filter_expired`. |
 
 #### Fan Entity
-| Entity           | Description              |
-|------------------|--------------------------|
-| `ventilation`    | Indicates and controls the operation and fan level of the ventilation unit |
+| Entity           | Default | Description              |
+|------------------|---------|--------------------------|
+| `ventilation`    | Enabled | Indicates and controls the operation and fan level of the ventilation unit |
 
 #### Number Entities
 
-| Entity                              | Description                        |
-|-------------------------------------|------------------------------------|
-| `boost_mode_timeout`                | Sets the duration for Boost Mode before it automatically turns off [[3]](#entity-notes) |
-| `bypass_minimum_temperature`        | Minimum outdoor temperature (winter[[6]](#entity-notes)) allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `bypass_maximum_temperature`        | Maximum outdoor temperature (winter[[6]](#entity-notes)) allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `bypass_minimum_temperature_summer` | Minimum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `bypass_maximum_temperature_summer` | Maximum outdoor temperature (summer) allowed for bypass damper to open [[2][5]](#entity-notes) |
-| `eco_mode_timeout`                  | Sets the duration for Eco Mode before it automatically deactivates [[3]](#entity-notes) |
-| `filter_lifetime`                   | Expected lifetime of the filter before triggering a replacement notification [[1][2]](#entity-notes) |
-| `humidity_setpoint`                 | Humidity setpoint in % (winter[[6]](#entity-notes)) [[2][5]](#entity-notes) |
-| `humidity_setpoint_summer`          | Humidity setpoint in % (summer) [[2][5]](#entity-notes) |
-| `home_mode_timeout`                 | Sets how long Home Mode should remain active after being triggered [[3]](#entity-notes) |
-| `manual_bypass_duration`            | Duration for which manual bypass remains active after user activation [[1][2][5]](#entity-notes) |
-| `air_quality_low_threshold`         |  Set the low threshold for air quality sensitivity [[1][2]](#entity-notes) |
-| `air_quality_middle_threshold`      |  Set the middle threshold for air quality sensitivity [[1][2]](#entity-notes) |
-| `air_quality_high_threshold`        |  Set the high threshold for air quality sensitivity [[1][2]](#entity-notes) |
+| Entity                              | Default     | Description                        |
+|-------------------------------------|-------------|------------------------------------|
+| `boost_mode_timeout`                | Conditional [[2]](#entity-notes) | Sets the duration for Boost Mode before it automatically turns off |
+| `bypass_minimum_temperature`        | Disabled [[4]](#entity-notes) | Minimum outdoor temperature (winter) allowed for bypass damper to open |
+| `bypass_maximum_temperature`        | Disabled [[4]](#entity-notes) | Maximum outdoor temperature (winter) allowed for bypass damper to open |
+| `bypass_minimum_temperature_summer` | Disabled [[4]](#entity-notes) | Minimum outdoor temperature (summer) allowed for bypass damper to open |
+| `bypass_maximum_temperature_summer` | Disabled [[4]](#entity-notes) | Maximum outdoor temperature (summer) allowed for bypass damper to open |
+| `eco_mode_timeout`                  | Conditional [[2]](#entity-notes) | Sets the duration for Eco Mode before it automatically deactivates |
+| `filter_lifetime`                   | Disabled [[1]](#entity-notes) | Expected lifetime of the filter before triggering a replacement notification |
+| `humidity_setpoint`                 | Disabled [[4]](#entity-notes) | Humidity setpoint in % (winter) |
+| `humidity_setpoint_summer`          | Disabled [[4]](#entity-notes) | Humidity setpoint in % (summer) |
+| `home_mode_timeout`                 | Conditional [[2]](#entity-notes) | Sets how long Home Mode should remain active after being triggered |
+| `manual_bypass_duration`            | Disabled [[1][4]](#entity-notes) | Duration for which manual bypass remains active after user activation |
+| `air_quality_low_threshold`         | Disabled [[1]](#entity-notes) | Set the low threshold for air quality sensitivity |
+| `air_quality_middle_threshold`      | Disabled [[1]](#entity-notes) | Set the middle threshold for air quality sensitivity |
+| `air_quality_high_threshold`        | Disabled [[1]](#entity-notes) | Set the high threshold for air quality sensitivity |
+| `carbon_dioxide_low_threshold`      | Disabled [[1]](#entity-notes) | Sets the low carbon dioxide threshold |
+| `carbon_dioxide_middle_threshold`   | Disabled [[1]](#entity-notes) | Sets the middle carbon dioxide threshold |
+| `carbon_dioxide_high_threshold`    | Disabled [[1]](#entity-notes) | Sets the high carbon dioxide threshold |
+| `after_heater_supply_setpoint`      | Disabled [[1]](#entity-notes) | Sets the target supply-air temperature for the after-heater |
+| `after_heater_extract_setpoint`     | Disabled [[1]](#entity-notes) | Sets the target extract-air temperature for the after-heater |
+| `after_heater_room_setpoint`        | Disabled [[1]](#entity-notes) | Sets the target room temperature for the after-heater |
 
 #### Select Entities
 
-| Entity                      | Description                        |
-|-----------------------------|------------------------------------|
-| `boost_operation_selection` | Defines which mode to apply when Boost Mode is triggered [[3]](#entity-notes) |
-| `eco_operation_selection`   | Defines which mode to apply when Eco Mode is triggered [[3]](#entity-notes) |
-| `fan_level_selection`       | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
-| `home_operation_selection`  | Defines which mode to apply when Home Mode is triggered [[3]](#entity-notes) |
-| `operation_selection`       | Selects the current mode of operation (Standby, Automatic, Manual, Week Program, Away Mode, Summer Mode, Fireplace Mode and Night Mode). _Night Mode_ is display only. _Standby_ and _Fireplace Mode_ will timeout after a fixed period. |
-| `week_program_selection`    | Selects the active predefined week program (Week Program 1 to Week Program 11). _Week Program 11_ can be user defined but not through the integration. [[2]](#entity-notes) |
+| Entity                      | Default     | Description                        |
+|-----------------------------|-------------|------------------------------------|
+| `boost_operation_selection` | Conditional [[2]](#entity-notes) | Defines which mode to apply when Boost Mode is triggered |
+| `eco_operation_selection`   | Conditional [[2]](#entity-notes) | Defines which mode to apply when Eco Mode is triggered |
+| `fan_level_selection`       | Enabled     | Selects the current fan level (Level 0 to Level 4). _Level 0_ and _Level 4_ will timeout after a fixed period. |
+| `home_operation_selection`  | Conditional [[2]](#entity-notes) | Defines which mode to apply when Home Mode is triggered |
+| `operation_selection`       | Enabled     | Selects the current mode of operation (Standby, Automatic, Manual, Week Program, Away Mode, Summer Mode, Fireplace Mode and Night Mode). _Night Mode_ is display only. _Standby_ and _Fireplace Mode_ will timeout after a fixed period. |
+| `week_program_selection`    | Disabled    | Selects the active predefined week program (Week Program 1 to Week Program 11). _Week Program 11_ can be user defined but not through the integration. |
 
 #### Sensor Entities
 
-| Entity                        | Description                          |
-|-------------------------------|--------------------------------------|
-| `actions_pending`             | Indicates whether one or more write actions are queued, in progress, or awaiting a follow-up refresh |
-| `air_quality`                 | Measures air quality if the unit is equipped with a VOC or CO₂ sensor [[1]](#entity-notes) |
-| `air_quality_level`           | Indicates the qualitative level of air quality (Clean, Polluted, etc.) [[2]](#entity-notes) |
-| `alarm`                       | Reports active alarms such as fan or temperature alarms |
-| `exhaust_temperature`         | Temperature of indoor air being exhausted after heat recovery |
-| `extract_temperature`         | Temperature of indoor air being pulled out for heat recovery |
-| `fan_level`                   | Current fan level (Level 0 to Level 4) |
-| `fan1_speed`                  | Actual RPM of fan 1 [[2]](#entity-notes) |
-| `fan2_speed`                  | Actual RPM of fan 2 [[2]](#entity-notes) |
-| `filter_remain`               | Remaining filter life in days [[1]](#entity-notes) |
-| `filter_remain_level`         | Qualitative status of the remaining filter lifetime (e.g. Good, Replace). If the unit supports ServoFlow, the status is based on the filter's dirtiness degree; otherwise, it is based on the filter's remaining lifetime in days. [[1][2]](#entity-notes) |
-| `humidity`                    | Indoor relative humidity from internal sensor [[1]](#entity-notes) |
-| `humidity_level`              | Qualitative level of humidity (e.g. Dry, Normal, Humid) [[2]](#entity-notes) |
-| `adaptive_state`              | Shows which adaptive mode (Home, Eco, Boost) is currently active [[4]](#entity-notes) |
-| `internal_preheater_dutycycle`| Percentage of power used by the internal electric preheater [[1][2]](#entity-notes) |
-| `operation_mode`              | Current system mode: Automatic, Manual, Week Program, etc. |
-| `outdoor_temperature`         | Temperature of fresh outdoor air being pulled in from outside the home |
-| `room_temperature`            | Room air temperature from the Dantherm HRC/Pluggit APRC remote [[1][2]](#entity-notes) |
-| `supply_temperature`          | Temperature of the supply air delivered to the home |
-| `work_time`                   | Total operational runtime of the unit [[2]](#entity-notes) |
+| Entity                        | Default     | Description                          |
+|-------------------------------|-------------|--------------------------------------|
+| `air_quality`                 | Enabled [[1]](#entity-notes) | Measures air quality if the unit is equipped with a VOC or CO₂ sensor |
+| `air_quality_level`           | Disabled    | Indicates the qualitative level of air quality (Clean, Polluted, etc.) |
+| `alarm`                       | Enabled     | Reports active alarms such as fan or temperature alarms |
+| `carbon_dioxide`              | Enabled [[1]](#entity-notes) | Measures carbon dioxide concentration in ppm |
+| `exhaust_temperature`         | Enabled     | Temperature of indoor air being exhausted after heat recovery |
+| `extract_temperature`         | Enabled     | Temperature of indoor air being pulled out for heat recovery |
+| `fan_level`                   | Enabled     | Current fan level (Level 0 to Level 4) |
+| `fan1_speed`                  | Disabled    | Actual RPM of fan 1 |
+| `fan2_speed`                  | Disabled    | Actual RPM of fan 2 |
+| `filter_remain`               | Enabled [[1]](#entity-notes) | Remaining filter life in days |
+| `filter_remain_level`         | Conditional [[1]](#entity-notes) | Qualitative status of the remaining filter lifetime (e.g. Good, Replace). If the unit supports ServoFlow, the status is based on the filter's dirtiness degree; otherwise, it is based on the filter's remaining lifetime in days. Enabled by default with ServoFlow and disabled otherwise. |
+| `humidity`                    | Enabled [[1]](#entity-notes) | Indoor relative humidity from internal sensor |
+| `humidity_level`              | Disabled    | Qualitative level of humidity (e.g. Dry, Normal, Humid) |
+| `adaptive_state`              | Conditional [[3]](#entity-notes) | Shows which adaptive mode (Home, Eco, Boost) is currently active |
+| `internal_preheater_dutycycle`| Disabled [[1]](#entity-notes) | Percentage of power used by the internal electric preheater |
+| `operation_mode`              | Enabled     | Current system mode: Automatic, Manual, Week Program, etc. |
+| `outdoor_temperature`         | Enabled     | Temperature of fresh outdoor air being pulled in from outside the home |
+| `room_temperature`            | Disabled [[1]](#entity-notes) | Room air temperature from the Dantherm HRC/Pluggit APRC remote |
+| `supply_temperature`          | Enabled     | Temperature of the supply air delivered to the home |
+| `work_time`                   | Disabled    | Total operational runtime of the unit |
 
 #### Switch Entities
 
-| Entity                 | Description                     |
-|------------------------|---------------------------------|
-| `away_mode`            | Enables or disables Away Mode |
-| `boost_mode`           | Enables or disables Boost Mode [[3]](#entity-notes) |
-| `disable_bypass`       | Forces the bypass damper to remain closed [[2]](#entity-notes) |
-| `eco_mode`             | Enables or disables Eco Mode [[3]](#entity-notes) |
-| `fireplace_mode`       | Enables Fireplace Mode, increases supply air to compensate for fireplace draft |
-| `home_mode`            | Enables or disables Home Mode [[3]](#entity-notes) |
-| `manual_bypass_mode`   | Manually activates bypass regardless of conditions [[1]](#entity-notes) |
-| `night_mode`           | Enables or disables Night Mode [[2]](#entity-notes) |
-| `sensor_filtering`     | Enables or disables sensor value filtering for stability [[2]](#entity-notes) |
-| `summer_mode`          | Enables or disables Summer Mode |
+| Entity                 | Default     | Description                     |
+|------------------------|-------------|---------------------------------|
+| `away_mode`            | Enabled     | Enables or disables Away Mode |
+| `boost_mode`           | Conditional [[2]](#entity-notes) | Enables or disables Boost Mode |
+| `disable_bypass`       | Disabled    | Forces the bypass damper to remain closed |
+| `eco_mode`             | Conditional [[2]](#entity-notes) | Enables or disables Eco Mode |
+| `fireplace_mode`       | Enabled     | Enables Fireplace Mode, increases supply air to compensate for fireplace draft |
+| `home_mode`            | Conditional [[2]](#entity-notes) | Enables or disables Home Mode |
+| `manual_bypass_mode`   | Enabled [[1]](#entity-notes) | Manually activates bypass regardless of conditions |
+| `night_mode`           | Disabled    | Enables or disables Night Mode |
+| `sensor_filtering`     | Disabled    | Enables or disables sensor value filtering for stability |
+| `summer_mode`          | Enabled     | Enables or disables Summer Mode |
 
 #### Text Entities
 
-| Entity                   | Description                     |
-|--------------------------|---------------------------------|
-| `night_mode_end_time`    | Sets the end time for Night Mode [[2]](#entity-notes) |
-| `night_mode_start_time`  | Sets the start time for Night Mode [[2]](#entity-notes) |
+| Entity                   | Default  | Description                     |
+|--------------------------|----------|---------------------------------|
+| `night_mode_end_time`    | Disabled | Sets the end time for Night Mode |
+| `night_mode_start_time`  | Disabled | Sets the start time for Night Mode |
 
 <h4 id="entity-notes">Notes</h4>
 
-[1] The entity may not install due to lack of support or installation in the particular unit.
-[2] The entity is disabled by default.
-[3] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.
-[4] The entity can only be enabled if any of the adaptive triggers are configured.
-[5] The entity may not install due to firmware limitation.
-[6] Winter setting if summer setting is available (Firmware ≥ 3.14).
-
-_~~Strikethrough~~ is a work in progress, planned for version 0.5.0._
+[1] The entity is only installed when the required component is supported and available on the unit.<br>
+[2] The entity will be enabled or disabled depending on whether the corresponding adaptive trigger is configured.<br>
+[3] The entity can only be enabled if any of the adaptive triggers are configured.<br>
+[4] The entity may not install due to firmware limitation.<br>
 
 ### Installation
 
@@ -247,7 +256,7 @@ Danish, Dutch, English, German and French.
 
 
 > [!NOTE]
-> The HAC module functions are currently unsupported due to limited testing possibilities. If support for these functions are desired, please contact me for potential collaborative efforts to provide the support.
+> HAC support is currently limited to carbon dioxide measurement and after-heater controls.
 
 
 ## Examples
