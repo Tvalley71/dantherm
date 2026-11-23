@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.device_map import (
     CONF_BOOST_MODE_TRIGGER,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,

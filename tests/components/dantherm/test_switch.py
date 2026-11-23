@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.switch import async_setup_entry
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.switch import async_setup_entry
 
 from homeassistant.core import HomeAssistant
 

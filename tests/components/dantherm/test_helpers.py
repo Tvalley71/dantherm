@@ -3,7 +3,7 @@
 from datetime import UTC, date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from config.custom_components.dantherm.helpers import (
+from custom_components.dantherm.helpers import (
     as_dt,
     duration_dt,
     has_single_loaded_instance,
@@ -54,9 +54,7 @@ class TestDateTimeHelpers:
 
     def test_parse_dt_or_date_datetime_string(self) -> None:
         """Test parse_dt_or_date with datetime string."""
-        with patch(
-            "config.custom_components.dantherm.helpers.parse_datetime"
-        ) as mock_parse:
+        with patch("custom_components.dantherm.helpers.parse_datetime") as mock_parse:
             mock_dt = datetime(2023, 10, 27, 12, 0, 0, tzinfo=UTC)
             mock_parse.return_value = mock_dt
 
@@ -101,7 +99,7 @@ class TestInstanceHelpers:
     def test_has_single_loaded_instance_true(self) -> None:
         """Test has_single_loaded_instance returns True."""
         with patch(
-            "config.custom_components.dantherm.helpers.active_instance_count"
+            "custom_components.dantherm.helpers.active_instance_count"
         ) as mock_count:
             mock_count.return_value = 1
 
@@ -111,7 +109,7 @@ class TestInstanceHelpers:
     def test_has_single_loaded_instance_false(self) -> None:
         """Test has_single_loaded_instance returns False."""
         with patch(
-            "config.custom_components.dantherm.helpers.active_instance_count"
+            "custom_components.dantherm.helpers.active_instance_count"
         ) as mock_count:
             mock_count.return_value = 2
 

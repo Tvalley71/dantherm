@@ -1,7 +1,7 @@
 """Test the Dantherm exceptions module."""
 
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.exceptions import (
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.exceptions import (
     InvalidAdaptiveState,
     InvalidFilterLifetime,
     InvalidTimeFormat,

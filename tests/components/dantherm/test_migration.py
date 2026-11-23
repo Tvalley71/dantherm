@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from config.custom_components.dantherm import (
+from custom_components.dantherm import (
     _migrate_sensor_filtering_option,
     async_migrate_entry,
     async_setup_entry,
 )
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.device_map import (
     ATTR_SENSOR_FILTERING,
     CONF_ENABLE_SENSOR_FILTERING,
 )
@@ -183,7 +183,7 @@ async def test_setup_entry_does_not_reapply_legacy_sensor_filtering_migration(
     )
 
     with (
-        patch("config.custom_components.dantherm.DanthermDevice") as mock_device_cls,
+        patch("custom_components.dantherm.DanthermDevice") as mock_device_cls,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",

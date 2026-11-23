@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from config.custom_components.dantherm.store import DanthermStore
+from custom_components.dantherm.store import DanthermStore
 
 from homeassistant.core import HomeAssistant
 

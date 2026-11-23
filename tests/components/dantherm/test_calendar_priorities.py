@@ -1,6 +1,6 @@
 """Tests for Dantherm calendar priority system."""
 
-from config.custom_components.dantherm.device_map import STATE_PRIORITIES
+from custom_components.dantherm.device_map import STATE_PRIORITIES
 
 
 def test_priority_order_matches_documentation() -> None:

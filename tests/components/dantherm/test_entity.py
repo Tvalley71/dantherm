@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from config.custom_components.dantherm.device_map import DanthermEntityDescription
-from config.custom_components.dantherm.entity import DanthermEntity
+from custom_components.dantherm.device_map import DanthermEntityDescription
+from custom_components.dantherm.entity import DanthermEntity
 
 from homeassistant.core import HomeAssistant
 

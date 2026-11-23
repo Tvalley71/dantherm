@@ -1,6 +1,6 @@
 """Test coverage for disabled entities in Dantherm integration."""
 
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.device_map import (
     BUTTONS,
     COVERS,
     NUMBERS,
@@ -82,6 +82,12 @@ class TestDisabledEntityCoverage:
             "air_quality_low_threshold",
             "air_quality_middle_threshold",
             "air_quality_high_threshold",
+            "carbon_dioxide_low_threshold",
+            "carbon_dioxide_middle_threshold",
+            "carbon_dioxide_high_threshold",
+            "after_heater_supply_setpoint",
+            "after_heater_extract_setpoint",
+            "after_heater_room_setpoint",
         }
 
         assert set(disabled_numbers) == expected_disabled_numbers, (
@@ -104,6 +110,16 @@ class TestDisabledEntityCoverage:
                 "air_quality_low_threshold",
                 "air_quality_middle_threshold",
                 "air_quality_high_threshold",
+            ],
+            "carbon_dioxide_": [
+                "carbon_dioxide_low_threshold",
+                "carbon_dioxide_middle_threshold",
+                "carbon_dioxide_high_threshold",
+            ],
+            "after_heater_": [
+                "after_heater_supply_setpoint",
+                "after_heater_extract_setpoint",
+                "after_heater_room_setpoint",
             ],
         }
 

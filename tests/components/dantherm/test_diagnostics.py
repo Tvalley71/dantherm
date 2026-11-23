@@ -6,15 +6,15 @@ from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from config.custom_components.dantherm.calendar import DanthermCalendarEvent
-from config.custom_components.dantherm.const import (
+from custom_components.dantherm.calendar import DanthermCalendarEvent
+from custom_components.dantherm.const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from config.custom_components.dantherm.device_map import ATTR_CALENDAR
-from config.custom_components.dantherm.diagnostics import (
+from custom_components.dantherm.device_map import ATTR_CALENDAR
+from custom_components.dantherm.diagnostics import (
     _extract_adaptive_state_async,
     async_get_config_entry_diagnostics,
 )
@@ -146,7 +146,7 @@ async def test_extract_adaptive_state_async(hass: HomeAssistant) -> None:
     """Test the async adaptive state extraction function with real translations."""
     # Mock the async_get_adaptive_state_from_summary function to return known states
     with patch(
-        "config.custom_components.dantherm.diagnostics.async_get_adaptive_state_from_summary"
+        "custom_components.dantherm.diagnostics.async_get_adaptive_state_from_summary"
     ) as mock_get_state:
         # Test various adaptive state patterns
         mock_get_state.return_value = "level_2"
@@ -242,7 +242,7 @@ async def test_diagnostics_with_intelligent_calendar_redaction(
 
     # Mock the adaptive state extraction to return predictable results
     with patch(
-        "config.custom_components.dantherm.diagnostics.async_get_adaptive_state_from_summary"
+        "custom_components.dantherm.diagnostics.async_get_adaptive_state_from_summary"
     ) as mock_get_state:
 
         def mock_state_func(hass: HomeAssistant, text: str) -> str | None:

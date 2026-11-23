@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from config.custom_components.dantherm.discovery import async_discover
+from custom_components.dantherm.discovery import async_discover
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -36,15 +36,15 @@ async def test_async_discover_unicast_fallback_local(
         return []
 
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._async_get_local_ips",
+        "custom_components.dantherm.discovery._async_get_local_ips",
         fake_get_local_ips,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_broadcast",
+        "custom_components.dantherm.discovery._discover_broadcast",
         fake_discover_broadcast,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_unicast_sweep",
+        "custom_components.dantherm.discovery._discover_unicast_sweep",
         fake_discover_unicast_sweep,
     )
 
@@ -78,15 +78,15 @@ async def test_async_discover_global_broadcast_last_resort(
         return []
 
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._async_get_local_ips",
+        "custom_components.dantherm.discovery._async_get_local_ips",
         fake_get_local_ips,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_broadcast",
+        "custom_components.dantherm.discovery._discover_broadcast",
         fake_discover_broadcast,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_unicast_sweep",
+        "custom_components.dantherm.discovery._discover_unicast_sweep",
         fake_discover_unicast_sweep,
     )
 

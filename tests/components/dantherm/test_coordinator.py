@@ -5,10 +5,10 @@ from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-import config.custom_components.dantherm.coordinator as coordinator_mod
-from config.custom_components.dantherm.coordinator import DanthermCoordinator
-from config.custom_components.dantherm.device import DanthermDevice
-from config.custom_components.dantherm.device_map import (
+import custom_components.dantherm.coordinator as coordinator_mod
+from custom_components.dantherm.coordinator import DanthermCoordinator
+from custom_components.dantherm.device import DanthermDevice
+from custom_components.dantherm.device_map import (
     ATTR_ACTIONS_PENDING,
     ATTR_CALENDAR,
     CONF_ENABLE_TIME_SYNCHRONIZATION,

@@ -3,8 +3,8 @@
 from time import monotonic
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from config.custom_components.dantherm.device import DanthermDevice
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.device import DanthermDevice
+from custom_components.dantherm.device_map import (
     ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
     ATTR_AFTER_HEATER_ROOM_SETPOINT,
     ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
@@ -15,9 +15,9 @@ from config.custom_components.dantherm.device_map import (
     ComponentClass,
     DanthermEventEntityDescription,
 )
-from config.custom_components.dantherm.entity import DanthermEntity
-from config.custom_components.dantherm.event import DanthermEvent
-from config.custom_components.dantherm.modbus import HacComponentClass
+from custom_components.dantherm.entity import DanthermEntity
+from custom_components.dantherm.event import DanthermEvent
+from custom_components.dantherm.modbus import HacComponentClass
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -95,7 +95,7 @@ async def test_set_alarm_reset_dismisses_notification(hass: HomeAssistant) -> No
 
     with (
         patch(
-            "config.custom_components.dantherm.device.async_dismiss_notification",
+            "custom_components.dantherm.device.async_dismiss_notification",
             new=AsyncMock(),
         ) as mock_dismiss,
         patch.object(device, "_write_holding_uint32", new=AsyncMock()) as mock_write,
@@ -131,7 +131,7 @@ async def test_set_filter_reset_dismisses_notification(hass: HomeAssistant) -> N
 
     with (
         patch(
-            "config.custom_components.dantherm.device.async_dismiss_notification",
+            "custom_components.dantherm.device.async_dismiss_notification",
             new=AsyncMock(),
         ) as mock_dismiss,
         patch.object(device, "_write_holding_uint32", new=AsyncMock()) as mock_write,
@@ -170,7 +170,7 @@ async def test_alarm_notification(hass: HomeAssistant) -> None:
     with (
         patch.object(device, "_read_holding_uint32", return_value=5),
         patch(
-            "config.custom_components.dantherm.device.async_create_key_value_notification",
+            "custom_components.dantherm.device.async_create_key_value_notification",
             new=AsyncMock(),
         ) as mock_notify,
     ):
@@ -267,11 +267,11 @@ async def test_alarm_event_includes_alarm_code_and_alarm_text(
     with (
         patch.object(device, "_read_holding_uint32", return_value=5),
         patch(
-            "config.custom_components.dantherm.device.async_create_key_value_notification",
+            "custom_components.dantherm.device.async_create_key_value_notification",
             new=AsyncMock(),
         ),
         patch(
-            "config.custom_components.dantherm.device.async_get_translated_state_text",
+            "custom_components.dantherm.device.async_get_translated_state_text",
             new=AsyncMock(return_value="HCC 2 ALU"),
         ),
         patch.object(device, "fire_event") as mock_fire_event,
@@ -313,7 +313,7 @@ async def test_filter_remain_notification(hass: HomeAssistant) -> None:
     with (
         patch.object(device, "_read_holding_uint32", side_effect=[30, 0]),
         patch(
-            "config.custom_components.dantherm.device.async_create_key_value_notification",
+            "custom_components.dantherm.device.async_create_key_value_notification",
             new=AsyncMock(),
         ) as mock_notify,
     ):

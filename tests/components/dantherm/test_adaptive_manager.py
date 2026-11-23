@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from config.custom_components.dantherm.adaptive_manager import (
+from custom_components.dantherm.adaptive_manager import (
     AdaptiveEventStack,
     DanthermAdaptiveManager,
 )
-from config.custom_components.dantherm.device_map import ATTR_OPERATION_SELECTION
+from custom_components.dantherm.device_map import ATTR_OPERATION_SELECTION
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -294,7 +294,7 @@ class TestCalculateEventEndTime:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager._LOGGER"
+            "custom_components.dantherm.adaptive_manager._LOGGER"
         ) as mock_logger:
             calculated_end = adaptive_manager._calculate_event_end_time(event)
 
@@ -328,9 +328,7 @@ class TestEventStackIntegration:
                 "_set_adaptive_target_operation",
                 new=AsyncMock(),
             ) as mock_set_operation,
-            patch.object(
-                adaptive_manager, "get_current_operation", return_value="eco"
-            ),
+            patch.object(adaptive_manager, "get_current_operation", return_value="eco"),
         ):
             await adaptive_manager.async_set_up_adaptive_manager()
             mock_cleanup.assert_called_once()
@@ -473,7 +471,7 @@ class TestAdaptivePendingBehavior:
                 adaptive_manager, "get_current_operation", return_value="manual"
             ),
             patch(
-                "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
+                "custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
                 AsyncMock(return_value="automatic"),
             ),
         ):

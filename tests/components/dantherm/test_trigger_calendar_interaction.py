@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
-from config.custom_components.dantherm.adaptive_manager import DanthermAdaptiveManager
-from config.custom_components.dantherm.device_map import STATE_BOOST, STATE_HOME
+from custom_components.dantherm.adaptive_manager import DanthermAdaptiveManager
+from custom_components.dantherm.device_map import STATE_BOOST, STATE_HOME
 import pytest
 
 from homeassistant.components.calendar import CalendarEvent
@@ -99,7 +99,7 @@ class TestTriggerCalendarInteraction:
         adaptive_manager.push_event = Mock(return_value=True)  # Event becomes top
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
+            "custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 
@@ -152,7 +152,7 @@ class TestTriggerCalendarInteraction:
         )
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
+            "custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary",
             return_value=STATE_BOOST,
         ):
             await adaptive_manager._update_adaptive_calendar_state("start", event)
@@ -349,7 +349,7 @@ class TestTriggerCalendarInteraction:
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
+            "custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 
@@ -389,7 +389,7 @@ class TestTriggerCalendarInteraction:
         adaptive_manager.get_device_entities = Mock(return_value=[mock_entity])
 
         with patch(
-            "config.custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
+            "custom_components.dantherm.adaptive_manager.async_get_adaptive_state_from_summary"
         ) as mock_translate:
             mock_translate.return_value = STATE_BOOST
 

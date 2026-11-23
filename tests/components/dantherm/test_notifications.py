@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from config.custom_components.dantherm import notifications as dn
+from custom_components.dantherm import notifications as dn
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ async def test_async_create_notification_with_message(hass: HomeAssistant) -> No
     # Patch translation footer text
     with (
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            "custom_components.dantherm.notifications.async_get_translated_exception_text",
             new=AsyncMock(return_value="footer"),
         ) as mock_footer,
         patch(
@@ -45,7 +45,7 @@ async def test_async_create_notification_without_message(hass: HomeAssistant) ->
 
     with (
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            "custom_components.dantherm.notifications.async_get_translated_exception_text",
             new=AsyncMock(return_value="footer"),
         ) as mock_footer,
         patch(
@@ -68,15 +68,15 @@ async def test_async_create_key_value_notification(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            "custom_components.dantherm.notifications.async_get_translated_exception_text",
             new=AsyncMock(return_value="header"),
         ) as mock_exc_text,
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_state_text",
+            "custom_components.dantherm.notifications.async_get_translated_state_text",
             new=AsyncMock(return_value="TranslatedState"),
         ) as mock_state_text,
         patch(
-            "config.custom_components.dantherm.notifications.async_create_notification",
+            "custom_components.dantherm.notifications.async_create_notification",
             new=AsyncMock(),
         ) as mock_create,
     ):
@@ -103,15 +103,15 @@ async def test_async_create_key_value_notification_with_pretranslated_text(
 
     with (
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            "custom_components.dantherm.notifications.async_get_translated_exception_text",
             new=AsyncMock(),
         ) as mock_exc_text,
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_state_text",
+            "custom_components.dantherm.notifications.async_get_translated_state_text",
             new=AsyncMock(),
         ) as mock_state_text,
         patch(
-            "config.custom_components.dantherm.notifications.async_create_notification",
+            "custom_components.dantherm.notifications.async_create_notification",
             new=AsyncMock(),
         ) as mock_create,
     ):
@@ -141,11 +141,11 @@ async def test_async_create_exception_notification(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "config.custom_components.dantherm.notifications.async_get_translated_exception_text",
+            "custom_components.dantherm.notifications.async_get_translated_exception_text",
             new=AsyncMock(return_value="Error: code={code}"),
         ) as mock_exc_text,
         patch(
-            "config.custom_components.dantherm.notifications.async_create_notification",
+            "custom_components.dantherm.notifications.async_create_notification",
             new=AsyncMock(),
         ) as mock_create,
     ):

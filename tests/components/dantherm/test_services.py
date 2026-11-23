@@ -2,13 +2,13 @@
 
 import re
 
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.device_map import (
     SERVICE_ALARM_RESET,
     SERVICE_CLEAR_ADAPTIVE_EVENT_STACK,
     SERVICE_FILTER_RESET,
     SERVICE_SET_CONFIGURATION,
 )
-from config.custom_components.dantherm.services import (
+from custom_components.dantherm.services import (
     DANTHERM_SET_CONFIGURATION_SCHEMA,
     DANTHERM_SET_STATE_SCHEMA,
     async_setup_services,
@@ -34,12 +34,14 @@ async def test_service_schema_validation(hass: HomeAssistant) -> None:
 
     # Test set_configuration schema accepts air quality thresholds
     try:
-        DANTHERM_SET_CONFIGURATION_SCHEMA({
-            "device_id": ["device1"],
-            "air_quality_low_threshold": 1000,
-            "air_quality_middle_threshold": 1500,
-            "air_quality_high_threshold": 2000
-        })
+        DANTHERM_SET_CONFIGURATION_SCHEMA(
+            {
+                "device_id": ["device1"],
+                "air_quality_low_threshold": 1000,
+                "air_quality_middle_threshold": 1500,
+                "air_quality_high_threshold": 2000,
+            }
+        )
     except vol.Invalid:
         pytest.fail("Configuration schema should accept air quality thresholds")
 

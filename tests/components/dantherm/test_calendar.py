@@ -6,13 +6,13 @@ from datetime import timedelta
 from types import SimpleNamespace
 from typing import Any
 
-from config.custom_components.dantherm import (
+from custom_components.dantherm import (
     calendar as calendar_mod,
     translations as translations_mod,
 )
-from config.custom_components.dantherm.calendar import DanthermCalendar
-from config.custom_components.dantherm.device_map import CALENDAR as CALENDAR_DESC
-from config.custom_components.dantherm.exceptions import InvalidAdaptiveState
+from custom_components.dantherm.calendar import DanthermCalendar
+from custom_components.dantherm.device_map import CALENDAR as CALENDAR_DESC
+from custom_components.dantherm.exceptions import InvalidAdaptiveState
 from freezegun import freeze_time
 import pytest
 

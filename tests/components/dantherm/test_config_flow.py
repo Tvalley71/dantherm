@@ -14,55 +14,33 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from custom_components.dantherm.config_flow import DanthermConfigFlow
+from custom_components.dantherm.const import (
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
+from custom_components.dantherm.device import DanthermDevice
+from custom_components.dantherm.device_map import (
+    CONF_DISABLE_NOTIFICATIONS,
+    CONF_DISABLE_TEMPERATURE_UNKNOWN,
+    CONF_ENABLE_SENSOR_FILTERING,
+    CONF_ENABLE_TIME_SYNCHRONIZATION,
+    CONF_MANUFACTURER,
+    CONF_USE_DISCOVERY,
+)
 
-# Dynamic imports based on test environment
-try:
-    from config.custom_components.dantherm.config_flow import DanthermConfigFlow
-    from config.custom_components.dantherm.const import (
-        DEFAULT_NAME,
-        DEFAULT_PORT,
-        DEFAULT_SCAN_INTERVAL,
-        DOMAIN,
-    )
-    from config.custom_components.dantherm.device import DanthermDevice
-    from config.custom_components.dantherm.device_map import (
-        CONF_DISABLE_NOTIFICATIONS,
-        CONF_DISABLE_TEMPERATURE_UNKNOWN,
-        CONF_ENABLE_SENSOR_FILTERING,
-        CONF_ENABLE_TIME_SYNCHRONIZATION,
-        CONF_MANUFACTURER,
-        CONF_USE_DISCOVERY,
-    )
-except ImportError:
-    # Fallback for custom integration tests
-    from custom_components.dantherm.config_flow import (
-        DanthermConfigFlow,  # type: ignore[import-untyped]
-    )
-    from custom_components.dantherm.const import (  # type: ignore[import-untyped]
-        DEFAULT_NAME,
-        DEFAULT_PORT,
-        DEFAULT_SCAN_INTERVAL,
-        DOMAIN,
-    )
-    from custom_components.dantherm.device import (
-        DanthermDevice,  # type: ignore[import-untyped]
-    )
-    from custom_components.dantherm.device_map import (  # type: ignore[import-untyped]
-        CONF_DISABLE_NOTIFICATIONS,
-        CONF_DISABLE_TEMPERATURE_UNKNOWN,
-        CONF_ENABLE_SENSOR_FILTERING,
-        CONF_ENABLE_TIME_SYNCHRONIZATION,
-        CONF_MANUFACTURER,
-        CONF_USE_DISCOVERY,
-    )
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def temp_integration_files():
     """Create temporary integration files for testing."""
-    # Path til test integration
-    test_integration_path = Path("tests/testing_config/custom_components/dantherm")
+    repository_root = Path(__file__).parents[3]
+    test_integration_path = (
+        repository_root / "tests/testing_config/custom_components/dantherm"
+    )
 
     # Opret directories hvis de ikke findes
     test_integration_path.mkdir(parents=True, exist_ok=True)
@@ -102,7 +80,7 @@ def temp_integration_files():
         json.dump(translations_content, f, indent=2)
 
     # Copy necessary Python files
-    source_dir = Path("config/custom_components/dantherm")
+    source_dir = repository_root / "custom_components/dantherm"
     files_to_copy = [
         "__init__.py",
         "config_flow.py",
@@ -572,12 +550,12 @@ async def test_options_flow_network_only_change_still_schedules_reload(
 async def test_user_flow_discovery_selects_new_device(hass: HomeAssistant) -> None:
     """Test that discovery returns only unconfigured device and populates host selection."""
     with (
+        patch("custom_components.dantherm.config_flow.async_discover") as mock_discover,
+        patch("custom_components.dantherm.config_flow.DanthermDevice") as mock_device,
         patch(
-            "config.custom_components.dantherm.config_flow.async_discover"
-        ) as mock_discover,
-        patch(
-            "config.custom_components.dantherm.config_flow.DanthermDevice"
-        ) as mock_device,
+            "custom_components.dantherm.async_setup_entry",
+            new=AsyncMock(return_value=True),
+        ),
     ):
         mock_discover.return_value = [
             {"ip": "10.10.10.10", "name": "Dantherm Discovered"}
@@ -646,7 +624,7 @@ async def test_user_flow_discovery_excludes_already_configured(
     existing_entry.add_to_hass(hass)
 
     with patch(
-        "config.custom_components.dantherm.config_flow.async_discover"
+        "custom_components.dantherm.config_flow.async_discover"
     ) as mock_discover:
         mock_discover.return_value = [
             {"ip": "10.10.10.10", "name": "Already Configured"},

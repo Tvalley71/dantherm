@@ -1,7 +1,7 @@
 """Test discovery for Dantherm integration."""
 
-from config.custom_components.dantherm import discovery
-from config.custom_components.dantherm.discovery import (
+from custom_components.dantherm import discovery
+from custom_components.dantherm.discovery import (
     _get_broadcast,
     _get_subnet,
     async_discover,
@@ -92,11 +92,11 @@ async def test_async_discover_with_last_known_ip(
         return []
 
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_broadcast",
+        "custom_components.dantherm.discovery._discover_broadcast",
         fake_discover_broadcast,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_unicast_sweep",
+        "custom_components.dantherm.discovery._discover_unicast_sweep",
         fake_discover_unicast_sweep,
     )
 
@@ -127,11 +127,11 @@ async def test_async_discover_with_broadcast_ip(
         return []
 
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_broadcast",
+        "custom_components.dantherm.discovery._discover_broadcast",
         fake_discover_broadcast,
     )
     monkeypatch.setattr(
-        "config.custom_components.dantherm.discovery._discover_unicast_sweep",
+        "custom_components.dantherm.discovery._discover_unicast_sweep",
         fake_discover_unicast_sweep,
     )
 

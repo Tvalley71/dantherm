@@ -6,15 +6,15 @@ from datetime import date, timedelta
 from types import SimpleNamespace
 from typing import Any
 
-from config.custom_components.dantherm import (
+from custom_components.dantherm import (
     calendar as calendar_mod,
     translations as translations_mod,
 )
-from config.custom_components.dantherm.calendar import (
+from custom_components.dantherm.calendar import (
     DanthermCalendar,
     DanthermCalendarEvent,
 )
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.device_map import (
     CALENDAR as CALENDAR_DESC,
     CONF_LINK_TO_PRIMARY_CALENDAR,
 )

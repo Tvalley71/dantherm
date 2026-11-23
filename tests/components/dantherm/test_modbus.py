@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from config.custom_components.dantherm.modbus import (
+from custom_components.dantherm.modbus import (
     MODBUS_REGISTER_ALARM,
     MODBUS_REGISTER_FAN_LEVEL,
     MODBUS_REGISTER_FILTER_REMAIN,

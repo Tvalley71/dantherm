@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.device_map import (
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.device_map import (
     CONF_BOOST_MODE_TRIGGER,
     CONF_ECO_MODE_TRIGGER,
     CONF_HOME_MODE_TRIGGER,
@@ -145,7 +145,7 @@ class TestTriggerDependentScenarios:
         assert config_entry.options.get(CONF_ECO_MODE_TRIGGER, False)
         assert config_entry.options.get(CONF_HOME_MODE_TRIGGER, False)
 
-    @patch("config.custom_components.dantherm.device.DanthermDevice")
+    @patch("custom_components.dantherm.device.DanthermDevice")
     async def test_trigger_tracking_setup_called_when_triggers_available(
         self,
         mock_device_class: MagicMock,
@@ -173,7 +173,7 @@ class TestTriggerDependentScenarios:
             "At least one trigger should be available for tracking setup"
         )
 
-    @patch("config.custom_components.dantherm.device.DanthermDevice")
+    @patch("custom_components.dantherm.device.DanthermDevice")
     async def test_trigger_tracking_not_setup_when_no_triggers(
         self,
         mock_device_class: MagicMock,

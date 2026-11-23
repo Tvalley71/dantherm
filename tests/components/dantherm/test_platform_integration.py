@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock
 
-from config.custom_components.dantherm.binary_sensor import (
+from custom_components.dantherm.binary_sensor import (
     async_setup_entry as async_setup_binary_sensor,
 )
-from config.custom_components.dantherm.button import (
+from custom_components.dantherm.button import (
     async_setup_entry as async_setup_button,
 )
-from config.custom_components.dantherm.const import DOMAIN
-from config.custom_components.dantherm.sensor import (
+from custom_components.dantherm.const import DOMAIN
+from custom_components.dantherm.sensor import (
     async_setup_entry as async_setup_sensor,
 )
 import pytest
@@ -27,7 +27,9 @@ class TestPlatformIntegration:
     ) -> None:
         """Test sensor platform can be set up successfully."""
         # Mock hass.data for sensor platform
-        hass.data = {DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}}
+        hass.data = {
+            DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}
+        }
 
         mock_config_entry = AsyncMock()
         mock_config_entry.entry_id = "test_entry"
@@ -44,7 +46,9 @@ class TestPlatformIntegration:
         mock_platform_setup,
     ) -> None:
         """Test binary_sensor platform can be set up successfully."""
-        hass.data = {DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}}
+        hass.data = {
+            DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}
+        }
 
         mock_config_entry = AsyncMock()
         mock_config_entry.entry_id = "test_entry"
@@ -62,7 +66,9 @@ class TestPlatformIntegration:
     ) -> None:
         """Test button platform can be set up successfully."""
         # Mock hass.data for button platform
-        hass.data = {DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}}
+        hass.data = {
+            DOMAIN: {"test_entry": {"device": mock_device_with_all_capabilities}}
+        }
 
         mock_config_entry = AsyncMock()
         mock_config_entry.entry_id = "test_entry"
