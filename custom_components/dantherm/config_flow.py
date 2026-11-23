@@ -11,7 +11,6 @@ import time
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
@@ -125,7 +124,6 @@ class DanthermConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Dantherm Modbus configflow."""
 
     VERSION = 4  # Current version of the config flow
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
