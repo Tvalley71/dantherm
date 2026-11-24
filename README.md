@@ -64,7 +64,7 @@ Thanks to _Smartzeug_
 | Entity            | Default | Description       |
 |-------------------|---------|-------------------|
 | `alarm_reset`     | Enabled | Clears the active alarm and dismis the alarm notification |
-| `filter_reset`    | Enabled | Resets the filter remain timer and dismis the alarm notification |
+| `filter_reset`    | Enabled | Resets the filter remain timer and dismis the filter notification |
 
 #### Binary Sensor Entities
 
