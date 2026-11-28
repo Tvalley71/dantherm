@@ -1,11 +1,13 @@
 """The device mapping."""
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any, Final
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.calendar import CalendarEntityDescription
+from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityDescription,
@@ -36,7 +38,7 @@ from .modbus import (
     MODBUS_REGISTER_INTERNAL_PREHEATER_DUTYCYCLE,
     MODBUS_REGISTER_WORK_TIME,
     DataClass,
-    HacComponentClass,
+    Hac1ComponentClass,
 )
 
 REQUIRED_PYMODBUS_VERSION = "3.8.3"
@@ -277,6 +279,10 @@ ATTR_AFTER_HEATER_SUPPLY_SETPOINT: Final = "after_heater_supply_setpoint"
 ATTR_AFTER_HEATER_EXTRACT_SETPOINT: Final = "after_heater_extract_setpoint"
 ATTR_AFTER_HEATER_ROOM_SETPOINT: Final = "after_heater_room_setpoint"
 
+ATTR_AFTER_HEATER_SUPPLY_CONTROL: Final = "after_heater_supply_control"
+ATTR_AFTER_HEATER_EXTRACT_CONTROL: Final = "after_heater_extract_control"
+ATTR_AFTER_HEATER_ROOM_CONTROL: Final = "after_heater_room_control"
+
 ATTR_FEATURES: Final = "features"
 
 CONF_DISABLE_NOTIFICATIONS: Final = "disable_notifications"
@@ -464,7 +470,9 @@ class DanthermEntityDescription(EntityDescription):
     component_class: int | None = None
     not_component_class: int | None = None
 
-    hac_component_class: HacComponentClass | None = None
+    hac1_component_class: Hac1ComponentClass | None = None
+
+    entity_exclude_if: str | Collection[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -479,6 +487,13 @@ class DanthermCalendarEntityDescription(
     DanthermEntityDescription, CalendarEntityDescription
 ):
     """Dantherm Calendar Entity Description."""
+
+
+@dataclass(frozen=True)
+class DanthermClimateEntityDescription(
+    DanthermEntityDescription, ClimateEntityDescription
+):
+    """Dantherm Climate Entity Description."""
 
 
 @dataclass(frozen=True)
@@ -584,7 +599,7 @@ BINARY_SENSORS: tuple[DanthermBinarySensorEntityDescription, ...] = (
         icon="mdi:heat-wave",
         data_getinternal=ATTR_AFTER_HEATER_ACTIVE,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.AfterHeater,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
     ),
 )
 
@@ -603,23 +618,38 @@ BUTTONS: tuple[DanthermButtonEntityDescription, ...] = (
     ),
 )
 
-EVENTS: tuple[DanthermEventEntityDescription, ...] = (
-    DanthermEventEntityDescription(
-        key=ATTR_ALARM_EVENT,
-        icon="mdi:alert-circle",
-        event_types=ALARM_EVENT_TYPES,
-    ),
-    DanthermEventEntityDescription(
-        key=ATTR_FILTER_EVENT,
-        icon="mdi:air-filter",
-        event_types=["filter_warning", "filter_expired"],
-    ),
-)
-
 CALENDAR: DanthermCalendarEntityDescription = DanthermCalendarEntityDescription(
     key=ATTR_CALENDAR,
     icon="mdi:calendar",
     data_getinternal=ATTR_CALENDAR,
+)
+
+CLIMATES: tuple[DanthermClimateEntityDescription, ...] = (
+    DanthermClimateEntityDescription(
+        key=ATTR_AFTER_HEATER_SUPPLY_CONTROL,
+        data_setinternal=ATTR_AFTER_HEATER_SUPPLY_CONTROL,
+        data_getinternal=ATTR_AFTER_HEATER_SUPPLY_CONTROL,
+        component_class=ComponentClass.HAC1,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
+    ),
+    DanthermClimateEntityDescription(
+        key=ATTR_AFTER_HEATER_EXTRACT_CONTROL,
+        data_setinternal=ATTR_AFTER_HEATER_EXTRACT_CONTROL,
+        data_getinternal=ATTR_AFTER_HEATER_EXTRACT_CONTROL,
+        component_class=ComponentClass.HAC1,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
+    ),
+    DanthermClimateEntityDescription(
+        key=ATTR_AFTER_HEATER_ROOM_CONTROL,
+        data_setinternal=ATTR_AFTER_HEATER_ROOM_CONTROL,
+        data_getinternal=ATTR_AFTER_HEATER_ROOM_CONTROL,
+        component_class=ComponentClass.HAC1 | ComponentClass.HRC2,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
+        entity_exclude_if=(
+            ATTR_AFTER_HEATER_ROOM_SETPOINT,
+            ATTR_ROOM_TEMPERATURE,
+        ),
+    ),
 )
 
 COVERS: tuple[DanthermCoverEntityDescription, ...] = (
@@ -636,6 +666,19 @@ COVERS: tuple[DanthermCoverEntityDescription, ...] = (
         state_closed=BypassDamperState.Closed,
         component_class=ComponentClass.Bypass,
         device_class=CoverDeviceClass.DAMPER,
+    ),
+)
+
+EVENTS: tuple[DanthermEventEntityDescription, ...] = (
+    DanthermEventEntityDescription(
+        key=ATTR_ALARM_EVENT,
+        icon="mdi:alert-circle",
+        event_types=ALARM_EVENT_TYPES,
+    ),
+    DanthermEventEntityDescription(
+        key=ATTR_FILTER_EVENT,
+        icon="mdi:air-filter",
+        event_types=["filter_warning", "filter_expired"],
     ),
 )
 
@@ -884,7 +927,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.CO2Sensor,
+        hac1_component_class=Hac1ComponentClass.CO2Sensor,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_CARBON_DIOXIDE_MIDDLE_THRESHOLD,
@@ -900,7 +943,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.CO2Sensor,
+        hac1_component_class=Hac1ComponentClass.CO2Sensor,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_CARBON_DIOXIDE_HIGH_THRESHOLD,
@@ -916,7 +959,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.CO2Sensor,
+        hac1_component_class=Hac1ComponentClass.CO2Sensor,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_AFTER_HEATER_SUPPLY_SETPOINT,
@@ -932,7 +975,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.AfterHeater,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_AFTER_HEATER_EXTRACT_SETPOINT,
@@ -948,7 +991,7 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.AfterHeater,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
     ),
     DanthermNumberEntityDescription(
         key=ATTR_AFTER_HEATER_ROOM_SETPOINT,
@@ -963,9 +1006,9 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
-        component_class=ComponentClass.HAC1
-        | ComponentClass.HRC2,  # Presumeably the HRC remote must be present to deliver the room temperature
-        hac_component_class=HacComponentClass.AfterHeater,
+        component_class=ComponentClass.HAC1 | ComponentClass.HRC2,
+        hac1_component_class=Hac1ComponentClass.AfterHeater,
+        entity_exclude_if=ATTR_ROOM_TEMPERATURE,
     ),
 )
 
@@ -1195,7 +1238,7 @@ SENSORS: tuple[DanthermSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         component_class=ComponentClass.HAC1,
-        hac_component_class=HacComponentClass.CO2Sensor,
+        hac1_component_class=Hac1ComponentClass.CO2Sensor,
     ),
     # DanthermSensorEntityDescription(
     #    key=ATTR_FEATURES,

@@ -73,6 +73,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
     Platform.FAN,
