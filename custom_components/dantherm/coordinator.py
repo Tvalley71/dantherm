@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections import deque
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +23,7 @@ from .device_map import (
     ATTR_CALENDAR,
     BINARY_SENSORS,
     BUTTONS,
+    CLIMATES,
     CONF_ENABLE_TIME_SYNCHRONIZATION,
     COVERS,
     FANS,
@@ -31,6 +32,7 @@ from .device_map import (
     SENSORS,
     SWITCHES,
     TIMETEXTS,
+    ComponentClass,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
 )
@@ -115,6 +117,7 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
             for tuple_ in (
                 BINARY_SENSORS,
                 BUTTONS,
+                CLIMATES,
                 COVERS,
                 FANS,
                 NUMBERS,
@@ -321,6 +324,13 @@ class DanthermCoordinator(DataUpdateCoordinator, DanthermStore):
 
             # Read bypass maximum temperature
             await self.hub.async_get_bypass_maximum_temperature()
+
+            # Read HAC1 active components if HAC1 is installed
+            if (
+                self.hub.installed_components & ComponentClass.HAC1
+                == ComponentClass.HAC1
+            ):
+                await self.hub.async_get_hac1_active_components()
 
             self._update_cycle += 1
             self._process_pending_transitions()
