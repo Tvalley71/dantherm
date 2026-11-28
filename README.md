@@ -79,6 +79,19 @@ Thanks to _Smartzeug_
 |------------|---------|--------------------------|
 | `calendar` | Enabled | Controls scheduled operations based on Home Assistant calendar events |
 
+#### Climate Entities
+
+| Entity                | Default | Description |
+|-----------------------|---------|-------------|
+| `after_heater_supply_control`  | Enabled [[1]](#entity-notes) | Controls the after-heater based on the current supply-air temperature |
+| `after_heater_extract_control` | Enabled [[1]](#entity-notes) | Controls the after-heater based on the current extract-air temperature |
+| `after_heater_room_control`    | Enabled [[1]](#entity-notes) | Controls the after-heater based on the room temperature; requires an HRC remote |
+
+Setting a thermostat to Off writes `0` to its corresponding after-heater setpoint. Turning it
+on restores the last positive target temperature. The thermostat reports Heating while the
+after-heater is active and its current temperature is below the target, otherwise it reports
+Idle.
+
 #### Cover Entity
 
 | Entity           | Default | Description              |
