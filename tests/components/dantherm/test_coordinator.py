@@ -12,6 +12,7 @@ from custom_components.dantherm.device_map import (
     ATTR_ACTIONS_PENDING,
     ATTR_CALENDAR,
     CONF_ENABLE_TIME_SYNCHRONIZATION,
+    ComponentClass,
     DanthermEntityDescription,
     DanthermSwitchEntityDescription,
 )
@@ -142,6 +143,60 @@ class TestDanthermCoordinator:
 
         assert await device.async_install_entity(description) is installed
         await coordinator.async_shutdown()
+
+    async def test_installation_follows_referenced_entity_exclusion(
+        self,
+    ) -> None:
+        """Installation follows the referenced entity's exclusion result."""
+        device = object.__new__(DanthermDevice)
+        coordinator = MagicMock()
+        device._coordinator = coordinator
+        referenced = DanthermEntityDescription(
+            key="referenced",
+            component_class=ComponentClass.HAC1,
+        )
+        description = DanthermEntityDescription(
+            key="dependent",
+            entity_exclude_if="referenced",
+        )
+        coordinator.get_entity_description.return_value = referenced
+        device.installed_components = 0
+
+        assert await device.async_install_entity(description) is False
+
+        device.installed_components = ComponentClass.HAC1
+        assert await device.async_install_entity(description) is True
+
+    async def test_installation_excludes_if_any_referenced_entity_is_excluded(
+        self,
+    ) -> None:
+        """Installation is excluded if one of several references is excluded."""
+        device = object.__new__(DanthermDevice)
+        coordinator = MagicMock()
+        device._coordinator = coordinator
+        available = DanthermEntityDescription(
+            key="available",
+            component_class=ComponentClass.HAC1,
+        )
+        excluded = DanthermEntityDescription(
+            key="excluded",
+            component_class=ComponentClass.HRC2,
+        )
+        descriptions = {
+            "available": available,
+            "excluded": excluded,
+        }
+        coordinator.get_entity_description.side_effect = descriptions.get
+        description = DanthermEntityDescription(
+            key="dependent",
+            entity_exclude_if=["available", "excluded"],
+        )
+        device.installed_components = ComponentClass.HAC1
+
+        assert await device.async_install_entity(description) is False
+
+        device.installed_components |= ComponentClass.HRC2
+        assert await device.async_install_entity(description) is True
 
     async def test_coordinator_initialization(
         self, hass: HomeAssistant, mock_hub, mock_config_entry

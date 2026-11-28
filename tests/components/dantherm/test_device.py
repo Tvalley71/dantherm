@@ -17,7 +17,7 @@ from custom_components.dantherm.device_map import (
 )
 from custom_components.dantherm.entity import DanthermEntity
 from custom_components.dantherm.event import DanthermEvent
-from custom_components.dantherm.modbus import HacComponentClass
+from custom_components.dantherm.modbus import Hac1ComponentClass
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -402,7 +402,7 @@ async def test_after_heater_disabled_setpoints_return_false(
         patch.object(
             device,
             "_read_holding_uint32",
-            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
         ),
     ):
         assert await device.async_get_after_heater_active() is False
@@ -431,7 +431,7 @@ async def test_after_heater_missing_temperature_returns_unknown(
         patch.object(
             device,
             "_read_holding_uint32",
-            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
         ),
     ):
         assert await device.async_get_after_heater_active() == STATE_UNKNOWN
@@ -463,7 +463,7 @@ async def test_after_heater_checks_room_setpoint_with_hrc2(
         patch.object(
             device,
             "_read_holding_uint32",
-            new=AsyncMock(return_value=HacComponentClass.AfterHeater),
+            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
         ),
     ):
         assert await device.async_get_after_heater_active() is True
