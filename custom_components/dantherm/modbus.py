@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from enum import IntEnum
 import logging
 import re
+from enum import IntEnum
 from typing import TYPE_CHECKING, Any
 
-from pymodbus import ModbusException
-
 from homeassistant.components.modbus import modbus
+from pymodbus import ModbusException
 
 if TYPE_CHECKING:
     from .device_map import DanthermEntityDescription
@@ -89,7 +88,7 @@ class ABSwitchPosition(IntEnum):
     B = 2
 
 
-class HacComponentClass(IntEnum):
+class Hac1ComponentClass(IntEnum):
     """Dantherm HAC components class."""
 
     CO2Sensor = 0x0001
@@ -471,17 +470,23 @@ class DanthermModbus:
                 hex(result),
                 MODBUS_REGISTER_HAC_COMPONENTS,
             )
-            if result & HacComponentClass.CO2Sensor == HacComponentClass.CO2Sensor:
+            if result & Hac1ComponentClass.CO2Sensor == Hac1ComponentClass.CO2Sensor:
                 _LOGGER.debug("CO2 sensor found")
-            if result & HacComponentClass.PreHeater == HacComponentClass.PreHeater:
+            if result & Hac1ComponentClass.PreHeater == Hac1ComponentClass.PreHeater:
                 _LOGGER.debug("Pre-heater found")
-            if result & HacComponentClass.PreCooler == HacComponentClass.PreCooler:
+            if result & Hac1ComponentClass.PreCooler == Hac1ComponentClass.PreCooler:
                 _LOGGER.debug("Pre-cooler found")
-            if result & HacComponentClass.AfterHeater == HacComponentClass.AfterHeater:
+            if (
+                result & Hac1ComponentClass.AfterHeater
+                == Hac1ComponentClass.AfterHeater
+            ):
                 _LOGGER.debug("After-heater found")
-            if result & HacComponentClass.AfterCooler == HacComponentClass.AfterCooler:
+            if (
+                result & Hac1ComponentClass.AfterCooler
+                == Hac1ComponentClass.AfterCooler
+            ):
                 _LOGGER.debug("After-cooler found")
-            if result & HacComponentClass.Hygrostat == HacComponentClass.Hygrostat:
+            if result & Hac1ComponentClass.Hygrostat == Hac1ComponentClass.Hygrostat:
                 _LOGGER.debug("Hygrostat found")
         result = await self._read_holding_uint32(MODBUS_REGISTER_HAC_ACTIVE_COMPONENTS)
         if result is not None:
