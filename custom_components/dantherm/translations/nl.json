@@ -132,6 +132,11 @@
     "calendar": {
       "calendar": { "name": "Kalender" }
     },
+    "climate": {
+      "after_heater_supply_control": { "name": "Naverwarming: toevoer" },
+      "after_heater_extract_control": { "name": "Naverwarming: afvoer" },
+      "after_heater_room_control": { "name": "Naverwarming: ruimte" }
+    },
     "cover": {
       "bypass_damper": { "name": "Demper Bypass" }
     },
@@ -155,24 +160,44 @@
     "number": {
       "filter_lifetime": { "name": "Levensduur Filter" },
       "humidity_setpoint": { "name": "Vochtigheidsinstelwaarde" },
-      "humidity_setpoint_summer": { "name": "Vochtigheidsinstelwaarde (Zomer)" },
+      "humidity_setpoint_summer": {
+        "name": "Vochtigheidsinstelwaarde (Zomer)"
+      },
       "air_quality_low_threshold": { "name": "Luchtkwaliteit Lage Drempel" },
-      "air_quality_middle_threshold": { "name": "Luchtkwaliteit Middel Drempel" },
+      "air_quality_middle_threshold": {
+        "name": "Luchtkwaliteit Middel Drempel"
+      },
       "air_quality_high_threshold": { "name": "Luchtkwaliteit Hoge Drempel" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperatuur" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperatuur" },
       "manual_bypass_duration": { "name": "Duur Manuele Bypass" },
-      "bypass_minimum_temperature_summer": { "name": "Bypass Minimum Temperatuur (Zomer)" },
-      "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperatuur (Zomer)" },
+      "bypass_minimum_temperature_summer": {
+        "name": "Bypass Minimum Temperatuur (Zomer)"
+      },
+      "bypass_maximum_temperature_summer": {
+        "name": "Bypass Maximum Temperatuur (Zomer)"
+      },
       "boost_mode_timeout": { "name": "Boost-modus Time-out" },
       "eco_mode_timeout": { "name": "Eco-modus Time-out" },
       "home_mode_timeout": { "name": "Thuis-modus Time-out" },
-      "carbon_dioxide_low_threshold": { "name": "Koolstofdioxide Lage Drempel" },
-      "carbon_dioxide_middle_threshold": { "name": "Koolstofdioxide Middel Drempel" },
-      "carbon_dioxide_high_threshold": { "name": "Koolstofdioxide Hoge Drempel" },
-      "after_heater_supply_setpoint": { "name": "Naverwarmer Toevoerinstelwaarde" },
-      "after_heater_extract_setpoint": { "name": "Naverwarmer Afvoerinstelwaarde" },
-      "after_heater_room_setpoint": { "name": "Naverwarmer Ruimte-instelwaarde" }
+      "carbon_dioxide_low_threshold": {
+        "name": "Koolstofdioxide Lage Drempel"
+      },
+      "carbon_dioxide_middle_threshold": {
+        "name": "Koolstofdioxide Middel Drempel"
+      },
+      "carbon_dioxide_high_threshold": {
+        "name": "Koolstofdioxide Hoge Drempel"
+      },
+      "after_heater_supply_setpoint": {
+        "name": "Naverwarmer Toevoerinstelwaarde"
+      },
+      "after_heater_extract_setpoint": {
+        "name": "Naverwarmer Afvoerinstelwaarde"
+      },
+      "after_heater_room_setpoint": {
+        "name": "Naverwarmer Ruimte-instelwaarde"
+      }
     },
     "select": {
       "operation_selection": {
@@ -361,7 +386,7 @@
         }
       },
       "work_time": { "name": "Inschakelduur" },
-      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur"},
+      "internal_preheater_dutycycle": { "name": "Voorverwarmer Inschakelduur" },
       "carbon_dioxide": { "name": "Koolstofdioxide" },
       "features": { "name": "Features" }
     },

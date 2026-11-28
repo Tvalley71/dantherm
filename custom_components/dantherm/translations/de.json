@@ -132,6 +132,11 @@
     "calendar": {
       "calendar": { "name": "Kalender" }
     },
+    "climate": {
+      "after_heater_supply_control": { "name": "Nachheizung: Zuluft" },
+      "after_heater_extract_control": { "name": "Nachheizung: Abluft" },
+      "after_heater_room_control": { "name": "Nachheizung: Raum" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass-Klappe" }
     },
@@ -155,23 +160,43 @@
     "number": {
       "filter_lifetime": { "name": "Filterlebensdauer" },
       "humidity_setpoint": { "name": "Luftfeuchtigkeits-Sollwert" },
-      "humidity_setpoint_summer": { "name": "Luftfeuchtigkeits-Sollwert (Sommer)" },
-      "air_quality_low_threshold": { "name": "Luftqualitäts-Schwellwert (niedrig)" },
-      "air_quality_middle_threshold": { "name": "Luftqualitäts-Schwellwert (mittel)" },
-      "air_quality_high_threshold": { "name": "Luftqualitäts-Schwellwert (hoch)" },
+      "humidity_setpoint_summer": {
+        "name": "Luftfeuchtigkeits-Sollwert (Sommer)"
+      },
+      "air_quality_low_threshold": {
+        "name": "Luftqualitäts-Schwellwert (niedrig)"
+      },
+      "air_quality_middle_threshold": {
+        "name": "Luftqualitäts-Schwellwert (mittel)"
+      },
+      "air_quality_high_threshold": {
+        "name": "Luftqualitäts-Schwellwert (hoch)"
+      },
       "bypass_minimum_temperature": { "name": "Bypass-Minimaltemperatur" },
       "bypass_maximum_temperature": { "name": "Bypass-Maximaltemperatur" },
       "manual_bypass_duration": { "name": "Manuelle Bypass-Dauer" },
-      "bypass_minimum_temperature_summer": { "name": "Bypass-Minimaltemperatur (Sommer)" },
-      "bypass_maximum_temperature_summer": { "name": "Bypass-Maximaltemperatur (Sommer)" },
+      "bypass_minimum_temperature_summer": {
+        "name": "Bypass-Minimaltemperatur (Sommer)"
+      },
+      "bypass_maximum_temperature_summer": {
+        "name": "Bypass-Maximaltemperatur (Sommer)"
+      },
       "boost_mode_timeout": { "name": "Boost-Modus Timeout" },
       "eco_mode_timeout": { "name": "Eco-Modus Timeout" },
       "home_mode_timeout": { "name": "Home-Modus Timeout" },
-      "carbon_dioxide_low_threshold": { "name": "Kohlendioxid-Schwellwert (niedrig)" },
-      "carbon_dioxide_middle_threshold": { "name": "Kohlendioxid-Schwellwert (mittel)" },
-      "carbon_dioxide_high_threshold": { "name": "Kohlendioxid-Schwellwert (hoch)" },
+      "carbon_dioxide_low_threshold": {
+        "name": "Kohlendioxid-Schwellwert (niedrig)"
+      },
+      "carbon_dioxide_middle_threshold": {
+        "name": "Kohlendioxid-Schwellwert (mittel)"
+      },
+      "carbon_dioxide_high_threshold": {
+        "name": "Kohlendioxid-Schwellwert (hoch)"
+      },
       "after_heater_supply_setpoint": { "name": "Nachheizung Zuluft-Sollwert" },
-      "after_heater_extract_setpoint": { "name": "Nachheizung Abluft-Sollwert" },
+      "after_heater_extract_setpoint": {
+        "name": "Nachheizung Abluft-Sollwert"
+      },
       "after_heater_room_setpoint": { "name": "Nachheizung Raum-Sollwert" }
     },
     "select": {

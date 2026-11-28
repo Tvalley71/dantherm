@@ -75,8 +75,8 @@
       }
     },
     "error": {
-        "invalid_host": "Invalid host or IP address.",
-        "invalid_entity": "Invalid entity ID. Please enter a valid binary sensor or input boolean."
+      "invalid_host": "Invalid host or IP address.",
+      "invalid_entity": "Invalid entity ID. Please enter a valid binary sensor or input boolean."
     },
     "abort": {
       "aborted_by_user": "Configuration aborted by user."
@@ -132,6 +132,11 @@
     "calendar": {
       "calendar": { "name": "Calendar" }
     },
+    "climate": {
+      "after_heater_supply_control": { "name": "After-heater: supply" },
+      "after_heater_extract_control": { "name": "After-heater: extract" },
+      "after_heater_room_control": { "name": "After-heater: room" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass Damper" }
     },
@@ -157,21 +162,37 @@
       "humidity_setpoint": { "name": "Humidity Setpoint" },
       "humidity_setpoint_summer": { "name": "Humidity Setpoint (Summer)" },
       "air_quality_low_threshold": { "name": "Air Quality Low Threshold" },
-      "air_quality_middle_threshold": { "name": "Air Quality Middle Threshold" },
+      "air_quality_middle_threshold": {
+        "name": "Air Quality Middle Threshold"
+      },
       "air_quality_high_threshold": { "name": "Air Quality High Threshold" },
       "bypass_minimum_temperature": { "name": "Bypass Minimum Temperature" },
       "bypass_maximum_temperature": { "name": "Bypass Maximum Temperature" },
       "manual_bypass_duration": { "name": "Manual Bypass Duration" },
-      "bypass_minimum_temperature_summer": { "name": "Bypass Minimum Temperature (Summer)" },
-      "bypass_maximum_temperature_summer": { "name": "Bypass Maximum Temperature (Summer)" },
+      "bypass_minimum_temperature_summer": {
+        "name": "Bypass Minimum Temperature (Summer)"
+      },
+      "bypass_maximum_temperature_summer": {
+        "name": "Bypass Maximum Temperature (Summer)"
+      },
       "boost_mode_timeout": { "name": "Boost Mode Timeout" },
       "eco_mode_timeout": { "name": "Eco Mode Timeout" },
       "home_mode_timeout": { "name": "Home Mode Timeout" },
-      "carbon_dioxide_low_threshold": { "name": "Carbon Dioxide Low Threshold" },
-      "carbon_dioxide_middle_threshold": { "name": "Carbon Dioxide Middle Threshold" },
-      "carbon_dioxide_high_threshold": { "name": "Carbon Dioxide High Threshold" },
-      "after_heater_supply_setpoint": { "name": "After Heater Supply Setpoint" },
-      "after_heater_extract_setpoint": { "name": "After Heater Extract Setpoint" },
+      "carbon_dioxide_low_threshold": {
+        "name": "Carbon Dioxide Low Threshold"
+      },
+      "carbon_dioxide_middle_threshold": {
+        "name": "Carbon Dioxide Middle Threshold"
+      },
+      "carbon_dioxide_high_threshold": {
+        "name": "Carbon Dioxide High Threshold"
+      },
+      "after_heater_supply_setpoint": {
+        "name": "After Heater Supply Setpoint"
+      },
+      "after_heater_extract_setpoint": {
+        "name": "After Heater Extract Setpoint"
+      },
       "after_heater_room_setpoint": { "name": "After Heater Room Setpoint" }
     },
     "select": {
@@ -361,7 +382,7 @@
         }
       },
       "work_time": { "name": "Work Time" },
-      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle"},
+      "internal_preheater_dutycycle": { "name": "Preheater Dutycycle" },
       "carbon_dioxide": { "name": "Carbon Dioxide" },
       "features": { "name": "Features" }
     },

@@ -132,6 +132,11 @@
     "calendar": {
       "calendar": { "name": "Calendrier" }
     },
+    "climate": {
+      "after_heater_supply_control": { "name": "Réchauffeur: insufflation" },
+      "after_heater_extract_control": { "name": "Réchauffeur: extraction" },
+      "after_heater_room_control": { "name": "Réchauffeur: pièce" }
+    },
     "cover": {
       "bypass_damper": { "name": "Bypass" }
     },
@@ -157,22 +162,42 @@
       "humidity_setpoint": { "name": "Consigne d'humidité" },
       "humidity_setpoint_summer": { "name": "Consigne d'humidité (été)" },
       "air_quality_low_threshold": { "name": "Seuil bas de qualité de l'air" },
-      "air_quality_middle_threshold": { "name": "Seuil moyen de qualité de l'air" },
-      "air_quality_high_threshold": { "name": "Seuil élevé de qualité de l'air" },
+      "air_quality_middle_threshold": {
+        "name": "Seuil moyen de qualité de l'air"
+      },
+      "air_quality_high_threshold": {
+        "name": "Seuil élevé de qualité de l'air"
+      },
       "bypass_minimum_temperature": { "name": "Bypass température minimale" },
       "bypass_maximum_temperature": { "name": "Bypass température maximale" },
       "manual_bypass_duration": { "name": "Durée du bypass manuel" },
-      "bypass_minimum_temperature_summer": { "name": "Bypass température minimale (été)" },
-      "bypass_maximum_temperature_summer": { "name": "Bypass température maximale (été)" },
+      "bypass_minimum_temperature_summer": {
+        "name": "Bypass température minimale (été)"
+      },
+      "bypass_maximum_temperature_summer": {
+        "name": "Bypass température maximale (été)"
+      },
       "boost_mode_timeout": { "name": "Délai d'expiration du mode Boost" },
       "eco_mode_timeout": { "name": "Délai d'expiration du mode Eco" },
       "home_mode_timeout": { "name": "Délai d'expiration du mode Maison" },
-      "carbon_dioxide_low_threshold": { "name": "Seuil bas de dioxyde de carbone" },
-      "carbon_dioxide_middle_threshold": { "name": "Seuil moyen de dioxyde de carbone" },
-      "carbon_dioxide_high_threshold": { "name": "Seuil élevé de dioxyde de carbone" },
-      "after_heater_supply_setpoint": { "name": "Consigne de soufflage du post-chauffage" },
-      "after_heater_extract_setpoint": { "name": "Consigne d'extraction du post-chauffage" },
-      "after_heater_room_setpoint": { "name": "Consigne de température ambiante du post-chauffage" }
+      "carbon_dioxide_low_threshold": {
+        "name": "Seuil bas de dioxyde de carbone"
+      },
+      "carbon_dioxide_middle_threshold": {
+        "name": "Seuil moyen de dioxyde de carbone"
+      },
+      "carbon_dioxide_high_threshold": {
+        "name": "Seuil élevé de dioxyde de carbone"
+      },
+      "after_heater_supply_setpoint": {
+        "name": "Consigne de soufflage du post-chauffage"
+      },
+      "after_heater_extract_setpoint": {
+        "name": "Consigne d'extraction du post-chauffage"
+      },
+      "after_heater_room_setpoint": {
+        "name": "Consigne de température ambiante du post-chauffage"
+      }
     },
     "select": {
       "operation_selection": {
@@ -361,7 +386,9 @@
         }
       },
       "work_time": { "name": "Temps de fonctionnement" },
-      "internal_preheater_dutycycle": { "name": "Cycle de service du préchauffeur"},
+      "internal_preheater_dutycycle": {
+        "name": "Cycle de service du préchauffeur"
+      },
       "carbon_dioxide": { "name": "Dioxyde de carbone" },
       "features": { "name": "Features" }
     },

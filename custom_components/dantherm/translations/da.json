@@ -132,8 +132,13 @@
     "calendar": {
       "calendar": { "name": "Kalender" }
     },
+    "climate": {
+      "after_heater_supply_control": { "name": "Eftervarmer: indblæsning" },
+      "after_heater_extract_control": { "name": "Eftervarmer: udsugning" },
+      "after_heater_room_control": { "name": "Eftervarmer: rum" }
+    },
     "cover": {
-      "bypass_damper": { "name": "Bypass-spjæld"}
+      "bypass_damper": { "name": "Bypass-spjæld" }
     },
     "fan": {
       "ventilation": {
@@ -162,17 +167,27 @@
       "bypass_minimum_temperature": { "name": "Bypass minimum temperatur" },
       "bypass_maximum_temperature": { "name": "Bypass maximum temperatur" },
       "manual_bypass_duration": { "name": "Varighed af manuel bypass" },
-      "bypass_minimum_temperature_summer": { "name": "Bypass minimum temperatur (sommer)" },
-      "bypass_maximum_temperature_summer": { "name": "Bypass maximum temperatur (sommer)" },
+      "bypass_minimum_temperature_summer": {
+        "name": "Bypass minimum temperatur (sommer)"
+      },
+      "bypass_maximum_temperature_summer": {
+        "name": "Bypass maximum temperatur (sommer)"
+      },
       "boost_mode_timeout": { "name": "Boost-tilstand timeout" },
       "eco_mode_timeout": { "name": "Eco-tilstand timeout" },
       "home_mode_timeout": { "name": "Hjemmetilstand timeout" },
       "carbon_dioxide_low_threshold": { "name": "Kuldioxid lav tærskel" },
       "carbon_dioxide_middle_threshold": { "name": "Kuldioxid mellem tærskel" },
       "carbon_dioxide_high_threshold": { "name": "Kuldioxid høj tærskel" },
-      "after_heater_supply_setpoint": { "name": "Eftervarmer indblæsningssætpunkt" },
-      "after_heater_extract_setpoint": { "name": "Eftervarmer udsugningssætpunkt" },
-      "after_heater_room_setpoint": { "name": "Eftervarmer rumtemperatursætpunkt" }
+      "after_heater_supply_setpoint": {
+        "name": "Eftervarmer indblæsningssætpunkt"
+      },
+      "after_heater_extract_setpoint": {
+        "name": "Eftervarmer udsugningssætpunkt"
+      },
+      "after_heater_room_setpoint": {
+        "name": "Eftervarmer rumtemperatursætpunkt"
+      }
     },
     "select": {
       "operation_selection": {
@@ -361,7 +376,7 @@
         }
       },
       "work_time": { "name": "Drifttid" },
-      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus"},
+      "internal_preheater_dutycycle": { "name": "Forvarmer driftscyklus" },
       "carbon_dioxide": { "name": "Kuldioxid" },
       "features": { "name": "Features" }
     },
