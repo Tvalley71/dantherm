@@ -1,7 +1,7 @@
 """Climate implementation."""
 
-from collections.abc import Mapping
 import logging
+from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -104,9 +104,7 @@ class DanthermClimate(ClimateEntity, DanthermEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        target_temperature = max(
-            self.min_temp, min(float(temperature), self.max_temp)
-        )
+        target_temperature = max(self.min_temp, min(float(temperature), self.max_temp))
         self._last_target_temperature = target_temperature
         self._attr_target_temperature = target_temperature
         self._attr_hvac_mode = HVACMode.HEAT

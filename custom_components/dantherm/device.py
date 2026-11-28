@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from collections import deque
 from datetime import datetime
-import logging
 from types import MappingProxyType
 from typing import Any
 
-from propcache.api import cached_property
-
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import STATE_UNKNOWN, HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import now as ha_now
+from propcache.api import cached_property
 
 from .adaptive_manager import DanthermAdaptiveManager
 from .const import DEFAULT_NAME, DEVICE_TYPES
@@ -342,9 +341,10 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         self._device_ab_switch_position = await self.get_device_ab_switch_position()
 
         if self.installed_components & ComponentClass.HAC1 == ComponentClass.HAC1:
-            self.hac1_installed_components = await self._read_holding_uint32(
+            hac1_installed_components = await self._read_holding_uint32(
                 MODBUS_REGISTER_HAC_COMPONENTS
             )
+            self.hac1_installed_components = hac1_installed_components or 0
             _LOGGER.debug(
                 "HAC installed components = %s", hex(self.hac1_installed_components)
             )
@@ -1169,15 +1169,11 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
 
     def _get_after_heater_active(
         self, setpoint: int | None, temperature: float | None
-    ) -> bool | str:
+    ) -> bool | None:
         """Check if after heater is active based on setpoint and temperature."""
 
         if self.hac1_active_components is None:
-            return STATE_UNAVAILABLE
-
-        # Check if the setpoint or temperature is available.
-        if setpoint is None or temperature is None:
-            return STATE_UNAVAILABLE
+            return None
 
         # Check if the after heater component is not active
         if (
@@ -1189,9 +1185,12 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         if setpoint == 0:  # If the setpoint is 0, the temperature is not checked
             return False
 
+        if setpoint is None or temperature is None:
+            return None
+
         return temperature < setpoint
 
-    async def async_get_after_heater_active(self) -> bool | str | None:
+    async def async_get_after_heater_active(self) -> bool | None:
         """Check if after heater is active."""
 
         # Get the active status for supply.
@@ -1206,7 +1205,7 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         )
 
         # Get the active status for room if HRC remote is present.
-        room_active = STATE_UNKNOWN
+        room_active = False
         if self.installed_components & ComponentClass.HRC2 == ComponentClass.HRC2:
             room_active = self._get_after_heater_active(
                 await self.async_get_entity_state(
@@ -1215,12 +1214,8 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
                 await self.async_get_entity_state(ATTR_ROOM_TEMPERATURE, None),
             )
 
-        if (
-            supply_active is STATE_UNAVAILABLE
-            or extract_active is STATE_UNAVAILABLE
-            or room_active is STATE_UNAVAILABLE
-        ):
-            return STATE_UNAVAILABLE
+        if supply_active is None or extract_active is None or room_active is None:
+            return None
 
         if supply_active is True or extract_active is True or room_active is True:
             return True
@@ -1730,6 +1725,24 @@ class DanthermDevice(DanthermModbus, DanthermAdaptiveManager):
         """Set after-heater room setpoint."""
         await self._write_holding_uint32(
             MODBUS_REGISTER_HAC_AFTER_HEATER_ROOM_SETPOINT, int(value)
+        )
+
+    async def set_carbon_dioxide_low_threshold(self, value: int) -> None:
+        """Set carbon dioxide low threshold."""
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_LOW_THRESHOLD, int(value)
+        )
+
+    async def set_carbon_dioxide_middle_threshold(self, value: int) -> None:
+        """Set carbon dioxide middle threshold."""
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_MIDDLE_THRESHOLD, int(value)
+        )
+
+    async def set_carbon_dioxide_high_threshold(self, value: int) -> None:
+        """Set carbon dioxide high threshold."""
+        await self._write_holding_uint32(
+            MODBUS_REGISTER_HAC_CARBON_DIOXIDE_HIGH_THRESHOLD, int(value)
         )
 
     async def set_after_heater_supply_control(self, value: float) -> None:

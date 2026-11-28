@@ -21,8 +21,7 @@ from custom_components.dantherm.modbus import Hac1ComponentClass
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import STATE_UNKNOWN, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -393,22 +392,18 @@ async def test_after_heater_disabled_setpoints_return_false(
         ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
     }
 
+    device.hac1_active_components = Hac1ComponentClass.AfterHeater
     with (
         patch.object(
             device,
             "async_get_entity_state",
             new=AsyncMock(side_effect=entity_states.get),
         ),
-        patch.object(
-            device,
-            "_read_holding_uint32",
-            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
-        ),
     ):
         assert await device.async_get_after_heater_active() is False
 
 
-async def test_after_heater_missing_temperature_returns_unknown(
+async def test_after_heater_missing_temperature_returns_none(
     hass: HomeAssistant, standard_config_entry: MockConfigEntry
 ) -> None:
     """An enabled setpoint with no corresponding reading should be unknown."""
@@ -422,19 +417,15 @@ async def test_after_heater_missing_temperature_returns_unknown(
         ATTR_AFTER_HEATER_EXTRACT_SETPOINT: 0,
     }
 
+    device.hac1_active_components = Hac1ComponentClass.AfterHeater
     with (
         patch.object(
             device,
             "async_get_entity_state",
             new=AsyncMock(side_effect=entity_states.get),
         ),
-        patch.object(
-            device,
-            "_read_holding_uint32",
-            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
-        ),
     ):
-        assert await device.async_get_after_heater_active() == STATE_UNKNOWN
+        assert await device.async_get_after_heater_active() is None
 
 
 async def test_after_heater_checks_room_setpoint_with_hrc2(
@@ -445,6 +436,7 @@ async def test_after_heater_checks_room_setpoint_with_hrc2(
         hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
     )
     device.installed_components = ComponentClass.HRC2
+    device.hac1_active_components = Hac1ComponentClass.AfterHeater
     entity_states = {
         ATTR_SUPPLY_TEMPERATURE: None,
         ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 0,
@@ -460,16 +452,11 @@ async def test_after_heater_checks_room_setpoint_with_hrc2(
             "async_get_entity_state",
             new=AsyncMock(side_effect=entity_states.get),
         ),
-        patch.object(
-            device,
-            "_read_holding_uint32",
-            new=AsyncMock(return_value=Hac1ComponentClass.AfterHeater),
-        ),
     ):
         assert await device.async_get_after_heater_active() is True
 
 
-async def test_after_heater_missing_hrc2_setpoint_returns_unavailable(
+async def test_after_heater_missing_hrc2_setpoint_returns_none(
     hass: HomeAssistant, standard_config_entry: MockConfigEntry
 ) -> None:
     """A missing room setpoint should make the HRC2-dependent result unavailable."""
@@ -477,6 +464,7 @@ async def test_after_heater_missing_hrc2_setpoint_returns_unavailable(
         hass, "TestDevice", "localhost", 502, 1, 5, standard_config_entry
     )
     device.installed_components = ComponentClass.HRC2
+    device.hac1_active_components = Hac1ComponentClass.AfterHeater
     entity_states = {
         ATTR_SUPPLY_TEMPERATURE: None,
         ATTR_AFTER_HEATER_SUPPLY_SETPOINT: 0,
@@ -490,4 +478,4 @@ async def test_after_heater_missing_hrc2_setpoint_returns_unavailable(
         "async_get_entity_state",
         new=AsyncMock(side_effect=entity_states.get),
     ):
-        assert await device.async_get_after_heater_active() == STATE_UNAVAILABLE
+        assert await device.async_get_after_heater_active() is None

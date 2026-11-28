@@ -74,8 +74,14 @@ class DanthermBinarySensor(BinarySensorEntity, DanthermEntity):
         """Handle updated data from the coordinator."""
         super()._coordinator_update()
 
-        if self._attr_changed:
-            self._attr_is_on = bool(self._attr_new_state)
+        if not self._attr_changed:
+            return
+
+        if self._attr_new_state is None:
+            self._attr_available = False
+            return
+
+        self._attr_is_on = bool(self._attr_new_state)
 
 
 class ActionPendingBinarySensor(DanthermBinarySensor):

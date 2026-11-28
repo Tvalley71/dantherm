@@ -105,10 +105,13 @@ def test_climate_off_state_keeps_last_positive_target() -> None:
         ("set_after_heater_supply_setpoint", 344),
         ("set_after_heater_extract_setpoint", 346),
         ("set_after_heater_room_setpoint", 348),
+        ("set_carbon_dioxide_low_threshold", 568),
+        ("set_carbon_dioxide_middle_threshold", 570),
+        ("set_carbon_dioxide_high_threshold", 572),
     ],
 )
-async def test_set_after_heater_setpoint(method: str, register: int) -> None:
-    """Test writing each after-heater setpoint."""
+async def test_set_hac_value(method: str, register: int) -> None:
+    """Test writing each HAC value."""
     device = object.__new__(DanthermDevice)
     device._write_holding_uint32 = AsyncMock()
 

@@ -1005,10 +1005,10 @@ NUMBERS: tuple[DanthermNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
+        entity_exclude_if=ATTR_ROOM_TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         component_class=ComponentClass.HAC1 | ComponentClass.HRC2,
         hac1_component_class=Hac1ComponentClass.AfterHeater,
-        entity_exclude_if=ATTR_ROOM_TEMPERATURE,
     ),
 )
 
